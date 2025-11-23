@@ -3,21 +3,6 @@
  * Handles all continue watching functionality with proper poster image handling
  */
 class ContinueWatchingManager {
-    // Helper: get Firestore ref for this user/profile
-    getFirestoreRef() {
-      if (!window.firebase || !window.firebase.firestore) return null;
-      const user = (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function')
-        ? window.FirebaseAuth.getUser()
-        : null;
-      const uid = user && user.uid;
-      if (!uid) return null;
-      const selectedProfileId = localStorage.getItem(`fb_selected_profile_${uid}`);
-      if (!selectedProfileId) return null;
-      return window.firebase.firestore()
-        .collection('users').doc(uid)
-        .collection('profiles').doc(selectedProfileId)
-        .collection('continueWatching');
-    }
   constructor() {
     this.BASE_STORAGE_KEY = 'continueWatching';
     this.PROGRESS_INTERVAL = 5000; // 5 seconds
@@ -52,8 +37,6 @@ class ContinueWatchingManager {
    * Get all continue watching data from localStorage
    */
   getAllProgress() {
-    // Load from localStorage first
-    let localData = {};
     try {
       const scopedKey = this.getStorageKey();
       let data = localStorage.getItem(scopedKey);
@@ -73,38 +56,11 @@ class ContinueWatchingManager {
           } catch (_) { }
         }
       }
-      localData = JSON.parse(data || '{}');
+      return JSON.parse(data || '{}');
     } catch (error) {
       console.error('Error reading continue watching data:', error);
-      localData = {};
+      return {};
     }
-
-    // Try to load from Firestore and merge (prefer latest updatedAt)
-    const ref = this.getFirestoreRef();
-    if (ref) {
-      // Async load, return local first, then update when Firestore loads
-      ref.get().then(snapshot => {
-        let cloudData = {};
-        snapshot.forEach(doc => {
-          cloudData[doc.id] = doc.data();
-        });
-        // Merge: prefer latest updatedAt
-        const merged = { ...localData };
-        for (const id in cloudData) {
-          if (!merged[id] || (cloudData[id].updatedAt > (merged[id].updatedAt || 0))) {
-            merged[id] = cloudData[id];
-          }
-        }
-        // Save merged to localStorage
-        const scopedKey = this.getStorageKey();
-        localStorage.setItem(scopedKey, JSON.stringify(merged));
-        // Dispatch event to update UI
-        window.dispatchEvent(new CustomEvent('continueWatchingUpdated', { detail: { merged } }));
-      }).catch(err => {
-        console.error('Error loading continue watching from Firestore:', err);
-      });
-    }
-    return localData;
   }
 
   /**
@@ -154,17 +110,8 @@ class ContinueWatchingManager {
         muted: progressData.muted || false
       };
 
-      // Save to localStorage
       localStorage.setItem(this.getStorageKey(), JSON.stringify(allProgress));
       this.lastSavedTime = progressData.currentTime;
-
-      // Save to Firestore (if available)
-      const ref = this.getFirestoreRef();
-      if (ref) {
-        ref.doc(movieId).set(allProgress[movieId]).catch((err) => {
-          console.error('Error saving continue watching to Firestore:', err);
-        });
-      }
 
       console.log('Progress saved for', movieId, ':', Math.round(progressData.currentTime), 's');
 

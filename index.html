@@ -5292,12 +5292,8 @@
         // Send report via backend API
         const params = {
           to_email: SUPPORT_EMAIL,
-          subject,
-          message,
-          from_email: fromEmail || 'noreply@cinematichub.local',
-          reply_to: fromEmail || SUPPORT_EMAIL,
-          category: t,
-          site_url: location.href
+          from_name: fromEmail || 'Anonymous',
+          message
         };
         fetch('/api/send-email', {
           method: 'POST',

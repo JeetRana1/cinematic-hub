@@ -1,0 +1,9 @@
+{
+  "name": "cinematic-hubs",
+  "version": "1.0.0",
+  "description": "Cinematic Hub static site with Firebase integration",
+  "scripts": {
+    "prebuild": "node scripts/generateFirebaseConfig.js"
+  },
+  "devDependencies": {}
+}

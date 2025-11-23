@@ -5995,9 +5995,7 @@
     const searchBtn = document.getElementById('searchBtn');
     const streamBtn = document.getElementById('streamBtn');
 
-    // Store current movie data
-    let currentMovie = null;
-    let isSearching = false; // Track if we're currently showing search results
+
 
     function extractYouTubeId(url) {
       if (!url) return null;
@@ -6169,6 +6167,8 @@
         particles: ['#eab308', '#f59e0b']
       }
     };
+
+
 
     /**
      * Apply theme to the page

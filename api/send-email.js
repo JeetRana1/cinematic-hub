@@ -5,6 +5,16 @@ const fetch = (...args) => import('node-fetch').then(mod => mod.default(...args)
 
 // For Vercel compatibility, also support export default
 module.exports = async (req, res) => {
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Handle preflight OPTIONS request
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
   // Log method and headers
   console.log('Request method:', req.method);
   console.log('Request headers:', req.headers);

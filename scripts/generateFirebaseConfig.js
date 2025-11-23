@@ -1,5 +1,5 @@
 // scripts/generateFirebaseConfig.js
-// This script generates firebaseConfig.js from environment variables for Vercel deployment
+// Generates firebaseConfig.js from Vercel environment variables at build time
 
 const fs = require('fs');
 const path = require('path');

@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Cinematic Hub static site with Firebase integration",
   "scripts": {
-    "prebuild": "node scripts/generateFirebaseConfig.js"
+    "prebuild": "node scripts/generateFirebaseConfig.js && node scripts/generateEmailConfig.js"
+    
   },
   "devDependencies": {}
 }

@@ -104,6 +104,7 @@ module.exports = async (req, res) => {
       try {
         errorText = await response.text();
       } catch (e) {}
+      console.error('EmailJS error details:', errorText);
       res.status(500).json({ error: 'EmailJS error', details: errorText });
       return;
     }

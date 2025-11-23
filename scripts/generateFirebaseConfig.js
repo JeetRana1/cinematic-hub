@@ -15,5 +15,10 @@ const firebaseConfig = {
 
 const configString = `window.firebaseConfig = ${JSON.stringify(firebaseConfig, null, 2)};\n`;
 
-fs.writeFileSync(path.join(__dirname, '../firebaseConfig.js'), configString);
-console.log('firebaseConfig.js generated successfully.');
+// Ensure public directory exists
+const publicDir = path.join(__dirname, '../public');
+if (!fs.existsSync(publicDir)) {
+  fs.mkdirSync(publicDir);
+}
+fs.writeFileSync(path.join(publicDir, 'firebaseConfig.js'), configString);
+console.log('public/firebaseConfig.js generated successfully.');

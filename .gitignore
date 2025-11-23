@@ -1,7 +1,10 @@
 # Ignore environment variable files
 .env
 .env.*
-# Ignore Firebase config backup
+# Ignore Firebase config backup (root only)
 firebaseConfig.js
-# Ignore EmailJS config
+# Ignore EmailJS config (root only)
 emailConfig.js
+# Allow public config files to be committed
+!public/firebaseConfig.js
+!public/emailConfig.js

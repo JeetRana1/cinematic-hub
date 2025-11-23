@@ -46,11 +46,12 @@ module.exports = async (req, res) => {
 
   console.log('Parsed body:', body);
 
-  const { to_email, from_name, message } = body || {};
 
-  // Validate input
-  if (!to_email || !from_name || !message) {
-    res.status(400).json({ error: 'Missing required fields' });
+  // Validate input: all required template fields
+  const requiredFields = ['category', 'from_email', 'reply_to', 'site_url', 'subject', 'message'];
+  const missing = requiredFields.filter(f => !body[f]);
+  if (missing.length > 0) {
+    res.status(400).json({ error: 'Missing required fields', missing });
     return;
   }
 

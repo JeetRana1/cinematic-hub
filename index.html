@@ -5291,8 +5291,11 @@
 
         // Send report via backend API
         const params = {
-          to_email: SUPPORT_EMAIL,
-          from_name: fromEmail || 'Anonymous',
+          category: t,
+          from_email: fromEmail || 'moive776@gmail.com',
+          reply_to: fromEmail || SUPPORT_EMAIL,
+          site_url: location.href,
+          subject,
           message
         };
         fetch('/api/send-email', {

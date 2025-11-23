@@ -70,9 +70,12 @@ module.exports = async (req, res) => {
     template_id: EMAILJS_TEMPLATE_ID,
     user_id: EMAILJS_PRIVATE_KEY, // This is the private API key
     template_params: {
-      to_email,
-      from_name,
-      message
+      category: body.category,
+      from_email: body.from_email,
+      reply_to: body.reply_to,
+      site_url: body.site_url,
+      subject: body.subject,
+      message: body.message
     }
   };
 

@@ -7122,7 +7122,13 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="public/firebaseConfig.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
   <script src="public/emailConfig.js"></script>
+  <script>
+    if (window.emailjs && window.EMAILJS && window.EMAILJS.publicKey) {
+      window.emailjs.init(window.EMAILJS.publicKey);
+    }
+  </script>
   <script src="auth-firebase.js?v=3"></script>
   <script src="ui.js"></script>
   <script>

@@ -120,7 +120,29 @@ class ContinueWatchingManager {
         detail: { movieId, progressData: allProgress[movieId] }
       }));
 
-      // Firestore sync removed: progress is now stored only in localStorage
+      // Sync only movie data to Firestore for cross-device support
+      if (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function') {
+        const user = window.FirebaseAuth.getUser();
+        if (user && user.uid && window.firebase && window.firebase.firestore) {
+          const docRef = window.firebase.firestore()
+            .collection('users')
+            .doc(user.uid)
+            .collection('continueWatching')
+            .doc(movieId);
+          // Only sync minimal movie data
+          const minimalData = {
+            movieId: movieId,
+            title: progressData.title || 'Unknown Movie',
+            posterUrl: progressData.posterUrl || progressData.thumbnail || '',
+            currentTime: Math.floor(progressData.currentTime),
+            duration: Math.floor(progressData.duration),
+            updatedAt: Date.now()
+          };
+          docRef.set(minimalData).catch((err) => {
+            console.error('Failed to sync continue watching to Firestore:', err);
+          });
+        }
+      }
     } catch (error) {
       console.error('Error saving continue watching data:', error);
     }

@@ -6,16 +6,13 @@
 //    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 // 3) Then include this script.
 
+
 (function(){
-  // Replace with your Firebase project config
-  const firebaseConfig = {
-    apiKey: "AIzaSyAOwMXKzazXPvJlMI7YuRvZ0q8efCDGN3c",
-    authDomain: "auth-implemented.firebaseapp.com",
-    projectId: "auth-implemented",
-    storageBucket: "auth-implemented.firebasestorage.app",
-    messagingSenderId: "201333894254",
-    appId: "1:201333894254:web:bb7af43735d15d7aa78a7f",
-  };
+  // Load firebaseConfig from external file (firebaseConfig.js)
+  if (typeof window.firebaseConfig === 'undefined') {
+    throw new Error('Firebase config not found. Please create firebaseConfig.js with your secrets.');
+  }
+  const firebaseConfig = window.firebaseConfig;
 
   // Initialize if not already
   if (!firebase.apps.length) {

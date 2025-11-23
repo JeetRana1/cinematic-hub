@@ -1,0 +1,7 @@
+# Ignore environment variable files
+.env
+.env.*
+# Ignore Firebase config backup
+firebaseConfig.js
+# Ignore EmailJS config
+emailConfig.js

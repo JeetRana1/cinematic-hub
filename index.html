@@ -5084,12 +5084,13 @@
     const SUPPORT_EMAIL = 'moive776@gmail.com';
     // Direct-send email via EmailJS (no email app needed). Fill keys and keep enabled: true.
     // Load EmailJS config from external file (emailConfig.js)
-    if (typeof window.EMAILJS === 'undefined') {
-      throw new Error('EmailJS config not found. Please create emailConfig.js with your secrets.');
-    }
-    const EMAILJS = window.EMAILJS;
+    // --- EmailJS config check temporarily disabled to allow movies to load even if emailConfig.js is missing ---
+    // if (typeof window.EMAILJS === 'undefined') {
+    //   throw new Error('EmailJS config not found. Please create emailConfig.js with your secrets.');
+    // }
+    // const EMAILJS = window.EMAILJS;
     // Avoid opening Outlook/mail app as fallback. If direct send fails, we copy the report instead.
-    const ALLOW_MAILTO_FALLBACK = false;
+    // const ALLOW_MAILTO_FALLBACK = false;
 
     // Lazy-load EmailJS if enabled (with CDN fallbacks)
     function ensureEmailJsLoaded(cb) {

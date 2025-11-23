@@ -4,19 +4,20 @@
 const fs = require('fs');
 const path = require('path');
 
-const EMAILJS_ENABLED = process.env.EMAILJS_ENABLED;
-const EMAILJS_PUBLIC_KEY = process.env.EMAILJS_PUBLIC_KEY;
-const EMAILJS_SERVICE_ID = process.env.EMAILJS_SERVICE_ID;
-const EMAILJS_TEMPLATE_ID = process.env.EMAILJS_TEMPLATE_ID;
 
-const config = `window.EMAILJS = {
-  enabled: ${EMAILJS_ENABLED},
-  publicKey: "${EMAILJS_PUBLIC_KEY}",
-  serviceId: "${EMAILJS_SERVICE_ID}",
-  templateId: "${EMAILJS_TEMPLATE_ID}"
+const EMAILJS_CONFIG = {
+  enabled: String(process.env.EMAILJS_ENABLED).toLowerCase() === 'true',
+  publicKey: process.env.EMAILJS_PUBLIC_KEY || '',
+  serviceId: process.env.EMAILJS_SERVICE_ID || '',
+  templateId: process.env.EMAILJS_TEMPLATE_ID || ''
 };
-`;
 
-const outPath = path.join(__dirname, '../public/emailConfig.js');
-fs.writeFileSync(outPath, config);
-console.log('Generated public/emailConfig.js');
+const configString = `window.EMAILJS = ${JSON.stringify(EMAILJS_CONFIG, null, 2)};\n`;
+
+// Ensure public directory exists
+const publicDir = path.join(__dirname, '../public');
+if (!fs.existsSync(publicDir)) {
+  fs.mkdirSync(publicDir);
+}
+fs.writeFileSync(path.join(publicDir, 'emailConfig.js'), configString);
+console.log('public/emailConfig.js generated successfully.');

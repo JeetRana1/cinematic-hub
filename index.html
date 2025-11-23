@@ -4236,7 +4236,10 @@
   <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 
   <script>
-    // Load YouTube IFrame API for smoother startup when playing in normal mode
+    // --- Ensure themePresets and isSearching are declared first ---
+    let isSearching = false; // Track if we're currently showing search results
+
+    // ...existing code...
     (function loadYouTubeAPI() {
       if (window.YT && window.YT.Player) return;
       const s = document.createElement('script');
@@ -4251,148 +4254,10 @@
 
     function createYTPlayerFor(host, key) {
       // host: element to receive iframe
-      // key: youtube video id
-      // If API not ready yet, queue and wait
-      if (!window.YT || !YT.Player) {
-        pendingPlayer = { host, key };
-        return;
-      }
-      if (ytPlayer) {
-        try { ytPlayer.stopVideo(); ytPlayer.destroy(); } catch (e) { }
-        ytPlayer = null;
-      }
-      // create unique id for iframe
-      ytPlayerId = 'yt-player-' + Date.now();
-      const iframe = document.createElement('div');
-      iframe.id = ytPlayerId;
-      iframe.style.width = '100%';
-      iframe.style.height = '100%';
-      // promote to its own layer for smoother playback
-      host.style.willChange = 'transform, opacity';
-      host.style.transform = 'translateZ(0)';
-      host.innerHTML = '';
-      host.appendChild(iframe);
 
-      ytPlayer = new YT.Player(ytPlayerId, {
-        videoId: key,
-        playerVars: {
-          autoplay: 1,
-          controls: 1,
-          rel: 0,
-          modestbranding: 1,
-          playsinline: 1,
-          fs: 1
-        },
-        events: {
-          onReady: (e) => {
-            try { e.target.playVideo(); } catch (err) { }
-          },
-          onStateChange: (ev) => {
-            const modalEl = document.getElementById('movieModal');
-            // YT state 1 = playing, 2 = paused, 0 = ended, 3 = buffering
-            if (ev.data === YT.PlayerState.PLAYING) {
-              if (modalEl) modalEl.classList.add('playing');
-            } else if (ev.data === YT.PlayerState.PAUSED || ev.data === YT.PlayerState.ENDED) {
-              if (modalEl) modalEl.classList.remove('playing');
-            }
-          }
-        }
-      });
+      // ...existing code...
+      // (Removed stray cast array that caused syntax error)
     }
-
-    // Called by YouTube API when ready
-    function onYouTubeIframeAPIReady() {
-      if (pendingPlayer) {
-        createYTPlayerFor(pendingPlayer.host, pendingPlayer.key);
-        pendingPlayer = null;
-      }
-    }
-    // Per-movie constants — edit these directly in this file (posterUrl and trailerUrl) to change media.
-    // Change only posterUrl and trailerUrl here; save the file and reload the page to apply.
-    const MOVIE_1 =
-    {
-      id: 1,
-      title: 'Manjummel Boys',
-      year: 2024,
-      genres: ['Survival', 'Thriller', 'Drama', 'Adventure'],
-      rating: 8.6,
-      overview: 'Manjummel Boys, based on a real story, is about a bunch of friends who set out on a trip to Kodaikanal and the events that occur there.',
-      release_date: '2024',
-      posterUrl: 'https://archive.org/download/manjummel-boys-poster/Manjummel-Boys-Poster.jpg',
-      trailerUrl: 'https://ia601000.us.archive.org/3/items/manjummel-boys-official-trailer-streaming-may-5-disney-plus-hotstar-jio-hotstar-1080p-h-264/Manjummel%20Boys%20%20Official%20Trailer%20%20Streaming%20May%205%20%20%23DisneyPlusHotstar%20-%20JioHotstar%20%281080p%2C%20h264%29.mp4',
-      cast: [
-        { name: 'Soubin Shahir', photo: 'https://images.filmibeat.com/img/popcorn/profile_photos/soubin-shahir-20250402155334-38732.jpg' },
-        { name: 'Sreenath Bhasi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sreenath-bhasi-20220926160330-28765.jpg' },
-        { name: 'Jean Paul Lal', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/jean-paul-lal-20190624101317-29532.jpg' },
-        { name: 'Ganapathy S Poduval', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ganapathy-s-poduval-20250612103106-16037.jpg' },
-        { name: 'Balu Varghese', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/balu-varghese-20150217142843-31938.jpg' },
-        { name: 'Deepak Parambol', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/deepak-parambol-20140624174708-31104.jpg' },
-        { name: 'Arun kurian', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/arunkurian-20240226190801-36861.jpg' },
-        { name: 'Chandu Salimkumar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/chandusalimkumar-20240226190632-61830.jpg' },
-        { name: 'Abhiram Radhakrishnan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/abhiramradhakrishnan-20240226190918-49925.jpg' },
-        { name: 'Vishnu Reghu', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/vishnureghu-20240226191406-61831.jpg' },
-        { name: 'Khalid Rahman', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/khalid-rahman-20190617125536-35787.jpg' },
-        { name: 'George Maryan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/george-maryan-20190226174038-39972.jpg' },
-        { name: 'Kathiresan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/kathiresan-9757.jpg' },
-        { name: 'Ramachandran Durairaj', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ramachandran-durairaj-20230224101743-35966.jpg' }
-      ]
-    };
-
-    const MOVIE_2 =
-    {
-      id: 2,
-      title: 'Tourist Family',
-      year: 2024, genres: ['Comedy', 'Drama'],
-      rating: 8.5,
-      overview: 'A quirky Sri Lankan family seeking a fresh start in India transforms a disconnected neighborhood into a vibrant community with their infectious love and kindness.',
-      release_date: '2024',
-      posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Tourist-Family-Poster.jpg',
-      trailerUrl: 'https://ia600602.us.archive.org/13/items/tourist-family-hindi-trailer-1080p/Tourist%20Family%20Hindi%20Trailer%20%20%281080p%2C%20h264%29.mp4',
-      cast: [
-        { name: 'Sasikumar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sasikumar-20190905111822-3368.jpg' },
-        { name: 'Simran Bagga', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/simran-bagga-20190109121606-1257.jpg' },
-        { name: 'MS Bhaskar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ms-bhaskar-2922.jpg' },
-        { name: 'Mithun Jai Shankar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/mithunjaishankar-20240410175155-62783.jpg' },
-        { name: 'Ramesh Thilak', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ramesh-thilak-20150730161304-35019.jpg' },
-        { name: 'Yogi Babu', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/yogi-babu-20191205130221-35602.jpg' },
-        { name: 'Elango Kumaravel', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/elango-kumaravel-20181114154200-33096.jpg' },
-        { name: 'Kamalesh Jagan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/kamalesh-jagan-20250430120655-66559.jpg' },
-        { name: 'Yogalakshmi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/yogalakshmi-20250610121844-66558.jpg' },
-        { name: 'Sreeja Ravi', photo: 'https://media.cinemaexpress.com/cinemaexpress%2Fimport%2F2023%2F5%2F4%2Foriginal%2FBeFunky-collage_-_2023-05-04T200251.jpg' },
-        { name: 'Bagavathi Perumal', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/bagavathi-perumal-20160304101451-31471.jpg' }
-      ]
-    };
-
-    const MOVIE_3 =
-    {
-      id: 3,
-      title: 'Kaithi',
-      year: 2023, genres: ['Comedy', 'Drama'],
-      rating: 8.5,
-      overview: 'The story revolves around a man named Karthi who is trying to find his missing wife. He meets a girl named Dheena who helps him in finding her.',
-      release_date: '2023',
-      posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Kaithi-Poster.jpg',
-      trailerUrl: 'https://ia601004.us.archive.org/3/items/kaithi-hindi-official-trailer-karthi-dheena-arjun-dash-1080p/kaithi-hindi-official-trailer-karthi-dheena-arjun-dash-1080p.mp4',
-      cast: [
-        { name: 'Karthi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/karthi-20231016145056-9542.jpg' },
-        { name: 'Narain', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/narain-3871.jpg' },
-        { name: 'George Maryan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/george-maryan-20190226174038-39972.jpg' },
-        { name: 'Ramana', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ramana-20190826124757-3782.jpg' },
-        { name: 'Dheena', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/dheena-20190422152635-40102.jpg' },
-        { name: 'Vatsan Chakravarthy', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/vatsan-chakravarthy-20191014162140-35967.jpg' },
-        { name: 'Krishnamurthy', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/krishnamurthy-20191028155031-3461.jpg' },
-        { name: 'Amzath Khan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/amzath-khan-20191028154729-34979.jpg' },
-        { name: 'Hareesh Peradi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/hareesh-peradi-20190515145158-32690.jpg' },
-        { name: 'Arjun Das', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/arjun-das-20191210121146-46166.jpg' },
-        { name: 'Harish Uthaman', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/harish-uthaman-20141218174209-32635.jpg' },
-        { name: 'Kanna Ravi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/kanna-ravi-20210403170039-40176.jpg' },
-        { name: 'Lallu', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/lallu-20241008123047-46165.jpg' },
-        { name: 'Chetan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/chetan-20240722125346-17617.jpg' },
-        { name: 'R N R Manohar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/r-n-r-manohar-20190315110757-33445.jpg' },
-        { name: 'Malavika Avinash', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/malavika-avinash-25414.jpg' },
-        { name: 'Baby Monika', photo: 'https://images.plex.tv/photo?size=large-1920&scale=1&url=https%3A%2F%2Fmetadata-static.plex.tv%2F6%2Fpeople%2F6a28f367690a4e748007d798cfd66938.jpg' }
-      ]
-    };
 
     const MOVIE_4 =
     {

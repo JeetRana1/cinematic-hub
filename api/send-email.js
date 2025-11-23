@@ -1,7 +1,7 @@
 // api/send-email.js
 // Secure backend email sending using EmailJS REST API
 
-const fetch = require('node-fetch');
+const fetch = (...args) => import('node-fetch').then(mod => mod.default(...args));
 
 // For Vercel compatibility, also support export default
 module.exports = async (req, res) => {

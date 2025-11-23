@@ -4236,7 +4236,55 @@
   <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 
   <script>
+
     // --- Ensure themePresets and isSearching are declared first ---
+    const themePresets = {
+      glossy: {
+        bgs: ['rgba(255,255,255,0.06)', 'rgba(255,0,100,0.10)', 'rgba(0,120,255,0.10)'],
+        accent: 'linear-gradient(90deg,#ff6b6b,#6b66ff)',
+        particles: ['#ff6b6b', '#6b66ff']
+      },
+      crimson: {
+        bgs: ['rgba(255,255,255,0.05)', 'rgba(220,38,38,0.14)', 'rgba(244,63,94,0.12)'],
+        accent: 'linear-gradient(90deg,#ef4444,#f97316)',
+        particles: ['#ef4444', '#f97316']
+      },
+      ocean: {
+        bgs: ['rgba(255,255,255,0.05)', 'rgba(14,165,233,0.14)', 'rgba(6,182,212,0.12)'],
+        accent: 'linear-gradient(90deg,#22d3ee,#60a5fa)',
+        particles: ['#22d3ee', '#60a5fa']
+      },
+      emerald: {
+        bgs: ['rgba(255,255,255,0.05)', 'rgba(5,150,105,0.14)', 'rgba(16,185,129,0.12)'],
+        accent: 'linear-gradient(90deg,#10b981,#22c55e)',
+        particles: ['#10b981', '#22c55e']
+      },
+      purple: {
+        bgs: ['rgba(255,255,255,0.05)', 'rgba(147,51,234,0.14)', 'rgba(99,102,241,0.12)'],
+        accent: 'linear-gradient(90deg,#a78bfa,#6366f1)',
+        particles: ['#a78bfa', '#6366f1']
+      },
+      sunset: {
+        bgs: ['rgba(255,255,255,0.05)', 'rgba(251,146,60,0.16)', 'rgba(236,72,153,0.12)'],
+        accent: 'linear-gradient(90deg,#f59e0b,#ec4899)',
+        particles: ['#f59e0b', '#ec4899']
+      },
+      neon: {
+        bgs: ['rgba(255,255,255,0.05)', 'rgba(34,211,238,0.18)', 'rgba(217,70,239,0.14)'],
+        accent: 'linear-gradient(90deg,#22d3ee,#d946ef)',
+        particles: ['#22d3ee', '#d946ef']
+      },
+      graphite: {
+        bgs: ['rgba(255,255,255,0.04)', 'rgba(107,114,128,0.18)', 'rgba(75,85,99,0.14)'],
+        accent: 'linear-gradient(90deg,#6b7280,#9ca3af)',
+        particles: ['#6b7280', '#9ca3af']
+      },
+      gold: {
+        bgs: ['rgba(255,255,255,0.05)', 'rgba(234,179,8,0.18)', 'rgba(245,158,11,0.14)'],
+        accent: 'linear-gradient(90deg,#eab308,#f59e0b)',
+        particles: ['#eab308', '#f59e0b']
+      }
+    };
     let isSearching = false; // Track if we're currently showing search results
 
     // ...existing code...

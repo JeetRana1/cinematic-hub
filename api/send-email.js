@@ -9,7 +9,26 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const { to_email, from_name, message } = req.body;
+  // Parse JSON body if not already parsed (Vercel/Node.js)
+  let body = req.body;
+  if (!body || typeof body !== 'object') {
+    try {
+      body = JSON.parse(req.body);
+    } catch (e) {
+      // If parsing fails, try reading from req (Vercel edge)
+      let raw = '';
+      req.on('data', chunk => { raw += chunk; });
+      await new Promise(resolve => req.on('end', resolve));
+      try {
+        body = JSON.parse(raw);
+      } catch (err) {
+        res.status(400).json({ error: 'Invalid JSON body' });
+        return;
+      }
+    }
+  }
+
+  const { to_email, from_name, message } = body || {};
 
   // Validate input
   if (!to_email || !from_name || !message) {
@@ -49,8 +68,11 @@ module.exports = async (req, res) => {
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      res.status(500).json({ error: 'EmailJS error', details: error });
+      let errorText = '';
+      try {
+        errorText = await response.text();
+      } catch (e) {}
+      res.status(500).json({ error: 'EmailJS error', details: errorText });
       return;
     }
 

@@ -10,7 +10,17 @@ async function sendEmail({ to_email, from_name, message }) {
       },
       body: JSON.stringify({ to_email, from_name, message })
     });
-    const data = await response.json();
+
+    const contentType = response.headers.get('content-type') || '';
+    let data = null;
+    if (contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      alert('Server error: ' + text);
+      return false;
+    }
+
     if (response.ok) {
       alert('Email sent successfully!');
       return true;

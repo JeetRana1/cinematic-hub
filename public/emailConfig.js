@@ -1,7 +1,7 @@
 // EmailJS config for client-side use
 window.EMAILJS = {
   enabled: true,
-  serviceId: 'YOUR_SERVICE_ID',
-  templateId: 'YOUR_TEMPLATE_ID',
-  publicKey: 'YOUR_PUBLIC_KEY'
+  serviceId: 'service_4bt0c2b',
+  templateId: 'template_gqg9xw6',
+  publicKey: 'JQxg73sNreNqwnDsf'
 };

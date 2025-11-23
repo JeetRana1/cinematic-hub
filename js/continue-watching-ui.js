@@ -1,0 +1,161 @@
+/**
+ * Continue Watching UI Component
+ * Creates and manages the continue watching section on the homepage
+ */
+class ContinueWatchingUI {
+  constructor(containerSelector = '#moviesContainer') {
+    this.container = document.querySelector(containerSelector);
+    this.sectionElement = null;
+    this.manager = window.ContinueWatchingManager;
+
+    // If the container isn't present on this page, silently no-op
+    if (!this.container) return;
+
+    this.init();
+  }
+
+  init() {
+    // Listen for continue watching updates
+    window.addEventListener('continueWatchingUpdated', () => {
+      this.render();
+    });
+
+    // Initial render
+    this.render();
+  }
+
+  render() {
+    const movies = this.manager.getContinueWatchingMovies();
+
+    if (movies.length === 0) {
+      this.removeContinueWatchingSection();
+      return;
+    }
+
+    this.createOrUpdateContinueWatchingSection(movies);
+  }
+
+  createOrUpdateContinueWatchingSection(movies) {
+    // Remove existing section if it exists
+    this.removeContinueWatchingSection();
+
+    // Create new section
+    this.sectionElement = document.createElement('div');
+    this.sectionElement.className = 'continue-watching-section';
+    this.sectionElement.innerHTML = `
+      <h2 class="section-title">Continue Watching</h2>
+      <div class="continue-watching-container">
+        ${movies.map(movie => this.createMovieCard(movie)).join('')}
+      </div>
+    `;
+
+    // Insert at the beginning of the container
+    if (this.container.firstChild) {
+      this.container.insertBefore(this.sectionElement, this.container.firstChild);
+    } else {
+      this.container.appendChild(this.sectionElement);
+    }
+
+    // Add event listeners
+    this.addEventListeners();
+  }
+
+  createMovieCard(movie) {
+    const thumbnailUrl = movie.thumbnail || `https://via.placeholder.com/300x450?text=${encodeURIComponent(movie.title)}`;
+
+    return `
+      <div class="continue-watching-card" data-movie-id="${movie.movieId}">
+        <div class="continue-watching-poster">
+          <img src="${thumbnailUrl}" alt="${movie.title}" loading="lazy" />
+          <div class="progress-bar">
+            <div class="progress" style="width: ${movie.progressPercent}%"></div>
+          </div>
+          <div class="resume-overlay">
+            <div class="resume-button">
+              <i class="fas fa-play"></i>
+              Resume
+            </div>
+          </div>
+          <div class="remove-button" title="Remove from Continue Watching">
+            <i class="fas fa-times"></i>
+          </div>
+        </div>
+        <div class="continue-watching-info">
+          <h3>${movie.title}</h3>
+          <p>${movie.progressPercent}% watched • ${this.manager.formatTime(movie.timeRemaining)} left</p>
+        </div>
+      </div>
+    `;
+  }
+
+  addEventListeners() {
+    if (!this.sectionElement) return;
+
+    // Resume button clicks
+    this.sectionElement.addEventListener('click', (e) => {
+      const card = e.target.closest('.continue-watching-card');
+      if (!card) return;
+
+      const movieId = card.dataset.movieId;
+      const movie = this.manager.getMovieProgress(movieId);
+
+      if (!movie) return;
+
+      if (e.target.closest('.remove-button')) {
+        // Remove from continue watching
+        e.stopPropagation();
+        this.removeMovie(movieId);
+      } else if (e.target.closest('.resume-button') || e.target.closest('.continue-watching-poster')) {
+        // Resume playback
+        e.stopPropagation();
+        this.resumeMovie(movie);
+      }
+    });
+  }
+
+  removeMovie(movieId) {
+    if (confirm('Remove this movie from Continue Watching?')) {
+      this.manager.removeMovieProgress(movieId);
+    }
+  }
+
+  resumeMovie(movie) {
+    // Calculate the time to resume from (in seconds)
+    const resumeTime = Math.floor(movie.currentTime);
+
+    // Generate the base URL
+    let resumeUrl = `player.html?title=${encodeURIComponent(movie.title)}`;
+
+    // Add optional parameters if they exist
+    if (movie.year) resumeUrl += `&year=${encodeURIComponent(movie.year)}`;
+    if (movie.poster) resumeUrl += `&poster=${encodeURIComponent(movie.poster)}`;
+    if (movie.thumbnail) resumeUrl += `&thumbnail=${encodeURIComponent(movie.thumbnail)}`;
+
+    // Add the resume time parameter
+    resumeUrl += `&t=${resumeTime}`;
+
+    // Open the player
+    window.location.href = resumeUrl;
+  }
+
+  removeContinueWatchingSection() {
+    if (this.sectionElement) {
+      this.sectionElement.remove();
+      this.sectionElement = null;
+    }
+  }
+}
+
+// Auto-initialize when DOM is ready, only if the container exists
+(function autoInit() {
+  function initIfPresent() {
+    if (document.querySelector('#moviesContainer')) {
+      new ContinueWatchingUI('#moviesContainer');
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initIfPresent);
+  } else {
+    initIfPresent();
+  }
+})();

@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reset Password | Cinematic Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+    @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+    
+    * { 
+      box-sizing: border-box; 
+      margin: 0;
+      padding: 0;
+    }
+    :root {
+      --primary: #6b66ff;
+      --primary-dark: #5a55e8;
+      --primary-light: #8a85ff;
+      --accent: linear-gradient(135deg, #ff6b6b, #6b66ff);
+      --accent-hover: linear-gradient(135deg, #ff7b7b, #7b75ff);
+      --glass-bg: rgba(18, 18, 28, 0.9);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --text-primary: #ffffff;
+      --text-secondary: rgba(255, 255, 255, 0.8);
+      --text-muted: rgba(255, 255, 255, 0.6);
+      --radius: 12px;
+      --radius-lg: 16px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      --shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.35);
+      --elevation-1: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --elevation-2: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--text-primary);
+      background: linear-gradient(135deg, #0a0a0f, #0f111a, #0a0a0f);
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', sans-serif;
+      padding: 1.5rem;
+      position: relative;
+      overflow-x: hidden;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Animated Background */
+    .bg-particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.6;
+    }
+    
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      background: linear-gradient(45deg, var(--primary), #ff6b6b);
+      opacity: 0.3; /* Increased from 0.15 */
+      animation: float 15s infinite ease-in-out;
+      box-shadow: 0 0 15px 3px rgba(255, 255, 255, 0.4); /* Enhanced glow for larger particles */
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0) translateX(0); }
+      25% { transform: translateY(-20px) translateX(10px); }
+      50% { transform: translateY(0) translateX(20px); }
+      75% { transform: translateY(20px) translateX(10px); }
+    }
+    
+    /* Glass Morphism Effect */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      background: 
+        radial-gradient(1200px 800px at 20% 20%, rgba(107, 102, 255, 0.08), transparent 40%),
+        radial-gradient(1000px 1000px at 80% 80%, rgba(255, 107, 107, 0.08), transparent 40%),
+        linear-gradient(to bottom right, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
+      mix-blend-mode: screen;
+      opacity: 0.4;
+    }
+    
+    .card {
+      position: relative;
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 3rem 2.5rem 2.5rem;
+      backdrop-filter: blur(20px) saturate(200%);
+      -webkit-backdrop-filter: blur(20px) saturate(200%);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transform: translateY(0);
+      transition: var(--transition);
+      z-index: 1;
+      box-sizing: border-box;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-hover);
+    }
+    
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      background: radial-gradient(800px 400px at -10% -10%, rgba(255, 255, 255, 0.08), transparent 40%),
+                  linear-gradient(to bottom right, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+      mix-blend-mode: screen;
+      opacity: 0.6;
+      transition: var(--transition);
+    }
+    
+    .card:hover::before {
+      opacity: 0.8;
+    }
+    
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 
+                  inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+                  inset 1px 0 0 rgba(255, 255, 255, 0.05),
+                  inset -1px 0 0 rgba(255, 255, 255, 0.05);
+      opacity: 0.9;
+    }
+
+    h1 { 
+      margin: 0 0 0.75rem; 
+      font-weight: 700; 
+      font-size: 2.25rem;
+      letter-spacing: -0.5px; 
+      background: var(--accent); 
+      text-align: center;
+      line-height: 1.2;
+      padding-bottom: 1.5rem;
+      position: relative;
+      display: block;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      position: relative;
+      display: block;
+      width: 100%;
+    }
+    
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 3px;
+      margin-top: 1rem;
+    }
+
+    p { 
+      font-size: 1.05rem;
+      line-height: 1.6;
+      font-weight: 400;
+      max-width: 90%;
+      margin: 1.25rem auto 2rem;
+      opacity: 0.9;
+      text-align: center;
+      padding: 0 0.5rem;
+      color: var(--text-secondary);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+      position: relative;
+      transition: var(--transition);
+    }
+    
+    .form-group:focus-within {
+      transform: translateY(-2px);
+    }
+    
+    .input-wrap { 
+      position: relative;
+      margin-top: 0.5rem;
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.05);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: var(--elevation-1);
+      overflow: hidden;
+      margin-bottom: 0.25rem;
+    }
+
+    .input-wrap label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .input-wrap input {
+      width: 100%;
+      padding: 0.875rem 1rem 0.875rem 3.25rem;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      font-weight: 400;
+      transition: var(--transition);
+      height: 54px;
+      outline: none;
+      box-shadow: none;
+    }
+
+    .input-wrap:focus-within {
+      box-shadow: 0 0 0 2px var(--primary-light);
+      transform: translateY(-1px);
+    }
+    
+    .input-wrap::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 2;
+    }
+    
+    .input-wrap:focus-within::after {
+      transform: scaleX(1);
+    }
+    
+    .input-wrap input:focus {
+      border-color: transparent;
+      box-shadow: none;
+      background: rgba(0, 0, 0, 0.2);
+      outline: none;
+    }
+    
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+    
+    /* Style for autofilled inputs */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover, 
+    input:-webkit-autofill:focus, 
+    input:-webkit-autofill:active {
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: var(--text-primary);
+      transition: background-color 5000s ease-in-out 0s;
+      box-shadow: 0 0 0 30px rgba(0, 0, 0, 0.1) inset !important;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+    }
+    
+    /* For Firefox */
+    input:-moz-ui-invalid:not(output) {
+      box-shadow: none;
+    }
+    
+    .input-icon {
+      position: absolute;
+      left: 1.25rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      transition: var(--transition);
+      z-index: 2;
+    }
+    
+    .input-wrap:focus-within .input-icon {
+      color: var(--primary);
+    }
+
+    .input-wrap input::placeholder {
+      color: #555;
+    }
+
+    .hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      display: block;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      padding: 0.9rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      box-shadow: 0 4px 15px rgba(107, 102, 255, 0.3);
+    }
+    
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--accent-hover);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: -1;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(107, 102, 255, 0.4);
+    }
+    
+    .btn:hover::before {
+      opacity: 1;
+    }
+    
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 12px rgba(107, 102, 255, 0.3);
+    }
+    
+    .btn:disabled {
+      background: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.5);
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+    
+    .btn i {
+      font-size: 1.1em;
+      transition: transform 0.3s ease;
+    }
+    
+    .btn:hover i {
+      transform: translateX(2px);
+    }
+
+    .btn i {
+      font-size: 1.1em;
+    }
+
+    .aux-links {
+      margin-top: 1.5rem;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+    
+    .aux-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      position: relative;
+      padding: 0.5rem 0;
+    }
+    
+    .aux-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 1px;
+      background: var(--primary);
+      transition: width 0.3s ease;
+    }
+    
+    .aux-links a:hover {
+      color: var(--primary);
+    }
+    
+    .aux-links a:hover::after {
+      width: 100%;
+    }
+    
+    .aux-links a i {
+      font-size: 0.9em;
+      transition: transform 0.3s ease;
+    }
+    
+    .aux-links a:hover i {
+      transform: translateX(3px);
+    }
+
+    .info-banner {
+      background: rgba(0, 113, 235, 0.1);
+      border: 1px solid rgba(0, 113, 235, 0.2);
+      border-radius: var(--radius);
+      padding: 1rem;
+      margin: 1.5rem 0 0;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .info-banner::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3px;
+      height: 100%;
+      background: #0071eb;
+    }
+
+    .info-banner .icon {
+      color: #0071eb;
+      font-size: 1.25rem;
+      margin-top: 0.15rem;
+      flex-shrink: 0;
+    }
+
+    .info-banner .content h4 {
+      font-size: 0.95rem;
+      margin-bottom: 0.25rem;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .info-banner .content p {
+      font-size: 0.9rem;
+      margin: 0;
+      text-align: left;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .info-banner .content strong {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .card {
+        padding: 2.5rem 2rem;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      body {
+        padding: 1rem;
+        display: block;
+      }
+      
+      .card {
+        padding: 2rem 1.5rem;
+        margin: 1rem 0;
+        border-radius: var(--radius);
+      }
+      
+      h1 {
+        font-size: 1.75rem;
+        padding-bottom: 1.25rem;
+      }
+      
+      p {
+        font-size: 0.95rem;
+        margin: 1rem auto 1.5rem;
+      }
+      
+      .btn {
+        padding: 0.85rem 1.25rem;
+      }
+      
+      .info-banner {
+        padding: 0.875rem 1rem 0.875rem 0.875rem;
+      }
+      
+      .info-banner .content p {
+        font-size: 0.85rem;
+      }
+    }
+    </style>
+</head>
+<body>
+  <!-- Animated Background Particles -->
+  <div class="bg-particles" id="particles"></div>
+  <div class="card">
+    <h1>Reset Password</h1>
+    <p>Enter your email and we'll send you a link to reset your password.</p>
+    
+    <div class="form-group">
+      <div class="input-wrap">
+        <i class="fas fa-envelope input-icon"></i>
+        <input 
+          id="email" 
+          type="email" 
+          placeholder="Enter your email" 
+          autocomplete="email" 
+          required
+        >
+      </div>
+    </div>
+    
+    <button id="btnSend" class="btn">
+      <i class="fas fa-paper-plane"></i> Send Reset Link
+    </button>
+    
+    <div id="resendInfo" class="aux-links" style="display: none;">
+      <span class="meta">Resend available in <strong><span id="resendTimer">60</span>s</strong></span>
+    </div>
+    
+    <div class="info-banner" role="status" aria-live="polite">
+      <div class="icon">
+        <i class="fas fa-info-circle"></i>
+      </div>
+      <div class="content">
+        <h4>Check your Spam/Junk</h4>
+        <p>If you don't see the email in your inbox, look in Spam/Junk. You can also use <strong>Resend reset link</strong> once the timer ends.</p>
+      </div>
+    </div>
+    
+    <div class="aux-links">
+      <a href="login.html">
+        <i class="fas fa-arrow-left"></i> Back to Login
+      </a>
+    </div>
+  </div>
+
+  <!-- Firebase compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="auth-firebase.js?v=3"></script>
+  <script src="ui.js"></script>
+  <script>
+    // Create animated background particles
+    function createParticles() {
+      const container = document.getElementById('particles');
+      if (!container) return;
+      
+      // Clear existing particles
+      container.innerHTML = '';
+      
+      // Adjust particle count based on screen size
+      const particleCount = Math.floor(window.innerWidth / 20);
+      
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        
+        // Random size between 5px and 12px
+        const size = Math.random() * 7 + 5;
+        
+        // Random position
+        const posX = Math.random() * 100;
+        const posY = Math.random() * 100;
+        
+        // Random animation duration and delay
+        const duration = Math.random() * 20 + 10; // 10-30s
+        const delay = Math.random() * -20; // Start at different times
+        
+        // Random opacity between 0.2 and 0.5 for better visibility
+        const opacity = (Math.random() * 0.3) + 0.2;
+        
+        // Apply styles
+        Object.assign(particle.style, {
+          width: `${size}px`,
+          height: `${size}px`,
+          left: `${posX}%`,
+          top: `${posY}%`,
+          animationDuration: `${duration}s`,
+          animationDelay: `${delay}s`,
+          opacity: opacity,
+          boxShadow: `0 0 ${size * 2.5}px ${size * 0.7}px rgba(255, 255, 255, 0.25)`
+        });
+        particle.style.animation = `float ${duration}s ${delay}s infinite ease-in-out`;
+        
+        container.appendChild(particle);
+      }
+    }
+    
+    // Initialize everything when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize particles
+      createParticles();
+      
+      // Handle window resize
+      let resizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(createParticles, 250);
+      });
+      
+      const emailEl = document.getElementById('email');
+      const btnSend = document.getElementById('btnSend');
+      const resendInfo = document.getElementById('resendInfo');
+      const resendTimerEl = document.getElementById('resendTimer');
+      const RESEND_DELAY = 10; // 10 seconds cooldown
+      
+      // Function to start cooldown timer
+      const startCooldown = (seconds) => {
+        clearInterval(window.cooldownTimer);
+        let remain = seconds;
+        
+        // Update UI for cooldown state
+        if (resendInfo && resendTimerEl) {
+          resendInfo.style.display = 'block';
+          resendTimerEl.textContent = remain;
+        }
+        
+        if (btnSend) {
+          btnSend.disabled = true;
+          btnSend.innerHTML = '<i class="fas fa-check"></i> Email Sent';
+        }
+        
+        // Start countdown
+        window.cooldownTimer = setInterval(() => {
+          remain--;
+          if (resendTimerEl) resendTimerEl.textContent = remain;
+          
+          if (remain <= 0) {
+            clearInterval(window.cooldownTimer);
+            if (resendInfo) resendInfo.style.display = 'none';
+            if (btnSend) {
+              btnSend.disabled = false;
+              btnSend.innerHTML = '<i class="fas fa-redo"></i> Resend Reset Link';
+            }
+          }
+        }, 1000);
+      };
+      
+      // Handle form submission
+      const handleResetPassword = async (e) => {
+        if (e) e.preventDefault();
+        
+        const email = (emailEl?.value || '').trim();
+        
+        // Basic validation
+        if (!email) {
+          showToast('Please enter your email', 'warning');
+          emailEl?.focus();
+          return;
+        }
+        
+        // Email format validation
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          showToast('Please enter a valid email address', 'warning');
+          emailEl?.focus();
+          return;
+        }
+        
+        try {
+          // Show loading state
+          if (btnSend) {
+            btnSend.disabled = true;
+            btnSend.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+          }
+          
+          // Send password reset email
+          await FirebaseAuth.resetPassword(email);
+          
+          // Show success message and start cooldown
+          showToast('Password reset email sent! Check your inbox.', 'success');
+          startCooldown(RESEND_DELAY);
+          
+        } catch (error) {
+          console.error('Password reset error:', error);
+          const msg = String(error?.message || error || 'An unknown error occurred');
+          
+          if (msg.includes('Email sent, but your domain is not whitelisted')) {
+            showToast('Email sent to non-whitelisted domain. Check your inbox.', 'info');
+            startCooldown(RESEND_DELAY);
+          } else if (msg.includes('user-not-found')) {
+            showToast('No account found with this email address.', 'error');
+          } else {
+            showToast('Failed to send reset email. Please try again.', 'error');
+          }
+          
+          // Reset button state on error
+          if (btnSend) {
+            btnSend.disabled = false;
+            btnSend.innerHTML = '<i class="fas fa-paper-plane"></i> Send Reset Link';
+          }
+        }
+      };
+      
+      // Add event listeners
+      if (btnSend) {
+        btnSend.addEventListener('click', handleResetPassword);
+      }
+      
+      // Allow form submission with Enter key
+      if (emailEl) {
+        emailEl.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter' && !(btnSend?.disabled)) {
+            e.preventDefault();
+            handleResetPassword(e);
+          }
+        });
+      }
+      
+      // Focus email field on page load
+      if (emailEl) {
+        emailEl.focus();
+      }
+    });
+    
+    // Helper function to show toast notifications
+    function showToast(message, type = 'info') {
+      if (window.UIToast) {
+        const toastFn = UIToast[type] || UIToast.info;
+        toastFn(type.charAt(0).toUpperCase() + type.slice(1), message);
+      } else {
+        // Fallback to browser alert if UIToast is not available
+        alert(`${type.toUpperCase()}: ${message}`);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,3526 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title id="pageTitle">Loading...</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Netflix+Sans:wght@300;400;500;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="css/subtitles.css">
+  <script src="ui.js"></script>
+  <!-- Firebase compat SDKs + Auth helpers for per-profile continue-watching scoping -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="auth-firebase.js?v=3"></script>
+  <!-- Continue Watching Scripts -->
+  <script src="js/continue-watching.js"></script>
+  <script src="js/continue-watching-ui.js"></script>
+  <!-- Player resume logic: prompts to resume on refresh or fresh load -->
+  <script src="js/player-continue-watching.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      const movieTitle = urlParams.get('title') || 'Movie';
+
+      // Set page title
+      document.title = movieTitle;
+    });
+  </script>
+  <style>
+    :root {
+      --netflix-red: #e50914;
+      --netflix-black: #141414;
+      --netflix-dark-gray: #2f2f2f;
+      --netflix-light-gray: #808080;
+      --netflix-white: #ffffff;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Netflix Sans', Arial, sans-serif;
+      background-color: #000;
+      color: var(--netflix-white);
+      overflow: hidden;
+      touch-action: none;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+      padding: 20px;
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(229, 9, 20, 0.7);
+      }
+
+      70% {
+        box-shadow: 0 0 0 10px rgba(229, 9, 20, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(229, 9, 20, 0);
+      }
+    }
+
+    @keyframes glow {
+      0% {
+        border-color: rgba(255, 255, 255, 0.15);
+      }
+
+      50% {
+        border-color: rgba(229, 9, 20, 0.8);
+      }
+
+      100% {
+        border-color: rgba(255, 255, 255, 0.15);
+      }
+    }
+
+    .back-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 100;
+      background: rgba(20, 20, 20, 0.9);
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.8);
+      border-radius: 140px;
+      padding: 10px 24px 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 0.7px;
+      transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1.2);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      transform: translateZ(0);
+      overflow: hidden;
+      will-change: transform, box-shadow, border-color;
+    }
+
+    .back-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .back-button:hover {
+      background: rgba(24, 23, 23, );
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(229, 9, 20, 0.4);
+      border-color: rgb(255, 255, 255);
+      animation: glow 1.5s infinite ease-in-out;
+    }
+
+    .back-button:hover::before {
+      opacity: 1;
+    }
+
+    .back-button:active {
+      transform: translateY(1px) scale(0.97);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), 0 0 8px rgba(229, 9, 20, 0.3);
+      transition: all 0.1s ease;
+      background: rgba(20, 20, 20, 0.95);
+      animation: pulse 0.5s ease-out;
+    }
+
+    .back-button:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.4);
+    }
+
+    .back-button i {
+      transition: transform 0.2s ease;
+    }
+
+    .back-button i {
+      transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    }
+
+    .back-button:hover i {
+      transform: translateX(-5px) scale(1.1);
+    }
+
+    .back-button:active i {
+      transform: translateX(-8px) scale(0.95);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .back-button {
+        padding: 8px 16px 8px 14px;
+        font-size: 14px;
+        top: 15px;
+        left: 15px;
+      }
+    }
+
+    .video-container {
+      position: relative;
+      width: 90%;
+      height: 80vh;
+      border-radius: 12px;
+      overflow: hidden;
+      max-width: 1600px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      background-color: #000;
+      overflow: hidden;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    #video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+
+    .controls-container {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+      padding: 20px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 10;
+    }
+
+    .controls-container.visible {
+      opacity: 1;
+    }
+
+    .progress-container {
+      width: 100%;
+      height: 4px;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+      margin: 15px 0;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background-color: var(--netflix-red);
+      width: 0%;
+      position: relative;
+      transition: width 0.1s linear;
+    }
+
+    .progress-buffer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.3);
+      width: 0%;
+    }
+
+    .time-display {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      color: var(--netflix-white);
+      font-weight: 500;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.6);
+      margin-left: 15px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .left-controls,
+    .right-controls {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .control-btn {
+      background: none;
+      border: none;
+      color: var(--netflix-white);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 5px;
+      outline: none;
+      transition: transform 0.2s;
+    }
+
+    .control-btn:active {
+      transform: scale(0.9);
+    }
+
+    .skip-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .skip-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .skip-btn:active {
+      transform: scale(0.9);
+    }
+
+    .skip-btn i {
+      font-size: 14px !important;
+    }
+
+    .skip-btn span {
+      display: none;
+    }
+
+    @media (min-width: 769px) {
+      .skip-btn {
+        position: relative;
+      }
+
+      .skip-btn::after {
+        content: attr(title);
+        position: absolute;
+        top: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        opacity: 0;
+        transition: opacity 0.2s;
+        pointer-events: none;
+      }
+
+      .skip-btn:hover::after {
+        opacity: 1;
+      }
+    }
+
+    .volume-container {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .volume-slider {
+      width: 0;
+      opacity: 0;
+      transition: all 0.3s ease;
+      background: rgba(0, 0, 0, 0.7);
+      height: 30px;
+      border-radius: 15px;
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+    }
+
+    .volume-container:hover .volume-slider {
+      width: 100px;
+      opacity: 1;
+    }
+
+    .volume-slider input[type="range"] {
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: var(--netflix-light-gray);
+      outline: none;
+      border-radius: 3px;
+    }
+
+    .volume-slider input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--netflix-white);
+      cursor: pointer;
+    }
+
+    .scrubber {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 5;
+    }
+
+    .scrubber .scrubber-line {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 2px;
+      height: 100%;
+      background-color: var(--netflix-red);
+      display: none;
+    }
+
+    .scrubber .scrubber-time {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      display: none;
+    }
+
+    .scrubber.active .scrubber-line,
+    .scrubber.active .scrubber-time {
+      display: block;
+    }
+
+    .play-pause-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 8;
+    }
+
+    .play-pause-overlay.visible {
+      opacity: 1;
+    }
+
+    .play-pause-icon {
+      font-size: 80px;
+      color: white;
+      text-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+    }
+
+    .volume-slider input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--netflix-white);
+      cursor: pointer;
+    }
+
+    .scrubber {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 5;
+    }
+
+    .scrubber .scrubber-line {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 2px;
+      height: 100%;
+      background-color: var(--netflix-red);
+      display: none;
+    }
+
+    .scrubber .scrubber-time {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      display: none;
+    }
+
+    .scrubber.active .scrubber-line,
+    .scrubber.active .scrubber-time {
+      display: block;
+    }
+
+    .play-pause-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 8;
+    }
+
+    .play-pause-overlay.visible {
+      opacity: 1;
+    }
+
+    .play-pause-icon {
+      font-size: 80px;
+      color: white;
+      text-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+      opacity: 0.9;
+    }
+
+    @media (max-width: 768px) {
+      .control-btn {
+        font-size: 18px;
+      }
+
+      .volume-container:hover .volume-slider {
+        width: 80px;
+      }
+
+      .settings-content {
+        padding: 15px 20px 20px;
+      }
+
+      .setting-group {
+        margin-bottom: 15px;
+      }
+
+      .setting-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 14px;
+        color: #b3b3b3;
+      }
+
+      .settings-panel {
+        transform: translate(-50%, -50%);
+        background: rgba(20, 20, 20, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        width: 90%;
+        max-width: 400px;
+        max-height: 80vh;
+        overflow-y: auto;
+        z-index: 2147483647;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
+        color: white;
+        font-family: 'Netflix Sans', Arial, sans-serif;
+        animation: fadeIn 0.3s ease;
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -45%);
+      }
+
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .settings-header h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .close-settings {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    .close-settings:hover {
+      opacity: 1;
+    }
+
+    .settings-content {
+      padding: 15px 20px 20px;
+    }
+
+    .setting-group {
+      margin-bottom: 15px;
+    }
+
+    .setting-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+      color: #b3b3b3;
+    }
+
+    .setting-group select,
+    .setting-group input[type="range"],
+    .setting-group input[type="color"] {
+      width: 100%;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      color: white;
+      font-family: inherit;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .setting-group input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      /* Standard property */
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+      padding: 0;
+      margin: 10px 0;
+    }
+
+    .setting-group input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      background: #e50914;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .setting-group input[type="color"] {
+      height: 36px;
+      padding: 2px;
+      cursor: pointer;
+    }
+
+    .setting-group input[type="checkbox"] {
+      margin-right: 8px;
+    }
+
+    #subtitleSizeValue,
+    #subtitleBgOpacityValue {
+      display: inline-block;
+      min-width: 40px;
+      text-align: right;
+      font-size: 13px;
+      color: #b3b3b3;
+    }
+
+    /* Fullscreen adjustments */
+    :fullscreen .settings-panel,
+    :-webkit-full-screen .settings-panel,
+    :-moz-full-screen .settings-panel {
+      position: fixed !important;
+      z-index: 2147483647 !important;
+    }
+
+    /* Subtitle Notification */
+    .subtitle-notification {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.85);
+      color: white;
+      padding: 8px 20px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      pointer-events: none;
+    }
+
+    .subtitle-notification.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+
+    .subtitle-notification i {
+      font-size: 16px;
+    }
+
+    /* Native video subtitles are hidden in favor of custom display */
+    video::cue {
+      display: none !important;
+    }
+
+    /* Custom subtitle container */
+    .video-subtitles {
+      position: fixed;
+      bottom: 18.9%;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 90%;
+      font-size: 26.5px;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 14px;
+      text-align: center;
+      line-height: 1.4;
+      white-space: pre-line;
+      word-break: break-word;
+      text-shadow: 1px 1px 2px black,
+        -1px -1px 2px black,
+        1px -1px 2px black,
+        -1px 1px 2px black;
+      -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.7);
+      font-family: Arial, sans-serif;
+      pointer-events: none;
+      z-index: 2147483647;
+      will-change: transform, opacity;
+      transition: opacity 0.2s ease;
+    }
+
+
+    /* --- Enhanced Player Features --- */
+    .video-loading-spinner {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 48px;
+      height: 48px;
+      margin: -24px 0 0 -24px;
+      border: 4px solid rgba(255, 255, 255, 0.18);
+      border-top: 4px solid #3290ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    @keyframes spin {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .skip-intro-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 1001;
+      padding: 0.5em 1.2em;
+      background: #3290ff;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+      display: none;
+    }
+
+    .skip-intro-btn:hover {
+      background: #2673c9;
+    }
+
+    .skip-intro-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Settings menu styles */
+    .settings-menu,
+    .settings-submenu {
+      position: absolute;
+      bottom: 200px;
+      left: 84%;
+      transform: translateX(-50%);
+      background: rgba(20, 20, 20, 0.9);
+      color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+      padding: 0;
+      min-width: 240px;
+      z-index: 1200;
+      display: none;
+      flex-direction: column;
+      font-size: 1.05em;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .settings-item {
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      width: 100%;
+    }
+
+    .settings-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      transition: background-color 0.2s;
+    }
+
+    .settings-item:hover .settings-header {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .current-value {
+      margin-right: 8px;
+      opacity: 0.7;
+      font-size: 0.9em;
+    }
+
+    .settings-submenu {
+      display: none;
+    }
+
+    .submenu-header {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      background-color: rgba(0, 0, 0, 0.3);
+      font-weight: 600;
+    }
+
+    .submenu-header button {
+      background: none;
+      border: none;
+      color: white;
+      margin-right: 12px;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .submenu-options {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .submenu-option {
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .submenu-option:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .submenu-option.selected {
+      background-color: rgba(255, 255, 255, 0.1);
+      position: relative;
+    }
+
+    .submenu-option.selected::after {
+      content: "✓";
+      position: absolute;
+      right: 16px;
+      color: #e50914;
+    }
+
+    /* Fullscreen video container - fill entire screen without black spots */
+    :fullscreen .video-container,
+    :-webkit-full-screen .video-container,
+    :-moz-full-screen .video-container,
+    .fullscreen .video-container {
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: 100vw !important;
+      max-height: 100vh !important;
+      border-radius: 0 !important;
+      border: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    :fullscreen body,
+    :-webkit-full-screen body,
+    :-moz-full-screen body,
+    .fullscreen body {
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+
+    /* Fullscreen support for menus - using the same approach as custom subtitles */
+    :fullscreen .settings-menu,
+    :fullscreen .settings-submenu,
+    :-webkit-full-screen .settings-menu,
+    :-webkit-full-screen .settings-submenu,
+    :-moz-full-screen .settings-menu,
+    :-moz-full-screen .settings-submenu,
+    .fullscreen .settings-menu,
+    .fullscreen .settings-submenu {
+      position: fixed !important;
+      bottom: 300px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      z-index: 2147483647 !important;
+      /* Maximum z-index value */
+    }
+
+    /* Additional fullscreen support for specific browsers */
+    .video-container:fullscreen .settings-menu,
+    .video-container:fullscreen .settings-submenu,
+    .video-container:-webkit-full-screen .settings-menu,
+    .video-container:-webkit-full-screen .settings-submenu,
+    .video-container:-moz-full-screen .settings-menu,
+    .video-container:-moz-full-screen .settings-submenu {
+      position: fixed !important;
+      bottom: 300px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      z-index: 2147483647 !important;
+    }
+
+    /* Pseudo-fullscreen mode (CSS-only fallback when Fullscreen API fails) */
+    body.pseudo-fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden;
+      z-index: 9999;
+    }
+
+    body.pseudo-fullscreen .back-button {
+      display: none;
+    }
+
+    body.pseudo-fullscreen .video-container {
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: 100vw !important;
+      border: none !important;
+      border-radius: 0 !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      z-index: 9998;
+    }
+
+    body.pseudo-fullscreen .controls-container,
+    body.pseudo-fullscreen .play-pause-overlay {
+      z-index: 9999 !important;
+    }
+
+    /* Close button removed */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
+
+<body>
+  <!-- Add allowfullscreen attribute to the video container -->
+  <div class="video-container" id="videoContainer" allowfullscreen>
+    <button id="backButton" class="back-button" aria-label="Back to movies">
+      <i class="fas fa-arrow-left"></i>
+      <span>Back to Movies</span>
+    </button>
+    <video id="video" playsinline>
+      <source src="" type="video/mp4">
+      <track kind="subtitles" srclang="en" label="English" default="false">
+    </video>
+
+    <!-- Movie Info Overlay -->
+    <div class="movie-info-overlay">
+      <h1 id="movieTitle"></h1>
+      <div class="movie-meta">
+        <span id="movieYear"></span>
+        <span id="movieRating"></span>
+        <span id="movieDuration"></span>
+      </div>
+      <p id="movieDescription"></p>
+    </div>
+
+    <div class="play-pause-overlay" id="playPauseOverlay">
+      <div class="play-pause-icon">
+        <i class="fas fa-pause"></i>
+      </div>
+    </div>
+
+    <div class="double-tap-indicator" id="rewindIndicator">
+      <i class="fas fa-backward"></i>
+      <span>10s</span>
+    </div>
+
+    <div class="double-tap-indicator right" id="forwardIndicator">
+      <span>10s</span>
+      <i class="fas fa-forward"></i>
+    </div>
+
+    <div class="scrubber" id="scrubber">
+      <div class="scrubber-line"></div>
+      <div class="scrubber-time">00:00</div>
+    </div>
+
+    <div class="controls-container" id="controlsContainer">
+      <div class="progress-container" id="progressContainer">
+        <div class="progress-bar" id="progressBar">
+          <div class="progress-buffer" id="progressBuffer"></div>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="left-controls">
+          <button class="control-btn" id="playPauseBtn" title="Play/Pause">
+            <i class="fas fa-play"></i>
+          </button>
+          <button class="skip-btn" id="skipBackwardBtn" title="Rewind 10s">
+            <i class="fas fa-backward"></i>
+          </button>
+          <button class="skip-btn" id="skipForwardBtn" title="Forward 10s">
+            <i class="fas fa-forward"></i>
+          </button>
+          <div class="volume-container">
+            <button class="control-btn" id="muteBtn" title="Mute/Unmute">
+              <i class="fas fa-volume-up"></i>
+            </button>
+            <div class="volume-slider">
+              <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1">
+            </div>
+          </div>
+          <div class="time-display">
+            <span id="timeDisplay">0:00 / 0:00</span>
+          </div>
+        </div>
+        <div class="right-controls">
+          <button class="control-btn" id="subtitleBtn" title="Subtitles">
+            <i class="fas fa-closed-captioning"></i>
+          </button>
+          <button class="control-btn" id="settingsBtn" title="Settings">
+            <i class="fas fa-cog"></i>
+          </button>
+          <button class="control-btn" id="fullscreenBtn" title="Fullscreen">
+            <i class="fas fa-expand"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <button class="skip-intro-btn" id="skipIntroBtn" style="display:none;">Skip Intro</button>
+  </div>
+
+  <div id="settingsMenu" class="settings-menu">
+    <div class="settings-item" id="playbackSpeedMenu">
+      <div class="settings-header">
+        <span>Playback Speed</span>
+        <span class="current-value">Normal</span>
+        <i class="fas fa-chevron-right"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Playback Speed Submenu - using CSS for styling -->
+  <div id="playbackSpeedSubmenu" class="settings-submenu">
+    <div class="submenu-header">
+      <button id="backToMainSettings"><i class="fas fa-arrow-left"></i></button>
+      <span>Playback Speed</span>
+    </div>
+    <div class="submenu-options">
+      <div class="submenu-option" data-value="0.5">0.5x</div>
+      <div class="submenu-option" data-value="0.75">0.75x</div>
+      <div class="submenu-option" data-value="1" data-label="Normal">Normal</div>
+      <div class="submenu-option" data-value="1.25">1.25x</div>
+      <div class="submenu-option" data-value="1.5">1.5x</div>
+      <div class="submenu-option" data-value="1.75">1.75x</div>
+      <div class="submenu-option" data-value="2">2x</div>
+    </div>
+  </div>
+
+  <!-- Subtitle Settings Panel -->
+  <div id="subtitleSettings" class="settings-panel" style="display: none;">
+    <div class="settings-header">
+      <h3>Subtitle Settings</h3>
+      <button class="close-settings">×</button>
+    </div>
+    <div class="settings-content">
+      <div class="setting-group">
+        <label>Position</label>
+        <select id="subtitlePosition">
+          <option value="bottom">Bottom</option>
+          <option value="middle">Middle</option>
+          <option value="top">Top</option>
+        </select>
+      </div>
+      <div class="setting-group">
+        <label>Font Size</label>
+        <input type="range" id="subtitleSize" min="12" max="48" value="20">
+        <span id="subtitleSizeValue">20px</span>
+      </div>
+      <div class="setting-group">
+        <label>Text Color</label>
+        <input type="color" id="subtitleColor" value="#ffffff">
+      </div>
+      <div class="setting-group">
+        <label>Background Color</label>
+        <input type="color" id="subtitleBgColor" value="#000000">
+        <input type="range" id="subtitleBgOpacity" min="0" max="10" value="8">
+        <span id="subtitleBgOpacityValue">80%</span>
+      </div>
+      <div class="setting-group">
+        <label>Font Family</label>
+        <select id="subtitleFont">
+          <option value="'Netflix Sans', Arial, sans-serif">Netflix Sans</option>
+          <option value="Arial, sans-serif">Arial</option>
+          <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica</option>
+          <option value="'Times New Roman', Times, serif">Times New Roman</option>
+          <option value="'Courier New', Courier, monospace">Courier New</option>
+        </select>
+      </div>
+      <div class="setting-group">
+        <label>Text Shadow</label>
+        <input type="checkbox" id="subtitleShadow" checked>
+      </div>
+      <div class="setting-group">
+        <label>Background Style</label>
+        <select id="subtitleBgStyle">
+          <option value="box">Box</option>
+          <option value="full">Full Width</option>
+          <option value="none">None</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+
+    // Movie database - maps movie titles to their sources
+    const movieDatabase = {
+      /* Done */
+      "tourist family": {
+        src: "https://ia601005.us.archive.org/3/items/tourist-family-2025-hindi-1080p/Tourist%20Family-%282025%29-Hindi-1080p.mp4",
+        type: "mp4",
+        poster: "https://m.media-amazon.com/images/M/MV5BZGY0YjY4YjAtYjU2Yy00ZWVjLThmZGYtYzA2YzY2Y2EwYzFhXkEyXkFqcGdeQXVyMTUzNTgzNzI0._V1_.jpg",
+        subtitles: [
+          { src: 'subtitles/Tourist-Family-(2025)-en.vtt', srclang: 'en', label: 'English', default: false }
+        ]
+      },
+      /* Done */
+      "manjummel boys": {
+        src: "https://ia800304.us.archive.org/11/items/manjummel-boys-2024/Manjummel%20Boys%20%282024%29.ia.mp4",
+        type: "mp4",
+        poster: "https://m.media-amazon.com/images/M/MV5BMTUyN2VjYzAtY2UzOC00YjY2LWI0YjktM2UyZmY2Y2Y4ZDM0XkEyXkFqcGdeQXVyMTUzNTgzNzI0._V1_.jpg",
+        subtitles: [
+          { src: 'subtitles/Manjummel-Boys-(2024)-en.vtt', srclang: 'en', label: 'English', default: false }
+        ]
+      },
+      /* Done */
+      "kaithi": {
+        src: "https://ia601009.us.archive.org/23/items/kaithi-2019-1080p-hindi/Kaithi%2B2019%2B1080p%2BHindi.ia.mp4",
+        type: "mp4",
+        poster: "https://m.media-amazon.com/images/M/MV5BM2Q2Y2E3YjgtZjUzMyMyMTYtYzVjOS1kYjY1Y2JmYzUzXkEyXkFqcGdeQXVyMTUzNTgzNzI0._V1_.jpg",
+        subtitles: [
+          { src: 'subtitles/Kaithi-2019-en.vtt', srclang: 'en', label: 'English', default: false }
+        ]
+      },
+      /* Done */
+      "vikram": {
+        src: "https://ia601007.us.archive.org/8/items/vikram-2022-lcu.mp-4/Vikram-%282022%29-%5BLCU%5D.mp4.mp4",
+        type: "mp4",
+        poster: "https://m.media-amazon.com/images/M/MV5BMmJhYTYxMGEtNjQ5NS00MWZiLWEwN2UtYzQ2YzY5YjQ0Y2I3XkEyXkFqcGdeQXVyMTUzNTgzNzI0._V1_.jpg",
+        subtitles: [
+          { src: 'subtitles/Vikram-(2022)-en.vtt', srclang: 'en', label: 'English', default: false }
+        ]
+      },
+      "leo": {
+        src: "https://ia600602.us.archive.org/19/items/leo-2023-south-hindi-dubbed-un-cut-hd-1080p/Leo-%282023%29-South-Hindi-Dubbed-UnCut-HD-1080p.mp4",
+        type: "mp4",
+        poster: "https://m.media-amazon.com/images/M/MV5BZTBmY2UyZWItZWFhNy00M2FiLWI0Y2ItZDAxY2VjYTQ3ZDA0XkEyXkFqcGdeQXVyMTUzNTgzNzI0._V1_.jpg",
+        subtitles: [
+          { src: 'subtitles/Leo-(2023)-en.vtt', srclang: 'en', label: 'English', default: false }
+        ]
+      },
+      /* Done */
+      "coolie": {
+        src: "https://ia601002.us.archive.org/23/items/coolie-2025-1080p-hindi/Coolie-2025-1080p-Hindi.mp4",
+        type: "mp4",
+        poster: "https://m.media-amazon.com/images/M/MV5BNDU4Y2VhYzQtYjUyYi00ZTI3LWI0MzAtYjUzYzU5YjUwY2Y4XkEyXkFqcGdeQXVyMTUzNTgzNzI0._V1_.jpg",
+        subtitles: [
+          { src: 'subtitles/Coolie-(2025)-en.vtt', srclang: 'en', label: 'English', default: false }
+        ]
+      },
+      /* Done */
+      "maharaja": {
+        src: "https://ia800404.us.archive.org/14/items/maharaja-2024-hindi-tamil-dual-audio-un-cut-movie-hd-1080p-esub/Maharaja%20%282024%29%20%28Hindi%20%2B%20Tamil%29%20Dual%20Audio%20UnCut%20Movie%20HD%201080p%20ESub.mp4",
+        type: "mp4",
+        subtitles: [
+          { src: 'subtitles/Maharaja-(2024)-en.vtt', srclang: 'en', label: 'English', default: false }
+        ]
+      },
+      /* Done */
+      "hi papa": {
+        src: "https://ia600801.us.archive.org/34/items/hi-papa-hi-nanna-2023-hindi-1080p/Hi%20Papa-%28Hi%20Nanna%29-%282023%29-%7BHindi-1080p%29.mp4",
+        type: "mp4",
+        subtitles: [
+          { src: 'subtitles/Hi-Nanna-(2023)-en.vtt', srclang: 'en', label: 'English', default: false }
+        ]
+      },
+      /* Done */
+      "kantara": {
+        src: "https://ia600404.us.archive.org/34/items/kantara-2022-hindi-dubbed-1080p/Kantara%20%282022%29%20Hindi%20Dubbed%201080p.mp4",
+        type: "mp4",
+        subtitles: [
+          { src: 'subtitles/Kantara-(2022)-en.vtt', srclang: 'en', label: 'English', default: false }
+        ]
+      },
+      /* Done */
+      "hridayam": {
+        src: "https://ia601003.us.archive.org/33/items/hridayam-2022-hindi-1080p/Hridayam%20%282022%29%20Hindi%201080p.mp4",
+        type: "mp4",
+        subtitles: [
+          { src: 'subtitles/Hridayam-(2022)-en.vtt', srclang: 'en', label: 'English', default: false }
+        ]
+      },
+      "lokah chapter 1": {
+        src: "https://ia800907.us.archive.org/17/items/lokah.-chapter-1.2025.1080p.-hevc.-hdtc.-multi.-2.0.-hc-esub.x-265-hdhub-4u.-ms/Lokah.Chapter-1.2025.1080p.HEVC.HDTC.Multi.2.0.HC-ESub.x265-HDHub4u.Ms.mp4",
+        type: "mp4",
+        subtitles: [
+          { src: 'subtitles/', srclang: 'en', label: 'English', default: false }
+        ]
+      },
+      /* Done */
+      "lucky bhaskar": {
+        src: "https://ia600301.us.archive.org/4/items/lucky-baskhar-2024-hindi-hd-1080p/Lucky-Baskhar-%282024%29-Hindi-HD-1080p.mp4",
+        type: "mp4",
+        subtitles: [
+          { src: 'subtitles/Lucky-Baskhar-2024-en.vtt', srclang: 'en', label: 'English', default: false }
+        ]
+      },
+      /* Done */
+      "court - state vs. a nobody": {
+        src: "https://ia601001.us.archive.org/20/items/court-state-vs-a-nobody-2025-hindi-hd-1080p/Court-State-Vs-A-Nobody-%282025%29-Hindi-HD-1080p.mp4",
+        type: "mp4",
+        subtitles: [
+          { src: 'subtitles/court-state-vs-a-nobody-2025-en.vtt', srclang: 'en', label: 'English', default: false }
+        ]
+      },
+      /* Done */
+      "master": {
+        src: "https://ia902807.us.archive.org/0/items/master-2021-1080p-hindi/Master-2021-1080p-Hindi.mp4",
+        type: "mp4",
+        subtitles: [
+          { src: 'subtitles/MASTER-(2021)-en.vtt', srclang: 'en', label: 'English', default: false }
+        ]
+      },
+      /* Done */
+      "hit: the first case": {
+        src: "https://ia801003.us.archive.org/22/items/hit-the-first-case-2020-1080p-hindi/HIT-The-First-Case-2020-1080p-Hindi.mp4",
+        type: "mp4",
+        subtitles: [
+          { src: 'subtitles/HIT-The-First-Case-(2020)-en.vtt', srclang: 'en', label: 'English', default: false }
+        ]
+      },
+      /* Done */
+      "hit: the second case": {
+        src: "https://ia801003.us.archive.org/22/items/hit-the-2nd-case-2022-1080p-hindi/HIT-The-2nd-Case-2022-1080p-Hindi.mp4",
+        type: "mp4",
+        subtitles: [
+          { src: 'subtitles/HIT-The-Second-Case-2022-en.vtt', srclang: 'en', label: 'English', default: false }
+        ]
+      },
+      /* Done */
+      "hit: the third case": {
+        src: "https://ia800505.us.archive.org/35/items/hit-the-third-case-2025-1080p-hindi/HIT-The-Third-Case-2025-1080p-Hindi.mp4",
+        type: "mp4",
+        subtitles: [
+          { src: 'subtitles/HIT-The-Third-Case-(2025)-en.vtt', srclang: 'en', label: 'English', default: false }
+        ]
+      },
+      /* Done */
+      "retro": {
+        src: "https://ia600301.us.archive.org/10/items/retro-2025-hindi-1080p/Retro-%282025%29-Hindi-1080p.mp4",
+        type: "mp4",
+        subtitles: [
+          { src: 'subtitles/Retro-2025-en.vtt', srclang: 'en', label: 'English', default: false }
+        ]
+      },
+      /* Done */
+      "kuberaa": {
+        src: "https://ia601302.us.archive.org/0/items/kuberaa-2025-hindi-1080p/Kuberaa-%282025%29-Hindi-1080p.mp4",
+        type: "mp4",
+        subtitles: [
+          { src: 'subtitles/kuberaa-2025-en.vtt', srclang: 'en', label: 'English', default: false }
+        ]
+      },
+      /* Done */
+      "thalaivan thalaivii": {
+        src: "https://ia600201.us.archive.org/14/items/thalaivan-thalaivii-2025-hindi-1080p/Thalaivan-Thalaivii-%282025%29-Hindi-1080p.mp4",
+        type: "mp4",
+        subtitles: [
+          { src: 'subtitles/Thalaivan-Thalaivii-(2025)-en.vtt', srclang: 'en', label: 'English', default: false }
+        ]
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Diagnostic check for fullscreen compatibility
+      console.log('=== Fullscreen Diagnostic ===');
+      console.log('Secure context (HTTPS):', window.isSecureContext);
+      console.log('Document fullscreenEnabled:', document.fullscreenEnabled);
+      console.log('Webkit fullscreen enabled:', 'webkitFullscreenEnabled' in document ? document.webkitFullscreenEnabled : 'N/A');
+      console.log('Moz fullscreen enabled:', 'mozFullScreenEnabled' in document ? document.mozFullScreenEnabled : 'N/A');
+
+      // Get URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+
+      // Initialize player elements
+      const video = document.getElementById('video');
+      const videoContainer = document.getElementById('videoContainer');
+      const controlsContainer = document.getElementById('controlsContainer');
+      const playPauseBtn = document.getElementById('playPauseBtn');
+      const muteBtn = document.getElementById('muteBtn');
+      const volumeSlider = document.getElementById('volumeSlider');
+      const timeDisplay = document.getElementById('timeDisplay');
+      const progressBar = document.getElementById('progressBar');
+      const progressBuffer = document.getElementById('progressBuffer');
+      const progressBarContainer = document.getElementById('progressContainer');
+      const fullscreenBtn = document.getElementById('fullscreenBtn');
+      const subtitleBtn = document.getElementById('subtitleBtn');
+
+      // Subtitle variables
+      let subtitleTracks = [];
+      let currentSubtitleTrack = null;
+      let currentSubtitleIndex = null;
+      let subtitleContainer = null;
+
+      // Initialize subtitle container
+      function initSubtitleContainer() {
+        // Create subtitle container if it doesn't exist
+        if (!subtitleContainer) {
+          subtitleContainer = document.createElement('div');
+          subtitleContainer.id = 'videoSubtitles';
+          subtitleContainer.className = 'video-subtitles';
+          subtitleContainer.style.cssText = `
+            position: absolute;
+            bottom: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 24px;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            padding: 8px 16px;
+            background-color: rgba(0, 0, 0, 0.6);
+            border-radius: 4px;
+            max-width: 80%;
+            z-index: 10;
+            pointer-events: none;
+            transition: opacity 0.3s;
+          `;
+          document.body.appendChild(subtitleContainer);
+
+          // Add to the appropriate parent based on fullscreen state
+          const isFullscreen = document.fullscreenElement ||
+            document.webkitFullscreenElement ||
+            document.mozFullScreenElement ||
+            document.msFullscreenElement;
+
+          if (isFullscreen) {
+            const container = document.querySelector('.video-container');
+            if (container) {
+              container.appendChild(subtitleContainer);
+              subtitleContainer.classList.add('fullscreen-subtitles');
+            } else {
+              document.body.appendChild(subtitleContainer);
+            }
+          } else {
+            document.body.appendChild(subtitleContainer);
+          }
+
+          // Ensure it's initially hidden if no subtitles are active
+          if (currentSubtitleIndex === null) {
+            subtitleContainer.style.display = 'none';
+          }
+        }
+      }
+      const skipBackwardBtn = document.getElementById('skipBackwardBtn');
+      const skipForwardBtn = document.getElementById('skipForwardBtn');
+      const playPauseOverlay = document.getElementById('playPauseOverlay');
+      const seekForwardIndicator = document.getElementById('forwardIndicator');
+      const seekBackwardIndicator = document.getElementById('rewindIndicator');
+      const scrubber = document.querySelector('.scrubber');
+      const scrubberTime = document.querySelector('.scrubber-time');
+      const movieTitle = document.getElementById('movieTitle');
+      const movieYear = document.getElementById('movieYear');
+      const movieRating = document.getElementById('movieRating');
+      const movieDescription = document.getElementById('movieDescription');
+      const backButton = document.getElementById('backButton');
+
+      // --- Settings Menu Logic ---
+      const settingsBtn = document.getElementById('settingsBtn');
+      const settingsMenu = document.getElementById('settingsMenu');
+      const playbackSpeedMenu = document.getElementById('playbackSpeedMenu');
+      const playbackSpeedSubmenu = document.getElementById('playbackSpeedSubmenu');
+      const backToMainSettings = document.getElementById('backToMainSettings');
+
+      // Hide all menus initially
+      if (settingsMenu) settingsMenu.style.display = 'none';
+      if (playbackSpeedSubmenu) playbackSpeedSubmenu.style.display = 'none';
+
+      // Show/hide settings menu on button click - using dynamic positioning like subtitle button
+      if (settingsBtn && settingsMenu) {
+        settingsBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+
+          // Force remove subtitle menu when opening settings menu
+          const subtitleMenu = document.getElementById('subtitleMenu');
+          if (subtitleMenu) {
+            try {
+              subtitleMenu.remove();
+            } catch (err) {
+              console.log('Error removing subtitle menu:', err);
+            }
+          }
+          // Also remove any subtitle menus by class name as a safety measure
+          const subtitleMenusByClass = document.querySelectorAll('.subtitle-menu');
+          subtitleMenusByClass.forEach(menu => {
+            try {
+              menu.remove();
+            } catch (err) {
+              console.log('Error removing subtitle menu by class:', err);
+            }
+          });
+
+          // Toggle menu visibility
+          const isMenuVisible = settingsMenu.style.display === 'flex';
+
+          if (!isMenuVisible) {
+            // Position relative to the settings button
+            const videoContainer = document.querySelector('.video-container');
+            const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+            const rect = settingsBtn.getBoundingClientRect();
+
+            if (isFullscreen && videoContainer && (document.fullscreenElement === videoContainer || document.webkitFullscreenElement === videoContainer || document.mozFullScreenElement === videoContainer || document.msFullscreenElement === videoContainer)) {
+              // Append menu to the fullscreen video container and position absolutely inside it
+              if (settingsMenu.parentElement !== videoContainer) {
+                videoContainer.appendChild(settingsMenu);
+              }
+              settingsMenu.style.position = 'absolute';
+              // Get button position relative to container
+              const containerRect = videoContainer.getBoundingClientRect();
+              const btnLeft = rect.left - containerRect.left;
+              const btnTop = rect.top - containerRect.top;
+              // Place menu above the button, shifted more to the left to prevent cutoff
+              settingsMenu.style.left = `${btnLeft + rect.width - settingsMenu.offsetWidth - 250}px`;
+              settingsMenu.style.top = `${btnTop - 20}px`;
+              settingsMenu.style.transform = 'translateY(-100%)';
+              settingsMenu.style.bottom = 'auto';
+              settingsMenu.style.right = 'auto';
+              settingsMenu.style.zIndex = '2147483647';
+            } else {
+              // Normal window positioning
+              if (settingsMenu.parentElement !== document.body) {
+                document.body.appendChild(settingsMenu);
+              }
+              settingsMenu.style.position = 'fixed';
+              settingsMenu.style.right = `${window.innerWidth - rect.right}px`;
+              settingsMenu.style.top = `${rect.top - 10}px`;
+              settingsMenu.style.transform = 'translateY(-100%)';
+              settingsMenu.style.left = 'auto';
+              settingsMenu.style.bottom = 'auto';
+              settingsMenu.style.zIndex = '2147483647';
+            }
+
+            // Show the menu
+            settingsMenu.style.display = 'flex';
+
+            // Hide submenus when opening main menu
+            if (playbackSpeedSubmenu) playbackSpeedSubmenu.style.display = 'none';
+          } else {
+            // Hide the menu
+            settingsMenu.style.display = 'none';
+          }
+        });
+      }
+
+      // Open playback speed submenu - using dynamic positioning like settings menu
+      if (playbackSpeedMenu && playbackSpeedSubmenu) {
+        playbackSpeedMenu.addEventListener('click', (e) => {
+          e.stopPropagation();
+
+          // Load saved subtitle settings if any
+          loadSubtitleSettings();
+
+          // Initialize subtitle settings panel
+          function initSubtitleSettings() {
+            const settingsPanel = document.getElementById('subtitleSettings');
+            const closeButton = settingsPanel.querySelector('.close-settings');
+
+            // Close button
+            closeButton.addEventListener('click', () => {
+              settingsPanel.style.display = 'none';
+            });
+
+            // Position
+            const positionSelect = document.getElementById('subtitlePosition');
+            positionSelect.addEventListener('change', (e) => {
+              const position = e.target.value;
+              const subtitleContainer = document.querySelector('.custom-subtitle');
+
+              // Reset all positions
+              subtitleContainer.style.top = '';
+              subtitleContainer.style.bottom = '';
+              subtitleContainer.style.alignItems = 'center';
+
+              // Apply new position
+              if (position === 'top') {
+                subtitleContainer.style.top = '80px';
+                subtitleContainer.style.bottom = '';
+              } else if (position === 'middle') {
+                subtitleContainer.style.top = '50%';
+                subtitleContainer.style.bottom = '';
+                subtitleContainer.style.transform = 'translateY(-50%)';
+              } else { // bottom
+                subtitleContainer.style.top = '';
+                subtitleContainer.style.bottom = '100px';
+                subtitleContainer.style.transform = '';
+              }
+
+              saveSubtitleSettings('position', position);
+            });
+
+            // Font Size
+            const sizeSlider = document.getElementById('subtitleSize');
+            const sizeValue = document.getElementById('subtitleSizeValue');
+
+            sizeSlider.addEventListener('input', (e) => {
+              const size = e.target.value;
+              sizeValue.textContent = `${size}px`;
+
+              const subtitleText = document.querySelector('.subtitle-text');
+              if (subtitleText) {
+                subtitleText.style.fontSize = `${size}px`;
+                saveSubtitleSettings('fontSize', size);
+              }
+            });
+
+            // Text Color
+            const colorPicker = document.getElementById('subtitleColor');
+            colorPicker.addEventListener('input', (e) => {
+              const color = e.target.value;
+              const subtitleText = document.querySelector('.subtitle-text');
+              if (subtitleText) {
+                subtitleText.style.color = color;
+                saveSubtitleSettings('textColor', color);
+              }
+            });
+
+            // Background Color and Opacity
+            const bgColorPicker = document.getElementById('subtitleBgColor');
+            const bgOpacitySlider = document.getElementById('subtitleBgOpacity');
+            const bgOpacityValue = document.getElementById('subtitleBgOpacityValue');
+
+            function updateBackground() {
+              const bgColor = bgColorPicker.value;
+              const opacity = bgOpacitySlider.value / 10; // Convert 0-10 to 0-1
+              bgOpacityValue.textContent = `${Math.round(opacity * 100)}%`;
+
+              const subtitleText = document.querySelector('.subtitle-text');
+              if (subtitleText) {
+                const rgba = hexToRgba(bgColor, opacity);
+                subtitleText.style.backgroundColor = rgba;
+
+                // Save both color and opacity
+                saveSubtitleSettings('bgColor', bgColor);
+                saveSubtitleSettings('bgOpacity', opacity);
+              }
+            }
+
+            bgColorPicker.addEventListener('input', updateBackground);
+            bgOpacitySlider.addEventListener('input', updateBackground);
+
+            // Font Family
+            const fontSelect = document.getElementById('subtitleFont');
+            fontSelect.addEventListener('change', (e) => {
+              const font = e.target.value;
+              const subtitleText = document.querySelector('.subtitle-text');
+              if (subtitleText) {
+                subtitleText.style.fontFamily = font;
+                saveSubtitleSettings('fontFamily', font);
+              }
+            });
+
+            // Text Shadow
+            const shadowCheckbox = document.getElementById('subtitleShadow');
+            shadowCheckbox.addEventListener('change', (e) => {
+              const hasShadow = e.target.checked;
+              const subtitleText = document.querySelector('.subtitle-text');
+              if (subtitleText) {
+                subtitleText.style.textShadow = hasShadow ? '1px 1px 2px rgba(0, 0, 0, 0.9)' : 'none';
+                saveSubtitleSettings('textShadow', hasShadow);
+              }
+            });
+
+            // Background Style
+            const bgStyleSelect = document.getElementById('subtitleBgStyle');
+            bgStyleSelect.addEventListener('change', (e) => {
+              const style = e.target.value;
+              const subtitleText = document.querySelector('.subtitle-text');
+              if (!subtitleText) return;
+
+              if (style === 'box') {
+                subtitleText.style.borderRadius = '4px';
+                subtitleText.style.padding = '8px 16px';
+                subtitleText.style.display = 'inline-block';
+                subtitleText.style.maxWidth = '80%';
+              } else if (style === 'full') {
+                subtitleText.style.borderRadius = '0';
+                subtitleText.style.padding = '8px 0';
+                subtitleText.style.display = 'block';
+                subtitleText.style.maxWidth = '100%';
+                subtitleText.style.width = '100%';
+                subtitleText.style.textAlign = 'center';
+              } else { // none
+                subtitleText.style.backgroundColor = 'transparent';
+                subtitleText.style.padding = '0';
+              }
+
+              saveSubtitleSettings('bgStyle', style);
+            });
+          }
+
+          // Helper function to convert hex color to rgba
+          function hexToRgba(hex, alpha = 1) {
+            // Remove # if present
+            hex = hex.replace('#', '');
+
+            // Parse r, g, b values
+            let r, g, b;
+            if (hex.length === 3) {
+              r = parseInt(hex[0] + hex[0], 16);
+              g = parseInt(hex[1] + hex[1], 16);
+              b = parseInt(hex[2] + hex[2], 16);
+            } else if (hex.length === 6) {
+              r = parseInt(hex.substring(0, 2), 16);
+              g = parseInt(hex.substring(2, 4), 16);
+              b = parseInt(hex.substring(4, 6), 16);
+            } else {
+              return 'rgba(0, 0, 0, 0.8)'; // Default fallback
+            }
+
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+          }
+
+          // Save settings to localStorage
+          function saveSubtitleSettings(key, value) {
+            const settings = JSON.parse(localStorage.getItem('subtitleSettings') || '{}');
+            settings[key] = value;
+            localStorage.setItem('subtitleSettings', JSON.stringify(settings));
+          }
+
+          // Load settings from localStorage
+          function loadSubtitleSettings() {
+            const settings = JSON.parse(localStorage.getItem('subtitleSettings') || '{}');
+
+            // Apply saved settings
+            if (settings.position) {
+              document.getElementById('subtitlePosition').value = settings.position;
+              document.getElementById('subtitlePosition').dispatchEvent(new Event('change'));
+            }
+
+            if (settings.fontSize) {
+              document.getElementById('subtitleSize').value = settings.fontSize;
+              document.getElementById('subtitleSize').dispatchEvent(new Event('input'));
+            }
+
+            if (settings.textColor) {
+              document.getElementById('subtitleColor').value = settings.textColor;
+              document.getElementById('subtitleColor').dispatchEvent(new Event('input'));
+            }
+
+            if (settings.bgColor) {
+              document.getElementById('subtitleBgColor').value = settings.bgColor;
+              if (settings.bgOpacity) {
+                document.getElementById('subtitleBgOpacity').value = settings.bgOpacity * 10;
+              }
+              document.getElementById('subtitleBgOpacity').dispatchEvent(new Event('input'));
+            }
+
+            if (settings.fontFamily) {
+              document.getElementById('subtitleFont').value = settings.fontFamily;
+              document.getElementById('subtitleFont').dispatchEvent(new Event('change'));
+            }
+
+            if (settings.textShadow !== undefined) {
+              document.getElementById('subtitleShadow').checked = settings.textShadow;
+              document.getElementById('subtitleShadow').dispatchEvent(new Event('change'));
+            }
+
+            if (settings.bgStyle) {
+              document.getElementById('subtitleBgStyle').value = settings.bgStyle;
+              document.getElementById('subtitleBgStyle').dispatchEvent(new Event('change'));
+            }
+          }
+
+          // Initialize the settings panel when the DOM is loaded
+          document.addEventListener('DOMContentLoaded', () => {
+            initSubtitleSettings();
+
+            // Add click handler for subtitle settings button
+            const subtitleSettingsBtn = document.querySelector('.subtitle-settings-btn');
+            if (subtitleSettingsBtn) {
+              subtitleSettingsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.getElementById('subtitleSettings').style.display = 'block';
+              });
+            }
+          });
+
+          // Close settings when clicking outside
+          document.addEventListener('click', (e) => {
+            const settingsPanel = document.getElementById('subtitleSettings');
+            if (settingsPanel && !settingsPanel.contains(e.target) &&
+              e.target !== document.querySelector('.subtitle-settings-btn')) {
+              settingsPanel.style.display = 'none';
+            }
+          });
+
+          // Hide the settings menu
+          settingsMenu.style.display = 'none';
+
+          // Position relative to the settings button
+          const videoContainer = document.querySelector('.video-container');
+          const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+          const rect = settingsBtn.getBoundingClientRect();
+
+          if (isFullscreen && videoContainer && (document.fullscreenElement === videoContainer || document.webkitFullscreenElement === videoContainer || document.mozFullScreenElement === videoContainer || document.msFullscreenElement === videoContainer)) {
+            // Append submenu to the fullscreen video container and position absolutely inside it
+            if (playbackSpeedSubmenu.parentElement !== videoContainer) {
+              videoContainer.appendChild(playbackSpeedSubmenu);
+            }
+            playbackSpeedSubmenu.style.position = 'absolute';
+            // Get button position relative to container
+            const containerRect = videoContainer.getBoundingClientRect();
+            const btnLeft = rect.left - containerRect.left;
+            const btnTop = rect.top - containerRect.top;
+            // Place submenu above the button, shifted more to the left to prevent cutoff
+            playbackSpeedSubmenu.style.left = `${btnLeft + rect.width - playbackSpeedSubmenu.offsetWidth - 250}px`;
+            playbackSpeedSubmenu.style.top = `${btnTop - 20}px`;
+            playbackSpeedSubmenu.style.transform = 'translateY(-100%)';
+            playbackSpeedSubmenu.style.bottom = 'auto';
+            playbackSpeedSubmenu.style.right = 'auto';
+            playbackSpeedSubmenu.style.zIndex = '2147483647';
+          } else {
+            // Normal window positioning
+            if (playbackSpeedSubmenu.parentElement !== document.body) {
+              document.body.appendChild(playbackSpeedSubmenu);
+            }
+            playbackSpeedSubmenu.style.position = 'fixed';
+            playbackSpeedSubmenu.style.right = `${window.innerWidth - rect.right}px`;
+            playbackSpeedSubmenu.style.top = `${rect.top - 10}px`;
+            playbackSpeedSubmenu.style.transform = 'translateY(-100%)';
+            playbackSpeedSubmenu.style.left = 'auto';
+            playbackSpeedSubmenu.style.bottom = 'auto';
+            playbackSpeedSubmenu.style.zIndex = '2147483647';
+          }
+
+          // Show the submenu
+          playbackSpeedSubmenu.style.display = 'flex';
+        });
+      }
+
+      // Back to main settings from playback speed submenu - using dynamic positioning like settings menu
+      if (backToMainSettings) {
+        backToMainSettings.addEventListener('click', (e) => {
+          e.stopPropagation();
+
+          // Hide the playback speed submenu
+          playbackSpeedSubmenu.style.display = 'none';
+
+          // Position and show the main settings menu
+          const videoContainer = document.querySelector('.video-container');
+          const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+          const rect = settingsBtn.getBoundingClientRect();
+
+          if (isFullscreen && videoContainer && (document.fullscreenElement === videoContainer || document.webkitFullscreenElement === videoContainer || document.mozFullScreenElement === videoContainer || document.msFullscreenElement === videoContainer)) {
+            // Append menu to the fullscreen video container and position absolutely inside it
+            if (settingsMenu.parentElement !== videoContainer) {
+              videoContainer.appendChild(settingsMenu);
+            }
+            settingsMenu.style.position = 'absolute';
+            // Get button position relative to container
+            const containerRect = videoContainer.getBoundingClientRect();
+            const btnLeft = rect.left - containerRect.left;
+            const btnTop = rect.top - containerRect.top;
+            // Place menu above the button, shifted more to the left to prevent cutoff
+            settingsMenu.style.left = `${btnLeft + rect.width - settingsMenu.offsetWidth - 250}px`;
+            settingsMenu.style.top = `${btnTop - 20}px`;
+            settingsMenu.style.transform = 'translateY(-100%)';
+            settingsMenu.style.bottom = 'auto';
+            settingsMenu.style.right = 'auto';
+            settingsMenu.style.zIndex = '2147483647';
+          } else {
+            // Normal window positioning
+            if (settingsMenu.parentElement !== document.body) {
+              document.body.appendChild(settingsMenu);
+            }
+            settingsMenu.style.position = 'fixed';
+            settingsMenu.style.right = `${window.innerWidth - rect.right}px`;
+            settingsMenu.style.top = `${rect.top - 10}px`;
+            settingsMenu.style.transform = 'translateY(-100%)';
+            settingsMenu.style.left = 'auto';
+            settingsMenu.style.bottom = 'auto';
+            settingsMenu.style.zIndex = '2147483647';
+          }
+
+          // Show the main settings menu
+          settingsMenu.style.display = 'flex';
+        });
+      }
+
+      // No subtitles menu functionality needed
+
+      // Handle playback speed selection
+      const playbackOptions = document.querySelectorAll('#playbackSpeedSubmenu .submenu-option');
+      if (playbackOptions.length) {
+        playbackOptions.forEach(option => {
+          option.addEventListener('click', () => {
+            // Remove selected class from all options
+            playbackOptions.forEach(opt => opt.classList.remove('selected'));
+            // Add selected class to clicked option
+            option.classList.add('selected');
+
+            // Update playback rate
+            const rate = parseFloat(option.getAttribute('data-value'));
+            video.playbackRate = rate;
+
+            // Update display in main menu
+            const displayLabel = option.getAttribute('data-label') || option.textContent;
+            document.querySelector('#playbackSpeedMenu .current-value').textContent = displayLabel;
+
+            // Close submenu and return to main menu
+            playbackSpeedSubmenu.style.display = 'none';
+            settingsMenu.style.display = 'flex';
+          });
+        });
+      }
+
+      // Hide settings menu when clicking outside
+      document.addEventListener('click', (e) => {
+        const isSettingsMenuVisible = settingsMenu && settingsMenu.style.display === 'flex';
+        const isPlaybackSubmenuVisible = playbackSpeedSubmenu && playbackSpeedSubmenu.style.display === 'flex';
+
+        if (isSettingsMenuVisible) {
+          if (!settingsMenu.contains(e.target) && e.target !== settingsBtn) {
+            settingsMenu.style.display = 'none';
+          }
+        }
+
+        if (isPlaybackSubmenuVisible) {
+          if (!playbackSpeedSubmenu.contains(e.target) && e.target !== playbackSpeedMenu) {
+            playbackSpeedSubmenu.style.display = 'none';
+          }
+        }
+      });
+
+      // No close button needed
+
+      // Set default playback speed option as selected
+      const defaultSpeedOption = document.querySelector('#playbackSpeedSubmenu .submenu-option[data-value="1"]');
+      if (defaultSpeedOption) {
+        defaultSpeedOption.classList.add('selected');
+      }
+
+      // Get movie details from URL parameters
+      const movieId = urlParams.get('movieId');
+      let title = urlParams.get('title') || 'Movie';
+      const year = urlParams.get('year') || '';
+      const rating = urlParams.get('rating') || '';
+      const description = urlParams.get('description') || 'No description available.';
+      const poster = urlParams.get('poster') || '';
+      let sourceType = urlParams.get('type') || 'mp4';
+      let src = urlParams.get('src') || urlParams.get('video') || '';
+
+      // Check movie database for the video source and subtitles
+      const normalizedTitle = title.toLowerCase().trim();
+      console.log('Looking up movie:', normalizedTitle);
+      console.log('Available movies in database:', Object.keys(movieDatabase));
+
+      if (movieDatabase[normalizedTitle]) {
+        const movieData = movieDatabase[normalizedTitle];
+        src = movieData.src;
+        sourceType = movieData.type;
+        console.log('✓ Found movie in database:', normalizedTitle, movieData);
+      } else {
+        console.log('✗ Movie not found in database:', normalizedTitle);
+      }
+
+      // Check for subtitle data in URL parameters
+      const subtitleParam = urlParams.get('subtitles');
+      let subtitleData = null;
+      if (subtitleParam) {
+        try {
+          subtitleData = JSON.parse(decodeURIComponent(subtitleParam));
+          console.log('✓ Found subtitle data in URL:', subtitleData);
+        } catch (error) {
+          console.error('Error parsing subtitle data:', error);
+        }
+      }
+
+      // Load subtitles if available (either from movie data or URL)
+      if (subtitleData && subtitleData.length > 0) {
+        console.log('Loading subtitles from URL data:', subtitleData.length, 'tracks');
+        loadSubtitles(subtitleData);
+      } else if (movieDatabase[normalizedTitle] && movieDatabase[normalizedTitle].subtitles && movieDatabase[normalizedTitle].subtitles.length > 0) {
+        console.log('Loading subtitles from movie database:', movieDatabase[normalizedTitle].subtitles.length, 'tracks');
+        loadSubtitles(movieDatabase[normalizedTitle].subtitles);
+      } else {
+        console.log('No subtitle data found');
+      }
+
+      // Debug: Log the source URL and parameters
+      console.log('Final Source URL:', src);
+      console.log('Final Source type:', sourceType);
+      console.log('URL parameters:', Object.fromEntries(urlParams.entries()));
+
+      // Initialize time display elements
+      if (timeDisplay) timeDisplay.textContent = '0:00 / 0:00';
+
+      // Set movie info
+      document.title = `${title}`;
+      movieTitle.textContent = title;
+      movieYear.textContent = year;
+      movieRating.textContent = rating ? `${rating}/10` : 'N/A';
+      movieDescription.textContent = description;
+
+      // Set solid black background
+      document.querySelector('.video-container').style.background = '#000';
+
+      // System message function using UI toast system
+      function showSubtitleNotification(message) {
+        // Use the UI toast system to show the notification
+        if (window.UIToast) {
+          window.UIToast.info('Subtitles', message, 3000);
+          // Ensure toast appears above fullscreen content
+          const toastWrap = document.querySelector('.toast-wrap');
+          if (toastWrap) {
+            toastWrap.style.zIndex = '2147483647'; // Max z-index
+          }
+        } else {
+          // Fallback to basic alert if UI toast system is not available
+          console.warn('UI Toast system not available, falling back to alert');
+          alert(message);
+        }
+      }
+
+      function showSystemMessage(message, type = 'info') {
+        // Use the UI toast system to show the notification
+        if (window.UIToast) {
+          // Map the type to the appropriate UI toast method
+          const toastType = type === 'error' ? 'error' : 'info';
+          window.UIToast[toastType](type.charAt(0).toUpperCase() + type.slice(1), message, 3000);
+          // Ensure toast appears above fullscreen content
+          const toastWrap = document.querySelector('.toast-wrap');
+          if (toastWrap) {
+            toastWrap.style.zIndex = '2147483647'; // Max z-index
+          }
+        } else {
+          // Fallback to basic alert if UI toast system is not available
+          console.warn('UI Toast system not available, falling back to alert');
+          alert(`[${type.toUpperCase()}] ${message}`);
+        }
+      }
+
+      // Initialize continue watching UI
+      let continueWatchingUI;
+
+      // Initialize video directly (like player.html)
+      if (src) {
+        console.log('Loading video:', src, 'Type:', sourceType);
+
+        // Set video attributes
+        video.playsInline = true;
+        video.preload = 'auto';
+        video.muted = false;
+        video.autoplay = true;
+        video.controls = false;
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'contain';
+
+        // Create and add source
+        const source = document.createElement('source');
+        source.src = src;
+        source.type = 'video/mp4';
+        video.appendChild(source);
+
+        // Handle video events
+        // Track if we've already set the resume time
+        let hasSetResumeTime = false;
+        const resumeTime = urlParams.get('t') ? parseFloat(urlParams.get('t')) : null;
+
+        // Function to set the resume time (only once)
+        const setResumeTime = () => {
+          if (hasSetResumeTime || !resumeTime || isNaN(resumeTime)) return;
+
+          console.log('Setting resume time to:', resumeTime, 'seconds');
+          video.currentTime = resumeTime;
+          hasSetResumeTime = true;
+        };
+
+        // Set up event listeners for resuming
+        video.addEventListener('loadedmetadata', () => {
+          console.log('Video metadata loaded, duration:', video.duration);
+          if (!isNaN(video.duration) && video.duration > 0) {
+            updateTimeDisplay();
+            updateProgress();
+
+            // Load subtitles for the current video
+            const videoId = urlParams.get('id');
+            if (videoId && videoSources[videoId] && videoSources[videoId].subtitles) {
+              // Initialize subtitle container first
+              initSubtitleContainer();
+
+              // Then load the subtitles
+              loadSubtitles(videoSources[videoId].subtitles);
+
+              // Set up cue change handler for the video's text tracks
+              const tracks = video.textTracks;
+              for (let i = 0; i < tracks.length; i++) {
+                tracks[i].addEventListener('cuechange', handleCueChange);
+              }
+            }
+
+            // Try to set resume time after metadata is loaded
+            if (!hasSetResumeTime && resumeTime) {
+              setResumeTime();
+            }
+          }
+        });
+
+        // Also try to set resume time when the video can play
+        video.addEventListener('canplay', () => {
+          if (!hasSetResumeTime && resumeTime) {
+            if (Math.abs(video.currentTime - resumeTime) > 1) {
+              console.log('Adjusting resume time in canplay event:', resumeTime);
+              setResumeTime();
+            }
+          }
+        });
+
+        // Clear the resume time from URL after first successful seek
+        video.addEventListener('seeked', () => {
+          if (hasSetResumeTime) {
+            // Update URL without page reload
+            const url = new URL(window.location);
+            url.searchParams.delete('t');
+            window.history.replaceState({}, '', url);
+          }
+        });
+
+        video.addEventListener('canplay', () => {
+          console.log('Video can play');
+          // Suppress autoplay if resume prompt is active
+          if (window.__resumePromptActive) { showControls(); return; }
+          video.play().catch(e => {
+            console.log('Auto-play prevented:', e);
+            showControls();
+          });
+        });
+
+        video.addEventListener('error', (e) => {
+          console.error('Video error:', video.error);
+          showSystemMessage('Error loading video. Please try another source.', 'error');
+        });
+
+        // Load the video
+        video.load();
+      } else {
+        console.error('No video source found');
+        showSystemMessage('No video source provided', 'error');
+      }
+
+      // Subtitle functionality
+      function loadSubtitles(subtitleArray) {
+        if (!subtitleArray || subtitleArray.length === 0) {
+          console.log('No subtitles to load');
+          return;
+        }
+
+        console.log('Loading subtitles:', subtitleArray);
+
+        // Remove existing subtitle tracks
+        const existingTracks = video.querySelectorAll('track');
+        existingTracks.forEach(track => track.remove());
+
+        // Clear existing tracks
+        subtitleTracks = [];
+        currentSubtitleTrack = null;
+        currentSubtitleIndex = null;
+
+        // Initialize subtitle container if it doesn't exist
+        if (!subtitleContainer) {
+          subtitleContainer = document.createElement('div');
+          subtitleContainer.id = 'videoSubtitles';
+          subtitleContainer.className = 'video-subtitles';
+          video.parentNode.appendChild(subtitleContainer);
+          console.log('Created new subtitle container');
+        } else {
+          // Clear any existing content
+          subtitleContainer.innerHTML = '';
+          subtitleContainer.style.display = 'none';
+        }
+
+        // Process each subtitle file
+        for (let i = 0; i < subtitleArray.length; i++) {
+          const subtitle = subtitleArray[i];
+          const track = document.createElement('track');
+          track.srclang = subtitle.srclang || 'en';
+          track.label = subtitle.label || `Subtitle ${i + 1}`;
+          track.kind = 'subtitles';
+          track.src = subtitle.src;
+          track.default = subtitle.default || false;
+
+          // Set mode to hidden by default and add event listeners
+          track.addEventListener('load', function () {
+            console.log('Subtitle track loaded:', this.track);
+
+            // Initially set to hidden for all tracks
+            this.track.mode = 'hidden';
+
+            // Keep all tracks hidden by default
+            // They will be enabled when the user clicks the subtitle button
+
+            // Add cuechange event listener to this track
+            this.track.addEventListener('cuechange', handleCueChange);
+          });
+
+          // Add error handler for debugging
+          track.addEventListener('error', function (e) {
+            console.error('Error loading subtitle track:', this.src, e);
+          });
+
+          // Add to video
+          video.appendChild(track);
+
+          // Add to our tracks array
+          subtitleTracks.push({
+            element: track,
+            label: track.label,
+            language: track.srclang,
+            track: track.track
+          });
+
+          console.log('Added subtitle track:', track.label, 'from', subtitle.src);
+        }
+
+        console.log('Subtitles loaded:', subtitleArray.length, 'tracks');
+
+        // Keep all subtitles disabled by default
+        // They will be enabled when the user clicks the subtitle button
+        console.log('Subtitles loaded but disabled by default');
+      }
+
+      function srtToVtt(srtContent) {
+        // Convert SRT format to WebVTT format
+        let vttContent = 'WEBVTT\n\n';
+
+        // Split SRT content into blocks
+        const blocks = srtContent.trim().split('\n\n');
+
+        blocks.forEach((block, index) => {
+          const lines = block.split('\n');
+          if (lines.length >= 3) {
+            // First line is the sequence number (ignore)
+            // Second line is the timestamp
+            const timestampLine = lines[1];
+            // Remaining lines are the subtitle text
+            const textLines = lines.slice(2);
+
+            // Simple timestamp conversion from SRT to VTT format
+            const timestamp = timestampLine.replace(/,/g, '.');
+            const text = textLines.join('\n');
+
+            if (text.trim()) {
+              vttContent += `${timestamp}\n${text}\n\n`;
+            }
+          }
+        });
+
+        return vttContent;
+      }
+
+      function toggleSubtitleMenu(e) {
+        e.stopPropagation();
+        const existingMenu = document.getElementById('subtitleMenu');
+        if (existingMenu) {
+          existingMenu.remove();
+          document.removeEventListener('fullscreenchange', handleFullscreenChange);
+          return;
+        }
+
+        // Hide settings menu and submenus when opening subtitle menu
+        const settingsMenu = document.getElementById('settingsMenu');
+        const playbackSpeedSubmenu = document.getElementById('playbackSpeedSubmenu');
+        if (settingsMenu) settingsMenu.style.display = 'none';
+        if (playbackSpeedSubmenu) playbackSpeedSubmenu.style.display = 'none';
+
+        // Always show the menu when CC button is clicked
+        createSubtitleMenu();
+      }
+
+      // Fullscreen change handler for subtitle menu
+      const handleFullscreenChange = () => {
+        const menu = document.getElementById('subtitleMenu');
+        if (menu && menu.parentNode) {
+          // Remove and recreate menu with correct positioning
+          menu.remove();
+          setTimeout(() => {
+            if (subtitleTracks.length > 0) {
+              createSubtitleMenu();
+            }
+          }, 10);
+        }
+      };
+
+      function createSubtitleMenu() {
+        // Create subtitle menu
+        const menu = document.createElement('div');
+        menu.id = 'subtitleMenu';
+        menu.className = 'subtitle-menu';
+        menu.style.cssText = `
+        position: fixed !important;
+        background: rgba(0, 0, 0, 0.4) !important;
+        border: 2px solid rgba(255, 255, 255, 0.4) !important;
+        border-radius: 8px !important;
+        padding: 12px 0 !important;
+        min-width: 180px !important;
+        max-width: 250px !important;
+        z-index: 2147483647 !important;
+        color: white !important;
+        font-family: 'Netflix Sans', Arial, sans-serif !important;
+        font-size: 16px !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8) !important;
+        backdrop-filter: blur(10px) !important;
+        transform-origin: bottom right !important;
+        pointer-events: auto !important;
+      `;
+
+        // Add CSS animation for the menu
+        const style = document.createElement('style');
+        style.textContent = `
+          @keyframes slideInSmooth {
+            0% {
+              opacity: 0;
+              transform: translateY(15px) scale(0.95);
+            }
+            60% {
+              opacity: 0.8;
+              transform: translateY(-2px) scale(1.02);
+            }
+            100% {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+
+          /* Ensure subtitle menu appears above everything */
+          #subtitleMenu {
+            position: fixed !important;
+            z-index: 2147483647 !important;
+            pointer-events: auto !important;
+            will-change: transform !important;
+          }
+
+          #subtitleMenu:-webkit-full-screen {
+            position: fixed !important;
+            z-index: 2147483647 !important;
+            left: 50% !important;
+            top: 20% !important;
+            transform: translateX(-50%) translateY(-100%) !important;
+          }
+
+          #subtitleMenu:-moz-full-screen {
+            position: fixed !important;
+            z-index: 2147483647 !important;
+            left: 50% !important;
+            top: 20% !important;
+            transform: translateX(-50%) translateY(-100%) !important;
+          }
+
+          #subtitleMenu:fullscreen {
+            position: fixed !important;
+            z-index: 2147483647 !important;
+            left: 50% !important;
+            top: 20% !important;
+            transform: translateX(-50%) translateY(-100%) !important;
+          }
+
+          /* Mobile styles */
+          @media (max-width: 768px) {
+            .video-subtitles {
+              font-size: 18px !important;
+              bottom: 70px !important; /* Slightly higher on mobile to avoid controls */
+              padding: 6px 12px !important;
+              background-color: rgba(0, 0, 0, 0.6) !important;
+            }
+
+            /* Ensure body doesn't interfere */
+            body {
+              overflow: hidden !important;
+            }
+          }
+
+          /* Ensure body doesn't interfere */
+          body {
+            overflow: hidden !important;
+          }
+        `;
+        document.head.appendChild(style);
+
+        const fullscreenStyles = document.createElement('style');
+        fullscreenStyles.textContent = `
+  :fullscreen #subtitleMenu,
+  ::-webkit-full-screen #subtitleMenu,
+  :-moz-full-screen #subtitleMenu {
+    position: fixed !important;
+    z-index: 2147483647 !important;
+    transform: none !important;
+  }
+`;
+        document.head.appendChild(fullscreenStyles);
+
+        // Add "Off" option
+        const offOption = document.createElement('div');
+        offOption.className = 'subtitle-option';
+        offOption.textContent = 'Off';
+        offOption.style.cssText = `
+          padding: 12px 20px;
+          cursor: pointer;
+          transition: all 0.2s;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          font-weight: ${currentSubtitleIndex === null ? 'bold' : 'normal'};
+          color: ${currentSubtitleIndex === null ? '#e50914' : 'white'};
+        `;
+        offOption.addEventListener('mouseenter', () => {
+          if (currentSubtitleIndex !== null) {
+            offOption.style.backgroundColor = 'rgba(50, 132, 255, 0.18)';
+            offOption.style.color = '#3290ff';
+          }
+        });
+        offOption.addEventListener('mouseleave', () => {
+          offOption.style.backgroundColor = 'transparent';
+          offOption.style.color = currentSubtitleIndex === null ? '#e50914' : 'white';
+        });
+        offOption.addEventListener('click', () => {
+          selectSubtitle(null);
+          menu.remove();
+        });
+        menu.appendChild(offOption);
+
+        // Add language options
+        subtitleTracks.forEach((track, index) => {
+          const option = document.createElement('div');
+          option.className = 'subtitle-option';
+          option.textContent = track.label;
+          const isActive = currentSubtitleIndex === index;
+          option.style.cssText = `
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: ${isActive ? 'bold' : 'normal'};
+            color: ${isActive ? '#e50914' : 'white'};
+          `;
+          option.addEventListener('mouseenter', () => {
+            if (!isActive) {
+              option.style.backgroundColor = 'rgba(50, 132, 255, 0.18)';
+              option.style.color = '#3290ff';
+            }
+          });
+          option.addEventListener('mouseleave', () => {
+            option.style.backgroundColor = 'transparent';
+            option.style.color = isActive ? '#e50914' : 'white';
+          });
+          option.addEventListener('click', () => {
+            selectSubtitle(index);
+            menu.remove();
+          });
+          menu.appendChild(option);
+        });
+
+
+        // Position relative to the CC button
+        const subtitleBtn = document.getElementById('subtitleBtn');
+        const videoContainer = document.querySelector('.video-container');
+        const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+        if (subtitleBtn) {
+          const rect = subtitleBtn.getBoundingClientRect();
+          if (isFullscreen && videoContainer && (document.fullscreenElement === videoContainer || document.webkitFullscreenElement === videoContainer || document.mozFullScreenElement === videoContainer || document.msFullscreenElement === videoContainer)) {
+            // Append menu to the fullscreen video container and position absolutely inside it
+            videoContainer.appendChild(menu);
+            menu.style.position = 'absolute';
+            // Get button position relative to container
+            const containerRect = videoContainer.getBoundingClientRect();
+            const btnLeft = rect.left - containerRect.left;
+            const btnTop = rect.top - containerRect.top;
+            // Place menu above the button, right-aligned
+            menu.style.left = `${btnLeft + rect.width - menu.offsetWidth}px`;
+            menu.style.top = `${btnTop - 10}px`;
+            menu.style.transform = 'translateY(-100%)';
+            menu.style.maxWidth = '300px';
+            menu.style.zIndex = '2147483647';
+          } else {
+            // Normal window positioning
+            menu.style.position = 'fixed';
+            menu.style.right = `${window.innerWidth - rect.right}px`;
+            menu.style.top = `${rect.top - 10}px`;
+            menu.style.transform = 'translateY(-100%)';
+            menu.style.zIndex = '2147483647';
+            document.body.appendChild(menu);
+          }
+        } else {
+          // Fallback positioning if button not found
+          menu.style.position = isFullscreen ? 'absolute' : 'fixed';
+          menu.style.top = '50%';
+          menu.style.left = '50%';
+          menu.style.transform = 'translate(-50%, -50%)';
+          menu.style.zIndex = '2147483647';
+          if (isFullscreen && videoContainer && (document.fullscreenElement === videoContainer || document.webkitFullscreenElement === videoContainer || document.mozFullScreenElement === videoContainer || document.msFullscreenElement === videoContainer)) {
+            videoContainer.appendChild(menu);
+          } else {
+            document.body.appendChild(menu);
+          }
+        }
+
+        // Show current active subtitle indicator
+        updateSubtitleIndicators(currentSubtitleIndex);
+
+        // Handle fullscreen change events
+        function handleFullscreenChange() {
+          const isFullscreen = document.fullscreenElement ||
+            document.webkitFullscreenElement ||
+            document.mozFullScreenElement ||
+            document.msFullscreenElement;
+
+          const container = document.querySelector('.video-container');
+          const subtitleElement = document.querySelector('.video-subtitles');
+
+          if (isFullscreen) {
+            document.documentElement.classList.add('fullscreen');
+            container.classList.add('fullscreen');
+
+            // Ensure the subtitle container is properly positioned in fullscreen
+            if (subtitleElement) {
+              // Move the subtitle container to the fullscreen element if subtitles are active
+              if (currentSubtitleIndex !== null) {
+                if (!container.contains(subtitleElement)) {
+                  container.appendChild(subtitleElement);
+                }
+                subtitleElement.style.display = 'block';
+                // Apply fullscreen-specific positioning
+                subtitleElement.classList.add('fullscreen-subtitles');
+              }
+            }
+          } else {
+            document.documentElement.classList.remove('fullscreen');
+            container.classList.remove('fullscreen');
+
+            // Move the subtitle container back to body if needed
+            if (subtitleElement) {
+              if (!document.body.contains(subtitleElement)) {
+                document.body.appendChild(subtitleElement);
+              }
+              // Remove fullscreen class
+              subtitleElement.classList.remove('fullscreen-subtitles');
+              // Restore visibility if subtitles are active
+              subtitleElement.style.display = currentSubtitleIndex !== null ? 'block' : 'none';
+            }
+          }
+
+          // Force update subtitle position if subtitles are active
+          if (currentSubtitleIndex !== null && video && video.textTracks && currentSubtitleTrack) {
+            const currentTime = video.currentTime;
+            // Force a small update to refresh the subtitle display
+            video.textTracks[currentSubtitleIndex].mode = 'hidden';
+            setTimeout(() => {
+              video.textTracks[currentSubtitleIndex].mode = 'showing';
+              if (currentTime > 0) {
+                video.currentTime = currentTime + 0.01;
+                video.currentTime = currentTime;
+              }
+            }, 50);
+          }
+        }
+
+        // Add fullscreen change event listeners for all browsers
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+        // Listen for fullscreen changes
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+        // Close menu when clicking outside
+        setTimeout(() => {
+          const closeMenu = (e) => {
+            if (!menu.contains(e.target) && e.target !== subtitleBtn) {
+              menu.remove();
+              document.removeEventListener('click', closeMenu);
+              document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            }
+          };
+          document.addEventListener('click', closeMenu);
+        }, 100);
+      }
+
+      function selectSubtitle(trackIndex) {
+        console.log('Selecting subtitle track:', trackIndex);
+
+        // Initialize subtitle container if it doesn't exist
+        initSubtitleContainer();
+
+        // Clear any existing cue change listeners
+        if (currentSubtitleTrack) {
+          currentSubtitleTrack.removeEventListener('cuechange', handleCueChange);
+        }
+
+        // If no track is specified, do nothing (keep current state)
+        if (trackIndex === undefined) {
+          return;
+        }
+
+        // First, disable all text tracks
+        for (let i = 0; i < video.textTracks.length; i++) {
+          video.textTracks[i].mode = 'hidden';
+        }
+
+        // If trackIndex is null or same as current, turn off subtitles
+        if (trackIndex === null || trackIndex === currentSubtitleIndex) {
+          currentSubtitleIndex = null;
+          currentSubtitleTrack = null;
+          console.log('Subtitles disabled');
+          showSubtitleNotification('Subtitles: Off');
+
+          // Hide the subtitle container
+          if (subtitleContainer) {
+            subtitleContainer.style.display = 'none';
+          }
+        }
+        // If valid track index, enable it
+        else if (trackIndex >= 0 && trackIndex < video.textTracks.length) {
+          try {
+            const track = video.textTracks[trackIndex];
+            console.log('Enabling track:', track.label, track);
+
+            // Set up cue change handler
+            track.addEventListener('cuechange', handleCueChange);
+
+            // Force a small delay to ensure the track is ready
+            setTimeout(() => {
+              track.mode = 'showing';
+              console.log('Track mode set to showing, current mode:', track.mode);
+
+              // Force a cue change to trigger the display
+              if (track.cues && track.cues.length > 0) {
+                const event = new Event('cuechange');
+                track.dispatchEvent(event);
+              }
+            }, 100);
+
+            currentSubtitleIndex = trackIndex;
+            currentSubtitleTrack = track;
+            console.log('Subtitle enabled:', track.label);
+            showSubtitleNotification(`Subtitles: ${track.label}`);
+          } catch (error) {
+            console.error('Error enabling subtitle track:', error);
+            showSubtitleNotification('Error enabling subtitles');
+          }
+        }
+
+        // Update UI to show active state
+        updateSubtitleIndicators(currentSubtitleIndex);
+
+        // Remove the menu after selection
+        const menu = document.getElementById('subtitleMenu');
+        if (menu) menu.remove();
+      }
+
+      // Handle cue changes to update the custom subtitle display
+      function handleCueChange() {
+        if (!subtitleContainer) {
+          console.warn('Subtitle container not found');
+          return;
+        }
+
+        // Only show subtitles if a track is explicitly selected
+        if (currentSubtitleIndex === null || !currentSubtitleTrack) {
+          subtitleContainer.style.display = 'none';
+          return;
+        }
+
+        const track = this;
+        const activeCues = Array.from(track.activeCues || []);
+
+        if (activeCues.length > 0) {
+          // Show active cues
+          let subtitleText = '';
+          for (let i = 0; i < activeCues.length; i++) {
+            if (activeCues[i].text) {
+              subtitleText += activeCues[i].text + '\n';
+            }
+          }
+
+          if (subtitleText.trim()) {
+            // Ensure the container is visible and has the correct styles
+            subtitleContainer.style.display = 'block';
+            subtitleContainer.style.visibility = 'visible';
+            subtitleContainer.style.opacity = '1';
+
+            // Update the text content
+            subtitleContainer.innerHTML = ''; // Clear first to avoid flash of old content
+            subtitleContainer.textContent = subtitleText.trim();
+
+            // Add line breaks back in
+            subtitleContainer.innerHTML = subtitleText.trim().replace(/\n/g, '<br>');
+          } else {
+            subtitleContainer.style.display = 'none';
+          }
+        } else {
+          // Hide when no active cues
+          subtitleContainer.style.display = 'none';
+        }
+      }
+
+      function updateSubtitleIndicators(activeIndex) {
+        // Update visual indicators in the menu
+        const menu = document.getElementById('subtitleMenu');
+        if (menu) {
+          const options = menu.querySelectorAll('.subtitle-option');
+          options.forEach((option, index) => {
+            // Remove existing indicators
+            const existingIndicator = option.querySelector('.subtitle-indicator');
+            if (existingIndicator) {
+              existingIndicator.remove();
+            }
+
+            // Add red dot for active subtitle (skip "Off" option at index 0)
+            if (activeIndex !== null && index === activeIndex + 1) {
+              const dot = document.createElement('span');
+              dot.className = 'subtitle-indicator';
+              dot.style.cssText = `
+                display: inline-block;
+                width: 8px;
+                height: 8px;
+                background-color: #e50914;
+                border-radius: 50%;
+                margin-right: 8px;
+                vertical-align: middle;
+              `;
+              option.insertBefore(dot, option.firstChild);
+            }
+          });
+        }
+      }
+
+      // Initialize continue watching UI
+      continueWatchingUI = new ContinueWatchingUI();
+
+      // Set movie info from URL parameters
+      document.title = `${title}`;
+      movieTitle.textContent = title;
+      movieYear.textContent = year;
+      movieRating.textContent = rating ? `${rating}/10` : 'N/A';
+      movieDescription.textContent = description;
+
+      // Function to load video subtitles
+      function loadVideoSubtitles() {
+        const videoId = urlParams.get('id');
+        if (videoId && videoSources[videoId] && videoSources[videoId].subtitles) {
+          // Initialize subtitle container first
+          initSubtitleContainer();
+
+          // Then load the subtitles
+          loadSubtitles(videoSources[videoId].subtitles);
+
+          // Set up cue change handler for the video's text tracks
+          const tracks = video.textTracks;
+          for (let i = 0; i < tracks.length; i++) {
+            tracks[i].addEventListener('cuechange', handleCueChange);
+          }
+        }
+      }
+
+      // Save progress when video is paused or closed
+      function saveProgress() {
+        if (video.duration && video.currentTime > 0) {
+          const progressData = {
+            currentTime: video.currentTime,
+            duration: video.duration,
+            title: title,
+            poster: poster,
+            lastWatched: new Date().toISOString()
+          };
+
+          // Save progress to continue watching
+          if (window.ContinueWatchingManager) {
+            window.ContinueWatchingManager.saveMovieProgress(src, progressData);
+          }
+        }
+      }
+
+      // Save progress when video is paused
+      video.addEventListener('pause', saveProgress);
+
+      // Save progress when page is unloaded
+      window.addEventListener('beforeunload', saveProgress);
+
+      // Make sure subtitles are loaded after video metadata is loaded
+      video.addEventListener('loadedmetadata', function () {
+        loadVideoSubtitles();
+      });
+
+      // Back button functionality
+      backButton.addEventListener('click', () => {
+        window.location.href = 'index.html';
+      });
+
+      // --- Enhanced Player Features ---
+      (function enhancePlayer() {
+        const video = document.getElementById('video');
+        const videoContainer = document.getElementById('videoContainer');
+        const controlsContainer = document.getElementById('controlsContainer');
+        let spinner = null;
+
+        // 1. Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+          switch (e.key.toLowerCase()) {
+            case 'spacebar': {
+              e.preventDefault();
+              // Block play/pause toggles while resume prompt is active
+              if (window.__resumePromptActive) { video.pause(); break; }
+              video.paused ? video.play() : video.pause();
+              break;
+            }
+            case 'arrowright': video.currentTime += 5; break;
+            case 'arrowleft': video.currentTime -= 5; break;
+            case 'm': video.muted = !video.muted; break;
+            case 'arrowup': video.volume = Math.min(1, video.volume + 0.05); break;
+            case 'arrowdown': video.volume = Math.max(0, video.volume - 0.05); break;
+            case 'p':
+              if (document.pictureInPictureElement) document.exitPictureInPicture();
+              else if (video.requestPictureInPicture) video.requestPictureInPicture();
+              break;
+          }
+        });
+
+        // 3. Click/tap overlay to play/pause
+        videoContainer.addEventListener('click', (e) => {
+          if (e.target === video || e.target === videoContainer) {
+            // Block play/pause toggles while resume prompt is active
+            if (window.__resumePromptActive) { video.pause(); return; }
+            video.paused ? video.play() : video.pause();
+          }
+        });
+
+        // 4. Animated loading spinner while buffering
+        function showSpinner() {
+          if (!spinner) {
+            spinner = document.createElement('div');
+            spinner.className = 'video-loading-spinner';
+            videoContainer.appendChild(spinner);
+          }
+        }
+        function hideSpinner() {
+          if (spinner) { spinner.remove(); spinner = null; }
+        }
+        video.addEventListener('waiting', showSpinner);
+        video.addEventListener('seeking', showSpinner);
+        video.addEventListener('playing', hideSpinner);
+        video.addEventListener('canplay', hideSpinner);
+        video.addEventListener('canplaythrough', hideSpinner);
+        video.addEventListener('ended', hideSpinner);
+
+        // 5. Volume slider with icon feedback (already present, but add feedback)
+        const volumeSlider = document.getElementById('volumeSlider');
+        const muteBtn = document.getElementById('muteBtn');
+        if (volumeSlider && muteBtn) {
+          volumeSlider.addEventListener('input', () => {
+            if (video.volume === 0 || video.muted) muteBtn.classList.add('muted');
+            else muteBtn.classList.remove('muted');
+          });
+          video.addEventListener('volumechange', () => {
+            if (video.volume === 0 || video.muted) muteBtn.classList.add('muted');
+            else muteBtn.classList.remove('muted');
+          });
+        }
+
+        // 6. Skip intro/recap button (if timestamp provided)
+        const skipIntroBtn = document.createElement('button');
+        skipIntroBtn.textContent = 'Skip Intro';
+        skipIntroBtn.className = 'skip-intro-btn';
+        skipIntroBtn.style = 'position:absolute;top:16px;right:16px;z-index:1001;padding:0.5em 1.2em;background:#3290ff;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.18);display:none;';
+        videoContainer.appendChild(skipIntroBtn);
+        let introTime = null;
+        // Example: set introTime from URL param ?intro=85
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('intro')) {
+          introTime = parseInt(urlParams.get('intro'));
+          if (!isNaN(introTime) && introTime > 0) {
+            skipIntroBtn.style.display = '';
+            skipIntroBtn.onclick = () => { video.currentTime = introTime; skipIntroBtn.style.display = 'none'; };
+            video.addEventListener('timeupdate', () => {
+              if (video.currentTime > introTime) skipIntroBtn.style.display = 'none';
+
+              // Auto-save progress every 5 seconds
+              if (window.continueWatchingUI && video.currentTime % 5 < 0.1) {
+                const progressData = {
+                  currentTime: video.currentTime,
+                  duration: video.duration,
+                  title: title,
+                  poster: poster,
+                  lastWatched: new Date().toISOString()
+                };
+
+                if (window.ContinueWatchingManager) {
+                  window.ContinueWatchingManager.saveMovieProgress(src, progressData);
+                }
+              }
+            });
+          }
+        }
+
+        // 7. Picture-in-Picture support (keyboard P)
+        // Already handled in keyboard shortcuts above
+
+        // 8. Mini progress bar preview on hover (basic time tooltip)
+        if (controlsContainer) {
+          const progressBar = document.getElementById('progressBar');
+          const progressContainer = document.getElementById('progressContainer');
+          let tooltip = document.createElement('div');
+          tooltip.className = 'scrubber-time';
+          tooltip.style = 'position:absolute;bottom:32px;left:0;z-index:1002;background:rgba(0,0,0,0.85);color:#fff;padding:2px 8px;border-radius:4px;font-size:0.95em;pointer-events:none;display:none;';
+          progressContainer.appendChild(tooltip);
+          progressContainer.addEventListener('mousemove', (e) => {
+            const rect = progressContainer.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            const time = percent * video.duration;
+            if (!isNaN(time)) {
+              tooltip.textContent = formatTime(time);
+              tooltip.style.left = `${e.clientX - rect.left - 18}px`;
+              tooltip.style.display = 'block';
+            }
+          });
+          progressContainer.addEventListener('mouseleave', () => {
+            tooltip.style.display = 'none';
+          });
+        }
+
+        // 9. Remember last volume and playback position
+        // Save on change
+        video.addEventListener('volumechange', () => {
+          localStorage.setItem('playerVolume', video.volume);
+          localStorage.setItem('playerMuted', video.muted ? '1' : '0');
+        });
+        video.addEventListener('timeupdate', () => {
+          if (!video.seeking && !video.paused) {
+            localStorage.setItem('playerLastTime', video.currentTime);
+            localStorage.setItem('playerLastSrc', video.currentSrc);
+          }
+        });
+        // Restore on load
+        window.addEventListener('DOMContentLoaded', () => {
+          const lastVol = localStorage.getItem('playerVolume');
+          const lastMuted = localStorage.getItem('playerMuted');
+          if (lastVol !== null) video.volume = parseFloat(lastVol);
+          if (lastMuted === '1') video.muted = true;
+          const lastSrc = localStorage.getItem('playerLastSrc');
+          const lastTime = localStorage.getItem('playerLastTime');
+          if (lastSrc === video.currentSrc && lastTime) {
+            video.currentTime = parseFloat(lastTime);
+          }
+        });
+
+        // 10. Responsive controls for mobile/desktop (basic)
+        function updateControlsForScreen() {
+          if (window.innerWidth < 600) {
+            controlsContainer.classList.add('mobile');
+          } else {
+            controlsContainer.classList.remove('mobile');
+          }
+        }
+        window.addEventListener('resize', updateControlsForScreen);
+        updateControlsForScreen();
+
+        // Helper: format time in HH:MM:SS or MM:SS format
+        function formatTime(seconds) {
+          seconds = Math.floor(seconds);
+          const hours = Math.floor(seconds / 3600);
+          const minutes = Math.floor((seconds % 3600) / 60);
+          const remainingSeconds = seconds % 60;
+
+          const paddedMinutes = minutes.toString().padStart(2, '0');
+          const paddedSeconds = remainingSeconds.toString().padStart(2, '0');
+
+          if (hours > 0) {
+            return `${hours}:${paddedMinutes}:${paddedSeconds}`;
+          } else {
+            return `${minutes}:${paddedSeconds}`;
+          }
+        }
+      })();
+      // State
+      let hideControlsTimeout;
+      let isScrubbing = false;
+      let wasPlayingBeforeScrubbing = false;
+      let lastTapTime = 0;
+      let tapCount = 0;
+      let tapTimeout;
+      const HIDE_CONTROLS_DELAY = 3000;
+      const DOUBLE_TAP_DELAY = 300;
+      const SEEK_AMOUNT = 10; // seconds
+
+      // Format time in seconds to HH:MM:SS or MM:SS (for durations under 1 hour)
+      function formatTime(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const remainingSeconds = Math.floor(seconds % 60);
+
+        // Always show two digits for minutes and seconds
+        const paddedMinutes = String(minutes).padStart(2, '0');
+        const paddedSeconds = String(remainingSeconds).padStart(2, '0');
+
+        // Only show hours if the video is 1 hour or longer
+        if (hours > 0) {
+          return `${hours}:${paddedMinutes}:${paddedSeconds}`;
+        } else {
+          return `${minutes}:${paddedSeconds}`;
+        }
+      }
+
+      // Update time display
+      function updateTimeDisplay() {
+        if (!isNaN(video.duration)) {
+          const current = formatTime(video.currentTime);
+          const total = formatTime(video.duration);
+
+          if (timeDisplay) timeDisplay.textContent = `${current} / ${total}`;
+          if (scrubberTime) scrubberTime.textContent = formatTime(video.currentTime);
+        }
+      }
+
+      // Update progress bar
+      function updateProgress() {
+        if (!isScrubbing && !isNaN(video.duration) && video.duration > 0) {
+          const progress = (video.currentTime / video.duration) * 100;
+          progressBar.style.width = `${progress}%`;
+
+          // Update buffered progress
+          if (video.buffered.length > 0) {
+            const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+            const duration = video.duration;
+            if (duration > 0) {
+              const bufferedPercent = (bufferedEnd / duration) * 100;
+              progressBuffer.style.width = `${bufferedPercent}%`;
+            }
+          }
+        }
+        updateTimeDisplay();
+      }
+
+      // Toggle play/pause
+      function togglePlayPause() {
+        // Suppress starting playback when resume prompt is active
+        if (window.__resumePromptActive) {
+          video.pause();
+          playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+          return;
+        }
+        if (video.paused) {
+          video.play();
+          playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        } else {
+          video.pause();
+          playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        }
+        showPlayPauseOverlay(!video.paused);
+        resetHideControlsTimeout();
+      }
+
+      // Toggle mute
+      function toggleMute() {
+        video.muted = !video.muted;
+        muteBtn.innerHTML = video.muted ?
+          '<i class="fas fa-volume-mute"></i>' :
+          '<i class="fas fa-volume-up"></i>';
+        if (!video.muted) {
+          video.volume = volumeSlider.value;
+        }
+        resetHideControlsTimeout();
+      }
+
+      // Update volume
+      function updateVolume() {
+        video.volume = volumeSlider.value;
+        video.muted = false;
+        muteBtn.innerHTML = video.volume > 0 ?
+          '<i class="fas fa-volume-up"></i>' :
+          '<i class="fas fa-volume-mute"></i>';
+      }
+
+      // Toggle fullscreen with better error handling and cross-browser support
+      // Also includes CSS-only "pseudo-fullscreen" fallback for restricted contexts
+      let usePseudoFullscreen = false;
+
+      async function toggleFullscreen() {
+        try {
+          const videoContainer = document.getElementById('videoContainer');
+          if (!videoContainer) {
+            throw new Error('Video container not found');
+          }
+
+          // Check current fullscreen state (real fullscreen)
+          const isRealFullscreen = document.fullscreenElement ||
+            document.webkitFullscreenElement ||
+            document.mozFullScreenElement ||
+            document.msFullscreenElement;
+
+          // Check pseudo-fullscreen state
+          const isPseudoFullscreen = document.body.classList.contains('pseudo-fullscreen');
+
+          if (!isRealFullscreen && !isPseudoFullscreen) {
+            // Try to enter fullscreen
+            let fullscreenSuccess = false;
+
+            try {
+              // Try real fullscreen first
+              if (videoContainer.requestFullscreen) {
+                await videoContainer.requestFullscreen();
+                fullscreenSuccess = true;
+                usePseudoFullscreen = false;
+              } else if (videoContainer.webkitRequestFullscreen) {
+                await videoContainer.webkitRequestFullscreen();
+                fullscreenSuccess = true;
+                usePseudoFullscreen = false;
+              } else if (videoContainer.mozRequestFullScreen) {
+                await videoContainer.mozRequestFullScreen();
+                fullscreenSuccess = true;
+                usePseudoFullscreen = false;
+              } else if (videoContainer.msRequestFullscreen) {
+                await videoContainer.msRequestFullscreen();
+                fullscreenSuccess = true;
+                usePseudoFullscreen = false;
+              } else if (video && video.webkitEnterFullscreen) {
+                // iOS Safari
+                await video.webkitEnterFullscreen();
+                fullscreenSuccess = true;
+                usePseudoFullscreen = false;
+              } else {
+                // No fullscreen API found, will try pseudo-fullscreen
+                console.warn('Fullscreen API not available, using CSS-based pseudo-fullscreen');
+              }
+            } catch (fsErr) {
+              console.warn('Real fullscreen failed, falling back to pseudo-fullscreen:', fsErr.message);
+            }
+
+            // If real fullscreen failed, use pseudo-fullscreen
+            if (!fullscreenSuccess) {
+              document.body.classList.add('pseudo-fullscreen');
+              usePseudoFullscreen = true;
+            }
+
+            // Update UI after successful fullscreen (both real and pseudo)
+            if (fullscreenBtn) {
+              fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+            }
+
+            // Move subtitle container to video container for proper positioning in fullscreen
+            if (subtitleContainer && subtitleContainer.parentElement !== videoContainer) {
+              videoContainer.appendChild(subtitleContainer);
+              subtitleContainer.style.display = 'block';
+              void subtitleContainer.offsetWidth; // Force reflow
+            }
+
+            // Add fullscreen class to body for CSS targeting (real fullscreen)
+            if (isRealFullscreen) {
+              document.body.classList.add('fullscreen');
+            }
+
+            // Force a re-layout
+            setTimeout(() => {
+              videoContainer.style.display = 'block';
+              void videoContainer.offsetWidth;
+            }, 0);
+          } else {
+            // Exit fullscreen (both real and pseudo)
+            if (isRealFullscreen) {
+              if (document.exitFullscreen) {
+                await document.exitFullscreen();
+              } else if (document.webkitExitFullscreen) {
+                await document.webkitExitFullscreen();
+              } else if (document.mozCancelFullScreen) {
+                await document.mozCancelFullScreen();
+              } else if (document.msExitFullscreen) {
+                await document.msExitFullscreen();
+              }
+              document.body.classList.remove('fullscreen');
+            }
+
+            // Exit pseudo-fullscreen
+            if (isPseudoFullscreen) {
+              document.body.classList.remove('pseudo-fullscreen');
+              usePseudoFullscreen = false;
+            }
+
+            // Update UI after exiting fullscreen
+            if (fullscreenBtn) {
+              fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            }
+
+            // Move subtitle container back to body when exiting fullscreen
+            if (subtitleContainer && subtitleContainer.parentElement === videoContainer) {
+              document.body.appendChild(subtitleContainer);
+              void subtitleContainer.offsetWidth; // Force reflow
+            }
+          }
+
+          // Force update controls and reset timeout
+          resetHideControlsTimeout();
+
+        } catch (err) {
+          console.error('Fullscreen error:', err);
+          console.error('Error name:', err.name);
+          console.error('Error message:', err.message);
+
+          // Provide more specific error messages
+          let errorMsg = 'Fullscreen mode activated using CSS rendering. ';
+
+          if (err.name === 'NotAllowedError' || err.message.includes('Permissions check failed')) {
+            errorMsg = 'Browser blocked real fullscreen, but activated CSS-based fullscreen mode instead.';
+          }
+
+          showSystemMessage(errorMsg, 'info');
+        }
+      }
+
+      // We're now using CSS for menu positioning in fullscreen mode
+      // No JavaScript positioning is needed
+
+      // Seek to specific time
+      function seekToTime(e) {
+        const rect = progressContainer.getBoundingClientRect();
+        const pos = (e.clientX - rect.left) / rect.width;
+        video.currentTime = pos * video.duration;
+      }
+
+      // Show/hide controls
+      function showControls() {
+        controlsContainer.classList.add('visible');
+      }
+
+      function hideControls() {
+        if (!video.paused) {
+          controlsContainer.classList.remove('visible');
+        }
+      }
+
+      function resetHideControlsTimeout() {
+        clearTimeout(hideControlsTimeout);
+        controlsContainer.classList.add('visible');
+        hideControlsTimeout = setTimeout(hideControls, HIDE_CONTROLS_DELAY);
+      }
+
+      // Show play/pause overlay
+      function showPlayPauseOverlay(isPlaying) {
+        const icon = playPauseOverlay.querySelector('i');
+        icon.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
+        playPauseOverlay.classList.add('visible');
+
+        clearTimeout(playPauseOverlay.timeout);
+        playPauseOverlay.timeout = setTimeout(() => {
+          playPauseOverlay.classList.remove('visible');
+        }, 500);
+      }
+
+      // Handle mouse double click for seeking (desktop)
+      function handleMouseDoubleClick(e) {
+        e.preventDefault();
+        const rect = video.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const videoWidth = rect.width;
+
+        // If click is on the left side, rewind 10 seconds
+        if (clickX < videoWidth / 2) {
+          video.currentTime = Math.max(0, video.currentTime - SEEK_AMOUNT);
+          showSeekIndicator(rewindIndicator);
+          console.log('Mouse: Rewind 10 seconds');
+        }
+        // If click is on the right side, forward 10 seconds
+        else {
+          video.currentTime = Math.min(video.duration, video.currentTime + SEEK_AMOUNT);
+          showSeekIndicator(forwardIndicator);
+          console.log('Mouse: Forward 10 seconds');
+        }
+
+        updateProgress();
+        resetHideControlsTimeout();
+      }
+
+      // Handle single click for play/pause (desktop)
+      function handleSingleClick(e) {
+        e.preventDefault();
+        clearTimeout(tapTimeout);
+        tapTimeout = setTimeout(() => {
+          togglePlayPause();
+        }, 200);
+      }
+
+      // Handle touch events for seeking (mobile)
+      function handleDoubleTap(e) {
+        e.preventDefault();
+        const currentTime = Date.now();
+        const tapLength = currentTime - lastTapTime;
+
+        if (tapLength < DOUBLE_TAP_DELAY && tapLength > 0) {
+          // Double tap detected
+          clearTimeout(tapTimeout);
+          tapCount = 0;
+
+          const touch = e.changedTouches[0];
+          const rect = video.getBoundingClientRect();
+          const tapX = touch.clientX - rect.left;
+          const videoWidth = rect.width;
+
+          // If tap is on the left side, rewind 10 seconds
+          if (tapX < videoWidth / 2) {
+            video.currentTime = Math.max(0, video.currentTime - SEEK_AMOUNT);
+            showSeekIndicator(rewindIndicator);
+            console.log('Touch: Rewind 10 seconds');
+          }
+          // If tap is on the right side, forward 10 seconds
+          else {
+            video.currentTime = Math.min(video.duration, video.currentTime + SEEK_AMOUNT);
+            showSeekIndicator(forwardIndicator);
+            console.log('Touch: Forward 10 seconds');
+          }
+
+          updateProgress();
+          resetHideControlsTimeout();
+          return;
+        }
+
+        // Single tap - prepare for potential double tap
+        tapCount++;
+        if (tapCount === 1) {
+          tapTimeout = setTimeout(() => {
+            if (tapCount === 1) {
+              // Single tap - toggle play/pause
+              togglePlayPause();
+            }
+            tapCount = 0;
+          }, DOUBLE_TAP_DELAY);
+        }
+
+        lastTapTime = currentTime;
+      }
+
+      // Show seek indicator
+      function showSeekIndicator(indicator) {
+        if (!indicator) return;
+
+        // Remove any existing visible indicators first
+        document.querySelectorAll('.seek-indicator.visible').forEach(el => {
+          el.classList.remove('visible');
+        });
+
+        indicator.classList.add('visible');
+        clearTimeout(indicator.timeout);
+        indicator.timeout = setTimeout(() => {
+          indicator.classList.remove('visible');
+        }, 1000);
+      }
+
+      // Handle scrubbing
+      function startScrubbing(e) {
+        if (e.type === 'mousedown' && e.button !== 0) return; // Only left mouse button
+
+        isScrubbing = true;
+        wasPlayingBeforeScrubbing = !video.paused;
+        if (wasPlayingBeforeScrubbing) {
+          video.pause();
+        }
+
+        // Show scrubber
+        scrubber.classList.add('active');
+        updateScrubberPosition(e);
+
+        // Prevent default for touch events
+        e.preventDefault();
+      }
+
+      function updateScrubberPosition(e) {
+        if (!isScrubbing) return;
+
+        const rect = video.getBoundingClientRect();
+        let pos = 0;
+
+        if (e.type.includes('touch')) {
+          const touch = e.touches[0] || e.changedTouches[0];
+          pos = (touch.clientX - rect.left) / rect.width;
+        } else {
+          pos = (e.clientX - rect.left) / rect.width;
+        }
+
+        pos = Math.max(0, Math.min(1, pos));
+
+        // Update scrubber position
+        const scrubberLine = document.querySelector('.scrubber-line');
+        scrubberLine.style.left = `${pos * 100}%`;
+
+        // Update scrubber time
+        const time = pos * video.duration;
+        scrubberTime.textContent = formatTime(time);
+
+        // Update progress bar during scrubbing
+        progressBar.style.width = `${pos * 100}%`;
+
+        // Update current time display
+        currentTimeDisplay.textContent = formatTime(time);
+      }
+
+      function endScrubbing(e) {
+        if (!isScrubbing) return;
+
+        const rect = video.getBoundingClientRect();
+        let pos = 0;
+
+        if (e.type.includes('touch')) {
+          const touch = e.changedTouches[0];
+          pos = (touch.clientX - rect.left) / rect.width;
+        } else {
+          pos = (e.clientX - rect.left) / rect.width;
+        }
+
+        pos = Math.max(0, Math.min(1, pos));
+        video.currentTime = pos * video.duration;
+
+        if (wasPlayingBeforeScrubbing && !window.__resumePromptActive) {
+          video.play();
+        } else {
+          video.pause();
+        }
+
+        isScrubbing = false;
+        scrubber.classList.remove('active');
+        resetHideControlsTimeout();
+      }
+
+      // Skip forward/backward functions
+      function skipBackward() {
+        video.currentTime = Math.max(0, video.currentTime - SEEK_AMOUNT);
+        showSeekIndicator(rewindIndicator);
+        resetHideControlsTimeout();
+      }
+
+      function skipForward() {
+        video.currentTime = Math.min(video.duration, video.currentTime + SEEK_AMOUNT);
+        showSeekIndicator(forwardIndicator);
+        resetHideControlsTimeout();
+      }
+
+      // Event Listeners
+      skipBackwardBtn.addEventListener('click', skipBackward);
+      skipForwardBtn.addEventListener('click', skipForward);
+
+      // Handle touch events for mobile
+      video.addEventListener('touchend', handleDoubleTap);
+      // Handle mouse events for desktop
+      video.addEventListener('dblclick', handleMouseDoubleClick);
+      video.addEventListener('click', handleSingleClick);
+      video.addEventListener('play', () => {
+        playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        resetHideControlsTimeout();
+      });
+      video.addEventListener('pause', () => {
+        playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+      });
+      video.addEventListener('timeupdate', updateProgress);
+      video.addEventListener('loadedmetadata', updateProgress);
+      video.addEventListener('ended', () => {
+        playPauseBtn.innerHTML = '<i class="fas fa-redo"></i>';
+      });
+
+      // Touch events for mobile
+
+      // Mouse events for desktop
+      video.addEventListener('mousedown', startScrubbing);
+      video.addEventListener('mousemove', updateScrubberPosition);
+      video.addEventListener('mouseup', endScrubbing);
+      video.addEventListener('mouseleave', () => {
+        if (isScrubbing) {
+          endScrubbing({ type: 'mouseup', clientX: 0 });
+        }
+      });
+
+      // Controls events
+      playPauseBtn.addEventListener('click', togglePlayPause);
+      muteBtn.addEventListener('click', toggleMute);
+      volumeSlider.addEventListener('input', updateVolume);
+      fullscreenBtn.addEventListener('click', toggleFullscreen);
+      if (subtitleBtn) {
+        subtitleBtn.addEventListener('click', toggleSubtitleMenu);
+      }
+
+      // Global fullscreen change handler for subtitles
+      const handleGlobalFullscreenChange = () => {
+        const isFullscreen = document.fullscreenElement ||
+          document.webkitFullscreenElement ||
+          document.mozFullScreenElement ||
+          document.msFullscreenElement;
+
+        const container = document.querySelector('.video-container');
+        const subtitleElement = document.querySelector('.video-subtitles');
+
+        if (!subtitleElement || currentSubtitleIndex === null) return;
+
+        if (isFullscreen) {
+          // Moving to fullscreen
+          if (!container.contains(subtitleElement)) {
+            container.appendChild(subtitleElement);
+          }
+          subtitleElement.classList.add('fullscreen-subtitles');
+        } else {
+          // Exiting fullscreen
+          if (!document.body.contains(subtitleElement)) {
+            document.body.appendChild(subtitleElement);
+          }
+          subtitleElement.classList.remove('fullscreen-subtitles');
+        }
+      };
+
+      // Register global fullscreen change listeners
+      document.addEventListener('fullscreenchange', handleGlobalFullscreenChange);
+      document.addEventListener('webkitfullscreenchange', handleGlobalFullscreenChange);
+      document.addEventListener('mozfullscreenchange', handleGlobalFullscreenChange);
+      document.addEventListener('MSFullscreenChange', handleGlobalFullscreenChange);
+
+      // Progress bar click to seek
+      progressContainer.addEventListener('click', (e) => {
+        seekToTime(e);
+        resetHideControlsTimeout();
+      });
+
+      // Show controls on mouse move or touch
+      videoContainer.addEventListener('mousemove', resetHideControlsTimeout);
+      videoContainer.addEventListener('touchstart', resetHideControlsTimeout);
+
+      // Hide controls when mouse leaves the video container (desktop only)
+      videoContainer.addEventListener('mouseleave', () => {
+        if (!video.paused) {
+          hideControls();
+        }
+      });
+
+      // Keyboard controls
+      document.addEventListener('keydown', (e) => {
+        // Space or K key to play/pause
+        if (e.code === 'Space' || e.code === 'KeyK') {
+          e.preventDefault();
+          togglePlayPause();
+        }
+        // M key to mute/unmute
+        else if (e.code === 'KeyM') {
+          e.preventDefault();
+          toggleMute();
+        }
+        // F key to toggle fullscreen
+        else if (e.code === 'KeyF') {
+          e.preventDefault();
+          toggleFullscreen();
+        }
+        // Left/Right arrow keys to seek
+        else if (e.code === 'ArrowLeft') {
+          e.preventDefault();
+          video.currentTime = Math.max(0, video.currentTime - 5);
+          showSeekIndicator(rewindIndicator);
+          resetHideControlsTimeout();
+        }
+        else if (e.code === 'ArrowRight') {
+          e.preventDefault();
+          video.currentTime = Math.min(video.duration, video.currentTime + 5);
+          showSeekIndicator(forwardIndicator);
+          resetHideControlsTimeout();
+        }
+      });
+
+      // Initialize controls
+      resetHideControlsTimeout();
+    });
+  </script>
+  <!-- Add the subtitles CSS -->
+  <link rel="stylesheet" href="css/subtitles.css">
+</body>
+
+</html>

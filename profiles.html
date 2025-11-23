@@ -1,0 +1,2248 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profiles</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    /* Animated Background */
+    .bg-particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      background: linear-gradient(45deg, #6b66ff, #ff6b6b);
+      opacity: 0.3;
+      animation: float 15s infinite ease-in-out;
+      box-shadow: 0 0 15px 3px rgba(255, 255, 255, 0.4);
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0) translateX(0);
+      }
+
+      25% {
+        transform: translateY(-20px) translateX(10px);
+      }
+
+      50% {
+        transform: translateY(0) translateX(20px);
+      }
+
+      75% {
+        transform: translateY(20px) translateX(10px);
+      }
+    }
+
+    :root {
+      --primary: #6b66ff;
+      --primary-light: #8a85ff;
+      --primary-dark: #4a44ff;
+      --text-primary: #ffffff;
+      --text-secondary: rgba(255, 255, 255, 0.7);
+      --bg-primary: #0f111a;
+      --bg-secondary: #1a1d2b;
+      --bg-tertiary: #252a3a;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --error: #ff4d4f;
+      --success: #52c41a;
+      --warning: #faad14;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--text-primary);
+      background: linear-gradient(135deg, #0a0a0f, #0f111a, #0a0a0f);
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', sans-serif;
+      padding: 1.5rem;
+      position: relative;
+      overflow-x: hidden;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(1200px 800px at 50% 0%, rgba(107, 102, 255, 0.1), transparent 60%),
+        linear-gradient(to bottom right, rgba(107, 102, 255, 0.05), rgba(107, 102, 255, 0));
+      mix-blend-mode: screen;
+      opacity: 0.6;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .brand {
+      position: fixed;
+      top: -40px;
+      left: -70px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+      margin: 0;
+      z-index: 1000;
+    }
+
+    .brand img {
+      height: 280px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-weight: 700;
+      font-size: 2rem;
+      letter-spacing: .2px;
+    }
+
+    .sub {
+      margin: 6px 0 18px;
+      opacity: 0.8;
+    }
+
+    .top-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 1.5rem 0 2rem;
+      width: 100%;
+      max-width: 1200px;
+      padding: 0 1rem;
+    }
+
+    .user {
+      opacity: 0.9;
+      font-size: 0.95rem;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 8px 16px;
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Enhanced Button Styles */
+    .btn {
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: none;
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.95rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+      transform: translateX(-100%);
+      transition: 0.6s;
+      z-index: -1;
+    }
+
+    .btn:hover::before {
+      transform: translateX(100%);
+    }
+
+    .btn[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .btn svg {
+      transition: transform 0.2s ease;
+    }
+
+    .btn:hover svg {
+      transform: scale(1.1);
+    }
+
+    /* Primary Button (Create/Save) */
+    .btn-primary {
+
+      background: linear-gradient(135deg, #6b66ff, #9b8cff);
+      box-shadow: 0 4px 12px rgba(107, 102, 255, 0.25);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #5b56f0, #8b7cff);
+      box-shadow: 0 6px 16px rgba(107, 102, 255, 0.35);
+    }
+
+    /* Secondary Button (Cancel) */
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Modal action buttons */
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-actions .btn-primary {
+      background: #6b66ff;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 24px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: white;
+      transition: all 0.2s ease;
+    }
+
+    .modal-actions .btn-primary:hover {
+      background: #5b56f0;
+      transform: translateY(-1px);
+    }
+
+    .modal-actions .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .modal-actions .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      padding: 10px 24px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgba(255, 255, 255, 0.9);
+      transition: all 0.2s ease;
+    }
+
+    .modal-actions .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+      box-shadow: 0 4px 12px rgba(248, 113, 113, 0.25);
+    }
+
+    .btn-danger:hover {
+      background: linear-gradient(135deg, #f05252, #ff6b6b);
+      box-shadow: 0 6px 16px rgba(248, 113, 113, 0.35);
+    }
+
+    .count {
+      align-self: center;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.06);
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .count.limit {
+      background: rgba(248, 113, 113, 0.12);
+      border-color: rgba(248, 113, 113, 0.35);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 0.5;
+      }
+
+      50% {
+        transform: scale(1.2);
+        opacity: 0.8;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 0.5;
+      }
+
+      0% {
+        box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.4);
+      }
+
+      70% {
+        box-shadow: 0 0 0 8px rgba(248, 113, 113, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(248, 113, 113, 0);
+      }
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 28px;
+      justify-items: center;
+      align-items: start;
+    }
+
+    .tile {
+      position: relative;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+      animation: pop 0.3s ease both;
+    }
+
+    .tile:hover {
+      transform: translateY(-6px) scale(1.03);
+      box-shadow: 0 0 0 2px var(--accent, rgba(255, 255, 255, 0.25)) inset,
+        0 20px 56px rgba(0, 0, 0, 0.45),
+        0 0 22px color-mix(in srgb, var(--accent, #6b66ff) 35%, transparent);
+      background: rgba(255, 255, 255, 0.09);
+      border-color: color-mix(in srgb, var(--accent, #6b66ff) 45%, rgba(255, 255, 255, 0.2));
+      filter: saturate(1.05);
+    }
+
+    .tile:active {
+      transform: translateY(-2px) scale(1.01);
+      transition: transform 0.1s ease;
+    }
+
+    .avatar {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4.5rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.8);
+      margin: 0 auto 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 0 0 4px rgba(255, 255, 255, 0.1);
+      border: 3px solid rgba(255, 255, 255, 0.15);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .tile:hover .avatar {
+      transform: scale(1.04);
+    }
+
+    .tile:hover .avatar::after {
+      opacity: .9;
+      transform: scale(1);
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: inherit;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .tile:hover .avatar img {
+      transform: scale(1.05);
+    }
+
+    .name {
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: .2px;
+      transition: color 0.2s ease;
+    }
+
+    .tile:hover .name {
+      color: #fff;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+      width: 100%;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* Action Buttons */
+    .select {
+      background: linear-gradient(135deg, #10b981, #34d399) !important;
+      color: white !important;
+      border: none !important;
+      padding: 8px 16px !important;
+      border-radius: 6px !important;
+      transition: all 0.3s ease !important;
+    }
+
+    .select:hover {
+      background: linear-gradient(135deg, #059669, #10b981) !important;
+      transform: translateY(-2px) scale(1.02) !important;
+    }
+
+    .edit {
+      background: linear-gradient(135deg, #3b82f6, #60a5fa) !important;
+      color: white !important;
+      border: none !important;
+      padding: 8px 16px !important;
+      border-radius: 6px !important;
+      transition: all 0.3s ease !important;
+    }
+
+    .edit:hover {
+      background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
+      transform: translateY(-2px) scale(1.02) !important;
+    }
+
+    .remove {
+      background: linear-gradient(135deg, #ef4444, #f87171) !important;
+      color: white !important;
+      border: none !important;
+      padding: 8px 16px !important;
+      border-radius: 6px !important;
+      transition: all 0.3s ease !important;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .remove::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: 0.5s;
+    }
+
+    .remove:hover {
+      background: linear-gradient(135deg, #dc2626, #ef4444) !important;
+      transform: translateY(-2px) scale(1.02) !important;
+    }
+
+    .remove:hover::before {
+      left: 100%;
+    }
+
+    .tile.manageable {
+      cursor: pointer;
+    }
+
+    .tile.manageable::after {
+      content: none;
+    }
+
+    .tile button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      color: #fff;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .tile button svg {
+      width: 16px;
+      height: 16px;
+      margin-right: 4px;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      display: inline-block;
+      margin-left: 8px;
+    }
+
+    .badge.kids {
+      background: rgba(34, 211, 238, 0.18);
+      border-color: rgba(34, 211, 238, 0.35);
+      color: #22d3ee;
+    }
+
+    .create-card {
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .create-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(to bottom right,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0.1) 50%,
+          rgba(255, 255, 255, 0) 100%);
+      transform: rotate(30deg);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .create-card:hover::before {
+      opacity: 1;
+      animation: shine 2s infinite;
+    }
+
+    @keyframes shine {
+      0% {
+        transform: translateX(-50%) translateY(-50%) rotate(30deg);
+      }
+
+      100% {
+        transform: translateX(50%) translateY(50%) rotate(30deg);
+      }
+    }
+
+    .create-card:hover {
+      border-color: rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .create-card .avatar {
+      background: rgba(0, 0, 0, 0.22);
+      font-size: 2.4rem;
+      color: rgba(255, 255, 255, 0.5);
+      transition: all 0.3s ease;
+    }
+
+    .create-card:hover .avatar {
+      color: #fff;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .create-card button {
+      background: rgba(255, 255, 255, 0.1);
+      margin-top: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+      z-index: 1;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .create-card button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg,
+          rgba(99, 102, 241, 0.9),
+          /* Indigo-500 */
+          rgba(124, 58, 237, 0.9)
+          /* Purple-600 */
+        );
+      z-index: -1;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 0.9;
+    }
+
+    .create-card button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .create-card button:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
+    }
+
+    .create-card button::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent);
+      transition: 0.5s;
+    }
+
+    .create-card button:hover::after {
+      left: 100%;
+    }
+
+    .max-note {
+      grid-column: 1/-1;
+      text-align: center;
+      opacity: .9;
+      padding: 8px 0;
+      font-size: .95rem;
+    }
+
+    .empty-state {
+      grid-column: 1/-1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 300px;
+      font-size: 1.3rem;
+      font-weight: 500;
+      opacity: 0.9;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    @keyframes pop {
+      from {
+        transform: translateY(10px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .footer {
+      margin-top: 28px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(12px) saturate(180%);
+      -webkit-backdrop-filter: blur(12px) saturate(180%);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 1.5rem;
+    }
+
+    .modal[aria-hidden="false"] {
+      display: flex;
+      opacity: 1;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        backdrop-filter: blur(0) saturate(100%);
+      }
+
+      to {
+        opacity: 1;
+        backdrop-filter: blur(12px) saturate(180%);
+      }
+    }
+
+    .modal-card {
+      background: rgba(22, 23, 35, 0.9);
+      border-radius: 20px;
+      padding: 0;
+      width: 100%;
+      max-width: 700px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+      transform: translateY(20px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      position: relative;
+      z-index: 1001;
+      overflow: hidden;
+    }
+
+    /* Mobile modal height fix */
+    @media (max-width: 600px) {
+      .modal-card {
+        max-height: 80vh;
+        min-height: 120px;
+        overflow-y: auto;
+      }
+    }
+
+    .modal-card-content {
+      padding: 4rem 0.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .modal[aria-hidden="false"] .modal-card {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .modal-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #6b66ff, #ff6b6b);
+      z-index: 2;
+      border-radius: 20px 20px 0 0;
+    }
+
+    .modal[aria-hidden="false"] {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal[aria-hidden="false"] .modal-card {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .modal-card h2 {
+      margin: 0 0 1.5rem;
+      font-size: 1.8rem;
+      font-weight: 700;
+      text-align: center;
+      color: #fff;
+      letter-spacing: -0.5px;
+      background: linear-gradient(90deg, #ffffff, #d1d1ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .field {
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .field:not(:last-child) {
+      margin-bottom: 2rem;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 0.75rem;
+      font-weight: 500;
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.95);
+      letter-spacing: 0.3px;
+    }
+
+    .modal-card input[type="text"] {
+      width: 100%;
+      padding: 0.85rem 1.25rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(10, 12, 20, 0.5);
+      color: #fff;
+      font-size: 1rem;
+      font-family: 'Poppins', sans-serif;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-card input[type="text"]:focus {
+      outline: none;
+      border-color: rgba(107, 102, 255, 0.5);
+      background: rgba(10, 12, 20, 0.7);
+      box-shadow: 0 0 0 3px rgba(107, 102, 255, 0.15);
+    }
+
+    .modal-card input[type="text"]::placeholder {
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    .field input[type="text"]:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .field input[type="text"]:focus {
+      outline: none;
+      border-color: #6b66ff;
+      background: rgba(107, 102, 255, 0.08);
+      box-shadow: 0 0 0 3px rgba(107, 102, 255, 0.15);
+    }
+
+    .field input[type="text"]::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .colors {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 16px;
+      margin: 1rem 0 2rem;
+      padding: 1.75rem 1.5rem;
+      background: rgba(15, 16, 27, 0.5);
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      justify-items: center;
+      overflow: visible;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .avatars {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 14px;
+      margin: 1rem 0 2rem;
+      padding: 1.25rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      justify-items: center;
+      overflow: visible;
+    }
+
+    .avatars::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .avatars::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .avatars::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+
+    .colors {
+      grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+      gap: 10px;
+    }
+
+    .colors::-webkit-scrollbar,
+    .avatars::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    .colors::-webkit-scrollbar-thumb,
+    .avatar-grid::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+
+    .colors::-webkit-scrollbar-thumb:hover,
+    .avatar-grid::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+
+    @media (max-width: 600px) {
+
+      .colors,
+      .avatars {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    @media (max-width: 400px) {
+
+      .colors,
+      .avatars {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .avatar-sel {
+      width: 80px;
+      height: 80px;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 2px solid transparent;
+      margin: 0 auto;
+    }
+
+    .swatch {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      position: relative;
+      background: var(--swatch-color) !important;
+    }
+
+    .swatch:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+      z-index: 10;
+    }
+
+    .swatch[data-selected="true"] {
+      border-color: #fff !important;
+      box-shadow: 0 0 0 2px #fff, 0 0 0 4px #6b66ff, 0 0 15px 5px rgba(255, 255, 255, 0.4) !important;
+      transform: scale(1.1);
+      position: relative;
+      animation: pulse-glow 2s infinite;
+    }
+
+    @keyframes pulse-glow {
+      0% {
+        box-shadow: 0 0 0 6px #fff, 0 0 0 4px #6b66ff, 0 0 15px 5px rgba(255, 255, 255, 0.4);
+      }
+
+      50% {
+        box-shadow: 0 0 0 6px #fff, 0 0 0 4px #6b66ff, 0 0 20px 8px rgba(255, 255, 255, 0.6);
+      }
+
+      100% {
+        box-shadow: 0 0 0 6px #fff, 0 0 0 4px #6b66ff, 0 0 15px 5px rgba(255, 255, 255, 0.4);
+      }
+    }
+
+    .color-tooltip {
+      position: absolute;
+      bottom: calc(100% + 12px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(20, 22, 35, 0.98);
+      color: white;
+      z-index: 10000;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      pointer-events: none;
+      font-weight: 500;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+      backdrop-filter: blur(4px);
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .swatch:hover .color-tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .color-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 6px;
+      border-style: solid;
+      border-color: rgba(20, 22, 35, 0.98) transparent transparent transparent;
+      pointer-events: none;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(-3px) scale(1.15);
+      }
+
+      50% {
+        transform: translateY(-5px) scale(1.17);
+      }
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(74, 144, 226, 0.7);
+      }
+
+      70% {
+        box-shadow: 0 0 0 10px rgba(74, 144, 226, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(74, 144, 226, 0);
+      }
+    }
+
+    .swatch.selected::after {
+      opacity: 0.5;
+      animation: none;
+    }
+
+    .avatars {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .avatar-sel {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      background: rgba(0, 0, 0, 0.25);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .tile:hover .avatar {
+      transform: scale(1.04);
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .avatar-sel:hover {
+      transform: scale(1.08);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .avatar-sel.selected {
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3), 0 4px 12px rgba(0, 0, 0, 0.25);
+      transform: scale(1.1);
+    }
+
+    .avatar-sel img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+      justify-content: flex-end;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .actions button {
+      padding: 0.8rem 1.8rem;
+      border-radius: 10px;
+      border: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .actions button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+      z-index: -1;
+      transition: all 0.3s ease;
+      opacity: 0;
+    }
+
+    .actions button:hover::before {
+      opacity: 1;
+    }
+
+    .actions button:first-child {
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .actions button:first-child:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .actions button:last-child {
+      background: linear-gradient(135deg, #6b66ff, #9d6bff);
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(107, 102, 255, 0.3);
+      box-shadow: 0 4px 12px rgba(107, 102, 255, 0.25);
+    }
+
+    .actions button:last-child:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(107, 102, 255, 0.35);
+    }
+
+    /* Checkbox styling */
+    .field-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      cursor: pointer;
+    }
+
+    .field-checkbox input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .field-checkbox label {
+      margin: 0;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1024px) {
+      body {
+        padding: 1.25rem;
+      }
+
+      .grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 24px;
+      }
+
+      .avatar {
+        width: 160px;
+        height: 160px;
+      }
+
+      .modal-card {
+        max-width: 90%;
+        padding: 1.25rem;
+      }
+
+      .avatar-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .avatar-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .avatar-sel {
+        width: 70px;
+        height: 70px;
+      }
+
+      .top-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+        margin: 1.25rem 0;
+        padding: 0 0.75rem;
+      }
+
+      .tile {
+        padding: 1.25rem;
+        width: 100%;
+        max-width: 280px;
+        margin: 0 auto;
+      }
+
+      .avatar {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+      }
+
+      .name {
+        font-size: 1.1rem;
+      }
+
+      .row {
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .modal-card {
+        width: 92vw;
+        max-width: none;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin: 1rem;
+      }
+
+      .colors,
+      .avatars {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+
+      .swatch {
+        width: 36px;
+        height: 36px;
+      }
+
+      .avatar-sel {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+      }
+
+      .btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        flex: 1;
+        justify-content: center;
+      }
+
+      .actions {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .actions button {
+        width: 100%;
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Animated Background Particles -->
+  <div class="bg-particles" id="particles"></div>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <img id="brandLogo" alt="brand" style="display:none" />
+      </div>
+      <h1 id="heroTitle">Who's watching?</h1>
+      <p class="sub">Choose a profile to continue your personalized experience</p>
+    </header>
+
+    <div class="top-actions">
+      <div class="row">
+        <span class="count" id="profileCount">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          <span>0/4 Profiles</span>
+        </span>
+        <button class="btn btn-primary" id="addProfileBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Add Profile
+        </button>
+        <button class="btn btn-danger" id="logout">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          Logout
+        </button>
+      </div>
+    </div>
+
+    <div class="grid" id="profilesGrid"></div>
+
+    <div class="footer" style="margin-top: 2.5rem; width: 100%; display: flex; justify-content: center; gap: 16px;">
+      <button class="btn btn-primary" id="createFirstBtn" style="min-width: 220px; display: none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Create Your First Profile
+      </button>
+      <button class="btn btn-secondary" id="manageBottom" style="min-width: 200px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+        </svg>
+        Manage Profiles
+      </button>
+      <button class="btn btn-primary" id="doneButton" style="min-width: 120px; display: none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        Done
+      </button>
+    </div>
+  </div>
+
+  <!-- Create Profile Modal -->
+  <div class="modal" id="createProfileModal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="createProfileTitle">
+      <div class="modal-card-content">
+        <h2 id="createProfileTitle">Create Profile</h2>
+        <div class="field">
+          <label for="profileNameInput">Profile name</label>
+          <input type="text" id="profileNameInput" placeholder="e.g. Alex" />
+        </div>
+        <div class="field">
+          <label>Choose a color</label>
+          <div class="colors" id="colorGrid"></div>
+        </div>
+        <div class="field">
+          <label>Choose an avatar</label>
+          <div class="avatars" id="avatarGrid"></div>
+        </div>
+        <div class="modal-actions">
+          <button id="cancelCreate" class="btn-secondary">Cancel</button>
+          <button id="confirmCreate" class="btn-primary">Create</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Profile Modal -->
+  <div class="modal" id="editProfileModal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="editProfileTitle">
+      <div class="modal-card-content">
+        <h2 id="editProfileTitle">Edit Profile</h2>
+        <div class="field">
+          <label for="editProfileNameInput">Profile name</label>
+          <input type="text" id="editProfileNameInput" placeholder="e.g. Alex" />
+        </div>
+        <div class="field">
+          <label>Choose a color</label>
+          <div class="colors" id="editColorGrid"></div>
+        </div>
+        <div class="field">
+          <label>Choose an avatar</label>
+          <div class="avatars" id="editAvatarGrid"></div>
+        </div>
+        <div class="modal-actions">
+          <button id="cancelEdit" class="btn-secondary">Cancel</button>
+          <button id="confirmEdit" class="btn-primary">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="auth-firebase.js?v=3"></script>
+  <script src="avatars.js"></script>
+  <script src="ui.js"></script>
+  <script>
+    // Create animated background particles
+    function createParticles() {
+      const container = document.getElementById('particles');
+      if (!container) return;
+
+      // Clear existing particles
+      container.innerHTML = '';
+
+      // Adjust particle count based on screen size
+      const particleCount = Math.floor(window.innerWidth / 20);
+
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+
+        // Random size between 5px and 12px
+        const size = Math.random() * 7 + 5;
+
+        // Random position
+        const posX = Math.random() * 100;
+        const posY = Math.random() * 100;
+
+        // Random animation duration and delay
+        const duration = Math.random() * 20 + 10; // 10-30s
+        const delay = Math.random() * -20; // Start at different times
+
+        // Random opacity between 0.2 and 0.5 for better visibility
+        const opacity = (Math.random() * 0.3) + 0.2;
+
+        // Apply styles
+        Object.assign(particle.style, {
+          width: `${size}px`,
+          height: `${size}px`,
+          left: `${posX}%`,
+          top: `${posY}%`,
+          animationDuration: `${duration}s`,
+          animationDelay: `${delay}s`,
+          opacity: opacity,
+          boxShadow: `0 0 ${size * 2.5}px ${size * 0.7}px rgba(255, 255, 255, 0.25)`
+        });
+        particle.style.animation = `float ${duration}s ${delay}s infinite ease-in-out`;
+
+        container.appendChild(particle);
+      }
+    }
+
+    // Initialize particles and setup window resize handler
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize particles
+      createParticles();
+
+      // Handle window resize
+      let resizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(createParticles, 250);
+      });
+    });
+
+    // Apply theme early if stored locally to reduce flash
+    (function () {
+      try {
+        const theme = localStorage.getItem('app_theme') || 'glossy';
+        const presets = {
+          glossy: ['rgba(255,255,255,0.06)', 'rgba(255,0,100,0.10)', 'rgba(0,120,255,0.10)'],
+          crimson: ['rgba(255,255,255,0.05)', 'rgba(220,38,38,0.14)', 'rgba(244,63,94,0.12)'],
+          ocean: ['rgba(255,255,255,0.05)', 'rgba(14,165,233,0.14)', 'rgba(6,182,212,0.12)'],
+          emerald: ['rgba(255,255,255,0.05)', 'rgba(5,150,105,0.14)', 'rgba(16,185,129,0.12)'],
+          purple: ['rgba(255,255,255,0.05)', 'rgba(147,51,234,0.14)', 'rgba(99,102,241,0.12)']
+        };
+        const p = presets[theme] || presets.glossy;
+        const r = document.documentElement.style;
+        r.setProperty('--theme-bg1', p[0]);
+        r.setProperty('--theme-bg2', p[1]);
+        r.setProperty('--theme-bg3', p[2]);
+      } catch (e) { }
+    })();
+    const profilesGrid = document.getElementById('profilesGrid');
+    const logoutBtn = document.getElementById('logout');
+    const manageBottomBtn = document.getElementById('manageBottom');
+    const addProfileBtn = document.getElementById('addProfileBtn');
+    const manageBtn = document.getElementById('manage');
+    const profileCountEl = document.getElementById('profileCount');
+    let manageMode = false;
+
+    let currentUser = null;
+
+    function initials(name) {
+      const parts = (name || '').trim().split(/\s+/);
+      if (parts.length === 1) return (parts[0] || '?').slice(0, 2).toUpperCase();
+      return (parts[0][0] + (parts[1]?.[0] || '')).toUpperCase();
+    }
+
+    async function ensureNet() {
+      try { await FirebaseAuth.ensureOnline(); } catch (_) { }
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        UIToast.warning('Offline', 'You appear to be offline. Changes may fail.');
+      }
+    }
+
+    async function renderProfiles() {
+      if (!currentUser) return;
+      await ensureNet();
+      const profiles = await FirebaseAuth.getProfiles(currentUser.uid);
+      // One-time migration: add default avatarUrl to profiles missing it
+      const migrated = await migrateMissingAvatars(profiles).catch(() => false);
+      if (migrated) { return; } // renderProfiles will be called again after migration
+      profilesGrid.innerHTML = '';
+      // Update header count and Add button state
+      const LIMIT = 4;
+      profileCountEl.textContent = `${profiles.length}/${LIMIT} Profiles`;
+      profileCountEl.classList.toggle('limit', profiles.length >= LIMIT);
+      addProfileBtn.disabled = profiles.length >= LIMIT;
+
+      if (!profiles.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = 'No profiles yet';
+        profilesGrid.appendChild(empty);
+
+        // Show the "Create Your First Profile" button in the footer
+        const createFirstBtn = document.getElementById('createFirstBtn');
+        if (createFirstBtn) {
+          createFirstBtn.style.display = 'inline-flex';
+        }
+        return; // Exit early, don't render the create tile
+      } else {
+        // Hide the "Create Your First Profile" button if profiles exist
+        const createFirstBtn = document.getElementById('createFirstBtn');
+        if (createFirstBtn) {
+          createFirstBtn.style.display = 'none';
+        }
+      }
+
+      if (profiles.length < LIMIT) {
+        // Create tile
+        const createTile = document.createElement('div');
+        createTile.className = 'tile create-card';
+        createTile.innerHTML = `
+          <div class="avatar">+</div>
+          <div class="name">Add Profile</div>
+          <button>Create</button>
+        `;
+        createTile.querySelector('button').addEventListener('click', () => openCreateModal());
+        profilesGrid.appendChild(createTile);
+      } else {
+        const note = document.createElement('div');
+        note.className = 'max-note';
+        note.textContent = 'Maximum of 4 profiles reached.';
+        profilesGrid.appendChild(note);
+      }
+
+      // Existing
+      profiles.forEach(p => {
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        const kidsBadge = p.kids ? '<span class="badge kids">KIDS</span>' : '';
+        tile.innerHTML = `
+          <div class="avatar" style="background:${p.color}">${p.avatarUrl ? '<img src="' + (p.avatarUrl) + '" alt="avatar" />' : initials(p.name)}</div>
+          <div class="name">${p.name} ${kidsBadge}</div>
+          <div class="row">
+            <button class="select">Select</button>
+            <button class="edit" style="background:#4b5563;display:none;">Edit</button>
+            <button class="remove" style="background:#ef4444;display:none;">Delete</button>
+          </div>
+        `;
+        // Set accent color for hover glow
+        tile.style.setProperty('--accent', p.color || '#6b66ff');
+        const selectBtn = tile.querySelector('.select');
+        const editBtn = tile.querySelector('.edit');
+        const removeBtn = tile.querySelector('.remove');
+
+        selectBtn.addEventListener('click', async () => {
+          try {
+            await ensureNet();
+            await FirebaseAuth.selectProfile(currentUser.uid, p.id);
+            // Store the profile name to show welcome message on the next page
+            sessionStorage.setItem('welcomeProfileName', p.name);
+            // Redirect immediately
+            window.location.assign('/index.html');
+          } catch (e) {
+            UIToast.error('Select failed', e.message || 'Unable to select profile');
+          }
+        });
+
+        // Edit button opens edit modal
+        editBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          openEditModal(p);
+        });
+
+        removeBtn.addEventListener('click', async (ev) => {
+          ev.stopPropagation(); // Prevent triggering tile click
+          try {
+            // two-click confirm within 5 seconds
+            if (tile.dataset.confirm !== '1') {
+              tile.dataset.confirm = '1';
+              UIToast.warning('Confirm delete', `Click delete again to remove "${p.name}"`);
+              setTimeout(() => { delete tile.dataset.confirm; }, 5000);
+              return;
+            }
+            await ensureNet();
+            await FirebaseAuth.deleteProfile(currentUser.uid, p.id);
+            UIToast.success('Profile deleted', `Removed "${p.name}"`);
+            // Stay in manage mode after deletion
+            await renderProfiles();
+            if (profilesGrid.querySelectorAll('.tile:not(.create-card)').length > 0) {
+              manageMode = true;
+              applyManageMode();
+            } else {
+              // If no profiles left, exit manage mode
+              manageMode = false;
+              applyManageMode();
+            }
+          } catch (e) {
+            console.error('Delete error:', e);
+            UIToast.error('Delete failed', e.message || 'Unable to delete profile');
+          }
+        });
+        profilesGrid.appendChild(tile);
+      });
+    }
+
+    logoutBtn.addEventListener('click', async () => {
+      try {
+        await FirebaseAuth.signOut();
+        window.location.assign('/login.html');
+      } catch (e) { UIToast.error('Logout failed', e.message || 'Try again'); }
+    });
+
+    async function selfCheckPermissions(uid) {
+      try {
+        const db = firebase.firestore();
+        const pingRef = db.collection('users').doc(uid).collection('profiles').doc('__ping');
+        await pingRef.set({ t: firebase.firestore.FieldValue.serverTimestamp() });
+        await pingRef.delete();
+        return true;
+      } catch (e) {
+        UIToast.error('Firestore blocked', (e && e.message) || 'Check Firestore rules. See console for details.');
+        console.error('Firestore self-check failed:', e);
+        return false;
+      }
+    }
+
+    FirebaseAuth.onAuthChanged(async (user) => {
+      if (!user) { window.location.href = 'login.html'; return; }
+      currentUser = user;
+      // Load theme preference
+      try {
+        const s = await FirebaseAuth.getUserSettings(user.uid);
+        if (s && s.theme) {
+          // Apply a fallback theme without writing a global key
+          applyTheme(s.theme);
+        }
+      } catch (_) { }
+      const ok = await selfCheckPermissions(user.uid);
+      if (!ok) return; // Don't proceed if rules block access
+      await renderProfiles().catch(err => UIToast.error('Load failed', err.message || 'Unable to load profiles'));
+      applyManageMode();
+    });
+
+    // Header button to open create modal
+    addProfileBtn.addEventListener('click', async () => {
+      const profiles = await FirebaseAuth.getProfiles(currentUser.uid);
+      if (profiles.length >= 4) { UIToast.info('Limit reached', 'You can have up to 4 profiles'); return; }
+      openCreateModal();
+    });
+
+    // Footer "Create Your First Profile" button
+    const createFirstBtn = document.getElementById('createFirstBtn');
+    if (createFirstBtn) {
+      createFirstBtn.addEventListener('click', () => {
+        openCreateModal();
+      });
+    }
+
+    function applyManageMode() {
+      const tiles = profilesGrid.querySelectorAll('.tile');
+      tiles.forEach(t => {
+        const edit = t.querySelector('.edit');
+        const rm = t.querySelector('.remove');
+        const sel = t.querySelector('.select');
+        if (edit && rm && sel) {
+          edit.style.display = manageMode ? '' : 'none';
+          rm.style.display = manageMode ? '' : 'none';
+          sel.style.display = manageMode ? 'none' : '';
+        }
+        t.classList.toggle('manageable', manageMode);
+      });
+
+      // Toggle between Manage and Done buttons
+      const doneButton = document.getElementById('doneButton');
+      if (doneButton) {
+        if (manageMode) {
+          manageBottomBtn.style.display = 'none';
+          doneButton.style.display = '';
+        } else {
+          manageBottomBtn.style.display = '';
+          doneButton.style.display = 'none';
+        }
+      }
+    }
+    // Initialize Done button and set up event listeners
+    const doneButton = document.getElementById('doneButton');
+
+    // Manage mode toggle
+    manageBottomBtn.addEventListener('click', () => {
+      manageMode = true;
+      applyManageMode();
+    });
+
+    // Done button handler
+    if (doneButton) {
+      doneButton.addEventListener('click', () => {
+        manageMode = false;
+        applyManageMode();
+      });
+    }
+
+    // Modal logic
+    const modal = document.getElementById('createProfileModal');
+    const nameInput = document.getElementById('profileNameInput');
+    const colorGrid = document.getElementById('colorGrid');
+    const avatarGrid = document.getElementById('avatarGrid');
+    const cancelBtn = document.getElementById('cancelCreate');
+    const confirmBtn = document.getElementById('confirmCreate');
+    let isCreatingProfile = false; // guard to prevent double-create
+
+    // Ensure create modal starts hidden
+    if (modal) {
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    const palette = [
+      // Vivid Reds
+      '#FF3B30', '#FF453A', '#FF5E57', '#FF8A7A',
+      // Vibrant Oranges
+      '#FF9500', '#FF9F0A', '#FFB340', '#FFC97F',
+      // Bright Yellows
+      '#FFCC00', '#FFD60A', '#FFE070', '#FFEB99',
+      // Lush Greens
+      '#34C759', '#30D158', '#5DD45F', '#8AFF8F',
+      // Teal/Aquas
+      '#00C7BE', '#00E5D1', '#5CE1E6', '#8FF0FF',
+      // Electric Blues
+      '#007AFF', '#0A84FF', '#64D2FF', '#90E0EF',
+      // Deep Blues
+      '#0071E3', '#1DA1F2', '#5E97F5', '#8FB3FF',
+      // Royal Purples
+      '#5856D6', '#7D7AFF', '#A5A5FF', '#C7C7FF',
+      // Magentas
+      '#AF52DE', '#C77DFF', '#D8A5FF', '#E9C2FF',
+      // Pinks
+      '#FF2D55', '#FF375F', '#FF6B8B', '#FF9AA8',
+      // Earth Tones
+      '#A2845E', '#C4A484', '#E6C59E', '#F8E1C4',
+      // Grayscale
+      '#191919', '#8E8E93', '#AEAEB2', '#C7C7CC', '#D1D1D6'
+    ];
+
+    const avatarColors = [
+      // Vibrant colors for avatars
+      '#ef4444', '#f97316', '#eab308', '#84cc16',
+      '#10b981', '#06b6d4', '#3b82f6', '#6366f1',
+      '#8b5cf6', '#d946ef', '#ec4899', '#f43f5e'
+    ];
+    const avatarUrlFromColor = (c) => `https://api.iconify.design/mdi:account-circle.svg?color=${encodeURIComponent(c)}&width=128&height=128`;
+    const customAvatars = Array.isArray(window.AVATARS) ? window.AVATARS.filter(Boolean) : [];
+    let selectedColor = palette[0];
+    let selectedAvatarUrl = avatarUrlFromColor(avatarColors[0]);
+
+    // Default avatar helper
+    function defaultAvatarFor(profile) {
+      if (customAvatars.length) return customAvatars[0];
+      const c = profile?.color || palette[0];
+      return avatarUrlFromColor(c);
+    }
+
+    // One-time migration to set avatarUrl where missing
+    async function migrateMissingAvatars(profiles) {
+      try {
+        const key = `migrated_avatars_${currentUser.uid}`;
+        if (localStorage.getItem(key)) return false;
+        const missing = profiles.filter(p => !p.avatarUrl);
+        if (!missing.length) { localStorage.setItem(key, '1'); return false; }
+        UIToast.info('Updating profiles', 'Applying default avatars...');
+        for (const p of missing) {
+          const url = defaultAvatarFor(p);
+          await FirebaseAuth.updateProfile(currentUser.uid, p.id, { avatarUrl: url });
+        }
+        localStorage.setItem(key, '1');
+        await renderProfiles();
+        return true;
+      } catch (e) {
+        console.warn('Migration failed:', e);
+        return false;
+      }
+    }
+
+    // Color name mapping for tooltips
+    const colorNames = {
+      // Vivid Reds
+      '#FF3B30': 'Red', '#FF453A': 'Red 2', '#FF5E57': 'Red 3', '#FF8A7A': 'Red 4',
+      // Vibrant Oranges
+      '#FF9500': 'Orange', '#FF9F0A': 'Orange 2', '#FFB340': 'Orange 3', '#FFC97F': 'Orange 4',
+      // Bright Yellows
+      '#FFCC00': 'Yellow', '#FFD60A': 'Yellow 2', '#FFE070': 'Yellow 3', '#FFEB99': 'Yellow 4',
+      // Lush Greens
+      '#34C759': 'Green', '#30D158': 'Green 2', '#5DD45F': 'Green 3', '#8AFF8F': 'Green 4',
+      // Teal/Aquas
+      '#00C7BE': 'Teal', '#00E5D1': 'Teal 2', '#5CE1E6': 'Teal 3', '#8FF0FF': 'Teal 4',
+      // Electric Blues
+      '#007AFF': 'Blue', '#0A84FF': 'Blue 2', '#64D2FF': 'Blue 3', '#90E0EF': 'Blue 4',
+      // Deep Blues
+      '#0071E3': 'Deep Blue', '#1DA1F2': 'Deep Blue 2', '#5E97F5': 'Deep Blue 3', '#8FB3FF': 'Deep Blue 4',
+      // Royal Purples
+      '#5856D6': 'Purple', '#7D7AFF': 'Purple 2', '#A5A5FF': 'Purple 3', '#C7C7FF': 'Purple 4',
+      // Magentas
+      '#AF52DE': 'Magenta', '#C77DFF': 'Magenta 2', '#D8A5FF': 'Magenta 3', '#E9C2FF': 'Magenta 4',
+      // Pinks
+      '#FF2D55': 'Pink', '#FF375F': 'Pink 2', '#FF6B8B': 'Pink 3', '#FF9AA8': 'Pink 4',
+      // Earth Tones
+      '#A2845E': 'Taupe', '#C4A484': 'Beige', '#E6C59E': 'Sand', '#F8E1C4': 'Cream',
+      // Grayscale
+      '#191919': 'Dark Gray', '#8E8E93': 'Gray', '#AEAEB2': 'Light Gray', '#C7C7CC': 'Silver', '#D1D1D6': 'Silver 2'
+    };
+
+    function buildColorGrid() {
+      colorGrid.innerHTML = '';
+      palette.forEach((c, idx) => {
+        const sw = document.createElement('div');
+        sw.className = 'swatch';
+        sw.style.setProperty('--swatch-color', c);
+        sw.setAttribute('data-color', c);
+        sw.setAttribute('data-selected', idx === 0 ? 'true' : 'false');
+
+        // Create tooltip
+        const tooltip = document.createElement('div');
+        tooltip.className = 'color-tooltip';
+        tooltip.textContent = colorNames[c] || 'Custom Color';
+        sw.appendChild(tooltip);
+
+        sw.addEventListener('click', () => {
+          selectedColor = c;
+          [...colorGrid.children].forEach(el => {
+            el.setAttribute('data-selected', 'false');
+          });
+          sw.setAttribute('data-selected', 'true');
+        });
+
+        colorGrid.appendChild(sw);
+      });
+    }
+    function buildAvatarGrid() {
+      avatarGrid.innerHTML = '';
+      const items = customAvatars.length ? customAvatars : avatarColors.map(c => avatarUrlFromColor(c));
+      // Default selection
+      selectedAvatarUrl = items[0];
+      items.forEach((url, idx) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'avatar-sel' + (idx === 0 ? ' selected' : '');
+        wrap.innerHTML = `<img src="${url}" alt="avatar"/>`;
+        wrap.addEventListener('click', () => {
+          selectedAvatarUrl = url;
+          [...avatarGrid.children].forEach(el => el.classList.remove('selected'));
+          wrap.classList.add('selected');
+        });
+        avatarGrid.appendChild(wrap);
+      });
+    }
+
+    function openCreateModal() {
+      // Close edit modal if open
+      if (editModal) {
+        editModal.style.display = 'none';
+        editModal.setAttribute('aria-hidden', 'true');
+      }
+
+      // Show modal and set aria attributes
+      modal.style.display = 'flex';
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+
+      // Trigger reflow to ensure the modal is in the DOM before adding the active class
+      void modal.offsetWidth;
+
+      // Reset form
+      nameInput.value = '';
+      selectedColor = palette[0];
+      selectedAvatarUrl = avatarUrlFromColor(avatarColors[0]);
+
+      // Rebuild color and avatar grids
+      buildColorGrid();
+      buildAvatarGrid();
+
+      // Focus the name input after a short delay to ensure it's visible
+      setTimeout(() => {
+        nameInput.focus();
+      }, 50);
+
+      // Add event listener for Escape key
+      document.addEventListener('keydown', handleEscapeKey);
+    }
+    function closeCreateModal() {
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = ''; // Re-enable scrolling
+      document.removeEventListener('keydown', handleEscapeKey);
+      // Let CSS transition handle the hiding
+      setTimeout(() => {
+        if (modal.getAttribute('aria-hidden') === 'true') {
+          modal.style.display = 'none';
+        }
+      }, 300); // Match CSS transition duration
+    }
+
+    async function handleCreate() {
+      if (isCreatingProfile) return; // prevent duplicate submissions
+      isCreatingProfile = true;
+      // disable confirm button immediately to avoid rapid double-clicks/presses
+      if (confirmBtn) confirmBtn.disabled = true;
+      try {
+        await ensureNet();
+        const existing = await FirebaseAuth.getProfiles(currentUser.uid);
+        if (existing.length >= 4) { UIToast.error('Max profiles reached', 'You can only create up to 4 profiles'); return; }
+        const name = nameInput.value.trim();
+        if (!name) { UIToast.warning('Missing name', 'Please enter a profile name'); return; }
+        // Instant UX: close modal and show creating toast before the network call
+        closeCreateModal();
+        UIToast.info('Creating profile', 'One moment...');
+        await FirebaseAuth.addProfile(currentUser.uid, name, selectedColor, selectedAvatarUrl);
+        UIToast.success('Profile created', `Added "${name}"`);
+        renderProfiles();
+      } catch (e) { UIToast.error('Create failed', e.message || 'Unable to create profile'); }
+      finally {
+        isCreatingProfile = false;
+        if (confirmBtn) confirmBtn.disabled = false;
+      }
+    }
+
+    // Handle Escape key press
+    function handleEscapeKey(e) {
+      if (e.key === 'Escape') {
+        closeCreateModal();
+      }
+    }
+
+    // Modal event listeners
+    cancelBtn.addEventListener('click', closeCreateModal);
+    confirmBtn.addEventListener('click', handleCreate);
+
+    // Close modal when clicking on the backdrop
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeCreateModal();
+      }
+    });
+
+    // Handle Enter key in name input
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        // route Enter to the same guarded path as the button
+        handleCreate();
+      }
+    });
+
+    // Add transition end listener for modal close
+    modal.addEventListener('transitionend', (e) => {
+      if (modal.getAttribute('aria-hidden') === 'true') {
+        modal.style.display = 'none';
+      }
+    });
+
+    // ==================== EDIT PROFILE MODAL ====================
+    const editModal = document.getElementById('editProfileModal');
+    const editNameInput = document.getElementById('editProfileNameInput');
+    const editColorGrid = document.getElementById('editColorGrid');
+    const editAvatarGrid = document.getElementById('editAvatarGrid');
+    const cancelEditBtn = document.getElementById('cancelEdit');
+    const confirmEditBtn = document.getElementById('confirmEdit');
+    let editingProfile = null;
+    let editSelectedColor = null;
+    let editSelectedAvatarUrl = null;
+    let isEditingProfile = false;
+
+    // Ensure edit modal starts hidden
+    if (editModal) {
+      editModal.style.display = 'none';
+      editModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function buildEditColorGrid(initialColor) {
+      editColorGrid.innerHTML = '';
+      palette.forEach((c) => {
+        const sw = document.createElement('div');
+        sw.className = 'swatch';
+        sw.style.setProperty('--swatch-color', c);
+        sw.setAttribute('data-color', c);
+        sw.setAttribute('data-selected', c === initialColor ? 'true' : 'false');
+
+        // Create tooltip
+        const tooltip = document.createElement('div');
+        tooltip.className = 'color-tooltip';
+        tooltip.textContent = colorNames[c] || 'Custom Color';
+        sw.appendChild(tooltip);
+
+        sw.addEventListener('click', () => {
+          editSelectedColor = c;
+          [...editColorGrid.children].forEach(el => {
+            el.setAttribute('data-selected', 'false');
+          });
+          sw.setAttribute('data-selected', 'true');
+        });
+
+        editColorGrid.appendChild(sw);
+      });
+    }
+
+    function buildEditAvatarGrid(initialUrl) {
+      editAvatarGrid.innerHTML = '';
+      const items = customAvatars.length ? customAvatars : avatarColors.map(c => avatarUrlFromColor(c));
+
+      items.forEach((url) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'avatar-sel' + (url === initialUrl ? ' selected' : '');
+        wrap.innerHTML = `<img src="${url}" alt="avatar"/>`;
+        wrap.addEventListener('click', () => {
+          editSelectedAvatarUrl = url;
+          [...editAvatarGrid.children].forEach(el => el.classList.remove('selected'));
+          wrap.classList.add('selected');
+        });
+        editAvatarGrid.appendChild(wrap);
+      });
+    }
+
+    function openEditModal(profile) {
+      if (!editModal) {
+        console.error('editModal not found');
+        return;
+      }
+
+      // Close create modal if open
+      if (modal) {
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+      }
+
+      // Store the profile being edited
+      editingProfile = { ...profile };
+      editSelectedColor = profile.color || palette[0];
+      editSelectedAvatarUrl = profile.avatarUrl || avatarUrlFromColor(avatarColors[0]);
+
+      // Set form values
+      editNameInput.value = profile.name || '';
+
+      // Build grids with current selections
+      buildEditColorGrid(editSelectedColor);
+      buildEditAvatarGrid(editSelectedAvatarUrl);
+
+      // Show modal and set aria attributes
+      editModal.style.display = '';
+      editModal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+
+      // Trigger reflow to ensure the modal is in the DOM
+      void editModal.offsetWidth;
+
+      // Focus the name input after a short delay
+      setTimeout(() => {
+        editNameInput.focus();
+      }, 50);
+
+      // Add event listener for Escape key
+      document.addEventListener('keydown', handleEditEscapeKey);
+    }
+
+    function closeEditModal() {
+      editModal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleEditEscapeKey);
+      editingProfile = null;
+
+      // Let CSS transition handle the hiding
+      setTimeout(() => {
+        if (editModal.getAttribute('aria-hidden') === 'true') {
+          editModal.style.display = 'none';
+        }
+      }, 300);
+    }
+
+    async function handleEditSave() {
+      if (isEditingProfile || !editingProfile) return;
+      isEditingProfile = true;
+
+      if (confirmEditBtn) confirmEditBtn.disabled = true;
+
+      try {
+        await ensureNet();
+        const name = editNameInput.value.trim();
+        if (!name) {
+          UIToast.warning('Missing name', 'Please enter a profile name');
+          return;
+        }
+        const profileId = editingProfile.id;
+        const nextColor = editSelectedColor;
+        const nextAvatar = editSelectedAvatarUrl;
+        if (!profileId) {
+          throw new Error('Profile identifier missing');
+        }
+
+        // Close modal and show updating toast
+        closeEditModal();
+        UIToast.info('Updating profile', 'One moment...');
+
+        // Update the profile
+        await FirebaseAuth.updateProfile(currentUser.uid, profileId, {
+          name: name,
+          color: nextColor,
+          avatarUrl: nextAvatar
+        });
+
+        UIToast.success('Profile updated', `Updated "${name}"`);
+        await renderProfiles();
+        applyManageMode();
+      } catch (e) {
+        UIToast.error('Update failed', e.message || 'Unable to update profile');
+      } finally {
+        isEditingProfile = false;
+        if (confirmEditBtn) confirmEditBtn.disabled = false;
+      }
+    }
+
+    // Handle Escape key for edit modal
+    function handleEditEscapeKey(e) {
+      if (e.key === 'Escape') {
+        closeEditModal();
+      }
+    }
+
+    // Edit modal event listeners
+    cancelEditBtn.addEventListener('click', closeEditModal);
+    confirmEditBtn.addEventListener('click', handleEditSave);
+
+    // Close edit modal when clicking on backdrop
+    editModal.addEventListener('click', (e) => {
+      if (e.target === editModal) {
+        closeEditModal();
+      }
+    });
+
+    // Handle Enter key in edit name input
+    editNameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleEditSave();
+      }
+    });
+
+    // Add transition end listener for edit modal close
+    editModal.addEventListener('transitionend', (e) => {
+      if (editModal.getAttribute('aria-hidden') === 'true') {
+        editModal.style.display = 'none';
+      }
+    });
+
+    // Brand wiring (set your logo/name here)
+    (function () {
+      const cfg = window.BRAND || { name: 'Cinematic Hub' };
+      const logoEl = document.getElementById('brandLogo');
+      const hero = document.getElementById('heroTitle');
+      if (cfg.logoUrl) { logoEl.src = cfg.logoUrl; logoEl.style.display = 'block'; }
+      hero.textContent = `Who's watching ${cfg.name}?`;
+    })();
+  </script>
+</body>
+
+</html>

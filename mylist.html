@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My List - Cinematic Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Animated Background */
+    .bg-particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.6;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      background: linear-gradient(45deg, #6b66ff, #ff6b6b);
+      opacity: 0.3;
+      animation: float 15s infinite ease-in-out;
+      box-shadow: 0 0 15px 3px rgba(255, 255, 255, 0.4);
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0) translateX(0);
+      }
+
+      25% {
+        transform: translateY(-20px) translateX(10px);
+      }
+
+      50% {
+        transform: translateY(0) translateX(20px);
+      }
+
+      75% {
+        transform: translateY(20px) translateX(10px);
+      }
+    }
+
+    :root {
+      --scrollbar-thumb: #ffffff;
+      --scrollbar-thumb-hover: #121418;
+      --scrollbar-track: #23232b;
+      --primary-gradient: linear-gradient(135deg, #ff6b6b, #6b66ff);
+      --text-color: #ffffff;
+      --text-secondary: rgba(255, 255, 255, 0.8);
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      color: var(--text-color);
+      min-height: 100vh;
+      padding: 2rem;
+      background: linear-gradient(135deg, #0a0a0f, #0f111a, #0a0a0f);
+      background-attachment: fixed;
+      position: relative;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(1200px 800px at 20% 20%, rgba(107, 102, 255, 0.08), transparent 40%),
+        radial-gradient(1000px 1000px at 80% 80%, rgba(255, 107, 107, 0.08), transparent 40%),
+        linear-gradient(to bottom right, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
+      mix-blend-mode: screen;
+      opacity: 0.4;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.04), transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Top bar */
+    .topbar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+    }
+
+    .back-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      padding: 0.75rem .3rem;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      backdrop-filter: blur(10px);
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .page-title {
+      font-size: 2.5rem;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      display: inline-block;
+      text-align: center;
+      margin-top: 0.5rem;
+    }
+
+    .refresh-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      backdrop-filter: blur(10px);
+      position: absolute;
+      right: 0;
+      top: 0.5rem;
+    }
+
+    .refresh-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .refresh-btn:active {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      backdrop-filter: blur(20px) saturate(200%);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      transform: translateY(0);
+    }
+
+    .refresh-btn i {
+      font-size: 1.1rem;
+      transition: transform 0.6s ease;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .refresh-btn.spinning i {
+      animation: spin 0.6s ease;
+    }
+
+    /* Movies Grid */
+    .movies-grid {
+      display: grid;
+      color: var(--text-secondary);
+      /* Auto-fill responsive columns instead of a hard-coded 6 */
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1.25rem;
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      align-items: stretch;
+    }
+
+    /* Responsive tweaks for My List layout */
+    @media (max-width: 1200px) {
+      .movies-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        padding: 0 1rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 1.5rem 1rem;
+      }
+
+      .topbar {
+        align-items: stretch;
+      }
+
+      .back-btn,
+      .refresh-btn {
+        position: static;
+        margin-top: 0.5rem;
+      }
+
+      .page-title {
+        font-size: 2rem;
+        margin-top: 0;
+        text-align: left;
+      }
+
+      .movies-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        padding: 0 0.75rem;
+        gap: 1rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 1rem;
+      }
+
+      .page-title {
+        font-size: 1.75rem;
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-secondary);
+      background: rgba(18, 18, 28, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .empty-state h2 {
+      color: var(--text-color);
+    }
+
+    .empty-state p {
+      color: var(--text-secondary);
+    }
+
+    .movie-card {
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 0.3s ease;
+      border-color: rgba(107, 102, 255, 0.4);
+      overflow: visible;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      opacity: 1;
+      isolation: isolate;
+      /* keep pseudo-elements behind */
+      border-radius: 12px 12px 0 0;
+    }
+
+    .movie-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      padding: 2px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      transition: background 0.3s ease;
+      z-index: 0;
+    }
+
+    .movie-card:hover {
+      transform: translateY(-12px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+      z-index: 10;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .movie-card:hover::before {
+      background: linear-gradient(135deg, rgba(167, 139, 250, 0.4), rgba(251, 113, 133, 0.4));
+      border-radius: 12px 12px 0 0;
+    }
+
+    .poster {
+      width: 100%;
+      height: 260px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px 12px 0 0;
+      background: rgba(0, 0, 0, 0.3);
+      flex-shrink: 0;
+    }
+
+    .poster img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+        filter 0.3s ease;
+      display: block;
+    }
+
+    .movie-card:hover .poster img {
+      transform: scale(1.08);
+      filter: brightness(1.1);
+    }
+
+    .movie-info {
+      padding: 0.65rem 0.75rem;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      border-radius: 0 0 12px 12px;
+      position: relative;
+      z-index: 2;
+      flex-shrink: 0;
+      height: 76px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .movie-title {
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 0.3rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      line-height: 1.25;
+      max-height: 2.5em;
+      color: #ffffff;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .movie-rating {
+      color: #ffd700;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .play-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 50px;
+      height: 50px;
+      background: rgb(0, 0, 0);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+      z-index: 3;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .play-icon::before {
+      content: '';
+      width: 0;
+      height: 0;
+      border-left: 22px solid #ffd900;
+      border-top: 14px solid transparent;
+      border-bottom: 14px solid transparent;
+      margin-left: 5px;
+    }
+
+    .movie-card:hover .play-icon {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.15);
+    }
+
+    .play-icon::after {
+      content: '';
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      z-index: -1;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(0.95);
+      }
+
+      50% {
+        opacity: 0.5;
+        transform: scale(1.05);
+      }
+    }
+
+    .remove-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 36px;
+      height: 36px;
+      background: rgba(220, 38, 38, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 4;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .movie-card:hover .remove-btn {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .remove-btn:hover {
+      background: rgba(239, 68, 68, 1);
+      transform: scale(1.15) rotate(90deg);
+      box-shadow: 0 6px 16px rgba(220, 38, 38, 0.6);
+    }
+
+    .remove-btn:active {
+      transform: scale(0.95) rotate(90deg);
+    }
+
+    /* Responsive columns */
+    @media (max-width: 1280px) {
+      .movies-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .movies-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 900px) {
+      .movies-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .topbar {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        padding-top: 3rem;
+      }
+
+      .back-btn {
+        position: absolute;
+        left: 0;
+        top: 10;
+      }
+
+      .refresh-btn {
+        position: absolute;
+        right: 0;
+        top: 4rem;
+      }
+
+      .page-title {
+        font-size: 2rem;
+        margin-top: 0;
+      }
+
+      .movies-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+      }
+
+      .poster {
+        height: 240px;
+      }
+
+      .play-icon {
+        width: 60px;
+        height: 60px;
+      }
+
+      .play-icon::before {
+        border-left-width: 18px;
+        border-top-width: 12px;
+        border-bottom-width: 12px;
+      }
+
+      .movie-info {
+        padding: 0.55rem 0.6rem;
+        height: 72px;
+      }
+
+      .movie-title {
+        font-size: 0.8rem;
+        line-height: 1.2;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .movies-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.85rem;
+        padding: 0 1rem;
+      }
+
+      .poster {
+        height: 210px;
+      }
+
+      .movie-card:hover {
+        transform: translateY(-8px);
+      }
+
+      .movie-info {
+        height: 68px;
+        padding: 0.5rem 0.55rem;
+      }
+
+      .movie-title {
+        font-size: 0.75rem;
+        line-height: 1.2;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .movies-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .poster {
+        height: 200px;
+      }
+
+      .movies-grid {
+        gap: 0.75rem;
+      }
+
+      .movie-info {
+        height: 66px;
+        padding: 0.5rem;
+      }
+
+      .movie-title {
+        font-size: 0.75rem;
+      }
+    }
+
+    /* Toast notifications */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(30, 30, 35, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 12px 16px;
+      border-radius: 10px;
+      min-width: 300px;
+      max-width: 400px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      animation: slideIn 0.3s ease-out;
+      color: white;
+    }
+
+    .toast .icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .toast.info {
+      border-left: 4px solid #60a5fa;
+    }
+
+    .toast.success {
+      border-left: 4px solid #34d399;
+    }
+
+    .toast.warning {
+      border-left: 4px solid #fbbf24;
+    }
+
+    .toast.error {
+      border-left: 4px solid #f87171;
+    }
+
+    .toast.info .icon {
+      background: rgba(96, 165, 250, 0.15);
+      color: #60a5fa;
+    }
+
+    .toast.success .icon {
+      background: rgba(52, 211, 153, 0.15);
+      color: #34d399;
+    }
+
+    .toast.warning .icon {
+      background: rgba(251, 191, 36, 0.15);
+      color: #fbbf24;
+    }
+
+    .toast.error .icon {
+      background: rgba(248, 113, 113, 0.15);
+      color: #f87171;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* Scrollbar styling */
+    *::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    *::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    *::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(10px);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, rgba(20, 20, 30, 0.95), rgba(30, 30, 45, 0.95));
+      margin: 5% auto;
+      padding: 2rem;
+      border-radius: 16px;
+      max-width: 800px;
+      position: relative;
+      animation: slideDown 0.3s ease;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideDown {
+      from {
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 2rem;
+      color: white;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .close-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: rotate(90deg);
+    }
+
+    #modalTitle {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .modal-info {
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-info p {
+      margin-bottom: 0.5rem;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 1rem;
+    }
+
+    .modal-info strong {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .stream-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      justify-content: center;
+    }
+
+    .stream-btn {
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, #a78bfa, #fb7185);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .stream-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(167, 139, 250, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .modal-content {
+        margin: 10% 1rem;
+        padding: 1.5rem;
+      }
+
+      #modalTitle {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Particle Background -->
+  <div class="bg-particles" id="particles"></div>
+
+  <div class="container">
+    <div class="topbar">
+      <a href="index.html" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        Back to Home
+      </a>
+      <h1 class="page-title">
+        <i class="far fa-bookmark"></i> My List
+      </h1>
+      <button class="refresh-btn" id="refreshBtn" title="Refresh">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+    </div>
+
+    <div class="movies-grid" id="moviesContainer"></div>
+    <div class="empty-state" id="emptyState" style="display: none;">
+      <i class="far fa-bookmark"></i>
+      <h2>Your list is empty</h2>
+      <p>Add movies to your list by clicking the bookmark button on any movie.</p>
+    </div>
+  </div>
+
+  <!-- Movie Modal -->
+  <div class="modal" id="movieModal">
+    <div class="modal-content">
+      <button class="close-btn" id="closeModal">&times;</button>
+      <h2 id="modalTitle"></h2>
+      <div class="modal-info">
+        <p><strong>Year:</strong> <span id="modalYear"></span></p>
+        <p><strong>Rating:</strong> <span id="modalRating"></span></p>
+        <p><strong>Genres:</strong> <span id="modalGenres"></span></p>
+      </div>
+      <div class="stream-buttons">
+        <button class="stream-btn" id="streamBtn">
+          <span>Watch Now</span>
+          <span class="stream-icon">▶️</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Firebase compat SDKs + App auth helpers -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="auth-firebase.js?v=3"></script>
+  <script src="ui.js"></script>
+  <script>
+    // Fixed dark look on this page; render particles only (no theme switching here)
+
+    function createParticles() {
+      const container = document.getElementById('particles');
+      if (!container) return;
+      container.innerHTML = '';
+      const count = window.innerWidth < 768 ? 30 : 50;
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.width = p.style.height = Math.random() * 4 + 2 + 'px';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.top = Math.random() * 100 + '%';
+        p.style.animationDelay = Math.random() * 15 + 's';
+        p.style.animationDuration = Math.random() * 10 + 15 + 's';
+        container.appendChild(p);
+      }
+    }
+
+    // Render particles on load
+    document.addEventListener('DOMContentLoaded', () => {
+      try { createParticles(); } catch (e) { }
+    });
+
+    // Refresh button handler
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        // Add spinning class to trigger icon rotation
+        refreshBtn.classList.add('spinning');
+
+        // Refresh the bookmarks list
+        displayBookmarks();
+
+        // Remove spinning class after animation completes
+        setTimeout(() => {
+          refreshBtn.classList.remove('spinning');
+        }, 600);
+
+        // Show toast notification
+        showToast('success', 'Refreshed', 'Bookmark list updated', 1500);
+      });
+    }
+
+    // Add spin animation for refresh icon
+    const spinStyle = document.createElement('style');
+    spinStyle.textContent = `
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(spinStyle);
+
+    // Modal functionality
+    let currentMovie = null;
+    const modal = document.getElementById('movieModal');
+    const closeModalBtn = document.getElementById('closeModal');
+
+    function openMovieModal(movie) {
+      currentMovie = movie;
+
+      // Update modal content
+      document.getElementById('modalTitle').textContent = movie.title;
+      document.getElementById('modalYear').textContent = movie.year || 'N/A';
+      document.getElementById('modalRating').textContent = movie.rating ? movie.rating.toFixed(1) + ' ⭐' : 'N/A';
+      document.getElementById('modalGenres').textContent = movie.genres ? movie.genres.join(', ') : 'N/A';
+
+      // Update Watch Now button
+      const streamBtn = document.getElementById('streamBtn');
+      if (streamBtn) {
+        streamBtn.onclick = () => {
+          window.location.href = `player.html?id=${movie.id}`;
+        };
+      }
+
+      // Show modal
+      modal.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeMovieModal() {
+      modal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+      currentMovie = null;
+    }
+
+    // Close modal when clicking X button
+    if (closeModalBtn) {
+      closeModalBtn.addEventListener('click', closeMovieModal);
+    }
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeMovieModal();
+      }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.style.display === 'block') {
+        closeMovieModal();
+      }
+    });
+
+    // Get bookmark storage key (scoped per user/profile)
+    function getBookmarksKey() {
+      try {
+        const user = (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function')
+          ? window.FirebaseAuth.getUser()
+          : null;
+        const uid = user && user.uid;
+        if (!uid) return 'myList_guest';
+        const sel = localStorage.getItem(`fb_selected_profile_${uid}`);
+        return sel ? `myList_${uid}_${sel}` : `myList_${uid}`;
+      } catch (e) {
+        console.error('Error getting bookmarks key:', e);
+        return 'myList_guest';
+      }
+    }
+
+    // Load bookmarked movies
+    function loadBookmarks() {
+      try {
+        const key = getBookmarksKey();
+        const bookmarksStr = localStorage.getItem(key);
+        const bookmarks = bookmarksStr ? JSON.parse(bookmarksStr) : {};
+        return Object.values(bookmarks);
+      } catch (e) {
+        console.error('Error loading bookmarks:', e);
+        return [];
+      }
+    }
+
+    // Remove bookmark
+    function removeBookmark(movieId) {
+      try {
+        const key = getBookmarksKey();
+        const bookmarksStr = localStorage.getItem(key);
+        const bookmarks = bookmarksStr ? JSON.parse(bookmarksStr) : {};
+
+        delete bookmarks[movieId];
+        localStorage.setItem(key, JSON.stringify(bookmarks));
+        return true;
+      } catch (e) {
+        console.error('Error removing bookmark:', e);
+        return false;
+      }
+    }
+
+    // Display bookmarked movies
+    function displayBookmarks() {
+      const container = document.getElementById('moviesContainer');
+      const emptyState = document.getElementById('emptyState');
+      const bookmarks = loadBookmarks();
+
+      if (bookmarks.length === 0) {
+        container.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      container.style.display = 'grid';
+      emptyState.style.display = 'none';
+      container.innerHTML = '';
+
+      // Sort by timestamp (most recent first)
+      bookmarks.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+      bookmarks.forEach(movie => {
+        const movieCard = document.createElement('div');
+        movieCard.className = 'movie-card';
+        movieCard.innerHTML = `
+          <button class="remove-btn" data-id="${movie.id}" title="Remove from My List">
+            <i class="fas fa-times"></i>
+          </button>
+          <div class="poster">
+            <img src="${movie.poster || 'https://via.placeholder.com/500x750?text=' + encodeURIComponent(movie.title)}" 
+                 alt="${movie.title}" loading="lazy" />
+            <div class="play-icon"></div>
+          </div>
+          <div class="movie-info">
+            <h3 class="movie-title">${movie.title} (${movie.year || ''})</h3>
+            <p class="movie-rating">⭐ ${movie.rating ? movie.rating.toFixed(1) : 'N/A'}</p>
+          </div>
+        `;
+
+        // Click card or play icon to open movie modal
+        movieCard.addEventListener('click', (e) => {
+          // Don't trigger if clicking remove button
+          if (e.target.closest('.remove-btn')) return;
+
+          // Open modal with movie details
+          openMovieModal(movie);
+        });
+
+        // Remove button
+        const removeBtn = movieCard.querySelector('.remove-btn');
+        removeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (removeBookmark(movie.id)) {
+            movieCard.style.animation = 'slideOut 0.3s ease-out';
+            setTimeout(() => {
+              movieCard.remove();
+              const remaining = loadBookmarks();
+              if (remaining.length === 0) {
+                container.style.display = 'none';
+                emptyState.style.display = 'block';
+              }
+            }, 300);
+            showToast('success', 'Removed', 'Movie removed from the list', 2000);
+          }
+        });
+
+        container.appendChild(movieCard);
+      });
+    }
+
+    // Toast notification function
+    function showToast(type, title, msg, duration = 3000) {
+      if (window.UIToast) {
+        if (type === 'success' && window.UIToast.success) {
+          window.UIToast.success(title, msg, duration);
+        } else if (type === 'info' && window.UIToast.info) {
+          window.UIToast.info(title, msg, duration);
+        } else if (type === 'warning' && window.UIToast.warning) {
+          window.UIToast.warning(title, msg, duration);
+        } else if (type === 'error' && window.UIToast.error) {
+          window.UIToast.error(title, msg, duration);
+        }
+      }
+    }
+
+    // Wait for auth to be ready, then load bookmarks
+    let initAttempts = 0;
+    function init() {
+      initAttempts++;
+
+      if (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function') {
+        const user = window.FirebaseAuth.getUser();
+
+        if (!user && initAttempts < 20) {
+          setTimeout(init, 250);
+          return;
+        }
+
+        displayBookmarks();
+      } else {
+        if (initAttempts < 20) {
+          setTimeout(init, 250);
+        } else {
+          console.error('FirebaseAuth never loaded');
+          displayBookmarks();
+        }
+      }
+    }
+
+    // Start when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+
+    // Listen for storage events (when bookmarks change in another tab)
+    window.addEventListener('storage', (e) => {
+      if (e.key && e.key.startsWith('myList_')) {
+        displayBookmarks();
+      }
+    });
+
+    // Add slideOut animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideOut {
+        to {
+          opacity: 0;
+          transform: translateX(-100%);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+</body>
+
+</html>

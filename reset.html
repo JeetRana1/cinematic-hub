@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reset Password | Cinematic Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+    @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --primary: #6b66ff;
+      --primary-dark: #5a55e8;
+      --primary-light: #8a85ff;
+      --accent: linear-gradient(135deg, #ff6b6b, #6b66ff);
+      --accent-hover: linear-gradient(135deg, #ff7b7b, #7b75ff);
+      --glass-bg: rgba(18, 18, 28, 0.9);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --text-primary: #ffffff;
+      --text-secondary: rgba(255, 255, 255, 0.8);
+      --text-muted: rgba(255, 255, 255, 0.6);
+      --radius: 12px;
+      --radius-lg: 16px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      --shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--text-primary);
+      background: linear-gradient(135deg, #0a0a0f, #0f111a, #0a0a0f);
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', sans-serif;
+      padding: 1.5rem;
+      position: relative;
+      overflow-x: hidden;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Animated Background */
+    .bg-particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.6;
+    }
+
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      background: linear-gradient(45deg, var(--primary), #ff6b6b);
+      opacity: 0.3;
+      /* Increased from 0.15 */
+      animation: float 15s infinite ease-in-out;
+      box-shadow: 0 0 15px 3px rgba(255, 255, 255, 0.4);
+      /* Enhanced glow for larger particles */
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0) translateX(0);
+      }
+
+      25% {
+        transform: translateY(-20px) translateX(10px);
+      }
+
+      50% {
+        transform: translateY(0) translateX(20px);
+      }
+
+      75% {
+        transform: translateY(20px) translateX(10px);
+      }
+    }
+
+    /* Card Styles */
+    .card {
+      position: relative;
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 3rem 2.5rem 2.5rem;
+      backdrop-filter: blur(20px) saturate(200%);
+      -webkit-backdrop-filter: blur(20px) saturate(200%);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transform: translateY(0);
+      transition: var(--transition);
+      z-index: 1;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      background: radial-gradient(800px 400px at -10% -10%, rgba(255, 255, 255, 0.08), transparent 40%),
+        linear-gradient(to bottom right, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+      mix-blend-mode: screen;
+      opacity: 0.6;
+      transition: var(--transition);
+    }
+
+    .card:hover::before {
+      opacity: 0.8;
+    }
+
+    h1 {
+      margin: 0 0 1.5rem;
+      font-weight: 700;
+      font-size: 2.25rem;
+      letter-spacing: -0.5px;
+      background: var(--accent);
+      text-align: center;
+      line-height: 1.2;
+      padding-bottom: 1.5rem;
+      position: relative;
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 3px;
+    }
+
+    p {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      font-weight: 400;
+      max-width: 90%;
+      margin: 0 auto 2rem;
+      opacity: 0.9;
+      text-align: center;
+      color: var(--text-secondary);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+      position: relative;
+      transition: var(--transition);
+    }
+
+    .form-group:focus-within {
+      transform: translateY(-2px);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: var(--transition);
+    }
+
+    .input-group {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      padding-right: 3rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius);
+      background: rgba(0, 0, 0, 0.2);
+      color: var(--text-primary);
+      font-size: 1rem;
+      font-family: inherit;
+      transition: var(--transition);
+    }
+
+    .form-group input:focus {
+      border-color: #e50914;
+      box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.2);
+    }
+
+    /* Fix autofill styling */
+    .form-group input:-webkit-autofill,
+    .form-group input:-webkit-autofill:hover,
+    .form-group input:-webkit-autofill:focus,
+    .form-group input:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 30px #1a1a1a inset !important;
+      -webkit-text-fill-color: #ffffff !important;
+      transition: background-color 5000s ease-in-out 0s;
+      caret-color: #ffffff;
+    }
+
+    .input-icon {
+      position: absolute;
+      right: 1rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .input-icon:hover {
+      color: var(--text-primary);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-top: 1rem;
+    }
+
+    .btn:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(107, 102, 255, 0.3);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn i {
+      font-size: 1.1em;
+    }
+
+    .aux-links {
+      margin-top: 1.5rem;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    .aux-links a {
+      color: var(--primary-light);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .aux-links a:hover {
+      color: white;
+      text-decoration: underline;
+    }
+
+    .info-banner {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: rgba(22, 22, 28, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .info-banner .icon {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(96, 165, 250, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #60a5fa;
+    }
+
+    .info-banner .content {
+      flex: 1;
+    }
+
+    .info-banner .title {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: white;
+    }
+
+    .info-banner .text {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .info-banner a {
+      color: var(--primary-light);
+      text-decoration: none;
+    }
+
+    .info-banner a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      body {
+        padding: 1rem;
+      }
+
+      .card {
+        padding: 2rem 1.5rem;
+        border-radius: var(--radius);
+      }
+
+      h1 {
+        font-size: 1.75rem;
+        margin-bottom: 1.25rem;
+      }
+
+      p {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Animated Background -->
+  <div class="bg-particles" id="particles"></div>
+
+  <div class="card">
+    <h1>Reset Password</h1>
+    <p>Enter your new password below to reset your account.</p>
+
+    <form id="resetForm">
+      <div class="form-group">
+        <label for="newPassword">New Password</label>
+        <div class="input-group">
+          <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password"
+            autocomplete="new-password" required minlength="6">
+          <span class="input-icon" id="toggleNewPassword">
+            <i class="far fa-eye"></i>
+          </span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <div class="input-group">
+          <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password"
+            autocomplete="new-password" required minlength="6">
+          <span class="input-icon" id="toggleConfirmPassword">
+            <i class="far fa-eye"></i>
+          </span>
+        </div>
+      </div>
+
+      <button type="submit" id="resetBtn" class="btn">
+        <i class="fas fa-key"></i>
+        <span>Reset Password</span>
+      </button>
+    </form>
+
+    <div class="aux-links">
+      <a href="login.html">Back to Login</a>
+    </div>
+
+    <div class="info-banner" id="infoBanner">
+      <div class="icon">
+        <i class="fas fa-info"></i>
+      </div>
+      <div class="content">
+        <div class="title">Password Requirements</div>
+        <div class="text">Your password must be at least 6 characters long. For better security, use a mix of letters,
+          numbers, and symbols.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="auth-firebase.js?v=3"></script>
+  <script src="ui.js"></script>
+  <script>
+    // UI Elements
+    const resetForm = document.getElementById('resetForm');
+    const newPasswordInput = document.getElementById('newPassword');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const resetBtn = document.getElementById('resetBtn');
+    const toggleNewPassword = document.getElementById('toggleNewPassword');
+    const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+    const infoBanner = document.getElementById('infoBanner');
+
+    // Get oobCode from URL
+    function getQueryParam(name) {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+      } catch (e) {
+        console.error('Error getting URL parameter:', e);
+        return null;
+      }
+    }
+
+    const oobCode = getQueryParam('oobCode');
+    const mode = getQueryParam('mode');
+    let emailForReset = '';
+
+    // Toggle password visibility
+    function togglePasswordVisibility(input, icon) {
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      icon.innerHTML = isPassword ? '<i class="far fa-eye-slash"></i>' : '<i class="far fa-eye"></i>';
+    }
+
+    // Show error message
+    function showError(message, element = null) {
+      console.error('Error:', message);
+
+      // Remove any existing error messages
+      const existingError = document.querySelector('.error-message');
+      if (existingError) {
+        existingError.remove();
+      }
+
+      // Create and show error message
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error-message';
+      errorDiv.innerHTML = `
+        <i class="fas fa-exclamation-circle"></i>
+        <span>${message}</span>
+      `;
+
+      if (element && element.parentNode) {
+        element.parentNode.insertBefore(errorDiv, element.nextSibling);
+      } else {
+        resetForm.insertBefore(errorDiv, resetForm.firstChild);
+      }
+
+      // Scroll to error
+      errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      return errorDiv;
+    }
+
+    // Show success message
+    function showSuccess(message) {
+      infoBanner.innerHTML = `
+        <div class="icon" style="background: rgba(74, 222, 128, 0.15); color: #4ade80;">
+          <i class="fas fa-check"></i>
+        </div>
+        <div class="content">
+          <div class="title" style="color: #4ade80;">Success!</div>
+          <div class="text">${message}</div>
+        </div>
+      `;
+      infoBanner.style.display = 'flex';
+      infoBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // Show loading state
+    function setLoading(isLoading) {
+      const buttonText = resetBtn.querySelector('span');
+      const buttonIcon = resetBtn.querySelector('i');
+
+      if (isLoading) {
+        resetBtn.disabled = true;
+        buttonText.textContent = 'Resetting...';
+        buttonIcon.className = 'fas fa-spinner fa-spin';
+      } else {
+        resetBtn.disabled = false;
+        buttonText.textContent = 'Reset Password';
+        buttonIcon.className = 'fas fa-key';
+      }
+    }
+
+    // Validate password
+    function validatePassword(password) {
+      if (!password || password.length < 6) {
+        return 'Password must be at least 6 characters long';
+      }
+      return null;
+    }
+
+    // Initialize the page
+    async function init() {
+      console.log('Initializing password reset page...');
+
+      // Check if we have a valid oobCode
+      if (!oobCode || mode !== 'resetPassword') {
+        infoBanner.innerHTML = `
+          <div class="icon" style="background: rgba(248, 113, 113, 0.15); color: #f87171;">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="content">
+            <div class="title" style="color: #f87171;">Invalid or Expired Link</div>
+            <div class="text">This password reset link is invalid or has expired. <a href="forgot.html" style="color: var(--primary-light);">Click here</a> to request a new one.</div>
+          </div>
+        `;
+        resetForm.style.display = 'none';
+        return;
+      }
+
+      try {
+        setLoading(true);
+
+        // Verify the password reset code
+        const auth = firebase.auth();
+        emailForReset = await auth.verifyPasswordResetCode(oobCode);
+
+        console.log('Password reset for email:', emailForReset);
+
+        // Update the info banner to show which email is being reset
+        infoBanner.innerHTML = `
+          <div class="icon">
+            <i class="fas fa-user-shield"></i>
+          </div>
+          <div class="content">
+            <div class="title">Resetting Password</div>
+            <div class="text">You are resetting the password for <strong>${emailForReset}</strong></div>
+          </div>
+        `;
+
+        setLoading(false);
+
+      } catch (error) {
+        console.error('Error verifying password reset code:', error);
+
+        infoBanner.innerHTML = `
+          <div class="icon" style="background: rgba(248, 113, 113, 0.15); color: #f87171;">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="content">
+            <div class="title" style="color: #f87171;">Error</div>
+            <div class="text">This password reset link is invalid or has expired. <a href="forgot.html" style="color: var(--primary-light);">Click here</a> to request a new one.</div>
+          </div>
+        `;
+
+        resetForm.style.display = 'none';
+        setLoading(false);
+      }
+    }
+
+    // Handle form submission
+    async function handleResetPassword(e) {
+      e.preventDefault();
+
+      // Clear previous errors
+      document.querySelectorAll('.error-message').forEach(el => el.remove());
+
+      const newPassword = newPasswordInput.value.trim();
+      const confirmPassword = confirmPasswordInput.value.trim();
+
+      // Validate passwords
+      const passwordError = validatePassword(newPassword);
+      if (passwordError) {
+        showError(passwordError, newPasswordInput);
+        newPasswordInput.focus();
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        showError('Passwords do not match', confirmPasswordInput);
+        confirmPasswordInput.focus();
+        return;
+      }
+
+      try {
+        setLoading(true);
+
+        // Reset the password
+        const auth = firebase.auth();
+        await auth.confirmPasswordReset(oobCode, newPassword);
+
+        console.log('Password reset successful for:', emailForReset);
+
+        // Show success message
+        showSuccess('Your password has been reset successfully. Redirecting to login...');
+
+        // Hide the form
+        resetForm.style.display = 'none';
+
+        // Redirect to login page after a delay
+        setTimeout(() => {
+          window.location.href = `login.html?email=${encodeURIComponent(emailForReset)}`;
+        }, 2000);
+
+      } catch (error) {
+        console.error('Error resetting password:', error);
+
+        let errorMessage = 'Failed to reset password. ';
+
+        switch (error.code) {
+          case 'auth/expired-action-code':
+            errorMessage += 'The reset code has expired. Please request a new password reset.';
+            break;
+          case 'auth/invalid-action-code':
+            errorMessage += 'The reset code is invalid. Please request a new password reset.';
+            break;
+          case 'auth/user-disabled':
+            errorMessage += 'This user account has been disabled.';
+            break;
+          case 'auth/user-not-found':
+            errorMessage += 'No user found with this email address.';
+            break;
+          case 'auth/weak-password':
+            errorMessage = 'The password is too weak. Please choose a stronger password.';
+            break;
+          default:
+            errorMessage += error.message || 'Please try again later.';
+        }
+
+        showError(errorMessage);
+        setLoading(false);
+      }
+    }
+
+    // Create animated particles
+    function createParticles() {
+      const container = document.getElementById('particles');
+      if (!container) return;
+
+      // Clear existing particles
+      container.innerHTML = '';
+
+      // Adjust particle count based on screen size
+      const particleCount = Math.floor(window.innerWidth / 20);
+
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+
+        // Random size between 5px and 12px
+        const size = Math.random() * 7 + 5;
+
+        // Random position
+        const posX = Math.random() * 100;
+        const posY = Math.random() * 100;
+
+        // Random animation duration and delay
+        const duration = Math.random() * 20 + 10; // 10-30s
+        const delay = Math.random() * -20; // Start at different times
+
+        // Random opacity between 0.2 and 0.5 for better visibility
+        const opacity = (Math.random() * 0.3) + 0.2;
+
+        // Apply styles
+        Object.assign(particle.style, {
+          width: `${size}px`,
+          height: `${size}px`,
+          left: `${posX}%`,
+          top: `${posY}%`,
+          animationDuration: `${duration}s`,
+          animationDelay: `${delay}s`,
+          opacity: opacity,
+          boxShadow: `0 0 ${size * 2.5}px ${size * 0.7}px rgba(255, 255, 255, 0.25)`
+        });
+        particle.style.animation = `float ${duration}s ${delay}s infinite ease-in-out`;
+
+        container.appendChild(particle);
+      }
+    }
+
+    // Event Listeners
+    toggleNewPassword.addEventListener('click', () => {
+      togglePasswordVisibility(newPasswordInput, toggleNewPassword);
+    });
+
+    toggleConfirmPassword.addEventListener('click', () => {
+      togglePasswordVisibility(confirmPasswordInput, toggleConfirmPassword);
+    });
+
+    resetForm.addEventListener('submit', handleResetPassword);
+
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize particles
+      createParticles();
+
+      // Handle window resize
+      let resizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(createParticles, 250);
+      });
+
+      // Initialize the page
+      init();
+    });
+  </script>
+</body>
+
+</html>

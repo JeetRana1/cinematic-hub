@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --glass-bg: rgba(7, 7, 7, 0.06);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --accent: linear-gradient(90deg, #1d1d1d, #551efa);
+      --radius: 16px;
+      --bg-color-1: rgba(255, 255, 255, 0.06);
+      --bg-color-2: rgba(255, 0, 100, 0.10);
+      --bg-color-3: rgba(0, 120, 255, 0.10);
+      --particle-color-1: #6b66ff;
+      --particle-color-2: #ff6b6b;
+    }
+
+    /* Animated Background */
+    .bg-particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.6;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      background: var(--particle-color-1, #6b66ff);
+      opacity: 0.3;
+      animation: float 15s infinite ease-in-out;
+      transition: background 0.5s ease, box-shadow 0.5s ease;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0) translateX(0);
+      }
+
+      25% {
+        transform: translateY(-20px) translateX(10px);
+      }
+
+      50% {
+        transform: translateY(0) translateX(20px);
+      }
+
+      75% {
+        transform: translateY(20px) translateX(10px);
+      }
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Poppins', sans-serif;
+      color: #ffffff;
+      background: linear-gradient(135deg, #0b0b12, #111827, #0b0b12);
+      background-attachment: fixed;
+      padding: 2rem;
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.00));
+      mix-blend-mode: screen;
+      opacity: 0.3;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+
+    .settings-header {
+      background: rgba(15, 15, 20, 0.5);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 24px 32px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .settings-header:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+      border-color: rgba(107, 102, 255, 0.3);
+    }
+
+    .header-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+    }
+
+    .header-title {
+      margin: 0 0 8px;
+      font-weight: 700;
+      font-size: 2.2rem;
+      background: linear-gradient(90deg, #ffffff, #d1d1ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+      letter-spacing: -0.5px;
+    }
+
+    .header-subtitle {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1rem;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+    }
+
+    .header-decoration {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: 1;
+      opacity: 0.3;
+    }
+
+    .decorative-circle {
+      position: absolute;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6b66ff, #9d6bff);
+      filter: blur(40px);
+      opacity: 0.4;
+    }
+
+    .decorative-circle:first-child {
+      width: 120px;
+      height: 120px;
+      top: -40px;
+      right: -40px;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    .decorative-circle:last-child {
+      width: 80px;
+      height: 80px;
+      bottom: -20px;
+      right: 20%;
+      background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+      animation: float 10s ease-in-out 1s infinite reverse;
+    }
+
+    .settings {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(10px);
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .nav a {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-radius: 12px;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 500;
+      opacity: 0.9;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid transparent;
+      background: rgba(255, 255, 255, 0.03);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transform: translateY(0);
+      will-change: transform, box-shadow, background, border-color;
+    }
+
+    .nav a:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.12);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      opacity: 1;
+    }
+
+    .nav a:active {
+      transform: translateY(0);
+      transition-duration: 0.1s;
+    }
+
+    .nav a.active {
+      background: linear-gradient(90deg, rgba(107, 102, 255, 0.15), rgba(107, 102, 255, 0.1));
+      border: 1px solid rgba(107, 102, 255, 0.2);
+      color: #fff;
+      opacity: 1;
+      box-shadow: 0 4px 12px rgba(107, 102, 255, 0.15);
+    }
+
+    .nav a.active:hover {
+      background: linear-gradient(90deg, rgba(107, 102, 255, 0.2), rgba(107, 102, 255, 0.15));
+    }
+
+    /* Email Display Styles */
+    .email-display {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin: 8px 0;
+      font-family: 'Poppins', monospace;
+      font-size: 14px;
+      color: #fff;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .email-display::before {
+      content: '📧';
+      margin-right: 10px;
+      font-size: 16px;
+      opacity: 0.8;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .row {
+      margin: 10px 0;
+    }
+
+    .btn {
+      padding: 10px 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 1px 3px rgba(0, 0, 0, 0.2);
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      border-color: rgba(255, 255, 255, 0.4);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15) inset, 0 2px 6px rgba(0, 0, 0, 0.25);
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 1px 2px rgba(0, 0, 0, 0.15);
+    }
+
+    input[type="text"],
+    input[type="email"],
+    select {
+      width: 100%;
+      margin-top: 6px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--glass-border);
+      background: rgba(0, 0, 0, 0.35);
+      color: #fff;
+    }
+
+    input[type="password"] {
+      width: 100%;
+      margin-top: 6px;
+      padding: 14px 16px;
+      height: 50px;
+      border-radius: 10px;
+      border: 1px solid var(--glass-border);
+      background: rgba(0, 0, 0, 0.35);
+      color: #fff;
+      font-size: 16px;
+    }
+
+    /* Custom Select Container */
+    .custom-select {
+      position: relative;
+      width: 100%;
+      margin: 8px 0;
+      font-family: 'Poppins', sans-serif;
+      z-index: 10;
+    }
+
+    /* Selected Option */
+    .select-selected {
+      background-color: rgba(20, 20, 20, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 18px;
+      padding: 12px 16px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+      color: #fff;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .select-selected:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      background-color: rgba(30, 30, 30, 0.9);
+    }
+
+    .select-arrow {
+      transition: transform 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+    }
+
+    .select-arrow svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Dropdown Items */
+    .select-items {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: rgba(20, 20, 25, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+    }
+
+    .select-option {
+      padding: 12px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s ease;
+      color: rgba(255, 255, 255, 0.9);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .select-option:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .select-option[data-selected="true"] {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .theme-preview {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      margin-right: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      flex-shrink: 0;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .select-option:hover .theme-preview {
+      transform: scale(1.1);
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+    }
+
+    /* Active state */
+    .select-active .select-items {
+      max-height: 400px;
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      overflow-y: auto;
+      padding: 8px 0;
+      scroll-behavior: smooth;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.1) rgba(0, 0, 0, 0.2);
+    }
+
+    /* Webkit Scrollbar Styling */
+    .select-items::-webkit-scrollbar {
+      width: 6px;
+      border-radius: 3px;
+    }
+
+    .select-items::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 3px;
+      margin: 4px 0;
+    }
+
+    .select-items::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+      transition: background-color 0.2s ease;
+    }
+
+    .select-items::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Firefox Scrollbar Styling */
+    @supports (scrollbar-color: auto) {
+      .select-items {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.15) rgba(0, 0, 0, 0.2);
+      }
+    }
+
+    .select-active .select-arrow {
+      transform: rotate(180deg);
+    }
+
+    /* Hide original select but keep it functional */
+    #themeSelect {
+      position: absolute;
+      opacity: 0;
+      height: 0;
+      width: 0;
+      overflow: hidden;
+    }
+
+    /* Modern Apply Button Styles */
+    .apply-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 16px 32px;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #6b66ff, #9d6bff);
+      color: white;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 500;
+      font-size: 15px;
+      line-height: 1.5;
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+      box-shadow: 0 4px 15px rgba(107, 102, 255, 0.3);
+      margin: 12px auto;
+      white-space: nowrap;
+      text-decoration: none;
+      z-index: 1;
+      min-width: 180px;
+    }
+
+    .apply-btn[disabled] {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: 0 4px 10px rgba(107, 102, 255, 0.1) !important;
+      background: linear-gradient(135deg, #6b66ff99, #9d6bff99);
+    }
+
+    .apply-btn:not([disabled]):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(107, 102, 255, 0.4);
+      background: linear-gradient(135deg, #7b76ff, #ad7bff);
+    }
+
+    .apply-btn:not([disabled]):active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 15px rgba(107, 102, 255, 0.3);
+      transition-duration: 0.1s;
+    }
+
+    .apply-btn .btn-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+      width: 20px;
+      height: 20px;
+    }
+
+    .apply-btn:not([disabled]):hover .btn-icon {
+      transform: translateX(4px);
+    }
+
+    .apply-btn:not([disabled]):active .btn-icon {
+      transform: translateX(2px);
+    }
+
+    .apply-btn .btn-loader {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+    }
+
+    .apply-btn .btn-loader svg {
+      width: 100%;
+      height: 100%;
+      animation: spin 1.5s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .apply-btn.loading .btn-text,
+    .apply-btn.loading .btn-icon {
+      position: relative;
+      z-index: 1;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .apply-btn.loading .btn-text {
+      position: relative;
+      display: inline-block;
+      transition: transform 0.3s ease;
+    }
+
+    .apply-btn:not([disabled]):hover .btn-text {
+      transform: translateX(2px);
+    }
+
+    .apply-btn.loading .btn-loader {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+
+    .apply-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+      transform: translateX(-100%);
+      transition: 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: -1;
+      opacity: 0.8;
+    }
+
+    .apply-btn:not([disabled]):hover::before {
+      transform: translateX(100%);
+    }
+
+    /* For WebKit browsers */
+    #themeSelect option:checked,
+    #themeSelect option:hover {
+      background: linear-gradient(to right, #e50914, #b20710);
+      color: white;
+    }
+
+    #themeSelect option:checked {
+      background: #e50914;
+      color: white;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      body {
+        padding: 1.25rem;
+      }
+
+      .container {
+        max-width: 900px;
+      }
+
+      .settings {
+        grid-template-columns: 1fr;
+      }
+
+      .nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .nav a {
+        flex: 1 1 calc(50% - 10px);
+        justify-content: center;
+        min-width: 120px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        max-width: 96vw;
+      }
+
+      .panel {
+        padding: 12px;
+        border-radius: 14px;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+    }
+
+    /* About Section Styles */
+    .about-content {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    .about-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .about-header h2 {
+      font-size: 2.5rem;
+      margin: 0 0 15px;
+      background: linear-gradient(90deg, #fff, #aaa);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+    }
+
+    .highlight {
+      display: inline-block;
+      animation: bounce 2s infinite;
+    }
+
+    .divider {
+      height: 3px;
+      width: 60px;
+      background: linear-gradient(90deg, #6b66ff, #e74c3c);
+      margin: 0 auto;
+      border-radius: 3px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .divider::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      animation: shine 3s infinite;
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+      margin-bottom: 40px;
+    }
+
+    .about-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 30px 25px;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    .about-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #6b66ff, #e74c3c);
+    }
+
+    .about-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .card-icon {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      display: inline-block;
+      transition: transform 0.3s ease;
+    }
+
+    .about-card:hover .card-icon {
+      transform: scale(1.1) rotate(5deg);
+    }
+
+    .about-card h3 {
+      font-size: 1.4rem;
+      margin: 0 0 15px;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .about-card p {
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.6;
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    .about-footer {
+      text-align: center;
+      margin-top: 50px;
+      padding-top: 30px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .tech-stack {
+      margin-bottom: 20px;
+    }
+
+    .tech-stack span {
+      display: block;
+      margin-bottom: 10px;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .tech-icons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin: 15px 0;
+    }
+
+    .tech-icons span {
+      font-size: 1.5rem;
+      opacity: 0.7;
+      transition: all 0.3s ease;
+      cursor: default;
+    }
+
+    .tech-icons span:hover {
+      opacity: 1;
+      transform: translateY(-3px);
+    }
+
+    .motto {
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 20px;
+      font-size: 1.1rem;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes bounce {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    @keyframes shine {
+      0% {
+        transform: translateX(-100%);
+      }
+
+      100% {
+        transform: translateX(100%);
+      }
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.8s ease-out forwards;
+    }
+
+    .animate-slide-up {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: slideUp 0.6s ease-out forwards;
+      animation-delay: var(--delay, 0s);
+    }
+
+    @keyframes slideUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Theme selection styles */
+    .theme-option {
+      position: relative;
+      display: flex;
+      align-items: center;
+      padding: 12px 15px 12px 40px;
+      margin: 5px 0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid transparent;
+    }
+
+    .theme-option:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .theme-selected {
+      background: rgba(34, 197, 94, 0.15) !important;
+      border-color: rgba(34, 197, 94, 0.4) !important;
+      font-weight: 500;
+      position: relative;
+      box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
+    }
+
+    .select-option.theme-selected {
+      background: rgba(34, 197, 94, 0.15) !important;
+      border-left: 3px solid rgba(34, 197, 94, 0.8);
+    }
+
+    .check-icon {
+      position: absolute;
+      left: 15px;
+      color: #22c55e;
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header class="settings-header">
+      <div class="header-content">
+        <h1 class="header-title">Settings</h1>
+        <p class="header-subtitle">Manage your experience</p>
+      </div>
+      <div class="header-decoration">
+        <div class="decorative-circle"></div>
+        <div class="decorative-circle"></div>
+      </div>
+    </header>
+
+    <div class="settings">
+      <nav class="panel nav">
+        <a href="#about" data-section="about" class="active">About 🎬</a>
+        <a href="#themes" data-section="themes">Themes 🎨</a>
+        <a href="#user" data-section="user">User 👤</a>
+        <a href="#back" id="backToApp">← Back to App</a>
+      </nav>
+
+      <main class="panel">
+        <section id="about" class="section active">
+          <div class="about-content">
+            <div class="about-header">
+              <h2 class="animate-fade-in">About</h2>
+              <div class="divider"></div>
+            </div>
+
+            <div class="about-grid">
+              <div class="about-card animate-slide-up" style="--delay: 0.1s">
+                <div class="card-icon">🍿</div>
+                <h3>Personal Movie Space</h3>
+                <p>A private, ad-free platform to watch and track your favorite movies. No subscriptions, no algorithms
+                  — just your personal collection, your way.</p>
+              </div>
+
+              <div class="about-card animate-slide-up" style="--delay: 0.2s">
+                <div class="card-icon">👥</div>
+                <h3>Multiple Profiles</h3>
+                <p>Create individual profiles for everyone. Each profile keeps track of watch history, preferences, and
+                  continue watching progress separately.</p>
+              </div>
+
+              <div class="about-card animate-slide-up" style="--delay: 0.3s">
+                <div class="card-icon">🎯</div>
+                <h3>Learning Project</h3>
+                <p>Built as a passion project to explore modern web technologies, video streaming, and browser storage
+                  capabilities.</p>
+              </div>
+
+              <div class="about-card animate-slide-up" style="--delay: 0.4s">
+                <div class="card-icon">🚀</div>
+                <h3>Future Plans</h3>
+                <p>Planned features include playlists, watch history, and enhanced visual customization options to make
+                  your experience even better.</p>
+              </div>
+            </div>
+        </section>
+
+        <section id="themes" class="section">
+          <h2>Themes</h2>
+          <div class="row">Choose a theme:</div>
+          <div class="row">
+            <div class="custom-select">
+              <div class="select-selected">
+                <span class="selected-option">Dark Glossy (default)</span>
+                <span class="select-arrow">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round" />
+                  </svg>
+                </span>
+              </div>
+              <div class="select-items">
+                <div class="theme-option" data-theme="glossy">
+                  <span class="theme-preview" style="background: linear-gradient(135deg, #ff6b6b, #6b66ff)"></span>
+                  <span>Dark Glossy (default)</span>
+                </div>
+                <div class="select-option" data-value="crimson">
+                  <span class="theme-preview" style="background: linear-gradient(135deg, #ef4444, #f97316)"></span>
+                  <span>Crimson Rose</span>
+                </div>
+                <div class="select-option" data-value="ocean">
+                  <span class="theme-preview" style="background: linear-gradient(135deg, #22d3ee, #60a5fa)"></span>
+                  <span>Ocean Blue</span>
+                </div>
+                <div class="select-option" data-value="emerald">
+                  <span class="theme-preview" style="background: linear-gradient(135deg, #10b981, #22c55e)"></span>
+                  <span>Emerald Green</span>
+                </div>
+                <div class="select-option" data-value="purple">
+                  <span class="theme-preview" style="background: linear-gradient(135deg, #a78bfa, #6366f1)"></span>
+                  <span>Royal Purple</span>
+                </div>
+                <div class="select-option" data-value="sunset">
+                  <span class="theme-preview" style="background: linear-gradient(135deg, #f59e0b, #ec4899)"></span>
+                  <span>Sunset</span>
+                </div>
+                <div class="select-option" data-value="neon">
+                  <span class="theme-preview" style="background: linear-gradient(135deg, #22d3ee, #d946ef)"></span>
+                  <span>Neon Pulse</span>
+                </div>
+                <div class="select-option" data-value="graphite">
+                  <span class="theme-preview" style="background: linear-gradient(135deg, #6b7280, #9ca3af)"></span>
+                  <span>Graphite</span>
+                </div>
+                <div class="select-option" data-value="gold">
+                  <span class="theme-preview" style="background: linear-gradient(135deg, #eab308, #f59e0b)"></span>
+                  <span>Golden Hour</span>
+                </div>
+              </div>
+              <select id="themeSelect">
+                <option value="glossy" selected>Dark Glossy (default)</option>
+                <option value="crimson">Crimson Rose</option>
+                <option value="ocean">Ocean Blue</option>
+                <option value="emerald">Emerald Green</option>
+                <option value="purple">Royal Purple</option>
+                <option value="sunset">Sunset</option>
+                <option value="neon">Neon Pulse</option>
+                <option value="graphite">Graphite</option>
+                <option value="gold">Golden Hour</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <button class="apply-btn" id="applyTheme">
+              <span class="btn-text">Apply Theme</span>
+              <span class="btn-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+              <span class="btn-loader">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M12 2V6M12 18V22M6 12H2M22 12H18M19.0784 19.0784L16.25 16.25M19.0784 4.99994L16.25 7.82837M4.92157 19.0784L7.75 16.25M4.92157 4.99994L7.75 7.82837"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+            </button>
+          </div>
+        </section>
+
+        <section id="user" class="section">
+          <h2>User</h2>
+          <div class="row">
+            <label>Your Email:</label>
+            <div class="email-display" id="userEmail">-</div>
+          </div>
+          <div class="row">
+            <label for="newPassword">Change Password</label>
+            <input type="password" id="newPassword" placeholder="New password" />
+          </div>
+          <div class="row">
+            <button class="apply-btn" id="savePassword">
+              <span class="btn-text">Update Password</span>
+              <span class="btn-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M12 15V17M6 21H18C19.1046 21 20 20.1046 20 19V13C20 11.8954 19.1046 11 18 11H6C4.89543 11 4 11.8954 4 13V19C4 20.1046 4.89543 21 6 21ZM16 11V7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7V11H16Z"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+              <span class="btn-loader">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M12 2V6M12 18V22M6 12H2M22 12H18M19.0784 19.0784L16.25 16.25M19.0784 4.99994L16.25 7.82837M4.92157 19.0784L7.75 16.25M4.92157 4.99994L7.75 7.82837"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <div class="bg-particles" id="particles"></div>
+  <script src="auth-firebase.js"></script>
+  <script src="ui.js"></script>
+  <script>
+    // Particle background functionality
+    function createParticles() {
+      const container = document.getElementById('particles');
+      if (!container) return;
+
+      // Get the current theme's accent color
+      const style = getComputedStyle(document.documentElement);
+      const accentGradient = style.getPropertyValue('--accent');
+
+      // Extract colors from gradient (simple extraction - assumes linear-gradient format)
+      let colors = ['#6b66ff', '#ff6b6b']; // Default colors
+      const colorMatch = accentGradient.match(/#[0-9a-fA-F]{3,6}|(?:rgba?\([^)]+\))/g);
+      if (colorMatch && colorMatch.length >= 2) {
+        colors = [colorMatch[0], colorMatch[1]];
+      }
+
+      // Clear existing particles
+      container.innerHTML = '';
+
+      // Adjust particle count based on screen size
+      const particleCount = Math.floor(window.innerWidth / 20);
+
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+
+        // Random size between 5px and 12px
+        const size = Math.random() * 7 + 5;
+
+        // Random position
+        const posX = Math.random() * 100;
+        const posY = Math.random() * 100;
+
+        // Random animation duration and delay
+        const duration = Math.random() * 20 + 10; // 10-30s
+        const delay = Math.random() * -20; // Start at different times
+
+        // Random opacity between 0.2 and 0.5 for better visibility
+        const opacity = (Math.random() * 0.3) + 0.2;
+
+        // Randomly choose one of the two theme colors for this particle
+        const colorIndex = Math.random() > 0.5 ? 0 : 1;
+        const color = colors[colorIndex];
+
+        // Apply styles
+        Object.assign(particle.style, {
+          width: `${size}px`,
+          height: `${size}px`,
+          left: `${posX}%`,
+          top: `${posY}%`,
+          animationDuration: `${duration}s`,
+          animationDelay: `${delay}s`,
+          opacity: opacity,
+          background: color,
+          boxShadow: `0 0 ${size * 2.5}px ${size * 1.5}px ${color}${Math.floor(opacity * 255).toString(16).padStart(2, '0')}`
+        });
+        particle.style.animation = `float ${duration}s ${delay}s infinite ease-in-out`;
+
+        container.appendChild(particle);
+      }
+    }
+
+    // Initialize particles when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      createParticles();
+
+      // Handle window resize
+      let resizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(createParticles, 250);
+      });
+
+      // Watch for theme changes
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.attributeName === 'style') {
+            createParticles();
+          }
+        });
+      });
+
+      // Start observing the document with the configured parameters
+      observer.observe(document.documentElement, { attributes: true });
+    });
+
+    // Simple section navigation
+    const links = document.querySelectorAll('.nav a[data-section]');
+    const sections = document.querySelectorAll('.section');
+    links.forEach(a => a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const id = a.getAttribute('data-section');
+      links.forEach(x => x.classList.remove('active'));
+      a.classList.add('active');
+      sections.forEach(s => s.classList.toggle('active', s.id === id));
+    }));
+
+    document.getElementById('backToApp').addEventListener('click', (e) => {
+      e.preventDefault();
+      window.location.assign('/index.html');
+    });
+
+    // Custom dropdown functionality
+    document.addEventListener('DOMContentLoaded', () => {
+      const customSelect = document.querySelector('.custom-select');
+      const selectSelected = document.querySelector('.select-selected');
+      const selectItems = document.querySelector('.select-items');
+      const selectOptions = document.querySelectorAll('.select-option');
+      const themeSelect = document.getElementById('themeSelect');
+      const selectedOption = document.querySelector('.selected-option');
+
+      // Toggle dropdown
+      selectSelected.addEventListener('click', (e) => {
+        e.stopPropagation();
+        customSelect.classList.toggle('select-active');
+      });
+
+      // Handle option selection
+      selectOptions.forEach(option => {
+        option.addEventListener('click', () => {
+          // Update selected option display
+          const value = option.getAttribute('data-value');
+          const text = option.querySelector('span:last-child').textContent;
+
+          // Update UI
+          selectedOption.textContent = text;
+          selectOptions.forEach(opt => {
+            opt.setAttribute('data-selected', 'false');
+            opt.classList.remove('theme-selected');
+          });
+          option.setAttribute('data-selected', 'true');
+          option.classList.add('theme-selected');
+
+          // Update the hidden select element
+          themeSelect.value = value;
+
+          // Trigger change event
+          themeSelect.dispatchEvent(new Event('change'));
+
+          // Close dropdown
+          customSelect.classList.remove('select-active');
+        });
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!customSelect.contains(e.target)) {
+          customSelect.classList.remove('select-active');
+        }
+      });
+
+      // Sync with original select if it changes programmatically
+      themeSelect.addEventListener('change', () => {
+        const selectedOption = themeSelect.options[themeSelect.selectedIndex];
+        const selectedOptionElement = document.querySelector(`.select-option[data-value="${selectedOption.value}"]`);
+        if (selectedOptionElement) {
+          document.querySelector('.selected-option').textContent = selectedOption.text;
+          selectOptions.forEach(opt => {
+            opt.setAttribute('data-selected', 'false');
+            opt.classList.remove('theme-selected');
+          });
+          selectedOptionElement.setAttribute('data-selected', 'true');
+          selectedOptionElement.classList.add('theme-selected');
+        }
+      });
+
+      // Helper: profile-scoped theme key
+      function getScopedThemeKey() {
+        try {
+          const getUser = window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function' ? window.FirebaseAuth.getUser : null;
+          const user = getUser ? getUser() : null;
+          const uid = user && user.uid;
+          if (!uid) return 'app_theme_guest';
+          const sel = localStorage.getItem(`fb_selected_profile_${uid}`);
+          return sel ? `app_theme_${uid}_${sel}` : `app_theme_${uid}`;
+        } catch (_) { return 'app_theme_guest'; }
+      }
+
+      // Function to refresh theme highlighting in the UI
+      function refreshThemeHighlighting() {
+        const savedTheme = localStorage.getItem(getScopedThemeKey()) || 'glossy';
+        const savedThemeOption = document.querySelector(`.select-option[data-value="${savedTheme}"]`);
+        const themeOption = document.querySelector(`.theme-option[data-theme="${savedTheme}"]`);
+
+        // Update dropdown select options
+        if (savedThemeOption) {
+          selectOptions.forEach(opt => {
+            opt.classList.remove('theme-selected');
+            opt.setAttribute('data-selected', 'false');
+          });
+          savedThemeOption.classList.add('theme-selected');
+          savedThemeOption.setAttribute('data-selected', 'true');
+
+          // Update displayed text
+          const selectedOptionText = document.querySelector('.selected-option');
+          if (selectedOptionText) {
+            selectedOptionText.textContent = savedThemeOption.querySelector('span:last-child').textContent;
+          }
+
+          // Update hidden select
+          themeSelect.value = savedTheme;
+        }
+
+        // Update theme option cards
+        if (themeOption) {
+          document.querySelectorAll('.theme-option').forEach(opt => {
+            opt.classList.remove('theme-selected');
+            const checkIcon = opt.querySelector('.check-icon');
+            if (checkIcon) checkIcon.remove();
+          });
+          themeOption.classList.add('theme-selected');
+
+          // Add checkmark
+          if (!themeOption.querySelector('.check-icon')) {
+            const newCheckIcon = document.createElement('span');
+            newCheckIcon.className = 'check-icon';
+            newCheckIcon.innerHTML = '✓';
+            themeOption.prepend(newCheckIcon);
+          }
+        }
+      }
+
+      // Highlight the currently saved theme on page load (scoped per profile)
+      refreshThemeHighlighting();
+
+      // Refresh highlighting when visibility changes (navigating back to page)
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+          refreshThemeHighlighting();
+        }
+      });
+
+      // Also refresh when window gains focus
+      window.addEventListener('focus', () => {
+        refreshThemeHighlighting();
+      });
+    });
+
+    // Theme configuration presets
+    const themePresets = {
+      glossy: {
+        bgs: ['rgba(255,255,255,0.06)', 'rgba(255,0,100,0.10)', 'rgba(0,120,255,0.10)'],
+        accent: 'linear-gradient(90deg,#ff6b6b,#6b66ff)',
+        particles: ['#ff6b6b', '#6b66ff']
+      },
+      crimson: {
+        bgs: ['rgba(255,255,255,0.05)', 'rgba(220,38,38,0.14)', 'rgba(244,63,94,0.12)'],
+        accent: 'linear-gradient(90deg,#ef4444,#f97316)',
+        particles: ['#ef4444', '#f97316']
+      },
+      ocean: {
+        bgs: ['rgba(255,255,255,0.05)', 'rgba(14,165,233,0.14)', 'rgba(6,182,212,0.12)'],
+        accent: 'linear-gradient(90deg,#22d3ee,#60a5fa)',
+        particles: ['#22d3ee', '#60a5fa']
+      },
+      emerald: {
+        bgs: ['rgba(255,255,255,0.05)', 'rgba(5,150,105,0.14)', 'rgba(16,185,129,0.12)'],
+        accent: 'linear-gradient(90deg,#10b981,#22c55e)',
+        particles: ['#10b981', '#22c55e']
+      },
+      purple: {
+        bgs: ['rgba(255,255,255,0.05)', 'rgba(147,51,234,0.14)', 'rgba(99,102,241,0.12)'],
+        accent: 'linear-gradient(90deg,#a78bfa,#6366f1)',
+        particles: ['#a78bfa', '#6366f1']
+      },
+      sunset: {
+        bgs: ['rgba(255,255,255,0.05)', 'rgba(251,146,60,0.16)', 'rgba(236,72,153,0.12)'],
+        accent: 'linear-gradient(90deg,#f59e0b,#ec4899)',
+        particles: ['#f59e0b', '#ec4899']
+      },
+      neon: {
+        bgs: ['rgba(255,255,255,0.05)', 'rgba(34,211,238,0.18)', 'rgba(217,70,239,0.14)'],
+        accent: 'linear-gradient(90deg,#22d3ee,#d946ef)',
+        particles: ['#22d3ee', '#d946ef']
+      },
+      graphite: {
+        bgs: ['rgba(255,255,255,0.04)', 'rgba(107,114,128,0.18)', 'rgba(75,85,99,0.14)'],
+        accent: 'linear-gradient(90deg,#6b7280,#9ca3af)',
+        particles: ['#6b7280', '#9ca3af']
+      },
+      gold: {
+        bgs: ['rgba(255,255,255,0.05)', 'rgba(234,179,8,0.18)', 'rgba(245,158,11,0.14)'],
+        accent: 'linear-gradient(90deg,#eab308,#f59e0b)',
+        particles: ['#eab308', '#f59e0b']
+      }
+    };
+
+    // Apply theme colors to the page
+    const applyThemeColors = (theme) => {
+      const preset = themePresets[theme] || themePresets.glossy;
+      const root = document.documentElement.style;
+      if (preset) {
+        // Update CSS variables
+        root.setProperty('--theme-bg1', preset.bgs[0]);
+        root.setProperty('--theme-bg2', preset.bgs[1]);
+        root.setProperty('--theme-bg3', preset.bgs[2]);
+        root.setProperty('--accent', preset.accent);
+        root.setProperty('--particle-color-1', preset.particles[0]);
+        root.setProperty('--particle-color-2', preset.particles[1]);
+        root.setProperty('--bg-color-1', preset.bgs[0]);
+        root.setProperty('--bg-color-2', preset.bgs[1]);
+        root.setProperty('--bg-color-3', preset.bgs[2]);
+        // Update particles
+        if (typeof createParticles === 'function') createParticles();
+        // Notify other tabs/windows of theme change
+        if (typeof BroadcastChannel !== 'undefined') {
+          const channel = new BroadcastChannel('theme_channel');
+          try {
+            const getUser = window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function' ? window.FirebaseAuth.getUser : null;
+            const user = getUser ? getUser() : null;
+            const uid = user && user.uid;
+            const sel = uid ? localStorage.getItem(`fb_selected_profile_${uid}`) : null;
+            channel.postMessage({ type: 'THEME_CHANGED', theme, uid, profileId: sel });
+          } catch (_) { channel.postMessage({ type: 'THEME_CHANGED', theme }); }
+        }
+      }
+    };
+    // Theme application function
+    function applyTheme(theme) {
+      if (!theme || !themePresets[theme]) {
+        theme = 'glossy'; // Default to glossy if theme is invalid
+      }
+
+      // Save theme to localStorage (scoped per profile)
+      try {
+        const key = (function () {
+          try {
+            const getUser = window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function' ? window.FirebaseAuth.getUser : null;
+            const user = getUser ? getUser() : null;
+            const uid = user && user.uid;
+            if (!uid) return 'app_theme_guest';
+            const sel = localStorage.getItem(`fb_selected_profile_${uid}`);
+            return sel ? `app_theme_${uid}_${sel}` : `app_theme_${uid}`;
+          } catch (_) { return 'app_theme_guest'; }
+        })();
+        localStorage.setItem(key, theme);
+      } catch (_) { }
+
+      // Apply theme to the document
+      document.documentElement.setAttribute('data-theme', theme);
+
+      // Update theme preview iframe if it exists
+      const iframe = document.querySelector('iframe');
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({ type: 'SET_THEME', theme }, '*');
+      }
+
+      // Update the select element if it exists
+      const themeSelect = document.getElementById('themeSelect');
+      if (themeSelect) {
+        themeSelect.value = theme;
+        // Update the custom select UI if it exists
+        const selectedOption = document.querySelector(`.select-option[data-value="${theme}"]`);
+        if (selectedOption) {
+          const selectedOptionText = document.querySelector('.selected-option');
+          if (selectedOptionText) {
+            selectedOptionText.textContent = selectedOption.textContent.trim();
+          }
+
+          // Update dropdown highlighting
+          const selectOptions = document.querySelectorAll('.select-option');
+          selectOptions.forEach(opt => {
+            opt.setAttribute('data-selected', 'false');
+            opt.classList.remove('theme-selected');
+          });
+          selectedOption.setAttribute('data-selected', 'true');
+          selectedOption.classList.add('theme-selected');
+        }
+      }
+
+      // Highlight the selected theme
+      document.querySelectorAll('.theme-option').forEach(option => {
+        const isSelected = option.dataset.theme === theme;
+        option.classList.toggle('theme-selected', isSelected);
+
+        // Manage checkmark icon
+        const checkIcon = option.querySelector('.check-icon');
+        if (isSelected) {
+          if (!checkIcon) {
+            const newCheckIcon = document.createElement('span');
+            newCheckIcon.className = 'check-icon';
+            newCheckIcon.innerHTML = '✓';
+            option.prepend(newCheckIcon);
+          }
+        } else if (checkIcon) {
+          checkIcon.remove();
+        }
+      });
+
+      // Update UI elements with theme colors
+      applyThemeColors(theme);
+
+      // Dispatch event for other components to react to theme changes
+      document.dispatchEvent(new CustomEvent('themeChanged', {
+        detail: { theme }
+      }));
+
+      return theme;
+    }
+
+    // Save theme to Firebase if user is logged in
+    async function saveThemeToFirebase(theme) {
+      try {
+        const user = FirebaseAuth.getUser();
+        if (user) {
+          const profile = await FirebaseAuth.getSelectedProfile(user.uid);
+          if (profile) {
+            // Update profile with new theme
+            await FirebaseAuth.updateProfile(user.uid, profile.id, { ...profile, theme });
+            // Also save to user's settings
+            const settings = await FirebaseAuth.getUserSettings(user.uid);
+            await FirebaseAuth.updateUserSettings(user.uid, {
+              ...settings,
+              theme,
+              profiles: {
+                ...(settings?.profiles || {}),
+                [profile.id]: {
+                  ...(settings?.profiles?.[profile.id] || {}),
+                  theme,
+                  name: profile.name,
+                  updatedAt: new Date().toISOString()
+                }
+              }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error saving theme to Firebase:', error);
+        throw error;
+      }
+    }
+
+    // Apply theme early from local storage to reduce flash
+    (function () {
+      try {
+        const key = (function () {
+          try {
+            const getUser = window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function' ? window.FirebaseAuth.getUser : null;
+            const user = getUser ? getUser() : null;
+            const uid = user && user.uid;
+            if (!uid) return 'app_theme_guest';
+            const sel = localStorage.getItem(`fb_selected_profile_${uid}`);
+            return sel ? `app_theme_${uid}_${sel}` : `app_theme_${uid}`;
+          } catch (_) { return 'app_theme_guest'; }
+        })();
+        const savedTheme = localStorage.getItem(key) || 'glossy';
+        applyTheme(savedTheme);
+      } catch (e) {
+        console.error('Error applying theme:', e);
+      }
+    })();
+
+    // Theme change handler
+    document.getElementById('applyTheme')?.addEventListener('click', async () => {
+      const button = document.getElementById('applyTheme');
+      button.classList.add('loading');
+
+      try {
+        const themeSelect = document.getElementById('themeSelect');
+        const theme = themeSelect?.value || 'glossy';
+
+        // Apply theme locally
+        await applyTheme(theme);
+
+        // Save to Firebase if user is logged in
+        try {
+          await saveThemeToFirebase(theme);
+          UIToast.success('Theme saved', `Applied theme: ${theme}`);
+        } catch (error) {
+          console.error('Error saving theme to Firebase:', error);
+          // Still show success since theme was applied locally
+          UIToast.success('Theme applied', 'Theme was applied locally');
+        }
+      } catch (error) {
+        console.error('Error applying theme:', error);
+        UIToast.error('Error', 'Failed to apply theme');
+      } finally {
+        button.classList.remove('loading');
+      }
+    });
+
+
+    // Initialize theme on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem((function () {
+        try {
+          const getUser = window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function' ? window.FirebaseAuth.getUser : null;
+          const user = getUser ? getUser() : null;
+          const uid = user && user.uid;
+          if (!uid) return 'app_theme_guest';
+          const sel = localStorage.getItem(`fb_selected_profile_${uid}`);
+          return sel ? `app_theme_${uid}_${sel}` : `app_theme_${uid}`;
+        } catch (_) { return 'app_theme_guest'; }
+      })()) || 'glossy';
+      applyThemeColors(savedTheme);
+    });
+
+    // Auth gate and populate User
+    FirebaseAuth.onAuthChanged(async (user) => {
+      if (!user) {
+        window.location.assign('/login.html');
+        return;
+      }
+
+      document.getElementById('userEmail').textContent = user.email || '-';
+
+      try {
+        // Load profile and settings in parallel
+        const [profile, settings] = await Promise.all([
+          FirebaseAuth.getSelectedProfile(user.uid).catch(() => null),
+          FirebaseAuth.getUserSettings(user.uid).catch(() => ({}))
+        ]);
+
+        if (!profile) {
+          window.location.assign('/profiles.html');
+          return;
+        }
+
+        // Theme resolution order:
+        // 1. Profile's theme from profile document
+        // 2. Profile's theme from user settings
+        // 3. Global theme from settings
+        // 4. Default 'glossy' theme
+        const profileTheme = profile.theme ||
+          (settings?.profiles?.[profile.id]?.theme) ||
+          settings?.theme ||
+          'glossy';
+
+        // Apply theme (will handle UI update) and save with profile-scoped key
+        applyTheme(profileTheme);
+        try {
+          const key = `app_theme_${user.uid}_${profile.id}`;
+          localStorage.setItem(key, profileTheme);
+        } catch (_) { }
+
+        // Ensure highlighting is refreshed after auth completes
+        setTimeout(() => {
+          if (typeof refreshThemeHighlighting === 'function') {
+            refreshThemeHighlighting();
+          }
+        }, 100);
+
+      } catch (e) {
+        console.error('Error loading profile or theme:', e);
+        // Fallback to default theme
+        applyTheme('glossy');
+      }
+    });
+
+    // Theme change handler
+    document.getElementById('applyTheme').addEventListener('click', async () => {
+      const button = document.getElementById('applyTheme');
+      button.classList.add('loading');
+      const theme = document.getElementById('themeSelect').value;
+      try {
+        const user = FirebaseAuth.getUser();
+        if (!user) {
+          UIToast.error('Not signed in', 'Please sign in again');
+          return;
+        }
+
+        // Get current profile
+        const profile = await FirebaseAuth.getSelectedProfile(user.uid);
+        if (!profile) {
+          UIToast.error('No profile selected', 'Please select a profile first');
+          return;
+        }
+
+        // Get current settings
+        const settings = await FirebaseAuth.getUserSettings(user.uid).catch(() => ({}));
+
+        // Update both profile and user settings
+        await Promise.all([
+          // Update profile document directly
+          FirebaseAuth.updateProfile(user.uid, profile.id, {
+            ...profile,
+            theme,
+            updatedAt: new Date().toISOString()
+          }),
+
+          // Update user settings with profile theme
+          FirebaseAuth.updateUserSettings(user.uid, {
+            ...settings,
+            theme, // Keep global theme as fallback
+            profiles: {
+              ...(settings.profiles || {}),
+              [profile.id]: {
+                ...(settings.profiles?.[profile.id] || {}),
+                theme,
+                name: profile.name,
+                updatedAt: new Date().toISOString()
+              }
+            }
+          })
+        ]);
+
+        // Save to profile-scoped key and apply theme (which will update UI)
+        try { localStorage.setItem(`app_theme_${user.uid}_${profile.id}`, theme); } catch (_) { }
+        applyTheme(theme);
+        button.classList.remove('loading');
+        UIToast.success('Theme saved', `Applied to ${profile.name}: ${theme}`);
+      } catch (e) {
+        button.classList.remove('loading');
+        UIToast.error('Save failed', e.message || 'Could not save theme');
+      }
+    });
+
+    // Update password
+    document.getElementById('savePassword').addEventListener('click', async () => {
+      const button = document.getElementById('savePassword');
+      const input = document.getElementById('newPassword');
+      const pwd = (input.value || '').trim();
+
+      if (pwd.length < 6) {
+        UIToast.warning('Weak password', 'Use at least 6 characters');
+        return;
+      }
+
+      button.classList.add('loading');
+      button.disabled = true;
+      try {
+        const auth = firebase.auth();
+        await auth.currentUser.updatePassword(pwd);
+        UIToast.success('Password updated', 'Your password has been changed');
+        input.value = '';
+        button.classList.remove('loading');
+        button.disabled = false;
+        UIToast.success('Success', 'Password updated successfully');
+      } catch (e) {
+        button.classList.remove('loading');
+        button.disabled = false;
+        UIToast.error('Update failed', e.message || 'Could not update password');
+      }
+    });
+  </script>
+</body>
+
+</html>

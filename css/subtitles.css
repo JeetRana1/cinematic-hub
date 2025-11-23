@@ -1,0 +1,90 @@
+/* subtitles.css */
+/* Hide native video subtitles since we're using custom display */
+video::cue {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+.video-subtitles {
+  position: fixed;
+  bottom: 19%;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 90%;
+  font-size: 22.5px;
+  font-weight: bold;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  line-height: 1.4;
+  white-space: pre-line;
+  word-break: break-word;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8), 
+              -1px -1px 3px rgba(0, 0, 0, 0.8),
+               1px -1px 3px rgba(0, 0, 0, 0.8),
+              -1px 1px 3px rgba(0, 0, 0, 0.8);
+  -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.7);
+  font-family: Arial, sans-serif;
+  pointer-events: none;
+  z-index: 9999;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  will-change: transform, opacity;
+  display: none;
+  box-sizing: border-box;
+}
+
+.video-subtitles.visible {
+  opacity: 1;
+  display: block;
+}
+
+/* Fullscreen styles */
+:fullscreen .video-subtitles,
+:-webkit-full-screen .video-subtitles,
+:-moz-full-screen .video-subtitles,
+:-ms-fullscreen .video-subtitles,
+.fullscreen-subtitles {
+  position: absolute !important;
+  bottom: 15% !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: auto !important;
+  max-width: 90% !important;
+  font-size: 28px !important;
+  padding: 12px 24px !important;
+  background-color: rgba(0, 0, 0, 0.7) !important;
+  border-radius: 8px !important;
+  opacity: 1 !important;
+  z-index: 2147483647 !important;
+  backdrop-filter: blur(4px) !important;
+  transition: none !important;
+  will-change: transform !important;
+  animation: none !important;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .video-subtitles {
+    font-size: 18px;
+    bottom: 70px;
+    padding: 8px 16px;
+    max-width: 95%;
+  }
+  
+  :fullscreen .video-subtitles,
+  :-webkit-full-screen .video-subtitles,
+  :-moz-full-screen .video-subtitles,
+  :-ms-fullscreen .video-subtitles,
+  .fullscreen-subtitles {
+    font-size: 22px !important;
+    bottom: 100px !important;
+    padding: 10px 15px !important;
+    max-width: 95% !important;
+    background-color: rgba(0, 0, 0, 0.8) !important;
+  }
+}

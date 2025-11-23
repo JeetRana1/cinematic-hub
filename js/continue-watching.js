@@ -120,20 +120,7 @@ class ContinueWatchingManager {
         detail: { movieId, progressData: allProgress[movieId] }
       }));
 
-      // Sync to Firestore for cross-device support
-      if (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function') {
-        const user = window.FirebaseAuth.getUser();
-        if (user && user.uid && window.FirebaseAuth.firestore) {
-          const docRef = window.FirebaseAuth.firestore
-            .collection('users')
-            .doc(user.uid)
-            .collection('continueWatching')
-            .doc(movieId);
-          docRef.set(allProgress[movieId]).catch((err) => {
-            console.error('Failed to sync continue watching to Firestore:', err);
-          });
-        }
-      }
+      // Firestore sync removed: progress is now stored only in localStorage
     } catch (error) {
       console.error('Error saving continue watching data:', error);
     }

@@ -1,7 +1,8 @@
 // api/send-email.js
 // Secure backend email sending using EmailJS REST API
 
-const fetch = (...args) => import('node-fetch').then(mod => mod.default(...args));
+
+const sgMail = require('@sendgrid/mail');
 
 // For Vercel compatibility, also support export default
 module.exports = async (req, res) => {
@@ -57,60 +58,43 @@ module.exports = async (req, res) => {
   console.log('Parsed body:', body);
 
 
-  // Validate input: all required template fields
-  const requiredFields = ['category', 'from_email', 'reply_to', 'site_url', 'subject', 'message'];
+  // Validate input: all required fields for SendGrid
+  const requiredFields = ['from_email', 'subject', 'message'];
   const missing = requiredFields.filter(f => !body[f]);
   if (missing.length > 0) {
     res.status(400).json({ error: 'Missing required fields', missing });
     return;
   }
 
-  // Use your private EmailJS REST API key (never expose to frontend)
-  const EMAILJS_PRIVATE_KEY = process.env.EMAILJS_PRIVATE_KEY;
-  const EMAILJS_SERVICE_ID = process.env.EMAILJS_SERVICE_ID;
-  const EMAILJS_TEMPLATE_ID = process.env.EMAILJS_TEMPLATE_ID;
+  // Use SendGrid API
+  const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+  const TO_EMAIL = process.env.SENDGRID_TO_EMAIL || 'your_verified_recipient@example.com';
+  const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'your_verified_sender@example.com';
 
-  if (!EMAILJS_PRIVATE_KEY || !EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID) {
-    res.status(500).json({ error: 'EmailJS server config missing' });
+  if (!SENDGRID_API_KEY) {
+    res.status(500).json({ error: 'SendGrid API key missing' });
     return;
   }
 
-  // Prepare EmailJS REST API payload
-  const payload = {
-    service_id: EMAILJS_SERVICE_ID,
-    template_id: EMAILJS_TEMPLATE_ID,
-    user_id: EMAILJS_PRIVATE_KEY, // This is the private API key
-    template_params: {
-      category: body.category,
-      from_email: body.from_email,
-      reply_to: body.reply_to,
-      site_url: body.site_url,
-      subject: body.subject,
-      message: body.message
-    }
+  sgMail.setApiKey(SENDGRID_API_KEY);
+
+  const msg = {
+    to: TO_EMAIL,
+    from: FROM_EMAIL,
+    replyTo: body.from_email,
+    subject: body.subject,
+    text: body.message,
+    html: `<div><strong>Category:</strong> ${body.category || ''}</div>
+           <div><strong>From:</strong> ${body.from_email}</div>
+           <div><strong>Page:</strong> ${body.site_url || ''}</div>
+           <div><strong>Message:</strong><br>${body.message.replace(/\n/g, '<br>')}</div>`
   };
 
   try {
-    const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      let errorText = '';
-      try {
-        errorText = await response.text();
-      } catch (e) {}
-      console.error('EmailJS error details:', errorText);
-      res.status(500).json({ error: 'EmailJS error', details: errorText });
-      return;
-    }
-
+    await sgMail.send(msg);
     res.status(200).json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Server error', details: err.message });
+    console.error('SendGrid error:', err.response ? err.response.body : err.message);
+    res.status(500).json({ error: 'SendGrid error', details: err.response ? err.response.body : err.message });
   }
 };

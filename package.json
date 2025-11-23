@@ -4,7 +4,8 @@
   "description": "Cinematic Hub static site with Firebase integration",
   "scripts": {
     "prebuild": "node scripts/generateFirebaseConfig.js && node scripts/generateEmailConfig.js"
-    
   },
-  "devDependencies": {}
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
 }

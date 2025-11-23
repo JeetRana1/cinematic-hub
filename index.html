@@ -5286,39 +5286,36 @@
           if (ok) close();
         };
 
-        // Validate config
-        const hasEmailJsConfig = EMAILJS.enabled && EMAILJS.serviceId && EMAILJS.templateId && EMAILJS.publicKey;
-        if (!hasEmailJsConfig) {
-          if (window.UIToast && UIToast.warning) UIToast.warning('Direct send not configured', 'Add your EmailJS keys in testing.html to send without opening email.');
-          finish(false);
-          return doMailto();
-        }
-
-        ensureEmailJsLoaded((ok) => {
-          if (!ok) { finish(false); return doMailto(); }
-          try {
-            const params = {
-              to_email: SUPPORT_EMAIL,
-              subject,
-              message,
-              from_email: fromEmail || 'noreply@cinematichub.local',
-              reply_to: fromEmail || SUPPORT_EMAIL,
-              category: t,
-              site_url: location.href
-            };
-            window.emailjs.send(EMAILJS.serviceId, EMAILJS.templateId, params).then(() => {
-              if (window.UIToast && UIToast.success) UIToast.success('Report sent', 'Thanks for your feedback!');
-              finish(true);
-            }).catch((err) => {
-              if (window.UIToast && UIToast.error) UIToast.error('Direct send failed', (err && err.text) ? String(err.text) : 'Check EmailJS serviceId/templateId and template fields.');
-              finish(false);
-              doMailto();
-            });
-          } catch (err) {
-            if (window.UIToast && UIToast.error) UIToast.error('Direct send failed', 'Unexpected error while sending.');
+        // Send report via backend API
+        const params = {
+          to_email: SUPPORT_EMAIL,
+          subject,
+          message,
+          from_email: fromEmail || 'noreply@cinematichub.local',
+          reply_to: fromEmail || SUPPORT_EMAIL,
+          category: t,
+          site_url: location.href
+        };
+        fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(params)
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            if (window.UIToast && UIToast.success) UIToast.success('Report sent', 'Thanks for your feedback!');
+            finish(true);
+          } else {
+            if (window.UIToast && UIToast.error) UIToast.error('Send failed', data.error || 'Check server logs.');
             finish(false);
             doMailto();
           }
+        })
+        .catch(err => {
+          if (window.UIToast && UIToast.error) UIToast.error('Send failed', err.message || 'Unexpected error.');
+          finish(false);
+          doMailto();
         });
       });
     }

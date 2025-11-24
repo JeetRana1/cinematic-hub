@@ -119,41 +119,81 @@
       margin: 0 auto;
     }
 
-    .screen-mode-container {
-      margin-left: 0 !important;
-      gap: 4px !important;
+    .controls {
+      gap: 0.2vw !important;
+      padding: 0 1vw !important;
     }
 
-    #screenModeToggle {
-      min-width: 48px;
-      min-height: 48px;
-      padding: 12px 16px;
-      font-size: 1.4em;
-      touch-action: manipulation;
+    .control-btn,
+    .skip-btn {
+      min-width: 32px !important;
+      min-height: 32px !important;
+      font-size: 0.95em !important;
+      padding: 0 2px !important;
+      margin: 0 !important;
     }
 
-    #screenModeIcon {
-      font-size: 2em;
+    .right-controls {
+      margin-right: 0 !important;
+      padding-right: 0 !important;
+      gap: 0.2vw !important;
     }
-  }
 
-  /* Mobile-specific styles for video and screen mode toggle */
-  @media (max-width: 600px) {
     .screen-mode-container {
       margin-left: 0 !important;
       gap: 2px !important;
     }
 
     #screenModeToggle {
-      min-width: 44px;
-      min-height: 44px;
-      padding: 10px 12px;
-      font-size: 1.2em;
+      min-width: 32px;
+      min-height: 32px;
+      padding: 6px 8px;
+      font-size: 1em;
       touch-action: manipulation;
     }
 
     #screenModeIcon {
-      font-size: 1.5em;
+      font-size: 1.2em;
+    }
+  }
+
+  /* Mobile-specific styles for video and screen mode toggle */
+  @media (max-width: 600px) {
+    .controls {
+      gap: 0.2vw !important;
+      padding: 0 1vw !important;
+    }
+
+    .control-btn,
+    .skip-btn {
+      min-width: 28px !important;
+      min-height: 28px !important;
+      font-size: 0.9em !important;
+      padding: 0 1px !important;
+      margin: 0 !important;
+    }
+
+    .right-controls {
+      margin-right: 0 !important;
+      padding-right: 0 !important;
+      gap: 0.1vw !important;
+    }
+
+    .screen-mode-container {
+      margin-left: 0 !important;
+      gap: 1px !important;
+    }
+
+    #screenModeToggle {
+      min-width: 28px;
+      min-height: 28px;
+      padding: 4px 6px;
+      font-size: 0.9em;
+      touch-action: manipulation;
+    }
+
+    #screenModeIcon {
+      font-size: 1em;
     }
 
     #video {

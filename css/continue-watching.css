@@ -1,3 +1,9 @@
+/* Make the clear all button smaller */
+#clearContinueWatching,
+.clear-button {
+  font-size: 0.85rem !important;
+  padding: 0.3em 0.7em !important;
+}
  :root {
       --scrollbar-thumb: #ffffff;
       --scrollbar-thumb-hover: #121418;
@@ -37,11 +43,11 @@ body.searching .continue-watching-section {
 }
 
 .continue-watching-section h2 {
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   margin: 0 0 1rem 0;
   color: #fff;
   font-weight: 600;
-  padding: 0 0.5rem;
+  padding: 0 0.25rem;
   display: flex;
   align-items: center;
   font-family: 'Netflix Sans', 'Helvetica Neue', Arial, sans-serif;
@@ -101,7 +107,7 @@ body.searching .continue-watching-section {
 .continue-watching-poster {
   position: relative;
   width: 100%;
-  padding-top: 150%;
+  padding-top: 120%; /* smaller poster height */
   overflow: hidden;
   background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
 }

@@ -2086,12 +2086,12 @@
     /* Movies Grid Container */
     .movies-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.2rem;
       width: 100%;
-      max-width: 1500px;
+      max-width: 900px;
       margin: 0 auto;
-      padding: 0 1.5rem;
+      padding: 0 0.5rem;
       box-sizing: border-box;
     }
 
@@ -2134,10 +2134,33 @@
     .poster {
       position: relative;
       width: 100%;
-      padding-top: 150%;
-      /* 2:3 aspect ratio */
+      padding-top: 140%; /* slightly shorter posters */
       overflow: hidden;
       background: #1a1a1a;
+      max-width: 220px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    /* Responsive: 3 per row on all screens, smaller posters on mobile */
+    @media (max-width: 900px) {
+      .movies-grid {
+        grid-template-columns: repeat(3, 1fr);
+        max-width: 100vw;
+      }
+      .poster {
+        max-width: 160px;
+        padding-top: 150%;
+      }
+    }
+    @media (max-width: 600px) {
+      .movies-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.7rem;
+      }
+      .poster {
+        max-width: 110px;
+        padding-top: 150%;
+      }
     }
 
     .movie-title-overlay {

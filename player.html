@@ -1,5 +1,25 @@
 <style>
   @media (orientation: portrait) and (max-width: 600px) {
+        /* Make key control buttons larger for easier tapping */
+        .play-pause-btn,
+        #captionsBtn,
+        #settingsBtn,
+        #screenModeToggle {
+          min-width: 16vw !important;
+          min-height: 16vw !important;
+          max-width: 18vw !important;
+          max-height: 18vw !important;
+          font-size: 2em !important;
+          border-radius: 50% !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          padding: 0 !important;
+        }
+        /* Make the icon inside fullscreen button larger */
+        #screenModeIcon {
+          font-size: 1.6em !important;
+        }
     .movie-info-overlay {
       display: none !important;
     }

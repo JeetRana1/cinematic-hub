@@ -1,5 +1,44 @@
 <style>
   @media (orientation: portrait) and (max-width: 600px) {
+            /* Uniform button size for all controls in portrait mode */
+            .control-btn,
+            .skip-btn,
+            .play-pause-btn,
+            #captionsBtn,
+            #settingsBtn,
+            #screenModeToggle {
+              min-width: 16vw !important;
+              min-height: 16vw !important;
+              max-width: 16vw !important;
+              max-height: 16vw !important;
+              width: 16vw !important;
+              height: 16vw !important;
+              font-size: 2em !important;
+              border-radius: 50% !important;
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+              padding: 0 !important;
+              margin: 0 1vw !important;
+              box-sizing: border-box !important;
+              background: rgba(0,0,0,0.5) !important;
+            }
+            /* Make the icon inside fullscreen and other buttons larger */
+            #screenModeIcon,
+            #settingsBtn i,
+            #captionsBtn i,
+            .play-pause-btn i {
+              font-size: 1.6em !important;
+            }
+            /* Remove extra background for skip buttons if needed */
+            .skip-btn {
+              background: rgba(0,0,0,0.5) !important;
+            }
+            /* Ensure right-controls and screen-mode-container have matching gap */
+            .right-controls,
+            .screen-mode-container {
+              gap: 2vw !important;
+            }
         /* Make key control buttons larger for easier tapping */
         .play-pause-btn,
         #captionsBtn,

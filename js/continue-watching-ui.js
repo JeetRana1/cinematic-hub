@@ -134,6 +134,11 @@ class ContinueWatchingUI {
     // Add the resume time parameter
     resumeUrl += `&t=${resumeTime}`;
 
+    // If on mobile, request landscape orientation before opening player
+    if (window.matchMedia && window.matchMedia('(max-width: 600px)').matches && screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(() => {});
+    }
+
     // Open the player
     window.location.href = resumeUrl;
   }

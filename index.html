@@ -2142,12 +2142,12 @@
     .poster {
       position: relative;
       width: 100%;
-      padding-top: 140%; /* slightly shorter posters */
+      padding-top: 150%; /* restore original poster height for desktop */
       overflow: hidden;
       background: #1a1a1a;
-      max-width: 220px;
-      margin-left: auto;
-      margin-right: auto;
+      max-width: none;
+      margin-left: 0;
+      margin-right: 0;
     }
     /* Responsive: 3 per row on all screens, smaller posters on mobile */
     @media (max-width: 900px) {
@@ -2157,7 +2157,7 @@
       }
       .poster {
         max-width: 160px;
-        padding-top: 150%;
+        padding-top: 140%;
       }
     }
     @media (max-width: 600px) {
@@ -2190,6 +2190,11 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .movie-card:hover .movie-title-overlay {
+      opacity: 1;
+      transform: translateY(0);
     }
 
     .movie-card:hover .movie-title-overlay {

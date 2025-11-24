@@ -7,14 +7,19 @@
     .skip-btn {
       display: inline-flex !important;
       align-items: center;
-      font-size: 1.1em;
-      margin: 0 8px;
+      font-size: 1.5em !important;
+      margin: 0 2vw !important;
       background: rgba(0, 0, 0, 0.5);
-      border-radius: 24px;
-      padding: 6px 14px;
+      border-radius: 50%;
+      padding: 0 !important;
       color: #fff;
       position: relative;
-      gap: 0.2vw !important;
+      gap: 0.5vw !important;
+      min-width: 12vw !important;
+      min-height: 12vw !important;
+      max-width: 14vw !important;
+      max-height: 14vw !important;
+      justify-content: center;
     }
 
     #video {
@@ -47,10 +52,12 @@
 
     .controls-container {
       box-sizing: border-box;
-      width: 10vw !important;
+      width: 100vw !important;
       left: 0 !important;
       right: 0 !important;
       bottom: 0 !important;
+      padding-bottom: 2vw !important;
+      padding-top: 2vw !important;
     }
 
     .controls {
@@ -59,24 +66,55 @@
       justify-content: space-between !important;
       align-items: center !important;
       flex-wrap: nowrap !important;
-      gap: 0.5vw !important;
+      gap: 2vw !important;
       overflow-x: visible !important;
       box-sizing: border-box;
-      padding: 0 2vw !important;
+      padding: 0 4vw !important;
+      min-width: 0 !important;
     }
 
     .control-btn,
     .skip-btn {
-      min-width: 16px !important;
-      min-height: 36px !important;
-      font-size: 1em !important;
-      padding: 0 4px !important;
+      min-width: 12vw !important;
+      min-height: 12vw !important;
+      max-width: 14vw !important;
+      max-height: 14vw !important;
+      font-size: 1.5em !important;
+      padding: 0 !important;
       margin: 0 !important;
+      border-radius: 50% !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-sizing: border-box !important;
     }
 
     .right-controls {
       margin-right: 0 !important;
       padding-right: 0 !important;
+      gap: 2vw !important;
+    }
+    .screen-mode-container {
+      margin-left: 0 !important;
+      gap: 2vw !important;
+    }
+
+    #screenModeToggle {
+      min-width: 12vw !important;
+      min-height: 12vw !important;
+      max-width: 14vw !important;
+      max-height: 14vw !important;
+      padding: 0 !important;
+      font-size: 1.5em !important;
+      border-radius: 50% !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      touch-action: manipulation;
+    }
+
+    #screenModeIcon {
+      font-size: 1.2em !important;
     }
 
     .control-btn,

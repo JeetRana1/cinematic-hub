@@ -119,41 +119,64 @@
       margin: 0 auto;
     }
 
+    .movie-info-overlay {
+      font-size: 0.9em !important;
+      margin-bottom: 0 !important;
+      margin-top: 0 !important;
+      padding: 0 2vw !important;
+      max-width: 100vw !important;
+      white-space: normal !important;
+    }
+
     .controls {
-      gap: 0.2vw !important;
-      padding: 0 1vw !important;
+      gap: 0.1vw !important;
+      padding: 0 0.5vw !important;
+      min-width: 0 !important;
+      flex-wrap: nowrap !important;
     }
 
     .control-btn,
     .skip-btn {
-      min-width: 22px !important;
-      min-height: 22px !important;
-      font-size: 0.7em !important;
-      padding: 0 1px !important;
+      min-width: 14px !important;
+      min-height: 14px !important;
+      font-size: 0.55em !important;
+      padding: 0 0.5px !important;
       margin: 0 !important;
+      box-sizing: border-box !important;
     }
 
     .right-controls {
       margin-right: 0 !important;
       padding-right: 0 !important;
-      gap: 0.2vw !important;
+      gap: 0.1vw !important;
     }
 
     .screen-mode-container {
       margin-left: 0 !important;
-      gap: 2px !important;
+      gap: 1px !important;
     }
 
     #screenModeToggle {
-      min-width: 22px;
-      min-height: 22px;
-      padding: 2px 3px;
-      font-size: 0.7em;
+      min-width: 14px !important;
+      min-height: 14px !important;
+      padding: 0.5px 1px !important;
+      font-size: 0.55em !important;
       touch-action: manipulation;
     }
 
     #screenModeIcon {
-      font-size: 0.9em;
+      font-size: 0.6em !important;
+    }
+    /* Ensure controls do not overlap info overlay */
+    .controls-container {
+      padding-bottom: 2px !important;
+      padding-top: 2px !important;
+    }
+    /* Hide movie title/description if needed for space */
+    .movie-meta,
+    #movieTitle,
+    #movieDescription {
+      display: none !important;
     }
   }
 

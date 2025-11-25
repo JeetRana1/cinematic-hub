@@ -699,14 +699,9 @@
           }
           handleGesture.tapCount = 0;
         } else if (handleGesture.tapCount === 1) {
-          // Single tap toggles play/pause immediately
+          // Single tap/click: only show overlay icon, do not pause/play
           tapTimeout = setTimeout(() => {
-            if (handleGesture.tapCount === 2) {
-              if (video.paused) {
-                video.play();
-              } else {
-                video.pause();
-              }
+            if (handleGesture.tapCount === 1) {
               const overlay = document.getElementById('playPauseOverlay');
               if (overlay) {
                 const icon = overlay.querySelector('i');

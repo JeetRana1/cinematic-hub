@@ -27,13 +27,19 @@
       }
 
       // On player click, show pause icon (do not pause)
-      video.addEventListener('click', function (e) {
+
+      // Prevent default pause/play on click/tap
+      function handlePlayerClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
         if (!video.paused) {
           showOverlay('pause');
         } else {
           showOverlay('play');
         }
-      });
+      }
+      video.addEventListener('click', handlePlayerClick, true);
+      video.addEventListener('touchend', handlePlayerClick, true);
 
       // Pause/play video if overlay is clicked
       overlay.addEventListener('click', function (e) {

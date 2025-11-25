@@ -10,22 +10,49 @@
     const overlay = document.getElementById('playPauseOverlay');
     let overlayTimeout;
     if (video && overlay) {
-      // Prevent default pause on video click
-      video.addEventListener('click', function (e) {
-        // Only show overlay, do not pause
+      // Hide overlay by default
+      overlay.style.display = 'none';
+
+      // Show overlay with correct icon
+      function showOverlay(icon) {
+        const iconElem = overlay.querySelector('.play-pause-icon i');
+        if (iconElem) {
+          iconElem.className = icon === 'play' ? 'fas fa-play' : 'fas fa-pause';
+        }
         overlay.style.display = 'flex';
         clearTimeout(overlayTimeout);
         overlayTimeout = setTimeout(() => {
           overlay.style.display = 'none';
         }, 3000);
+      }
+
+      // On player click, show pause icon (do not pause)
+      video.addEventListener('click', function (e) {
+        if (!video.paused) {
+          showOverlay('pause');
+        } else {
+          showOverlay('play');
+        }
       });
-      // Pause video if overlay is clicked
+
+      // Pause/play video if overlay is clicked
       overlay.addEventListener('click', function (e) {
-        video.pause();
-        overlay.style.display = 'none';
+        if (!video.paused) {
+          video.pause();
+          showOverlay('play');
+        } else {
+          video.play().catch(()=>{});
+          showOverlay('pause');
+        }
       });
-      // Hide overlay by default
-      overlay.style.display = 'none';
+
+      // Also update overlay icon on play/pause events
+      video.addEventListener('pause', function () {
+        showOverlay('play');
+      });
+      video.addEventListener('play', function () {
+        showOverlay('pause');
+      });
     }
   });
 

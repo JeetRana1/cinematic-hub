@@ -40,10 +40,7 @@
         return false;
       }
       // Remove all other click/touchend listeners on video
-      video.onclick = null;
-      video.ontouchend = null;
-      video.addEventListener('click', handlePlayerClick, true);
-      video.addEventListener('touchend', handlePlayerClick, true);
+      // Do not override video click/touchend here; player.html will handle overlay logic
 
       // Do not set overlay click handler here; player.html will handle play/pause overlay click
 

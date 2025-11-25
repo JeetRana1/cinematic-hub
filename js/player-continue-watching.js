@@ -21,9 +21,14 @@
         }
         overlay.style.display = 'flex';
         clearTimeout(overlayTimeout);
-        overlayTimeout = setTimeout(() => {
-          overlay.style.display = 'none';
-        }, 6000);
+        if (icon === 'pause' && !video.paused) {
+          overlayTimeout = setTimeout(() => {
+            overlay.style.display = 'none';
+          }, 10000);
+        } else if (icon === 'play' || video.paused) {
+          // Keep overlay visible if paused
+          overlay.style.display = 'flex';
+        }
       }
 
       // On player click, show pause icon (do not pause)
@@ -58,6 +63,12 @@
       });
       video.addEventListener('play', function () {
         showOverlay('pause');
+      });
+      // Hide overlay if video resumes from pause by other means
+      video.addEventListener('playing', function () {
+        if (!video.paused) {
+          overlay.style.display = 'none';
+        }
       });
     }
   });

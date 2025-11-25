@@ -688,6 +688,13 @@
 
         if (tapTimeout) clearTimeout(tapTimeout);
 
+        // Clear overlay on subsequent taps
+        const overlay = document.getElementById('playPauseOverlay');
+        if (overlay && handleGesture.tapCount > 1) {
+          overlay.classList.remove('visible');
+          if (overlay.timeout) clearTimeout(overlay.timeout);
+        }
+
         // Triple tap triggers skip
         if (handleGesture.tapCount === 4) {
           if (x > width * 0.6) {
@@ -700,40 +707,20 @@
           handleGesture.tapCount = 0;
         } else if (handleGesture.tapCount === 1) {
           // Single tap/click: show overlay icon for 5s, do not pause/play
-          tapTimeout = setTimeout(() => {
-            if (handleGesture.tapCount === 1) {
-              const overlay = document.getElementById('playPauseOverlay');
-              if (overlay) {
-                const icon = overlay.querySelector('i');
-                if (video.paused) {
-                  icon.className = 'fas fa-play';
-                } else {
-                  icon.className = 'fas fa-pause';
-                }
-                overlay.classList.add('visible');
-                // Do not set overlay.onclick here; main handler will be set globally
-                // Hide overlay after 5s only if video is playing
-                if (!video.paused) {
-                  setTimeout(() => overlay.classList.remove('visible'), 5000);
-                }
-
-                // Update icon and overlay visibility on play/pause events
-                video.addEventListener('pause', function () {
-                  icon.className = 'fas fa-play';
-                  overlay.classList.add('visible');
-                });
-                video.addEventListener('play', function () {
-                  icon.className = 'fas fa-pause';
-                  overlay.classList.add('visible');
-                  // Only hide if still playing after 5s
-                  const hideTimeout = setTimeout(() => {
-                    if (!video.paused) overlay.classList.remove('visible');
-                  }, 5000);
-                });
-              }
+          const overlay = document.getElementById('playPauseOverlay');
+          if (overlay) {
+            const icon = overlay.querySelector('i');
+            if (video.paused) {
+              icon.className = 'fas fa-play';
+            } else {
+              icon.className = 'fas fa-pause';
             }
-            handleGesture.tapCount = 1;
-          }, 20);
+            overlay.classList.add('visible');
+            clearTimeout(overlay.timeout);
+            overlay.timeout = setTimeout(() => {
+              overlay.classList.remove('visible');
+            }, 5000);
+          }
         }
       }
 

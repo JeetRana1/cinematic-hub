@@ -2804,6 +2804,7 @@
       const seekBackwardIndicator = document.getElementById('rewindIndicator');
       const scrubber = document.querySelector('.scrubber');
       const scrubberTime = document.querySelector('.scrubber-time');
+      const currentTimeDisplay = timeDisplay;
       const movieTitle = document.getElementById('movieTitle');
       const movieYear = document.getElementById('movieYear');
       const movieRating = document.getElementById('movieRating');
@@ -5537,54 +5538,47 @@
       });
 
       // Draggable progress bar
-      let isDragging = false;
-
       progressContainer.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        seekToTime(e);
-        resetHideControlsTimeout();
+        startScrubbing(e);
       });
 
       progressContainer.addEventListener('touchstart', (e) => {
-        isDragging = true;
-        const touch = e.touches[0];
-        const mouseEvent = new MouseEvent('mousedown', {
-          clientX: touch.clientX,
-          clientY: touch.clientY
-        });
-        seekToTime(mouseEvent);
-        resetHideControlsTimeout();
+        startScrubbing(e);
       });
 
       document.addEventListener('mousemove', (e) => {
-        if (isDragging) {
+        if (isScrubbing) {
           const rect = progressContainer.getBoundingClientRect();
           if (e.clientX >= rect.left && e.clientX <= rect.right) {
-            seekToTime(e);
+            updateScrubberPosition(e);
+            video.currentTime = ((e.clientX - rect.left) / rect.width) * video.duration;
+            updateProgress();
           }
         }
       });
 
       document.addEventListener('touchmove', (e) => {
-        if (isDragging) {
+        if (isScrubbing) {
           const touch = e.touches[0];
-          const mouseEvent = new MouseEvent('mousemove', {
-            clientX: touch.clientX,
-            clientY: touch.clientY
-          });
           const rect = progressContainer.getBoundingClientRect();
           if (touch.clientX >= rect.left && touch.clientX <= rect.right) {
-            seekToTime(mouseEvent);
+            updateScrubberPosition(e);
+            video.currentTime = ((touch.clientX - rect.left) / rect.width) * video.duration;
+            updateProgress();
           }
         }
       });
 
-      document.addEventListener('mouseup', () => {
-        isDragging = false;
+      document.addEventListener('mouseup', (e) => {
+        if (isScrubbing) {
+          endScrubbing(e);
+        }
       });
 
-      document.addEventListener('touchend', () => {
-        isDragging = false;
+      document.addEventListener('touchend', (e) => {
+        if (isScrubbing) {
+          endScrubbing(e);
+        }
       });
 
       // Show controls on mouse move or touch

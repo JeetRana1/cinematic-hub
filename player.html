@@ -4988,7 +4988,7 @@
             const barRect = progressBar.getBoundingClientRect();
             const containerRect = progressBar.parentElement.getBoundingClientRect();
             // Place the dot at the right edge of the red bar, minus half its width to center
-            let leftPx = barRect.width - 7;
+            let leftPx = barRect.width - 107;
             // Clamp so it never goes outside
             leftPx = Math.max(0, Math.min(leftPx, containerRect.width - 14));
             scrubberLine.style.left = leftPx + 'px';

@@ -5223,9 +5223,11 @@
       function handleSingleClick(e) {
         e.preventDefault();
         clearTimeout(tapTimeout);
+        // Show overlay for 5 seconds, do not play/pause
+        showPlayPauseOverlay(!video.paused);
         tapTimeout = setTimeout(() => {
-          togglePlayPause();
-        }, 200);
+          playPauseOverlay.classList.remove('visible');
+        }, 5000);
       }
 
       // Handle touch events for seeking (mobile)

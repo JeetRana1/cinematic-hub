@@ -308,6 +308,16 @@
 <html lang="en">
 
 <head>
+    <script>
+      // Force landscape mode on mobile
+      document.addEventListener('DOMContentLoaded', function () {
+        if (window.screen && window.screen.orientation && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+          try {
+            window.screen.orientation.lock('landscape').catch(function(){});
+          } catch (e) {}
+        }
+      });
+    </script>
   <style>
     /* Remove all scrollbars and adjust height for playbackSpeedSubmenu */
     #playbackSpeedSubmenu {

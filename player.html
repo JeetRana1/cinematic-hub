@@ -4968,8 +4968,10 @@
       // Update progress bar
       function updateProgress() {
         if (!isScrubbing && !isNaN(video.duration) && video.duration > 0) {
-          const progress = (video.currentTime / video.duration) * 100;
-          progressBar.style.width = `${progress}%`;
+          let progress = (video.currentTime / video.duration) * 100;
+          // Clamp progress between 0.5% and 99.5% to keep the dot always inside
+          progress = Math.max(0.5, Math.min(progress, 99.5));
+          progressBar.style.width = `${(video.currentTime / video.duration) * 100}%`;
 
           // Update buffered progress
           if (video.buffered.length > 0) {

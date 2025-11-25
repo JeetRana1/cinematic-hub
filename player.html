@@ -1,84 +1,57 @@
 <style>
   @media (orientation: portrait) and (max-width: 600px) {
-            /* Uniform button size for all controls in portrait mode */
-            .control-btn,
-            .skip-btn,
-            .play-pause-btn,
-            #captionsBtn,
-            #settingsBtn,
-            #screenModeToggle {
-              min-width: 16vw !important;
-              min-height: 16vw !important;
-              max-width: 16vw !important;
-              max-height: 16vw !important;
-              width: 16vw !important;
-              height: 16vw !important;
-              font-size: 2em !important;
-              border-radius: 50% !important;
-              display: flex !important;
-              align-items: center !important;
-              justify-content: center !important;
-              padding: 0 !important;
-              margin: 0 1vw !important;
-              box-sizing: border-box !important;
-              background: rgba(0,0,0,0.5) !important;
-            }
-            /* Make the icon inside fullscreen and other buttons larger */
-            #screenModeIcon,
-            #settingsBtn i,
-            #captionsBtn i,
-            .play-pause-btn i {
-              font-size: 1.6em !important;
-            }
-            /* Remove extra background for skip buttons if needed */
-            .skip-btn {
-              background: rgba(0,0,0,0.5) !important;
-            }
-            /* Ensure right-controls and screen-mode-container have matching gap */
-            .right-controls,
-            .screen-mode-container {
-              gap: 2vw !important;
-            }
-        /* Make key control buttons larger for easier tapping */
-        .play-pause-btn,
-        #captionsBtn,
-        #settingsBtn,
-        #screenModeToggle {
-          min-width: 12vw !important;
-          min-height: 12vw !important;
-          max-width: 14vw !important;
-          max-height: 14vw !important;
-          font-size: 2em !important;
-          border-radius: 50% !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          padding: 0 !important;
-        }
-        /* Make the icon inside fullscreen button larger */
-        #screenModeIcon {
-          font-size: 1.6em !important;
-        }
+    /* Uniform, slightly smaller, and left-aligned control buttons for all controls in portrait mode */
+    .control-btn,
+    .skip-btn,
+    .play-pause-btn,
+    #captionsBtn,
+    #settingsBtn,
+    #screenModeToggle {
+      min-width: 12vw !important;
+      min-height: 12vw !important;
+      max-width: 12vw !important;
+      max-height: 12vw !important;
+      width: 12vw !important;
+      height: 12vw !important;
+      font-size: 1.3em !important;
+      border-radius: 50% !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 0 !important;
+      margin: 0 0.5vw !important;
+      box-sizing: border-box !important;
+      background: rgba(0,0,0,0.5) !important;
+    }
+    #screenModeIcon,
+    #settingsBtn i,
+    #captionsBtn i,
+    .play-pause-btn i {
+      font-size: 1.1em !important;
+    }
+    .controls {
+      display: flex !important;
+      flex-direction: row !important;
+      justify-content: flex-start !important;
+      align-items: center !important;
+      flex-wrap: nowrap !important;
+      gap: 0.5vw !important;
+      overflow-x: visible !important;
+      box-sizing: border-box;
+      padding: 0 2vw !important;
+      min-width: 0 !important;
+    }
+    .right-controls,
+    .screen-mode-container {
+      gap: 0.5vw !important;
+    }
     .movie-info-overlay {
       display: none !important;
     }
 
     .skip-btn {
-      display: inline-flex !important;
-      align-items: center;
-      font-size: 1.5em !important;
-      margin: 0 2vw !important;
-      background: rgba(0, 0, 0, 0.5);
-      border-radius: 50%;
-      padding: 0 !important;
       color: #fff;
       position: relative;
-      gap: 0.5vw !important;
-      min-width: 12vw !important;
-      min-height: 12vw !important;
-      max-width: 14vw !important;
-      max-height: 14vw !important;
-      justify-content: center;
     }
 
     #video {

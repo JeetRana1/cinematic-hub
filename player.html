@@ -571,6 +571,7 @@
       const videoContainer = document.getElementById('videoContainer');
       let lastTap = 0;
       let tapTimeout = null;
+      let overlayShownForThisTap = false;
 
       function isLandscape() {
         return window.matchMedia('(orientation: landscape)').matches;
@@ -682,18 +683,12 @@
         // Reset tap count if too much time has passed
         if (now - handleGesture.lastTapTime > 400) {
           handleGesture.tapCount = 0;
+          overlayShownForThisTap = false;
         }
         handleGesture.tapCount++;
         handleGesture.lastTapTime = now;
 
         if (tapTimeout) clearTimeout(tapTimeout);
-
-        // Clear overlay on subsequent taps
-        const overlay = document.getElementById('playPauseOverlay');
-        if (overlay && handleGesture.tapCount > 1) {
-          overlay.classList.remove('visible');
-          if (overlay.timeout) clearTimeout(overlay.timeout);
-        }
 
         // Triple tap triggers skip
         if (handleGesture.tapCount === 4) {
@@ -707,19 +702,22 @@
           handleGesture.tapCount = 0;
         } else if (handleGesture.tapCount === 1) {
           // Single tap/click: show overlay icon for 5s, do not pause/play
-          const overlay = document.getElementById('playPauseOverlay');
-          if (overlay) {
-            const icon = overlay.querySelector('i');
-            if (video.paused) {
-              icon.className = 'fas fa-play';
-            } else {
-              icon.className = 'fas fa-pause';
+          if (!overlayShownForThisTap) {
+            overlayShownForThisTap = true;
+            const overlay = document.getElementById('playPauseOverlay');
+            if (overlay) {
+              const icon = overlay.querySelector('i');
+              if (video.paused) {
+                icon.className = 'fas fa-play';
+              } else {
+                icon.className = 'fas fa-pause';
+              }
+              overlay.classList.add('visible');
+              clearTimeout(overlay.timeout);
+              overlay.timeout = setTimeout(() => {
+                overlay.classList.remove('visible');
+              }, 5000);
             }
-            overlay.classList.add('visible');
-            clearTimeout(overlay.timeout);
-            overlay.timeout = setTimeout(() => {
-              overlay.classList.remove('visible');
-            }, 5000);
           }
         }
       }

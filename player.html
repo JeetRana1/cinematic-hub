@@ -361,7 +361,74 @@
 <html lang="en">
 
 <head>
+      <style>
+        /* Center skip text overlays */
+        .center-skip-text {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          font-size: 2.2em;
+          font-weight: 700;
+          color: #fff;
+          text-shadow: 0 2px 8px #000, 0 0 12px #000;
+          background: rgba(0,0,0,0.45);
+          border-radius: 12px;
+          padding: 8px 18px;
+          z-index: 1002;
+          pointer-events: none;
+          opacity: 0.95;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .center-skip-back {
+          left: 6%;
+          right: auto;
+          justify-content: flex-start;
+        }
+        .center-skip-forward {
+          right: 6%;
+          left: auto;
+          justify-content: flex-end;
+        }
+        @media (max-width: 600px) {
+          .center-skip-text {
+            font-size: 1.3em;
+            padding: 5px 10px;
+          }
+          .center-skip-back { left: 2%; }
+          .center-skip-forward { right: 2%; }
+        }
+      </style>
     <script>
+            // Show skip 10s overlays when skip buttons are pressed
+            const centerSkipBackText = document.getElementById('centerSkipBackText');
+            const centerSkipForwardText = document.getElementById('centerSkipForwardText');
+            function showSkipText(type) {
+              if (type === 'back') {
+                if (centerSkipBackText) {
+                  centerSkipBackText.style.display = 'flex';
+                  setTimeout(() => { centerSkipBackText.style.display = 'none'; }, 700);
+                }
+              } else if (type === 'forward') {
+                if (centerSkipForwardText) {
+                  centerSkipForwardText.style.display = 'flex';
+                  setTimeout(() => { centerSkipForwardText.style.display = 'none'; }, 700);
+                }
+              }
+            }
+            if (centerSkipBack) centerSkipBack.onclick = function(e) {
+              e.stopPropagation();
+              video.currentTime = Math.max(0, video.currentTime - 10);
+              showCenterOverlay();
+              showSkipText('back');
+            };
+            if (centerSkipForward) centerSkipForward.onclick = function(e) {
+              e.stopPropagation();
+              video.currentTime = Math.min(video.duration, video.currentTime + 10);
+              showCenterOverlay();
+              showSkipText('forward');
+            };
       // Force landscape mode on mobile
       document.addEventListener('DOMContentLoaded', function () {
         if (window.screen && window.screen.orientation && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {

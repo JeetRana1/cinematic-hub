@@ -227,6 +227,13 @@
 
   /* Landscape orientation styles for mobile devices */
   @media (orientation: landscape) and (max-width: 900px) {
+            .skip-notification,
+            .skip-text {
+              display: none !important;
+            }
+            #video {
+              object-fit: cover !important;
+            }
         .movie-meta,
         #movieTitle,
         #movieDescription,

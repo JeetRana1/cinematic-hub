@@ -714,7 +714,8 @@
                 // Remove any previous click handler
                 overlay.onclick = null;
                 // Add click handler to toggle pause/play
-                overlay.onclick = function () {
+                overlay.onclick = function (e) {
+                  e.stopPropagation();
                   if (video.paused) {
                     video.play();
                     icon.className = 'fas fa-pause';

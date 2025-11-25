@@ -5163,6 +5163,10 @@
 
         if (!video.paused && !settingsMenuOpen && !submenuOpen && !subtitleMenuOpen) {
           controlsContainer.classList.remove('visible');
+          const playPauseOverlay = document.getElementById('playPauseOverlay');
+          if (playPauseOverlay) {
+            playPauseOverlay.classList.remove('visible');
+          }
         }
       }
 

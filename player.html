@@ -711,26 +711,7 @@
                   icon.className = 'fas fa-pause';
                 }
                 overlay.classList.add('visible');
-                // Remove any previous click handler
-                overlay.onclick = null;
-                // Add click handler to toggle pause/play
-                overlay.onclick = function (e) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
-                  // Trigger the main play/pause button click
-                  const playPauseBtn = document.getElementById('playPauseBtn');
-                  if (playPauseBtn) {
-                    playPauseBtn.click();
-                  } else {
-                    // Fallback: toggle video
-                    if (!video.paused) {
-                      video.pause();
-                    } else {
-                      video.play();
-                    }
-                  }
-                };
+                // Do not set overlay.onclick here; main handler will be set globally
                 // Hide overlay after 5s only if video is playing
                 if (!video.paused) {
                   setTimeout(() => overlay.classList.remove('visible'), 5000);
@@ -5002,6 +4983,16 @@
         }
         showPlayPauseOverlay(!video.paused);
         resetHideControlsTimeout();
+      }
+
+      // Set overlay click handler globally (after togglePlayPause is defined)
+      if (playPauseOverlay) {
+        playPauseOverlay.onclick = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+          togglePlayPause();
+        };
       }
 
       // Toggle mute

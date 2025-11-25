@@ -1348,24 +1348,32 @@
       width: 100%;
       height: 100%;
       z-index: 5;
+      pointer-events: none;
     }
 
     .scrubber .scrubber-line {
       position: absolute;
       top: 50%;
-      left: 50%;
+      left: 0%;
       width: 14px;
       height: 14px;
       border-radius: 50%;
       background-color: var(--netflix-red);
-      display: none;
       transform: translate(-50%, -50%);
       cursor: grab;
       box-shadow: 0 2px 8px rgba(229, 9, 20, 0.6);
+      opacity: 0.7;
+      transition: opacity 0.2s ease;
+      pointer-events: auto;
+    }
+
+    .scrubber .scrubber-line:hover {
+      opacity: 1;
     }
 
     .scrubber .scrubber-line:active {
       cursor: grabbing;
+      opacity: 1;
     }
 
     .scrubber .scrubber-time {
@@ -1382,7 +1390,6 @@
       display: none;
     }
 
-    .scrubber.active .scrubber-line,
     .scrubber.active .scrubber-time {
       display: block;
     }
@@ -1430,24 +1437,32 @@
       width: 100%;
       height: 100%;
       z-index: 5;
+      pointer-events: none;
     }
 
     .scrubber .scrubber-line {
       position: absolute;
       top: 50%;
-      left: 50%;
+      left: 0%;
       width: 14px;
       height: 14px;
       border-radius: 50%;
       background-color: var(--netflix-red);
-      display: none;
       transform: translate(-50%, -50%);
       cursor: grab;
       box-shadow: 0 2px 8px rgba(229, 9, 20, 0.6);
+      opacity: 0.7;
+      transition: opacity 0.2s ease;
+      pointer-events: auto;
+    }
+
+    .scrubber .scrubber-line:hover {
+      opacity: 1;
     }
 
     .scrubber .scrubber-line:active {
       cursor: grabbing;
+      opacity: 1;
     }
 
     .scrubber .scrubber-time {
@@ -1464,7 +1479,6 @@
       display: none;
     }
 
-    .scrubber.active .scrubber-line,
     .scrubber.active .scrubber-time {
       display: block;
     }
@@ -4966,6 +4980,12 @@
               const bufferedPercent = (bufferedEnd / duration) * 100;
               progressBuffer.style.width = `${bufferedPercent}%`;
             }
+          }
+
+          // Update scrubber circle position
+          const scrubberLine = document.querySelector('.scrubber-line');
+          if (scrubberLine) {
+            scrubberLine.style.left = `${progress}%`;
           }
         }
         updateTimeDisplay();

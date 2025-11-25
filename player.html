@@ -1343,7 +1343,7 @@
 
     .scrubber {
       position: absolute;
-      top: 50%;
+      top: -25px;
       left: 0;
       width: 100%;
       height: 14px;
@@ -1353,13 +1353,13 @@
 
     .scrubber .scrubber-line {
       position: absolute;
-      top: 50%;
+      top: 0;
       left: 0%;
       width: 14px;
       height: 14px;
       border-radius: 50%;
       background-color: var(--netflix-red);
-      transform: translate(-20%, -50%);
+      transform: translate(-50%, 0);
       cursor: grab;
       box-shadow: 0 2px 8px rgba(229, 9, 20, 0.6);
       opacity: 0.7;
@@ -1448,7 +1448,7 @@
       height: 14px;
       border-radius: 50%;
       background-color: var(--netflix-red);
-      transform: translate(-20%, -50%);
+      transform: translate(-50%, -80%);
       cursor: grab;
       box-shadow: 0 2px 8px rgba(229, 9, 20, 0.6);
       opacity: 0.7;
@@ -4983,9 +4983,15 @@
 
           // Update scrubber circle position to match end of red bar
           const scrubberLine = document.querySelector('.scrubber-line');
-          if (scrubberLine) {
-            const progress = video.duration ? (video.currentTime / video.duration) * 100 : 0;
-            scrubberLine.style.left = `${progress}%`;
+          const progressBar = document.getElementById('progressBar');
+          if (scrubberLine && progressBar) {
+            const barRect = progressBar.getBoundingClientRect();
+            const containerRect = progressBar.parentElement.getBoundingClientRect();
+            // Place the dot at the right edge of the red bar, minus half its width to center
+            let leftPx = barRect.width - 7;
+            // Clamp so it never goes outside
+            leftPx = Math.max(0, Math.min(leftPx, containerRect.width - 14));
+            scrubberLine.style.left = leftPx + 'px';
           }
         }
         updateTimeDisplay();

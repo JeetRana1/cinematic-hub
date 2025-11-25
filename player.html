@@ -5269,8 +5269,11 @@
         if (tapCount === 1) {
           tapTimeout = setTimeout(() => {
             if (tapCount === 1) {
-              // Single tap - toggle play/pause
-              togglePlayPause();
+              // Single tap - show overlay for 5s, do not play/pause
+              showPlayPauseOverlay(!video.paused);
+              setTimeout(() => {
+                playPauseOverlay.classList.remove('visible');
+              }, 5000);
             }
             tapCount = 0;
           }, DOUBLE_TAP_DELAY);

@@ -718,11 +718,17 @@
                   e.preventDefault();
                   e.stopPropagation();
                   if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
-                  // Only toggle if not already transitioning
-                  if (!video.paused) {
-                    video.pause();
+                  // Trigger the main play/pause button click
+                  const playPauseBtn = document.getElementById('playPauseBtn');
+                  if (playPauseBtn) {
+                    playPauseBtn.click();
                   } else {
-                    video.play();
+                    // Fallback: toggle video
+                    if (!video.paused) {
+                      video.pause();
+                    } else {
+                      video.play();
+                    }
                   }
                 };
                 // Hide overlay after 5s only if video is playing

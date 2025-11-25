@@ -702,22 +702,7 @@
           // Single tap toggles play/pause immediately
           tapTimeout = setTimeout(() => {
             if (handleGesture.tapCount === 1) {
-              if (video.paused) {
-                video.play();
-              } else {
-                video.pause();
-              }
-              const overlay = document.getElementById('playPauseOverlay');
-              if (overlay) {
-                const icon = overlay.querySelector('i');
-                if (video.paused) {
-                  icon.className = 'fas fa-play';
-                } else {
-                  icon.className = 'fas fa-pause';
-                }
-                overlay.classList.add('visible');
-                setTimeout(() => overlay.classList.remove('visible'), 400);
-              }
+              // Do nothing here; play/pause and overlay are handled elsewhere
             }
             handleGesture.tapCount = 1;
           }, 20);

@@ -31,13 +31,17 @@
       // Prevent default pause/play on click/tap
       function handlePlayerClick(e) {
         e.preventDefault();
-        e.stopPropagation();
+        e.stopImmediatePropagation();
         if (!video.paused) {
           showOverlay('pause');
         } else {
           showOverlay('play');
         }
+        return false;
       }
+      // Remove all other click/touchend listeners on video
+      video.onclick = null;
+      video.ontouchend = null;
       video.addEventListener('click', handlePlayerClick, true);
       video.addEventListener('touchend', handlePlayerClick, true);
 

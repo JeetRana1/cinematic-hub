@@ -715,7 +715,9 @@
                 overlay.onclick = null;
                 // Add click handler to toggle pause/play
                 overlay.onclick = function (e) {
+                  e.preventDefault();
                   e.stopPropagation();
+                  if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
                   // Only toggle if not already transitioning
                   if (!video.paused) {
                     video.pause();

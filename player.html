@@ -5536,6 +5536,57 @@
         resetHideControlsTimeout();
       });
 
+      // Draggable progress bar
+      let isDragging = false;
+
+      progressContainer.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        seekToTime(e);
+        resetHideControlsTimeout();
+      });
+
+      progressContainer.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent('mousedown', {
+          clientX: touch.clientX,
+          clientY: touch.clientY
+        });
+        seekToTime(mouseEvent);
+        resetHideControlsTimeout();
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+          const rect = progressContainer.getBoundingClientRect();
+          if (e.clientX >= rect.left && e.clientX <= rect.right) {
+            seekToTime(e);
+          }
+        }
+      });
+
+      document.addEventListener('touchmove', (e) => {
+        if (isDragging) {
+          const touch = e.touches[0];
+          const mouseEvent = new MouseEvent('mousemove', {
+            clientX: touch.clientX,
+            clientY: touch.clientY
+          });
+          const rect = progressContainer.getBoundingClientRect();
+          if (touch.clientX >= rect.left && touch.clientX <= rect.right) {
+            seekToTime(mouseEvent);
+          }
+        }
+      });
+
+      document.addEventListener('mouseup', () => {
+        isDragging = false;
+      });
+
+      document.addEventListener('touchend', () => {
+        isDragging = false;
+      });
+
       // Show controls on mouse move or touch
       videoContainer.addEventListener('mousemove', resetHideControlsTimeout);
       videoContainer.addEventListener('touchstart', resetHideControlsTimeout);

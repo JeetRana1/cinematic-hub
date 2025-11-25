@@ -4752,14 +4752,7 @@
           }
         });
 
-        // 3. Click/tap overlay to play/pause
-        videoContainer.addEventListener('click', (e) => {
-          if (e.target === video || e.target === videoContainer) {
-            // Block play/pause toggles while resume prompt is active
-            if (window.__resumePromptActive) { video.pause(); return; }
-            video.paused ? video.play() : video.pause();
-          }
-        });
+        // 3. Click/tap overlay to play/pause (handled by overlay button only)
 
         // 4. Animated loading spinner while buffering
         function showSpinner() {

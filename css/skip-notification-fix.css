@@ -1,0 +1,7 @@
+/* Move skip notification to center when active, bottom when inactive */
+.skip-notification {
+  display: none !important;
+}
+.skip-notification.active {
+  display: flex !important;
+}

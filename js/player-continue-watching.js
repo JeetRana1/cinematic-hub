@@ -5,6 +5,30 @@
 (function () {
   'use strict';
 
+  // --- Skip Notification Animation ---
+
+  function showSkipNotification() {
+    const skipNotification = document.getElementById('skipNotification');
+    if (!skipNotification) return;
+    skipNotification.classList.add('active');
+    clearTimeout(skipNotification._hideTimeout);
+    skipNotification._hideTimeout = setTimeout(() => {
+      skipNotification.classList.remove('active');
+    }, 400); // Show briefly, no animation
+  }
+
+  // Attach to skip buttons
+  document.addEventListener('DOMContentLoaded', () => {
+    const skipForwardBtn = document.getElementById('skipForwardBtn');
+    const skipBackwardBtn = document.getElementById('skipBackwardBtn');
+    if (skipForwardBtn) {
+      skipForwardBtn.addEventListener('click', showSkipNotification);
+    }
+    if (skipBackwardBtn) {
+      skipBackwardBtn.addEventListener('click', showSkipNotification);
+    }
+  });
+
   // Module-level state to be shared between functions
   let resumePromptShown = false;
 

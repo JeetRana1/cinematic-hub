@@ -1673,7 +1673,45 @@
     }
     .skip-notification.visible .skip-text,
     #skipNotification.visible #skipText {
-      display: inline !important;
+      display: inline-block !important;
+      font-size: 2.2em !important;
+      font-weight: 700 !important;
+      color: #fff !important;
+      text-shadow: 0 2px 8px #000, 0 0 12px #000;
+      background: rgba(0,0,0,0.45);
+      border-radius: 12px;
+      padding: 8px 18px;
+      pointer-events: none;
+    }
+    .skip-notification.visible.forward {
+      position: absolute !important;
+      top: 50% !important;
+      right: 8% !important;
+      left: auto !important;
+      transform: translateY(-50%);
+      z-index: 1000;
+      display: flex !important;
+      align-items: center;
+      justify-content: flex-end;
+      width: auto;
+      min-width: 0;
+      background: none;
+      box-shadow: none;
+    }
+    .skip-notification.visible.backward {
+      position: absolute !important;
+      top: 50% !important;
+      left: 8% !important;
+      right: auto !important;
+      transform: translateY(-50%);
+      z-index: 1000;
+      display: flex !important;
+      align-items: center;
+      justify-content: flex-start;
+      width: auto;
+      min-width: 0;
+      background: none;
+      box-shadow: none;
     }
 
     .skip-notification.visible {

@@ -561,6 +561,8 @@
   </script>
 
   <script>
+    window.overlayClickEnabled = true;
+    
     document.addEventListener('DOMContentLoaded', function () {
       const urlParams = new URLSearchParams(window.location.search);
       const movieTitle = urlParams.get('title') || 'Movie';
@@ -572,7 +574,6 @@
       let lastTap = 0;
       let tapTimeout = null;
       let overlayShownForThisTap = false;
-      let overlayClickEnabled = true;
 
       function isLandscape() {
         return window.matchMedia('(orientation: landscape)').matches;
@@ -715,9 +716,9 @@
               }
               overlay.classList.add('visible');
               clearTimeout(overlay.timeout);
-              overlayClickEnabled = false;
+              window.overlayClickEnabled = false;
               setTimeout(() => {
-                overlayClickEnabled = true;
+                window.overlayClickEnabled = true;
               }, 200);
               overlay.timeout = setTimeout(() => {
                 overlay.classList.remove('visible');
@@ -4975,7 +4976,7 @@
       // Set overlay click handler globally (after togglePlayPause is defined)
       if (playPauseOverlay) {
         playPauseOverlay.onclick = function(e) {
-          if (!overlayClickEnabled) return;
+          if (!window.overlayClickEnabled) return;
           e.preventDefault();
           e.stopPropagation();
           if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();

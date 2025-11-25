@@ -716,15 +716,21 @@
                 // Add click handler to toggle pause/play
                 overlay.onclick = function (e) {
                   e.stopPropagation();
+                  overlay.onclick = null; // Prevent double click during transition
                   if (video.paused) {
-                    video.play();
-                    icon.className = 'fas fa-pause';
-                    overlay.classList.add('visible');
-                    setTimeout(() => overlay.classList.remove('visible'), 5000);
-                  } else {
+                    video.play().then(() => {
+                      icon.className = 'fas fa-pause';
+                      overlay.classList.add('visible');
+                      setTimeout(() => overlay.classList.remove('visible'), 5000);
+                      overlay.onclick = arguments.callee;
+                    }).catch(() => {
+                      overlay.onclick = arguments.callee;
+                    });
+                  } else if (!video.paused) {
                     video.pause();
                     icon.className = 'fas fa-play';
                     overlay.classList.add('visible'); // keep visible while paused
+                    overlay.onclick = arguments.callee;
                   }
                 };
                 // Hide overlay after 5s only if video is playing

@@ -2022,6 +2022,74 @@
 <body>
   <!-- Add allowfullscreen attribute to the video container -->
   <div class="video-container" id="videoContainer" allowfullscreen>
+      <!-- Skip 10s overlays -->
+      <div id="centerSkipBackText" class="center-skip-text center-skip-back" style="display:none;">10s <i class="fas fa-backward"></i></div>
+      <div id="centerSkipForwardText" class="center-skip-text center-skip-forward" style="display:none;"><i class="fas fa-forward"></i> 10s</div>
+      /* Center skip text overlays */
+      .center-skip-text {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 2.2em;
+        font-weight: 700;
+        color: #fff;
+        text-shadow: 0 2px 8px #000, 0 0 12px #000;
+        background: rgba(0,0,0,0.45);
+        border-radius: 12px;
+        padding: 8px 18px;
+        z-index: 1002;
+        pointer-events: none;
+        opacity: 0.95;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .center-skip-back {
+        left: 6%;
+        right: auto;
+        justify-content: flex-start;
+      }
+      .center-skip-forward {
+        right: 6%;
+        left: auto;
+        justify-content: flex-end;
+      }
+      @media (max-width: 600px) {
+        .center-skip-text {
+          font-size: 1.3em;
+          padding: 5px 10px;
+        }
+        .center-skip-back { left: 2%; }
+        .center-skip-forward { right: 2%; }
+      }
+          // Show skip 10s overlays when skip buttons are pressed
+          const centerSkipBackText = document.getElementById('centerSkipBackText');
+          const centerSkipForwardText = document.getElementById('centerSkipForwardText');
+          function showSkipText(type) {
+            if (type === 'back') {
+              if (centerSkipBackText) {
+                centerSkipBackText.style.display = 'flex';
+                setTimeout(() => { centerSkipBackText.style.display = 'none'; }, 700);
+              }
+            } else if (type === 'forward') {
+              if (centerSkipForwardText) {
+                centerSkipForwardText.style.display = 'flex';
+                setTimeout(() => { centerSkipForwardText.style.display = 'none'; }, 700);
+              }
+            }
+          }
+          if (centerSkipBack) centerSkipBack.onclick = function(e) {
+            e.stopPropagation();
+            video.currentTime = Math.max(0, video.currentTime - 10);
+            showCenterOverlay();
+            showSkipText('back');
+          };
+          if (centerSkipForward) centerSkipForward.onclick = function(e) {
+            e.stopPropagation();
+            video.currentTime = Math.min(video.duration, video.currentTime + 10);
+            showCenterOverlay();
+            showSkipText('forward');
+          };
     <button id="backButton" class="back-button" aria-label="Back">
       <i class="fas fa-arrow-left"></i>
     </button>
@@ -2077,15 +2145,6 @@
       </div>
       <div class="controls">
         <div class="left-controls">
-          <button class="control-btn" id="playPauseBtn" data-tooltip="Play/Pause">
-            <i class="fas fa-play"></i>
-          </button>
-          <button class="skip-btn" id="skipBackwardBtn" data-tooltip="Rewind 10s">
-            <i class="fas fa-backward"></i>
-          </button>
-          <button class="skip-btn" id="skipForwardBtn" data-tooltip="Forward 10s">
-            <i class="fas fa-forward"></i>
-          </button>
           <div class="volume-container">
             <button class="control-btn" id="muteBtn" data-tooltip="Mute/Unmute">
               <i class="fas fa-volume-up"></i>
@@ -2098,6 +2157,117 @@
             <span id="timeDisplay">0:00 / 0:00</span>
           </div>
         </div>
+            <!-- Center overlay controls -->
+            <div id="centerOverlayControls" class="center-overlay-controls" style="display:none;">
+              <button class="center-skip-btn" id="centerSkipBack" aria-label="Skip Backward 10s"><i class="fas fa-backward"></i></button>
+              <button class="center-play-btn" id="centerPlayPause" aria-label="Play/Pause"><i class="fas fa-play"></i></button>
+              <button class="center-skip-btn" id="centerSkipForward" aria-label="Skip Forward 10s"><i class="fas fa-forward"></i></button>
+            </div>
+          /* Center overlay controls for skip/play/skip */
+          .center-overlay-controls {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            z-index: 1001;
+            pointer-events: none;
+          }
+          .center-overlay-controls button {
+            background: rgba(0,0,0,0.7);
+            border: none;
+            color: #fff;
+            font-size: 2.6em;
+            border-radius: 50%;
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+            transition: background 0.2s;
+            pointer-events: auto;
+            outline: none;
+            cursor: pointer;
+          }
+          .center-overlay-controls button:active {
+            background: rgba(229,9,20,0.8);
+          }
+          @media (max-width: 600px) {
+            .center-overlay-controls button {
+              font-size: 2em;
+              width: 48px;
+              height: 48px;
+            }
+            .center-overlay-controls {
+              gap: 18px;
+            }
+          }
+              // --- Center Overlay Controls ---
+              const centerOverlay = document.getElementById('centerOverlayControls');
+              const centerSkipBack = document.getElementById('centerSkipBack');
+              const centerPlayPause = document.getElementById('centerPlayPause');
+              const centerSkipForward = document.getElementById('centerSkipForward');
+              let overlayTimeout = null;
+
+              function showCenterOverlay() {
+                if (centerOverlay) {
+                  centerOverlay.style.display = 'flex';
+                  clearTimeout(overlayTimeout);
+                  overlayTimeout = setTimeout(() => {
+                    centerOverlay.style.display = 'none';
+                  }, 2000);
+                }
+              }
+
+              function hideCenterOverlay() {
+                if (centerOverlay) centerOverlay.style.display = 'none';
+                clearTimeout(overlayTimeout);
+              }
+
+              // Center overlay button actions
+              if (centerSkipBack) centerSkipBack.onclick = function(e) {
+                e.stopPropagation();
+                video.currentTime = Math.max(0, video.currentTime - 10);
+                showCenterOverlay();
+              };
+              if (centerSkipForward) centerSkipForward.onclick = function(e) {
+                e.stopPropagation();
+                video.currentTime = Math.min(video.duration, video.currentTime + 10);
+                showCenterOverlay();
+              };
+              if (centerPlayPause) centerPlayPause.onclick = function(e) {
+                e.stopPropagation();
+                if (video.paused) {
+                  video.play();
+                  centerPlayPause.innerHTML = '<i class="fas fa-pause"></i>';
+                } else {
+                  video.pause();
+                  centerPlayPause.innerHTML = '<i class="fas fa-play"></i>';
+                }
+                showCenterOverlay();
+              };
+
+              // Show overlay on single click/tap (not play/pause)
+              videoContainer.addEventListener('click', function(e) {
+                // Only show overlay if not clicking a control
+                if (e.target === video || e.target === videoContainer) {
+                  showCenterOverlay();
+                }
+              });
+
+              // Hide overlay on video play
+              video.addEventListener('play', function() {
+                centerPlayPause.innerHTML = '<i class="fas fa-pause"></i>';
+                hideCenterOverlay();
+              });
+              video.addEventListener('pause', function() {
+                centerPlayPause.innerHTML = '<i class="fas fa-play"></i>';
+              });
         <div class="right-controls">
           <div class="screen-mode-container" style="display:inline-flex;gap:4px;align-items:center;margin-left:8px;">
             <button class="control-btn" id="screenModeToggle" data-tooltip="Stretch" title="Stretch">

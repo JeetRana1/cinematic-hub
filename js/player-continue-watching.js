@@ -23,7 +23,7 @@
         clearTimeout(overlayTimeout);
         overlayTimeout = setTimeout(() => {
           overlay.style.display = 'none';
-        }, 3000);
+        }, 6000);
       }
 
       // On player click, show pause icon (do not pause)

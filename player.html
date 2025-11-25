@@ -719,17 +719,12 @@
                   overlay.onclick = null; // Prevent double click during transition
                   if (video.paused) {
                     video.play().then(() => {
-                      icon.className = 'fas fa-pause';
-                      overlay.classList.add('visible');
-                      setTimeout(() => overlay.classList.remove('visible'), 5000);
                       overlay.onclick = arguments.callee;
                     }).catch(() => {
                       overlay.onclick = arguments.callee;
                     });
                   } else if (!video.paused) {
                     video.pause();
-                    icon.className = 'fas fa-play';
-                    overlay.classList.add('visible'); // keep visible while paused
                     overlay.onclick = arguments.callee;
                   }
                 };
@@ -737,6 +732,17 @@
                 if (!video.paused) {
                   setTimeout(() => overlay.classList.remove('visible'), 5000);
                 }
+
+                // Update icon and overlay visibility on play/pause events
+                video.onpause = function () {
+                  icon.className = 'fas fa-play';
+                  overlay.classList.add('visible');
+                };
+                video.onplay = function () {
+                  icon.className = 'fas fa-pause';
+                  overlay.classList.add('visible');
+                  setTimeout(() => overlay.classList.remove('visible'), 5000);
+                };
               }
             }
             handleGesture.tapCount = 1;

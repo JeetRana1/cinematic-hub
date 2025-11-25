@@ -1,25 +1,37 @@
 <style>
   @media (orientation: portrait) and (max-width: 600px) {
-    /* Uniform, slightly smaller, and left-aligned control buttons for all controls in portrait mode */
+    /* Desktop-like controls for portrait mobile: inline, square, centered, evenly spaced */
+    .controls {
+      display: flex !important;
+      flex-direction: row !important;
+      justify-content: center !important;
+      align-items: center !important;
+      flex-wrap: nowrap !important;
+      gap: 18px !important;
+      overflow-x: visible !important;
+      box-sizing: border-box;
+      padding: 0 0 !important;
+      min-width: 0 !important;
+    }
     .control-btn,
     .skip-btn,
     .play-pause-btn,
     #captionsBtn,
     #settingsBtn,
     #screenModeToggle {
-      min-width: 12vw !important;
-      min-height: 12vw !important;
-      max-width: 12vw !important;
-      max-height: 12vw !important;
-      width: 12vw !important;
-      height: 12vw !important;
-      font-size: 1.3em !important;
-      border-radius: 50% !important;
+      min-width: 44px !important;
+      min-height: 44px !important;
+      max-width: 44px !important;
+      max-height: 44px !important;
+      width: 44px !important;
+      height: 44px !important;
+      font-size: 1.2em !important;
+      border-radius: 8px !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       padding: 0 !important;
-      margin: 0 0.5vw !important;
+      margin: 0 !important;
       box-sizing: border-box !important;
       background: rgba(0,0,0,0.5) !important;
     }
@@ -29,21 +41,9 @@
     .play-pause-btn i {
       font-size: 1.1em !important;
     }
-    .controls {
-      display: flex !important;
-      flex-direction: row !important;
-      justify-content: flex-start !important;
-      align-items: center !important;
-      flex-wrap: nowrap !important;
-      gap: 0.5vw !important;
-      overflow-x: visible !important;
-      box-sizing: border-box;
-      padding: 0 2vw !important;
-      min-width: 0 !important;
-    }
     .right-controls,
     .screen-mode-container {
-      gap: 0.5vw !important;
+      gap: 18px !important;
     }
     .movie-info-overlay {
       display: none !important;

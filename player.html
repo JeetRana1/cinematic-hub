@@ -5489,6 +5489,7 @@
       });
       video.addEventListener('timeupdate', updateProgress);
       video.addEventListener('loadedmetadata', updateProgress);
+      video.addEventListener('loadeddata', updateProgress);
       video.addEventListener('ended', () => {
         playPauseBtn.innerHTML = '<i class="fas fa-redo"></i>';
       });

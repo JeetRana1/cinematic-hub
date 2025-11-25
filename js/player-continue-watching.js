@@ -2,70 +2,7 @@
  * Enhanced Player Continue Watching Integration
  * Properly handles resume functionality with accurate currentTime setting
  */
-(function () {
-  'use strict';
-  // --- Custom Pause Overlay Logic ---
-  document.addEventListener('DOMContentLoaded', function () {
-    const video = document.getElementById('video');
-    const overlay = document.getElementById('playPauseOverlay');
-    let overlayTimeout;
-    if (video && overlay) {
-      // Hide overlay by default
-      overlay.style.display = 'none';
-
-      // Show overlay with correct icon
-      function showOverlay(icon) {
-        const iconElem = overlay.querySelector('.play-pause-icon i');
-        if (iconElem) {
-          iconElem.className = icon === 'play' ? 'fas fa-play' : 'fas fa-pause';
-        }
-        overlay.style.display = 'flex';
-        clearTimeout(overlayTimeout);
-        overlayTimeout = setTimeout(() => {
-          overlay.style.display = 'none';
-        }, 16000);
-      }
-
-      // On player click, show pause icon (do not pause)
-
-      // Prevent default pause/play on click/tap
-      function handlePlayerClick(e) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        if (!video.paused) {
-          showOverlay('pause');
-        } else {
-          showOverlay('play');
-        }
-        return false;
-      }
-      // Remove all other click/touchend listeners on video
-      video.onclick = null;
-      video.ontouchend = null;
-      video.addEventListener('click', handlePlayerClick, true);
-      video.addEventListener('touchend', handlePlayerClick, true);
-
-      // Pause/play video if overlay is clicked
-      overlay.addEventListener('click', function (e) {
-        if (!video.paused) {
-          video.pause();
-          showOverlay('play');
-        } else {
-          video.play().catch(()=>{});
-          showOverlay('pause');
-        }
-      });
-
-      // Also update overlay icon on play/pause events
-      video.addEventListener('pause', function () {
-        showOverlay('play');
-      });
-      video.addEventListener('play', function () {
-        showOverlay('pause');
-      });
-    }
-  });
-
+(function() {
   // --- Skip Notification Animation ---
 
   function showSkipNotification() {

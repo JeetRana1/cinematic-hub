@@ -4,6 +4,30 @@
  */
 (function () {
   'use strict';
+  // --- Custom Pause Overlay Logic ---
+  document.addEventListener('DOMContentLoaded', function () {
+    const video = document.getElementById('video');
+    const overlay = document.getElementById('playPauseOverlay');
+    let overlayTimeout;
+    if (video && overlay) {
+      // Prevent default pause on video click
+      video.addEventListener('click', function (e) {
+        // Only show overlay, do not pause
+        overlay.style.display = 'flex';
+        clearTimeout(overlayTimeout);
+        overlayTimeout = setTimeout(() => {
+          overlay.style.display = 'none';
+        }, 3000);
+      });
+      // Pause video if overlay is clicked
+      overlay.addEventListener('click', function (e) {
+        video.pause();
+        overlay.style.display = 'none';
+      });
+      // Hide overlay by default
+      overlay.style.display = 'none';
+    }
+  });
 
   // --- Skip Notification Animation ---
 

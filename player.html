@@ -572,6 +572,7 @@
       let lastTap = 0;
       let tapTimeout = null;
       let overlayShownForThisTap = false;
+      let overlayClickEnabled = true;
 
       function isLandscape() {
         return window.matchMedia('(orientation: landscape)').matches;
@@ -714,6 +715,10 @@
               }
               overlay.classList.add('visible');
               clearTimeout(overlay.timeout);
+              overlayClickEnabled = false;
+              setTimeout(() => {
+                overlayClickEnabled = true;
+              }, 200);
               overlay.timeout = setTimeout(() => {
                 overlay.classList.remove('visible');
               }, 5000);
@@ -4970,6 +4975,7 @@
       // Set overlay click handler globally (after togglePlayPause is defined)
       if (playPauseOverlay) {
         playPauseOverlay.onclick = function(e) {
+          if (!overlayClickEnabled) return;
           e.preventDefault();
           e.stopPropagation();
           if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();

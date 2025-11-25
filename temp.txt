@@ -1475,12 +1475,10 @@
       opacity: 0;
       transition: opacity 0.3s;
       z-index: 8;
-      pointer-events: none;
     }
 
     .play-pause-overlay.visible {
       opacity: 1;
-      pointer-events: auto;
     }
 
     .play-pause-icon {

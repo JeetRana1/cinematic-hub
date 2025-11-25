@@ -716,10 +716,11 @@
                 // Add click handler to toggle pause/play
                 overlay.onclick = function (e) {
                   e.stopPropagation();
-                  if (video.paused) {
-                    video.play();
-                  } else {
+                  // Only toggle if not already transitioning
+                  if (!video.paused) {
                     video.pause();
+                  } else {
+                    video.play();
                   }
                 };
                 // Hide overlay after 5s only if video is playing
@@ -735,7 +736,10 @@
                 video.addEventListener('play', function () {
                   icon.className = 'fas fa-pause';
                   overlay.classList.add('visible');
-                  setTimeout(() => overlay.classList.remove('visible'), 5000);
+                  // Only hide if still playing after 5s
+                  const hideTimeout = setTimeout(() => {
+                    if (!video.paused) overlay.classList.remove('visible');
+                  }, 5000);
                 });
               }
             }

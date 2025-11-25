@@ -1352,12 +1352,20 @@
 
     .scrubber .scrubber-line {
       position: absolute;
-      top: 0;
+      top: 50%;
       left: 50%;
-      width: 2px;
-      height: 100%;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
       background-color: var(--netflix-red);
       display: none;
+      transform: translate(-50%, -50%);
+      cursor: grab;
+      box-shadow: 0 2px 8px rgba(229, 9, 20, 0.6);
+    }
+
+    .scrubber .scrubber-line:active {
+      cursor: grabbing;
     }
 
     .scrubber .scrubber-time {
@@ -1426,12 +1434,20 @@
 
     .scrubber .scrubber-line {
       position: absolute;
-      top: 0;
+      top: 50%;
       left: 50%;
-      width: 2px;
-      height: 100%;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
       background-color: var(--netflix-red);
       display: none;
+      transform: translate(-50%, -50%);
+      cursor: grab;
+      box-shadow: 0 2px 8px rgba(229, 9, 20, 0.6);
+    }
+
+    .scrubber .scrubber-line:active {
+      cursor: grabbing;
     }
 
     .scrubber .scrubber-time {

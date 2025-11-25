@@ -1,0 +1,13 @@
+.skip-text,
+.double-tap-indicator,
+.double-tap-indicator.right {
+  display: none;
+}
+
+@media (orientation: portrait) {
+  .skip-text,
+  .double-tap-indicator,
+  .double-tap-indicator.right {
+    display: initial;
+  }
+}

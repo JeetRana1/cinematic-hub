@@ -4968,10 +4968,8 @@
       // Update progress bar
       function updateProgress() {
         if (!isScrubbing && !isNaN(video.duration) && video.duration > 0) {
-          let progress = (video.currentTime / video.duration) * 100;
-          // Clamp progress between 0.5% and 99.5% to keep the dot always inside
-          progress = Math.max(0.5, Math.min(progress, 99.5));
-          progressBar.style.width = `${(video.currentTime / video.duration) * 100}%`;
+          let progress = (video.currentTime / video.duration);
+          progressBar.style.width = `${progress * 100}%`;
 
           // Update buffered progress
           if (video.buffered.length > 0) {
@@ -4983,10 +4981,17 @@
             }
           }
 
-          // Update scrubber circle position
+          // Update scrubber circle position to match end of red bar
           const scrubberLine = document.querySelector('.scrubber-line');
-          if (scrubberLine) {
-            scrubberLine.style.left = `${progress}%`;
+          const progressContainer = document.getElementById('progressContainer');
+          if (scrubberLine && progressContainer) {
+            const barWidth = progressContainer.offsetWidth;
+            // The progress bar starts at 0, so the dot should be at (progress * barWidth)
+            // Subtract half the dot width (7px) to center it
+            let leftPx = Math.round(progress * barWidth) - 7;
+            // Clamp so it never goes outside
+            leftPx = Math.max(0, Math.min(leftPx, barWidth - 14));
+            scrubberLine.style.left = leftPx + 'px';
           }
         }
         updateTimeDisplay();

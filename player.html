@@ -699,7 +699,7 @@
           }
           handleGesture.tapCount = 0;
         } else if (handleGesture.tapCount === 1) {
-          // Single tap/click: only show overlay icon, do not pause/play
+          // Single tap/click: show overlay icon for 5s, do not pause/play
           tapTimeout = setTimeout(() => {
             if (handleGesture.tapCount === 1) {
               const overlay = document.getElementById('playPauseOverlay');
@@ -711,10 +711,28 @@
                   icon.className = 'fas fa-pause';
                 }
                 overlay.classList.add('visible');
-                setTimeout(() => overlay.classList.remove('visible'), 5000);
+                // Remove any previous click handler
+                overlay.onclick = null;
+                // Add click handler to toggle pause/play
+                overlay.onclick = function () {
+                  if (video.paused) {
+                    video.play();
+                    icon.className = 'fas fa-pause';
+                    overlay.classList.add('visible');
+                    setTimeout(() => overlay.classList.remove('visible'), 5000);
+                  } else {
+                    video.pause();
+                    icon.className = 'fas fa-play';
+                    overlay.classList.add('visible'); // keep visible while paused
+                  }
+                };
+                // Hide overlay after 5s only if video is playing
+                if (!video.paused) {
+                  setTimeout(() => overlay.classList.remove('visible'), 5000);
+                }
               }
             }
-            handleGesture.tapCount = 2;
+            handleGesture.tapCount = 1;
           }, 20);
         }
       }

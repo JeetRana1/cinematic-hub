@@ -1343,10 +1343,10 @@
 
     .scrubber {
       position: absolute;
-      top: 0;
+      top: -5px;
       left: 0;
       width: 100%;
-      height: 100%;
+      height: 14px;
       z-index: 5;
       pointer-events: none;
     }
@@ -1432,10 +1432,10 @@
 
     .scrubber {
       position: absolute;
-      top: 0;
+      top: -5px;
       left: 0;
       width: 100%;
-      height: 100%;
+      height: 14px;
       z-index: 5;
       pointer-events: none;
     }
@@ -2102,15 +2102,14 @@
       <i class="fas fa-forward"></i>
     </div>
 
-    <div class="scrubber" id="scrubber">
-      <div class="scrubber-line"></div>
-      <div class="scrubber-time">00:00</div>
-    </div>
-
     <div class="controls-container" id="controlsContainer">
       <div class="progress-container" id="progressContainer">
         <div class="progress-bar" id="progressBar">
           <div class="progress-buffer" id="progressBuffer"></div>
+        </div>
+        <div class="scrubber" id="scrubber">
+          <div class="scrubber-line"></div>
+          <div class="scrubber-time">00:00</div>
         </div>
       </div>
       <div class="controls">

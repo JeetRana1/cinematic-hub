@@ -1,16 +1,3 @@
-/* Landscape mode: position subtitles lower for screens >= 600px */
-@media (orientation: landscape) and (min-width: 600px) and (max-width: 900px) {
-  .video-subtitles {
-    bottom: 8% !important;
-  }
-  :fullscreen .video-subtitles,
-  :-webkit-full-screen .video-subtitles,
-  :-moz-full-screen .video-subtitles,
-  :-ms-fullscreen .video-subtitles,
-  .fullscreen-subtitles {
-    bottom: 8% !important;
-  }
-}
 /* subtitles.css */
 /* Hide native video subtitles since we're using custom display */
 video::cue {
@@ -84,7 +71,7 @@ video::cue {
 @media (max-width: 768px) {
   .video-subtitles {
     font-size: 18px;
-    bottom: 70px;
+    bottom: 160px;
     padding: 8px 16px;
     max-width: 95%;
   }

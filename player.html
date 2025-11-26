@@ -5260,7 +5260,6 @@
           // Always hide overlay when controls hide
           if (playPauseOverlay) {
             playPauseOverlay.classList.remove('visible');
-            if (playPauseOverlay.timeout) clearTimeout(playPauseOverlay.timeout);
           }
         }
       }
@@ -5277,14 +5276,7 @@
         const icon = playPauseOverlay.querySelector('i');
         if (icon) icon.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
         playPauseOverlay.classList.add('visible');
-        // Always clear and reset timeout
-        if (playPauseOverlay.timeout) clearTimeout(playPauseOverlay.timeout);
-        playPauseOverlay.timeout = setTimeout(() => {
-          // Only hide overlay if controls are not visible
-          if (!controlsContainer.classList.contains('visible')) {
-            playPauseOverlay.classList.remove('visible');
-          }
-        }, 5000);
+        // No timeout: overlay is always visible when controls are visible
       }
 
       // Handle mouse double click for seeking (desktop)
@@ -5318,9 +5310,9 @@
         console.log('Video clicked, current time:', video.currentTime, 'duration:', video.duration);
         // Only handle clicks if video is properly loaded
         if (!video.duration || video.duration <= 0 || isNaN(video.duration)) return;
-        // Always show overlay, even if it was hidden after menu/captions
+        // Always show overlay and controls, and reset controls timeout
         showPlayPauseOverlay(!video.paused);
-        // Never hide overlay on click; overlay timeout will handle hiding
+        resetHideControlsTimeout();
       }
 
       // Handle touch events for seeking (mobile)

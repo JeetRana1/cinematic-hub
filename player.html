@@ -5257,9 +5257,10 @@
 
         if (!video.paused && !settingsMenuOpen && !submenuOpen && !subtitleMenuOpen) {
           controlsContainer.classList.remove('visible');
-          const playPauseOverlay = document.getElementById('playPauseOverlay');
+          // Always hide overlay when controls hide
           if (playPauseOverlay) {
             playPauseOverlay.classList.remove('visible');
+            if (playPauseOverlay.timeout) clearTimeout(playPauseOverlay.timeout);
           }
         }
       }
@@ -5279,7 +5280,10 @@
         // Always clear and reset timeout
         if (playPauseOverlay.timeout) clearTimeout(playPauseOverlay.timeout);
         playPauseOverlay.timeout = setTimeout(() => {
-          playPauseOverlay.classList.remove('visible');
+          // Only hide overlay if controls are not visible
+          if (!controlsContainer.classList.contains('visible')) {
+            playPauseOverlay.classList.remove('visible');
+          }
         }, 5000);
       }
 
@@ -5316,7 +5320,7 @@
         if (!video.duration || video.duration <= 0 || isNaN(video.duration)) return;
         // Always show overlay, even if it was hidden after menu/captions
         showPlayPauseOverlay(!video.paused);
-        // No tapTimeout logic here; overlay handles its own timeout
+        // Never hide overlay on click; overlay timeout will handle hiding
       }
 
       // Handle touch events for seeking (mobile)

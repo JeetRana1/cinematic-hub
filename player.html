@@ -82,7 +82,7 @@
       width: 26px !important;
       height: 26px !important;
       border-radius: 8px !important;
-      background: rgba(0,0,0,0.5) !important;
+      background: transparent !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
@@ -574,49 +574,69 @@
       let lastTap = 0;
       let tapTimeout = null;
       let overlayShownForThisTap = false;
+      
+      // Skip notification state for landscape gestures
+      let skipAccumulator = 0;
+      let skipDirection = null; // 'forward' or 'backward'
+      let skipTimeout = null;
 
       function isLandscape() {
         return window.matchMedia('(orientation: landscape)').matches;
       }
 
       function showSkipNotification(type) {
-        const skipNotification = document.getElementById('skipNotification');
+        const seconds = type === 'forward' ? 10 : -10;
+        // Use the same accumulation logic as the main showSkipNotification function
+        const notification = document.getElementById('skipNotification');
         const skipText = document.getElementById('skipText');
-        const skipIcon = skipNotification.querySelector('i');
-        // Track cumulative skip
-        if (!showSkipNotification.skipAmount) showSkipNotification.skipAmount = 0;
-        if (!showSkipNotification.timeout) showSkipNotification.timeout = null;
+        const icon = notification.querySelector('i');
 
-        // If a new skip happens before previous notification hides, accumulate
-        if (showSkipNotification.timeout) {
-          clearTimeout(showSkipNotification.timeout);
+        const currentDirection = seconds > 0 ? 'forward' : 'backward';
+
+        // If direction changed, reset accumulator
+        if (skipDirection !== null && skipDirection !== currentDirection) {
+          skipAccumulator = 0;
         }
 
-        if (type === 'forward') {
-          showSkipNotification.skipAmount += 10;
-          skipNotification.classList.add('visible', 'forward');
-          skipText.textContent = `+${showSkipNotification.skipAmount}s`;
-          skipIcon.classList.remove('fa-backward');
-          skipIcon.classList.add('fa-forward');
-          skipNotification.style.left = '';
-          skipNotification.style.right = '15%';
+        // Update direction and accumulate
+        skipDirection = currentDirection;
+        skipAccumulator += Math.abs(seconds);
+
+        // Update text and icon based on direction
+        if (currentDirection === 'forward') {
+          skipText.textContent = `+${skipAccumulator}s`;
+          icon.className = 'fas fa-forward';
+          notification.classList.remove('backward');
+          notification.classList.add('forward');
+          notification.style.left = '';
+          notification.style.right = '15%';
         } else {
-          showSkipNotification.skipAmount -= 10;
-          skipNotification.classList.add('visible', 'backward');
-          skipText.textContent = `${showSkipNotification.skipAmount}s`;
-          skipIcon.classList.remove('fa-forward');
-          skipIcon.classList.add('fa-backward');
-          skipNotification.style.right = '';
-          skipNotification.style.left = '15%';
+          skipText.textContent = `-${skipAccumulator}s`;
+          icon.className = 'fas fa-backward';
+          notification.classList.remove('forward');
+          notification.classList.add('backward');
+          notification.style.right = '';
+          notification.style.left = '15%';
         }
 
-        showSkipNotification.timeout = setTimeout(() => {
-          skipNotification.classList.remove('visible', 'forward', 'backward');
-          skipNotification.style.left = '';
-          skipNotification.style.right = '';
-          showSkipNotification.skipAmount = 0;
-          showSkipNotification.timeout = null;
-        }, 600);
+        // Show notification
+        notification.classList.add('visible');
+
+        // Clear existing timeout
+        if (skipTimeout) {
+          clearTimeout(skipTimeout);
+        }
+
+        // Hide after 3 seconds of no activity
+        skipTimeout = setTimeout(() => {
+          notification.classList.remove('visible');
+          notification.classList.remove('forward', 'backward');
+          notification.style.left = '';
+          notification.style.right = '';
+          skipAccumulator = 0;
+          skipDirection = null;
+          skipTimeout = null;
+        }, 3000);
       }
 
       function handleGesture(e) {
@@ -734,9 +754,11 @@
         // Remove previous listeners
         videoContainer.removeEventListener('touchstart', handleGesture);
         videoContainer.removeEventListener('mousedown', handleGesture);
-        if (isLandscape()) {
-          videoContainer.addEventListener('touchstart', handleGesture);
-          videoContainer.addEventListener('mousedown', handleGesture);
+        
+        // Only add touch gesture listeners on mobile/touch devices
+        if (isLandscape() && ('ontouchstart' in window || navigator.maxTouchPoints > 0)) {
+          videoContainer.addEventListener('touchstart', handleGesture, { passive: false });
+          // Don't add mousedown handler on desktop - it interferes with normal clicks
         }
       }
 
@@ -1044,11 +1066,11 @@
 
     .progress-container {
       width: 100%;
-      height: 4px;
+      height: 8px;
       background-color: rgba(255, 255, 255, 0.2);
-      border-radius: 2px;
+      border-radius: 4px;
       margin: 15px 0;
-      overflow: hidden;
+      overflow: visible;
       cursor: pointer;
     }
 
@@ -1058,6 +1080,27 @@
       width: 0%;
       position: relative;
       transition: width 0.1s linear;
+      border-radius: 4px;
+    }
+
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      right: -8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background-color: #ff0000;
+      box-shadow: 0 0 0 2px rgb(0, 0, 0), 0 2px 12px rgb(255, 0, 0);
+      z-index: 10;
+      transition: all 0.2s ease;
+    }
+
+    .progress-bar:hover::after {
+      transform: translateY(-50%) scale(1.2);
+      box-shadow: 0 0 0 3px rgba(53, 53, 53, 0.9), 0 2px 16px rgb(255, 0, 0);
     }
 
     .progress-buffer {
@@ -1197,7 +1240,7 @@
     .skip-btn:hover {
       transform: scale(1.12);
       border-color: rgba(255, 255, 255, 0.5);
-      background: rgba(255, 255, 255, 0.08);
+      background: transparent;
       box-shadow: 0 0 20px rgba(255, 255, 255, 0.15),
         0 4px 12px rgba(0, 0, 0, 0.3);
     }
@@ -1208,7 +1251,7 @@
 
     .skip-btn:active {
       transform: scale(0.92);
-      background: rgba(255, 255, 255, 0.12);
+      background: transparent;
       box-shadow: 0 0 12px rgba(255, 255, 255, 0.2),
         0 2px 6px rgba(0, 0, 0, 0.3);
       transition: all 0.1s ease;
@@ -1341,58 +1384,6 @@
       cursor: pointer;
     }
 
-    .scrubber {
-      position: absolute;
-      top: -25px;
-      left: 0;
-      width: 100%;
-      height: 14px;
-      z-index: 5;
-      pointer-events: none;
-    }
-
-    .scrubber .scrubber-line {
-      position: absolute;
-      top: 0;
-      left: 0%;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background-color: var(--netflix-red);
-      transform: translate(-50%, 0);
-      cursor: grab;
-      box-shadow: 0 2px 8px rgba(229, 9, 20, 0.6);
-      opacity: 0.7;
-      transition: opacity 0.2s ease;
-      pointer-events: auto;
-    }
-
-    .scrubber .scrubber-line:hover {
-      opacity: 1;
-    }
-
-    .scrubber .scrubber-line:active {
-      cursor: grabbing;
-      opacity: 1;
-    }
-
-    .scrubber .scrubber-time {
-      position: absolute;
-      top: 0px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 5px 10px;
-      border-radius: 4px;
-      font-size: 12px;
-      white-space: nowrap;
-      display: none;
-    }
-
-    .scrubber.active .scrubber-time {
-      display: block;
-    }
 
     .play-pause-overlay {
       position: absolute;
@@ -1430,59 +1421,7 @@
       cursor: pointer;
     }
 
-    .scrubber {
-      position: absolute;
-      top: -15px;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 5;
-      pointer-events: none;
-    }
-
-    .scrubber .scrubber-line {
-      position: absolute;
-      top: 50%;
-      left: 0%;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background-color: var(--netflix-red);
-      transform: translate(-50%, -80%);
-      cursor: grab;
-      box-shadow: 0 2px 8px rgba(229, 9, 20, 0.6);
-      opacity: 0.7;
-      transition: opacity 0.2s ease;
-      pointer-events: auto;
-    }
-
-    .scrubber .scrubber-line:hover {
-      opacity: 1;
-    }
-
-    .scrubber .scrubber-line:active {
-      cursor: grabbing;
-      opacity: 1;
-    }
-
-    .scrubber .scrubber-time {
-      position: absolute;
-      top: -30px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 5px 10px;
-      border-radius: 4px;
-      font-size: 12px;
-      white-space: nowrap;
-      display: none;
-    }
-
-    .scrubber.active .scrubber-time {
-      display: block;
-    }
-
+    
     .play-pause-overlay {
       position: absolute;
       top: 0;
@@ -1716,7 +1655,7 @@
       font-weight: 700 !important;
       color: #fff !important;
       text-shadow: 0 2px 8px #000, 0 0 12px #000;
-      background: rgba(0,0,0,0.45);
+      background: transparent;
       border-radius: 12px;
       padding: 8px 18px;
       pointer-events: none;
@@ -2106,10 +2045,6 @@
       <div class="progress-container" id="progressContainer">
         <div class="progress-bar" id="progressBar">
           <div class="progress-buffer" id="progressBuffer"></div>
-        </div>
-        <div class="scrubber" id="scrubber">
-          <div class="scrubber-line"></div>
-          <div class="scrubber-time">00:00</div>
         </div>
       </div>
       <div class="controls">
@@ -2744,8 +2679,10 @@
               movieId = btoa(videoSrc).replace(/[^a-zA-Z0-9]/g, '').substring(0, 16);
             }
             const savedProgress = window.ContinueWatchingManager.getMovieProgress(movieId);
-            if (savedProgress && savedProgress.currentTime > 0) {
-              // Force video to remain paused at 0 until resume modal is handled
+            console.log('Continue watching check - savedProgress:', savedProgress, 'currentTime:', video.currentTime);
+            if (savedProgress && savedProgress.currentTime > 0 && video.currentTime === 0) {
+              console.log('Setting video to 0 for continue watching');
+              // Only force reset if video is actually at the beginning
               video.currentTime = 0;
               video.pause();
               // Prevent any autoplay
@@ -2831,8 +2768,6 @@
       const playPauseOverlay = document.getElementById('playPauseOverlay');
       const seekForwardIndicator = document.getElementById('forwardIndicator');
       const seekBackwardIndicator = document.getElementById('rewindIndicator');
-      const scrubber = document.querySelector('.scrubber');
-      const scrubberTime = document.querySelector('.scrubber-time');
       const currentTimeDisplay = timeDisplay;
       const movieTitle = document.getElementById('movieTitle');
       const movieYear = document.getElementById('movieYear');
@@ -3545,14 +3480,27 @@
             // Close the modal
             modal.remove();
 
+            // Set flag to indicate we're resuming from prompt
+            window.__resumedFromPrompt = true;
+
             // Get the saved position and seek to it
             if (window.continueWatchingUI) {
               const savedProgress = window.continueWatchingUI.getSavedProgress(movie.id);
               if (savedProgress && savedProgress.position > 0) {
                 video.currentTime = savedProgress.position;
-                video.play();
+                const playPromise = video.play();
+                if (playPromise !== undefined) {
+                  playPromise.catch(error => {
+                    console.log('Resume play interrupted:', error);
+                  });
+                }
               }
             }
+            
+            // Clear the flag after a short delay to allow normal operation
+            setTimeout(() => {
+              window.__resumedFromPrompt = false;
+            }, 2000);
           });
 
           document.getElementById('resumeNo').addEventListener('click', function () {
@@ -3566,7 +3514,12 @@
 
             // Start from the beginning
             video.currentTime = 0;
-            video.play();
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+              playPromise.catch(error => {
+                console.log('Start from beginning play interrupted:', error);
+              });
+            }
           });
 
           // Close modal when clicking outside content
@@ -4443,8 +4396,7 @@
           }
         }
 
-        // Add fullscreen change event listeners for all browsers
-        document.addEventListener('fullscreenchange', handleFullscreenChange);
+                document.addEventListener('fullscreenchange', handleFullscreenChange);
         document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
         document.addEventListener('mozfullscreenchange', handleFullscreenChange);
         document.addEventListener('MSFullscreenChange', handleFullscreenChange);
@@ -4762,7 +4714,16 @@
               e.preventDefault();
               // Block play/pause toggles while resume prompt is active
               if (window.__resumePromptActive) { video.pause(); break; }
-              video.paused ? video.play() : video.pause();
+              if (video.paused) {
+                const playPromise = video.play();
+                if (playPromise !== undefined) {
+                  playPromise.catch(error => {
+                    console.log('Spacebar play interrupted:', error);
+                  });
+                }
+              } else {
+                video.pause();
+              }
               break;
             }
             case 'arrowright': video.currentTime += 5; break;
@@ -4854,7 +4815,7 @@
           const progressBar = document.getElementById('progressBar');
           const progressContainer = document.getElementById('progressContainer');
           let tooltip = document.createElement('div');
-          tooltip.className = 'scrubber-time';
+          tooltip.className = 'progress-tooltip';
           tooltip.style = 'position:absolute;bottom:32px;left:0;z-index:1002;background:rgba(0,0,0,0.85);color:#fff;padding:2px 8px;border-radius:4px;font-size:0.95em;pointer-events:none;display:none;';
           progressContainer.appendChild(tooltip);
           progressContainer.addEventListener('mousemove', (e) => {
@@ -4961,7 +4922,6 @@
           const total = formatTime(video.duration);
 
           if (timeDisplay) timeDisplay.textContent = `${current} / ${total}`;
-          if (scrubberTime) scrubberTime.textContent = formatTime(video.currentTime);
         }
       }
 
@@ -4981,18 +4941,6 @@
             }
           }
 
-          // Update scrubber circle position to match end of red bar
-          const scrubberLine = document.querySelector('.scrubber-line');
-          const progressBar = document.getElementById('progressBar');
-          if (scrubberLine && progressBar) {
-            const barRect = progressBar.getBoundingClientRect();
-            const containerRect = progressBar.parentElement.getBoundingClientRect();
-            // Place the dot at the right edge of the red bar, minus half its width to center
-            let leftPx = barRect.width - 7;
-            // Clamp so it never goes outside
-            leftPx = Math.max(0, Math.min(leftPx, containerRect.width - 14));
-            scrubberLine.style.left = leftPx + 'px';
-          }
         }
         updateTimeDisplay();
       }
@@ -5006,7 +4954,13 @@
           return;
         }
         if (video.paused) {
-          video.play();
+          const playPromise = video.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.log('Play interrupted:', error);
+              playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            });
+          }
           playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
         } else {
           video.pause();
@@ -5188,9 +5142,35 @@
 
       // Seek to specific time
       function seekToTime(e) {
-        const rect = progressContainer.getBoundingClientRect();
+        const progressBar = document.getElementById('progressBar');
+        const rect = progressBar.getBoundingClientRect();
+        
+        // Debug logging
+        console.log('seekToTime called on BAR:', {
+          clientX: e.clientX,
+          clientY: e.clientY,
+          rectLeft: rect.left,
+          rectRight: rect.right,
+          rectTop: rect.top,
+          rectBottom: rect.bottom,
+          barHeight: rect.height
+        });
+        
+        // Check if click is strictly within progress BAR bounds - no tolerance
+        if (e.clientX < rect.left || e.clientX > rect.right || 
+            e.clientY < rect.top || e.clientY > rect.bottom) {
+          console.log('Click outside progress BAR - ignoring');
+          return; // Don't seek if click is outside the progress bar
+        }
+        
         const pos = (e.clientX - rect.left) / rect.width;
-        video.currentTime = pos * video.duration;
+        console.log('Click inside progress BAR - seeking to pos:', pos);
+        
+        // Validate video duration and position
+        if (!isNaN(video.duration) && video.duration > 0 && !isNaN(pos)) {
+          const clampedPos = Math.max(0, Math.min(1, pos));
+          video.currentTime = clampedPos * video.duration;
+        }
       }
 
       // Show/hide controls
@@ -5258,6 +5238,15 @@
       // Handle single click for play/pause (desktop)
       function handleSingleClick(e) {
         e.preventDefault();
+        
+        // Debug: Log click events
+        console.log('Video clicked, current time:', video.currentTime, 'duration:', video.duration);
+        
+        // Only handle clicks if video is properly loaded
+        if (!video.duration || video.duration <= 0 || isNaN(video.duration)) {
+          return;
+        }
+        
         clearTimeout(tapTimeout);
         // Show overlay for 5 seconds, do not play/pause
         showPlayPauseOverlay(!video.paused);
@@ -5344,8 +5333,7 @@
           video.pause();
         }
 
-        // Show scrubber
-        scrubber.classList.add('active');
+        // Update progress immediately on start
         updateScrubberPosition(e);
 
         // Prevent default for touch events
@@ -5355,7 +5343,7 @@
       function updateScrubberPosition(e) {
         if (!isScrubbing) return;
 
-        const rect = video.getBoundingClientRect();
+        const rect = progressContainer.getBoundingClientRect();
         let pos = 0;
 
         if (e.type.includes('touch')) {
@@ -5367,21 +5355,22 @@
 
         pos = Math.max(0, Math.min(1, pos));
 
-        // Update scrubber position
-        const scrubberLine = document.querySelector('.scrubber-line');
-        scrubberLine.style.left = `${pos * 100}%`;
-
-        // Update scrubber time
-        const time = pos * video.duration;
-        scrubberTime.textContent = formatTime(time);
-
-        // Update progress bar during scrubbing
+        // Update progress bar smoothly in real-time
         progressBar.style.width = `${pos * 100}%`;
-
-        // Update current time display
-        currentTimeDisplay.textContent = formatTime(time);
+        
+        // Update video time smoothly
+        if (!isNaN(video.duration) && video.duration > 0) {
+          video.currentTime = pos * video.duration;
+        }
+        
+        // Update time display
+        const time = pos * video.duration;
+        if (!isNaN(time)) {
+          currentTimeDisplay.textContent = formatTime(time);
+        }
       }
 
+      
       function endScrubbing(e) {
         if (!isScrubbing) return;
 
@@ -5399,13 +5388,17 @@
         video.currentTime = pos * video.duration;
 
         if (wasPlayingBeforeScrubbing && !window.__resumePromptActive) {
-          video.play();
+          const playPromise = video.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.log('Play after scrubbing interrupted:', error);
+            });
+          }
         } else {
           video.pause();
         }
 
         isScrubbing = false;
-        scrubber.classList.remove('active');
         resetHideControlsTimeout();
       }
 
@@ -5505,7 +5498,6 @@
 
       // Mouse events for desktop
       video.addEventListener('mousedown', startScrubbing);
-      video.addEventListener('mousemove', updateScrubberPosition);
       video.addEventListener('mouseup', endScrubbing);
       video.addEventListener('mouseleave', () => {
         if (isScrubbing) {
@@ -5574,41 +5566,46 @@
       document.addEventListener('mozfullscreenchange', forceLandscapeOnFullscreen);
       document.addEventListener('MSFullscreenChange', forceLandscapeOnFullscreen);
 
-      // Progress bar click to seek
-      progressContainer.addEventListener('click', (e) => {
+      // Progress bar click to seek - ONLY on the actual progress bar
+      progressBar.addEventListener('click', (e) => {
+        console.log('Progress BAR clicked (not container)');
+        e.stopPropagation();
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        
         seekToTime(e);
         resetHideControlsTimeout();
-      });
+      }, true);
 
       // Draggable progress bar
       progressContainer.addEventListener('mousedown', (e) => {
-        startScrubbing(e);
+        // Only allow scrubbing if click is actually on the progress bar
+        const rect = progressContainer.getBoundingClientRect();
+        if (e.clientX >= rect.left && e.clientX <= rect.right && 
+            e.clientY >= rect.top && e.clientY <= rect.bottom) {
+          startScrubbing(e);
+        }
       });
 
       progressContainer.addEventListener('touchstart', (e) => {
-        startScrubbing(e);
+        // Only allow scrubbing if touch is actually on the progress bar
+        const rect = progressContainer.getBoundingClientRect();
+        const touch = e.touches[0];
+        if (touch.clientX >= rect.left && touch.clientX <= rect.right && 
+            touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+          startScrubbing(e);
+        }
       });
 
       document.addEventListener('mousemove', (e) => {
         if (isScrubbing) {
-          const rect = progressContainer.getBoundingClientRect();
-          if (e.clientX >= rect.left && e.clientX <= rect.right) {
-            updateScrubberPosition(e);
-            video.currentTime = ((e.clientX - rect.left) / rect.width) * video.duration;
-            updateProgress();
-          }
+          updateScrubberPosition(e);
         }
       });
 
       document.addEventListener('touchmove', (e) => {
         if (isScrubbing) {
-          const touch = e.touches[0];
-          const rect = progressContainer.getBoundingClientRect();
-          if (touch.clientX >= rect.left && touch.clientX <= rect.right) {
-            updateScrubberPosition(e);
-            video.currentTime = ((touch.clientX - rect.left) / rect.width) * video.duration;
-            updateProgress();
-          }
+          updateScrubberPosition(e);
         }
       });
 

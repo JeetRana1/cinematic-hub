@@ -6898,9 +6898,12 @@
             // On mobile/landscape, reload and play after seek
             v.addEventListener('seeked', function() {
               if ((window.innerWidth <= 900 && window.matchMedia('(orientation: landscape)').matches) || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                v.load();
-                const playPromise = v.play();
-                if (playPromise !== undefined) { playPromise.catch(() => {}); }
+                // Only reload if not already loading
+                if (v.readyState < 2) v.load();
+                if (v.paused) {
+                  const playPromise = v.play();
+                  if (playPromise !== undefined) { playPromise.catch(() => {}); }
+                }
               }
             });
           }

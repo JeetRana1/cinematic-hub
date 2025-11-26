@@ -1,3 +1,16 @@
+/* Landscape mode: position subtitles lower */
+@media (orientation: landscape) and (max-width: 900px) {
+  .video-subtitles {
+    bottom: 8% !important;
+  }
+  :fullscreen .video-subtitles,
+  :-webkit-full-screen .video-subtitles,
+  :-moz-full-screen .video-subtitles,
+  :-ms-fullscreen .video-subtitles,
+  .fullscreen-subtitles {
+    bottom: 6% !important;
+  }
+}
 /* subtitles.css */
 /* Hide native video subtitles since we're using custom display */
 video::cue {

@@ -5374,7 +5374,7 @@
       function endScrubbing(e) {
         if (!isScrubbing) return;
 
-        const rect = video.getBoundingClientRect();
+        const rect = progressContainer.getBoundingClientRect();
         let pos = 0;
 
         if (e.type.includes('touch')) {
@@ -5566,59 +5566,123 @@
       document.addEventListener('mozfullscreenchange', forceLandscapeOnFullscreen);
       document.addEventListener('MSFullscreenChange', forceLandscapeOnFullscreen);
 
-      // Progress bar click to seek - ONLY on the actual progress bar
-      progressBar.addEventListener('click', (e) => {
-        console.log('Progress BAR clicked (not container)');
-        e.stopPropagation();
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        
-        seekToTime(e);
-        resetHideControlsTimeout();
-      }, true);
-
-      // Draggable progress bar
+      // Unified progress bar interaction
+      let isDragging = false;
+      let dragStartTime = 0;
+      
       progressContainer.addEventListener('mousedown', (e) => {
-        // Only allow scrubbing if click is actually on the progress bar
+        if (e.button !== 0) return; // Only left mouse button
+        
+        // Only allow interaction if clicking directly on the progress bar itself
+        const progressBarRect = progressBar.getBoundingClientRect();
+        if (e.clientX < progressBarRect.left || e.clientX > progressBarRect.right || 
+            e.clientY < progressBarRect.top || e.clientY > progressBarRect.bottom) {
+          return;
+        }
+        
+        isDragging = true;
+        dragStartTime = Date.now();
+        wasPlayingBeforeScrubbing = !video.paused;
+        if (wasPlayingBeforeScrubbing) {
+          video.pause();
+        }
+        
+        // Update position immediately using progress container for calculation
+        const containerRect = progressContainer.getBoundingClientRect();
+        const pos = Math.max(0, Math.min(1, (e.clientX - containerRect.left) / containerRect.width));
+        if (!isNaN(video.duration) && video.duration > 0) {
+          video.currentTime = pos * video.duration;
+          progressBar.style.width = `${pos * 100}%`;
+        }
+        
+        e.preventDefault();
+      });
+      
+      progressContainer.addEventListener('touchstart', (e) => {
+        // Only allow interaction if touching directly on the progress bar itself
+        const progressBarRect = progressBar.getBoundingClientRect();
+        const touch = e.touches[0];
+        
+        if (touch.clientX < progressBarRect.left || touch.clientX > progressBarRect.right || 
+            touch.clientY < progressBarRect.top || touch.clientY > progressBarRect.bottom) {
+          return;
+        }
+        
+        isDragging = true;
+        dragStartTime = Date.now();
+        wasPlayingBeforeScrubbing = !video.paused;
+        if (wasPlayingBeforeScrubbing) {
+          video.pause();
+        }
+        
+        // Update position immediately using progress container for calculation
+        const containerRect = progressContainer.getBoundingClientRect();
+        const pos = Math.max(0, Math.min(1, (touch.clientX - containerRect.left) / containerRect.width));
+        if (!isNaN(video.duration) && video.duration > 0) {
+          video.currentTime = pos * video.duration;
+          progressBar.style.width = `${pos * 100}%`;
+        }
+        
+        e.preventDefault();
+      });
+      
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
         const rect = progressContainer.getBoundingClientRect();
-        if (e.clientX >= rect.left && e.clientX <= rect.right && 
-            e.clientY >= rect.top && e.clientY <= rect.bottom) {
-          startScrubbing(e);
+        const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        
+        if (!isNaN(video.duration) && video.duration > 0) {
+          video.currentTime = pos * video.duration;
+          progressBar.style.width = `${pos * 100}%`;
         }
       });
-
-      progressContainer.addEventListener('touchstart', (e) => {
-        // Only allow scrubbing if touch is actually on the progress bar
+      
+      document.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        
         const rect = progressContainer.getBoundingClientRect();
         const touch = e.touches[0];
-        if (touch.clientX >= rect.left && touch.clientX <= rect.right && 
-            touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
-          startScrubbing(e);
+        const pos = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width));
+        
+        if (!isNaN(video.duration) && video.duration > 0) {
+          video.currentTime = pos * video.duration;
+          progressBar.style.width = `${pos * 100}%`;
         }
       });
-
-      document.addEventListener('mousemove', (e) => {
-        if (isScrubbing) {
-          updateScrubberPosition(e);
-        }
-      });
-
-      document.addEventListener('touchmove', (e) => {
-        if (isScrubbing) {
-          updateScrubberPosition(e);
-        }
-      });
-
+      
       document.addEventListener('mouseup', (e) => {
-        if (isScrubbing) {
-          endScrubbing(e);
+        if (!isDragging) return;
+        
+        isDragging = false;
+        
+        if (wasPlayingBeforeScrubbing && !window.__resumePromptActive) {
+          const playPromise = video.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.log('Play after dragging interrupted:', error);
+            });
+          }
         }
+        
+        resetHideControlsTimeout();
       });
-
+      
       document.addEventListener('touchend', (e) => {
-        if (isScrubbing) {
-          endScrubbing(e);
+        if (!isDragging) return;
+        
+        isDragging = false;
+        
+        if (wasPlayingBeforeScrubbing && !window.__resumePromptActive) {
+          const playPromise = video.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.log('Play after dragging interrupted:', error);
+            });
+          }
         }
+        
+        resetHideControlsTimeout();
       });
 
       // Show controls on mouse move or touch

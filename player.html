@@ -2507,7 +2507,7 @@
         src: "https://ia601009.us.archive.org/23/items/kaithi-2019-1080p-hindi/Kaithi%2B2019%2B1080p%2BHindi.ia.mp4",
         type: "mp4",
         subtitles: [
-          { src: 'https://archive.org/download/kaithi-2019-1080p-hindi/Kaithi-2019-en.vtt', srclang: 'en', label: 'English', default: false }
+          { src: 'https://archive.org/download/kaithi-2019-1080p-hindi/Kaithi.2019.en.vtt', srclang: 'en', label: 'English', default: false }
         ]
       },
       /* Done */
@@ -5272,11 +5272,12 @@
 
       // Show play/pause overlay
       function showPlayPauseOverlay(isPlaying) {
+        if (!playPauseOverlay) return;
         const icon = playPauseOverlay.querySelector('i');
-        icon.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
+        if (icon) icon.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
         playPauseOverlay.classList.add('visible');
-
-        clearTimeout(playPauseOverlay.timeout);
+        // Always clear and reset timeout
+        if (playPauseOverlay.timeout) clearTimeout(playPauseOverlay.timeout);
         playPauseOverlay.timeout = setTimeout(() => {
           playPauseOverlay.classList.remove('visible');
         }, 5000);
@@ -5309,21 +5310,13 @@
       // Handle single click for play/pause (desktop)
       function handleSingleClick(e) {
         e.preventDefault();
-        
         // Debug: Log click events
         console.log('Video clicked, current time:', video.currentTime, 'duration:', video.duration);
-        
         // Only handle clicks if video is properly loaded
-        if (!video.duration || video.duration <= 0 || isNaN(video.duration)) {
-          return;
-        }
-        
-        clearTimeout(tapTimeout);
-        // Show overlay for 5 seconds, do not play/pause
+        if (!video.duration || video.duration <= 0 || isNaN(video.duration)) return;
+        // Always show overlay, even if it was hidden after menu/captions
         showPlayPauseOverlay(!video.paused);
-        tapTimeout = setTimeout(() => {
-          playPauseOverlay.classList.remove('visible');
-        }, 5000);
+        // No tapTimeout logic here; overlay handles its own timeout
       }
 
       // Handle touch events for seeking (mobile)

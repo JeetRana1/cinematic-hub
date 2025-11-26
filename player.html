@@ -5573,10 +5573,9 @@
       progressContainer.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return; // Only left mouse button
         
-        // Only allow interaction if clicking directly on the progress bar itself
-        const progressBarRect = progressBar.getBoundingClientRect();
-        if (e.clientX < progressBarRect.left || e.clientX > progressBarRect.right || 
-            e.clientY < progressBarRect.top || e.clientY > progressBarRect.bottom) {
+        const rect = progressContainer.getBoundingClientRect();
+        if (e.clientX < rect.left || e.clientX > rect.right || 
+            e.clientY < rect.top || e.clientY > rect.bottom) {
           return;
         }
         
@@ -5587,9 +5586,8 @@
           video.pause();
         }
         
-        // Update position immediately using progress container for calculation
-        const containerRect = progressContainer.getBoundingClientRect();
-        const pos = Math.max(0, Math.min(1, (e.clientX - containerRect.left) / containerRect.width));
+        // Update position immediately
+        const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
         if (!isNaN(video.duration) && video.duration > 0) {
           video.currentTime = pos * video.duration;
           progressBar.style.width = `${pos * 100}%`;
@@ -5599,12 +5597,11 @@
       });
       
       progressContainer.addEventListener('touchstart', (e) => {
-        // Only allow interaction if touching directly on the progress bar itself
-        const progressBarRect = progressBar.getBoundingClientRect();
+        const rect = progressContainer.getBoundingClientRect();
         const touch = e.touches[0];
         
-        if (touch.clientX < progressBarRect.left || touch.clientX > progressBarRect.right || 
-            touch.clientY < progressBarRect.top || touch.clientY > progressBarRect.bottom) {
+        if (touch.clientX < rect.left || touch.clientX > rect.right || 
+            touch.clientY < rect.top || touch.clientY > rect.bottom) {
           return;
         }
         
@@ -5615,9 +5612,8 @@
           video.pause();
         }
         
-        // Update position immediately using progress container for calculation
-        const containerRect = progressContainer.getBoundingClientRect();
-        const pos = Math.max(0, Math.min(1, (touch.clientX - containerRect.left) / containerRect.width));
+        // Update position immediately
+        const pos = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width));
         if (!isNaN(video.duration) && video.duration > 0) {
           video.currentTime = pos * video.duration;
           progressBar.style.width = `${pos * 100}%`;

@@ -8,7 +8,7 @@
   :-moz-full-screen .video-subtitles,
   :-ms-fullscreen .video-subtitles,
   .fullscreen-subtitles {
-    bottom: 6% !important;
+    bottom: 8% !important;
   }
 }
 /* subtitles.css */

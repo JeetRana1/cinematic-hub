@@ -6853,6 +6853,7 @@
           video.setAttribute('autoplay', '');
           video.setAttribute('controlsList', 'nodownload');
           video.setAttribute('oncontextmenu', 'return false;');
+          video.setAttribute('preload', 'auto');
           // Remove placeholder and play button
           const img = host.querySelector('#trailerPlaceholderImg');
           if (img) img.remove();
@@ -6863,7 +6864,7 @@
           // fallback: create video if not preloaded
           host.innerHTML = `
             <div class="video-container">
-              <video class="video-player" controls>
+              <video class="video-player" controls preload="auto">
                 <source src="${mp4Url}" type="video/mp4">
                 Your browser does not support the video tag.
               </video>
@@ -6873,6 +6874,37 @@
             </div>
           `;
         }
+        // Add spinner for trailer buffering
+        let spinner = host.querySelector('.trailer-loading-spinner');
+        if (!spinner) {
+          spinner = document.createElement('div');
+          spinner.className = 'trailer-loading-spinner';
+          spinner.style = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1000;width:48px;height:48px;border:6px solid #fff;border-top:6px solid #888;border-radius:50%;animation:spin 1s linear infinite;display:none;';
+          host.appendChild(spinner);
+        }
+        function showSpinner() { spinner.style.display = 'block'; }
+        function hideSpinner() { spinner.style.display = 'none'; }
+        // Attach spinner events
+        setTimeout(() => {
+          let v = host.querySelector('video');
+          if (v) {
+            v.addEventListener('waiting', showSpinner);
+            v.addEventListener('seeking', showSpinner);
+            v.addEventListener('stalled', showSpinner);
+            v.addEventListener('playing', hideSpinner);
+            v.addEventListener('canplay', hideSpinner);
+            v.addEventListener('canplaythrough', hideSpinner);
+            v.addEventListener('ended', hideSpinner);
+            // On mobile/landscape, reload and play after seek
+            v.addEventListener('seeked', function() {
+              if ((window.innerWidth <= 900 && window.matchMedia('(orientation: landscape)').matches) || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                v.load();
+                const playPromise = v.play();
+                if (playPromise !== undefined) { playPromise.catch(() => {}); }
+              }
+            });
+          }
+        }, 100);
       } else if (key) {
         createYTPlayerFor(host, key);
       } else {

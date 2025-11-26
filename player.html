@@ -1,3 +1,5 @@
+  // --- Fix: Pending play for not-yet-loaded video ---
+  let pendingPlay = false;
 <style>
   @media (orientation: portrait) and (max-width: 600px) {
         .time-display {
@@ -3626,6 +3628,7 @@
         // Set video attributes
         video.playsInline = true;
         video.preload = 'auto';
+        video.setAttribute('preload', 'auto');
         video.muted = false;
         video.autoplay = true;
         video.controls = false;
@@ -4818,12 +4821,14 @@
             spinner.className = 'video-loading-spinner';
             videoContainer.appendChild(spinner);
           }
+          spinner.style.display = 'block';
         }
         function hideSpinner() {
-          if (spinner) { spinner.remove(); spinner = null; }
+          if (spinner) { spinner.style.display = 'none'; }
         }
         video.addEventListener('waiting', showSpinner);
         video.addEventListener('seeking', showSpinner);
+        video.addEventListener('stalled', showSpinner);
         video.addEventListener('playing', hideSpinner);
         video.addEventListener('canplay', hideSpinner);
         video.addEventListener('canplaythrough', hideSpinner);
@@ -5024,6 +5029,13 @@
           playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
           return;
         }
+        if (video.readyState < 2) { // Not enough data to play
+          pendingPlay = true;
+          playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+          showPlayPauseOverlay(true);
+          resetHideControlsTimeout();
+          return;
+        }
         if (video.paused) {
           const playPromise = video.play();
           if (playPromise !== undefined) {
@@ -5039,6 +5051,16 @@
         }
         showPlayPauseOverlay(!video.paused);
         resetHideControlsTimeout();
+            // If play was requested before video was ready, play as soon as possible
+            video.addEventListener('canplay', function () {
+              if (pendingPlay) {
+                video.play();
+                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                showPlayPauseOverlay(true);
+                resetHideControlsTimeout();
+                pendingPlay = false;
+              }
+            });
       }
 
       // Set overlay click handler globally (after togglePlayPause is defined)
@@ -5447,7 +5469,14 @@
         pos = Math.max(0, Math.min(1, pos));
         video.currentTime = pos * video.duration;
 
-        if (wasPlayingBeforeScrubbing && !window.__resumePromptActive) {
+        // On mobile/landscape, force reload and play after seek to reduce buffering
+        if ((window.innerWidth <= 900 && window.matchMedia('(orientation: landscape)').matches) || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+          video.load();
+          const playPromise = video.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(() => {});
+          }
+        } else if (wasPlayingBeforeScrubbing && !window.__resumePromptActive) {
           const playPromise = video.play();
           if (playPromise !== undefined) {
             playPromise.catch(error => {

@@ -1,5 +1,5 @@
-/* Landscape mode: position subtitles lower */
-@media (orientation: landscape) and (max-width: 900px) {
+/* Landscape mode: position subtitles lower for screens >= 600px */
+@media (orientation: landscape) and (min-width: 600px) and (max-width: 900px) {
   .video-subtitles {
     bottom: 8% !important;
   }

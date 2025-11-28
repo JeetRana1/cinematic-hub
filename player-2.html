@@ -55,6 +55,12 @@
             background: #000;
         }
 
+        /* Move native subtitle (track) display higher */
+        video::cue {
+            position: absolute;
+            bottom: 12vh;
+        }
+
         /* MX Player Style Controls */
         .controls-overlay {
             position: absolute;
@@ -947,22 +953,10 @@ Try hosting subtitles on same server as video`;
         }
 
         // Handle subtitle cue changes
+        // Remove custom subtitle rendering to avoid duplicate subtitles
+        // Native browser rendering will be used
         function handleCueChange(e) {
-            const track = e.target;
-            const cues = track.activeCues;
-            subtitleContainer.innerHTML = '';
-            
-            console.log('Cue change triggered, active cues:', cues ? cues.length : 0);
-            
-            if (cues && cues.length > 0) {
-                Array.from(cues).forEach(cue => {
-                    const subtitleDiv = document.createElement('div');
-                    subtitleDiv.className = 'subtitle';
-                    subtitleDiv.textContent = cue.text;
-                    subtitleContainer.appendChild(subtitleDiv);
-                    console.log('Subtitle text:', cue.text);
-                });
-            }
+            // No-op: let the browser render subtitles
         }
 
         // Toggle subtitles

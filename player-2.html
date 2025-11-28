@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <!-- Continue Watching and Player Resume scripts -->
+        <script src="js/continue-watching.js"></script>
+        <script src="js/player-continue-watching.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MX Player - Cinematic Hub</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --mx-primary: #1976d2;
+            --mx-secondary: #2196f3;
+            --mx-dark: #0d47a1;
+            --mx-light: #bbdefb;
+            --mx-black: #000000;
+            --mx-white: #ffffff;
+            --mx-gray: #424242;
+            --mx-light-gray: #757575;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: var(--mx-black);
+            color: var(--mx-white);
+            overflow: hidden;
+            position: relative;
+            height: 100vh;
+        }
+
+        /* Video Container */
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
+
+        /* MX Player Style Controls */
+        .controls-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.7) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .controls-overlay.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Top Controls */
+        .top-controls {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: var(--mx-white);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .video-title {
+            font-size: 16px;
+            font-weight: 500;
+            text-align: center;
+            flex: 1;
+            margin: 0 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .top-right-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: var(--mx-white);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Bottom Controls */
+        .bottom-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+        }
+
+        .progress-container {
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-filled {
+            height: 100%;
+            background: var(--mx-primary);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.1s linear;
+            position: relative;
+        }
+
+        .progress-thumb {
+            position: absolute;
+            top: 50%;
+            right: -8px;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            background: var(--mx-primary);
+            border: 2px solid var(--mx-white);
+            border-radius: 50%;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 10;
+        }
+
+        .progress-bar:hover .progress-thumb,
+        .controls-overlay.visible .progress-thumb {
+            opacity: 1;
+        }
+
+        .progress-buffered {
+            height: 100%;
+            background: rgba(255,255,255,0.5);
+            border-radius: 2px;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 12px;
+            color: var(--mx-white);
+        }
+
+        .main-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .left-controls, .right-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .play-pause-btn {
+            background: var(--mx-primary);
+            border: none;
+            color: var(--mx-white);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 20px;
+        }
+
+        .play-pause-btn:hover {
+            background: var(--mx-secondary);
+        }
+
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .volume-slider {
+            width: 80px;
+            height: 4px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .volume-filled {
+            height: 100%;
+            background: var(--mx-primary);
+            border-radius: 2px;
+            width: 70%;
+        }
+
+        /* Gesture Indicators */
+        .gesture-indicator {
+            position: absolute;
+            top: 80%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: var(--mx-white);
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .gesture-indicator.visible {
+            opacity: 1;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid var(--mx-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        .loading-spinner.active {
+            display: block;
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* MX Player Menu */
+        .mx-menu {
+            position: absolute;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.9);
+            border-radius: 10px 0 0 10px;
+            padding: 20px 10px;
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .mx-menu.visible {
+            display: flex;
+        }
+
+        .menu-item {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: var(--mx-white);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .menu-item:hover {
+            background: var(--mx-primary);
+        }
+
+        /* Subtitle Container */
+        .subtitle-container {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+            pointer-events: none;
+            z-index: 100;
+            display: block;
+        }
+
+        .subtitle {
+            display: inline-block;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 1.4;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9);
+            margin: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        /* Ensure subtitle container is visible */
+        .subtitle-container:empty::before {
+            content: "";
+            display: block;
+            height: 1px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .video-title {
+                font-size: 14px;
+                margin: 0 10px;
+            }
+            
+            .volume-slider {
+                width: 60px;
+            }
+            
+            .control-btn, .back-btn {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .play-pause-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+        }
+
+        /* Tap Overlay Styles */
+        .tap-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: none;
+            pointer-events: none;
+            z-index: 200;
+        }
+
+        .tap-overlay.visible {
+            display: flex;
+        }
+
+        .tap-zone {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tap-indicator {
+            pointer-events: all;
+            cursor: pointer;
+            background: transparent;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.3s ease;
+        }
+
+        .tap-overlay.visible .tap-indicator {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .tap-indicator i {
+            font-size: 32px;
+            margin-bottom: 2px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .tap-indicator span {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+
+        .center-zone .tap-indicator {
+            background: transparent;
+            padding: 20px 25px;
+        }
+
+        .center-zone .tap-indicator i {
+            font-size: 40px;
+        }
+
+        /* Gesture Feedback Styles */
+        .gesture-feedback {
+            position: absolute;
+            bottom: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 300;
+        }
+
+        .gesture-feedback.visible {
+            opacity: 1;
+            bottom: -50px;
+        }
+
+        .left-feedback {
+            background: rgba(244, 67, 54, 0.9);
+        }
+
+        .center-feedback {
+            background: var(--mx-primary);
+        }
+
+        .right-feedback {
+            background: rgba(76, 175, 80, 0.9);
+        }
+    </style>
+</head>
+<body>
+    <div class="video-container">
+        <video id="videoPlayer" preload="metadata"></video>
+        
+        <!-- Loading Spinner -->
+        <div class="loading-spinner" id="loadingSpinner"></div>
+        
+        <!-- Gesture Indicator -->
+        <div class="gesture-indicator" id="gestureIndicator"></div>
+        
+        <!-- Controls Overlay -->
+        <div class="controls-overlay" id="controlsOverlay">
+            <!-- Top Controls -->
+            <div class="top-controls">
+                <button class="back-btn" onclick="goBack()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="video-title" id="videoTitle">Loading...</div>
+                <div class="top-right-controls">
+                    <button class="control-btn" onclick="toggleSubtitle()" title="Toggle Subtitles">
+                        <i class="fas fa-closed-captioning"></i>
+                    </button>
+                    <button class="control-btn" onclick="toggleMenu()" title="More Options">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Bottom Controls -->
+            <div class="bottom-controls">
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar">
+                        <div class="progress-buffered" id="progressBuffered"></div>
+                        <div class="progress-filled" id="progressFilled">
+                            <div class="progress-thumb"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="time-display">
+                    <span id="currentTime">00:00</span>
+                    <span id="duration">00:00</span>
+                </div>
+                
+                <div class="main-controls">
+                    <div class="left-controls">
+                        <button class="control-btn" onclick="togglePlayback()" title="Rewind 10s">
+                            <i class="fas fa-rotate-left"></i>
+                        </button>
+                        <button class="play-pause-btn" id="playPauseBtn" onclick="togglePlayPause()" title="Play/Pause">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button class="control-btn" onclick="togglePlayback()" title="Forward 10s">
+                            <i class="fas fa-rotate-right"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="right-controls">
+                        <div class="volume-container">
+                            <button class="control-btn" onclick="toggleMute()" title="Mute/Unmute">
+                                <i class="fas fa-volume-up" id="volumeIcon"></i>
+                            </button>
+                            <div class="volume-slider" id="volumeSlider" title="Volume">
+                                <div class="volume-filled" id="volumeFilled"></div>
+                            </div>
+                        </div>
+                        <button class="control-btn" onclick="toggleFullscreen()" title="Fullscreen">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- MX Player Menu -->
+        <div class="mx-menu" id="mxMenu">
+            <button class="menu-item" onclick="changePlaybackSpeed()">
+                <i class="fas fa-tachometer-alt"></i>
+            </button>
+            <button class="menu-item" onclick="toggleSubtitleStyle()">
+                <i class="fas fa-text-height"></i>
+            </button>
+            <button class="menu-item" onclick="toggleAudioTrack()">
+                <i class="fas fa-headphones"></i>
+            </button>
+            <button class="menu-item" onclick="toggleLock()">
+                <i class="fas fa-lock"></i>
+            </button>
+            <button class="menu-item" onclick="shareVideo()">
+                <i class="fas fa-share"></i>
+            </button>
+        </div>
+        
+        <!-- Subtitle Container -->
+        <div class="subtitle-container" id="subtitleContainer"></div>
+        
+        <!-- Tap Overlay for Controls -->
+        <div class="tap-overlay" id="tapOverlay">
+            <div class="tap-zone left-zone" data-action="rewind">
+                <div class="tap-indicator" onclick="handleTapZoneClick('rewind')">
+                    <i class="fas fa-rotate-left"></i>
+                    <span>-10s</span>
+                </div>
+                <div class="gesture-feedback left-feedback" id="leftFeedback">-10s</div>
+            </div>
+            <div class="tap-zone center-zone" data-action="playpause">
+                <div class="tap-indicator" onclick="handleTapZoneClick('playpause')">
+                    <i class="fas fa-play" id="centerPlayIcon"></i>
+                    <span id="centerPlayText">Play</span>
+                </div>
+                <div class="gesture-feedback center-feedback" id="centerFeedback">Play/Pause</div>
+            </div>
+            <div class="tap-zone right-zone" data-action="forward">
+                <div class="tap-indicator" onclick="handleTapZoneClick('forward')">
+                    <i class="fas fa-rotate-right"></i>
+                    <span>+10s</span>
+                </div>
+                <div class="gesture-feedback right-feedback" id="rightFeedback">+10s</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Movie database (same as original)
+        const movieDatabase = {
+            "tourist family": {
+                src: "https://ia601005.us.archive.org/3/items/tourist-family-2025-hindi-1080p/Tourist%20Family-%282025%29-Hindi-1080p.mp4",
+                type: "mp4",
+                subtitles: [
+                    { src: 'https://archive.org/download/tourist-family-2025-hindi-1080p/Tourist-Family-%282025%29-en.vtt', srclang: 'en', label: 'English', default: false }
+                ]
+            },
+            "manjummel boys": {
+                src: "https://ia800304.us.archive.org/11/items/manjummel-boys-2024/Manjummel%20Boys%20%282024%29.ia.mp4",
+                type: "mp4",
+                subtitles: [
+                    { src: 'https://archive.org/download/manjummel-boys-2024/Manjummel-Boys-%282024%29-en.vtt', srclang: 'en', label: 'English', default: false }
+                ]
+            },
+            "kaithi": {
+                src: "https://ia601009.us.archive.org/23/items/kaithi-2019-1080p-hindi/Kaithi%2B2019%2B1080p%2BHindi.ia.mp4",
+                type: "mp4",
+                subtitles: [
+                    { src: 'https://archive.org/download/kaithi-2019-1080p-hindi/Kaithi-2019-en.vtt', srclang: 'en', label: 'English', default: false }
+                ]
+            },
+            "vikram": {
+                src: "https://ia902807.us.archive.org/8/items/vikram-2022-lcu.mp-4/Vikram-%25282022%2529-%255BLCU%255D.mp4.mp4",
+                type: "mp4",
+                subtitles: [
+                    { src: 'https://archive.org/download/vikram-2022-lcu.mp-4/Vikram-2022-en.vtt', srclang: 'en', label: 'English', default: false }
+                ]
+            }
+        };
+
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const title = urlParams.get('title') || 'Unknown Movie';
+        const year = urlParams.get('year') || '';
+        const movieId = urlParams.get('movieId') || '';
+
+        // Video elements
+        const video = document.getElementById('videoPlayer');
+        const videoTitle = document.getElementById('videoTitle');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressFilled = document.getElementById('progressFilled');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationEl = document.getElementById('duration');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeFilled = document.getElementById('volumeFilled');
+        const volumeIcon = document.getElementById('volumeIcon');
+        const controlsOverlay = document.getElementById('controlsOverlay');
+        const tapOverlay = document.getElementById('tapOverlay');
+        const gestureIndicator = document.getElementById('gestureIndicator');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const subtitleContainer = document.getElementById('subtitleContainer');
+        const mxMenu = document.getElementById('mxMenu');
+
+        // Variables
+        let isPlaying = false;
+        let isDragging = false;
+        let isLocked = false;
+        let isVolumeGesturing = false;
+        let isBrightnessGesturing = false;
+        let isSeeking = false;
+        let subtitlesEnabled = true;
+        let playbackSpeed = 1;
+        let currentBrightness = 1;
+        let initialBrightness = 1;
+        let initialVolume = 1;
+        let tapOverlayVisible = false;
+        let controlsTimeout;
+        let longPressTimer;
+        let doubleTapTimer;
+        let gestureIndicatorTimeout;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchStartTime = 0;
+        let gestureStartX = 0;
+        let gestureStartY = 0;
+        let lastTapTime = 0;
+        let tapCount = 0;
+
+        // Set video title
+        videoTitle.textContent = title;
+
+        // Get video source
+        let videoSrc = urlParams.get('src') || urlParams.get('video') || '';
+        let sourceType = 'mp4';
+
+        // Check movie database for the video source
+        const normalizedTitle = title.toLowerCase().trim();
+        console.log('Looking for movie:', normalizedTitle);
+        console.log('Available movies:', Object.keys(movieDatabase));
+        
+        if (movieDatabase[normalizedTitle]) {
+            const movieData = movieDatabase[normalizedTitle];
+            videoSrc = movieData.src;
+            sourceType = movieData.type;
+            console.log('Found movie data:', movieData);
+            console.log('Movie has subtitles:', !!movieData.subtitles);
+        } else {
+            console.log('Movie not found in database, using URL parameters');
+        }
+
+        // Initialize video
+        function initVideo() {
+            if (videoSrc) {
+                video.src = videoSrc;
+                video.load();
+                
+                // Auto-play when ready
+                video.addEventListener('canplay', () => {
+                    video.play().then(() => {
+                        isPlaying = true;
+                        updatePlayPauseButton();
+                    }).catch(err => {
+                        console.log('Auto-play failed:', err);
+                    });
+                });
+                
+                // Initialize subtitle container first
+                initSubtitleContainer();
+                
+                // Load subtitles if available
+                if (movieDatabase[normalizedTitle] && movieDatabase[normalizedTitle].subtitles) {
+                    loadSubtitles(movieDatabase[normalizedTitle].subtitles);
+                }
+                
+                // Set up subtitle track listeners after video loads
+                video.addEventListener('loadedmetadata', () => {
+                    setupSubtitleTracks();
+                });
+            } else {
+                videoTitle.textContent = 'No video source available';
+                showError('No video source available');
+            }
+        }
+
+        // Initialize subtitle container
+        function initSubtitleContainer() {
+            if (!subtitleContainer) {
+                subtitleContainer = document.getElementById('subtitleContainer');
+            }
+            subtitleContainer.style.display = subtitlesEnabled ? 'block' : 'none';
+            
+            // Check if current movie has subtitles
+            const currentMovie = movieDatabase[normalizedTitle];
+            if (subtitlesEnabled && currentMovie && currentMovie.subtitles) {
+                subtitleContainer.innerHTML = '<div class="subtitle">Loading subtitles...</div>';
+            } else if (subtitlesEnabled) {
+                subtitleContainer.innerHTML = '<div class="subtitle">No subtitles available for this movie</div>';
+            }
+        }
+
+        // Setup subtitle tracks after video loads
+        function setupSubtitleTracks() {
+            const tracks = video.textTracks;
+            for (let i = 0; i < tracks.length; i++) {
+                if (tracks[i].kind === 'subtitles') {
+                    tracks[i].mode = subtitlesEnabled ? 'showing' : 'hidden';
+                    tracks[i].addEventListener('cuechange', handleCueChange);
+                }
+            }
+        }
+
+        // Load subtitles
+        function loadSubtitles(subtitleData) {
+            console.log('Loading subtitles:', subtitleData);
+            
+            subtitleData.forEach(async (subtitle, index) => {
+                try {
+                    // Test if subtitle file is accessible
+                    console.log(`Testing subtitle URL ${index + 1}:`, subtitle.src);
+                    const response = await fetch(subtitle.src, { method: 'HEAD' });
+                    console.log(`Subtitle ${index + 1} status:`, response.status);
+                    
+                    if (response.ok) {
+                        const track = document.createElement('track');
+                        track.kind = 'subtitles';
+                        track.label = subtitle.label;
+                        track.srclang = subtitle.srclang;
+                        track.src = subtitle.src;
+                        if (subtitle.default) track.default = true;
+                        video.appendChild(track);
+                        console.log('Added subtitle track:', subtitle.src);
+                        
+                        // Set up track event listeners
+                        track.addEventListener('load', () => {
+                            console.log(`Subtitle track ${subtitle.label} loaded successfully`);
+                            track.mode = subtitlesEnabled ? 'showing' : 'hidden';
+                        });
+                        
+                        track.addEventListener('error', (e) => {
+                            console.error(`Error loading subtitle track ${subtitle.label}:`, e);
+                        });
+                    } else {
+                        console.error(`Subtitle file not accessible: ${subtitle.src} (Status: ${response.status})`);
+                        // Create fallback subtitle
+                        createFallbackSubtitle();
+                    }
+                } catch (error) {
+                    console.error('Error testing subtitle URL (CORS or network issue):', error);
+                    // Create fallback subtitle for CORS issues
+                    createFallbackSubtitle();
+                }
+            });
+            
+            // Set up subtitle event listeners
+            video.textTracks.addEventListener('addtrack', (e) => {
+                const track = e.target;
+                if (track.kind === 'subtitles') {
+                    track.mode = subtitlesEnabled ? 'showing' : 'hidden';
+                    track.addEventListener('cuechange', handleCueChange);
+                    console.log('Subtitle track added:', track.label);
+                }
+            });
+        }
+
+        // Create fallback subtitle when CORS blocks external files
+        function createFallbackSubtitle() {
+            console.log('Creating fallback subtitle due to CORS/network issues');
+            
+            // Create a simple VTT content as data URL
+            const vttContent = `WEBVTT
+
+00:00:00.000 --> 00:00:03.000
+Subtitle loading failed due to CORS restrictions
+
+00:00:05.000 --> 00:00:08.000
+This is a fallback subtitle
+
+00:00:10.000 --> 00:00:13.000
+External subtitle files are blocked by browser security
+
+00:00:15.000 --> 00:00:18.000
+CC button works but external files need CORS headers
+
+00:00:20.000 --> 00:00:23.000
+Subtitle system is functioning correctly
+
+00:00:25.000 --> 00:00:28.000
+Try hosting subtitles on same server as video`;
+            
+            const dataUrl = 'data:text/vtt;base64,' + btoa(vttContent);
+            
+            const track = document.createElement('track');
+            track.kind = 'subtitles';
+            track.label = 'Fallback English';
+            track.srclang = 'en';
+            track.src = dataUrl;
+            track.default = true;
+            video.appendChild(track);
+            
+            console.log('Added fallback subtitle track');
+            
+            // Set up track event listeners
+            track.addEventListener('load', () => {
+                console.log('Fallback subtitle track loaded successfully');
+                track.mode = subtitlesEnabled ? 'showing' : 'hidden';
+            });
+        }
+
+        // Handle subtitle cue changes
+        function handleCueChange(e) {
+            const track = e.target;
+            const cues = track.activeCues;
+            subtitleContainer.innerHTML = '';
+            
+            console.log('Cue change triggered, active cues:', cues ? cues.length : 0);
+            
+            if (cues && cues.length > 0) {
+                Array.from(cues).forEach(cue => {
+                    const subtitleDiv = document.createElement('div');
+                    subtitleDiv.className = 'subtitle';
+                    subtitleDiv.textContent = cue.text;
+                    subtitleContainer.appendChild(subtitleDiv);
+                    console.log('Subtitle text:', cue.text);
+                });
+            }
+        }
+
+        // Toggle subtitles
+        function toggleSubtitle() {
+            subtitlesEnabled = !subtitlesEnabled;
+            
+            // Initialize container if needed
+            initSubtitleContainer();
+            
+            const tracks = video.textTracks;
+            
+            // Toggle all subtitle tracks
+            for (let i = 0; i < tracks.length; i++) {
+                if (tracks[i].kind === 'subtitles') {
+                    tracks[i].mode = subtitlesEnabled ? 'showing' : 'hidden';
+                }
+            }
+            
+            subtitleContainer.style.display = subtitlesEnabled ? 'block' : 'none';
+            showGestureIndicator(subtitlesEnabled ? 'CC ON' : 'CC OFF');
+        }
+
+        // Play/Pause toggle
+        function togglePlayPause() {
+            if (isPlaying) {
+                video.pause();
+                isPlaying = false;
+            } else {
+                video.play();
+                isPlaying = true;
+            }
+            updatePlayPauseButton();
+            updateCenterPlayButton();
+        }
+
+        function updatePlayPauseButton() {
+            const icon = playPauseBtn.querySelector('i');
+            icon.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
+        }
+
+        function updateCenterPlayButton() {
+            centerPlayIcon.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
+            centerPlayText.textContent = isPlaying ? 'Pause' : 'Play';
+        }
+
+        // Progress bar
+        function updateProgress() {
+            const progress = (video.currentTime / video.duration) * 100;
+            progressFilled.style.width = progress + '%';
+            currentTimeEl.textContent = formatTime(video.currentTime);
+            durationEl.textContent = formatTime(video.duration);
+        }
+
+        function updateBuffered() {
+            if (video.buffered.length > 0) {
+                const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+                const bufferedProgress = (bufferedEnd / video.duration) * 100;
+                progressBuffered.style.width = bufferedProgress + '%';
+            }
+        }
+
+        // Enhanced seek functionality
+        function startSeek(e) {
+            if (!video.duration) return;
+            isSeeking = true;
+            updateSeekPosition(e);
+            video.pause(); // Pause video while seeking
+        }
+
+        function updateSeekPosition(e) {
+            if (!isSeeking || !video.duration) return;
+            
+            const rect = progressBar.getBoundingClientRect();
+            const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            const newTime = pos * video.duration;
+            
+            // Update progress bar immediately for smooth feedback
+            progressFilled.style.width = (pos * 100) + '%';
+            currentTimeEl.textContent = formatTime(newTime);
+            
+            // Show time preview
+            showGestureIndicator(formatTime(newTime));
+        }
+
+        function endSeek(e) {
+            if (!isSeeking) return;
+            
+            const rect = progressBar.getBoundingClientRect();
+            const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            const newTime = pos * video.duration;
+            
+            // Check if video.duration is valid and newTime is finite
+            if (video.duration && !isNaN(video.duration) && isFinite(newTime)) {
+                video.currentTime = newTime;
+            }
+            
+            isSeeking = false;
+            
+            // Resume video if it was playing before seeking
+            if (isPlaying) {
+                video.play();
+            }
+            
+            hideGestureIndicator();
+        }
+
+        // Enhanced seek event listeners
+        progressBar.addEventListener('mousedown', startSeek, { passive: false });
+        document.addEventListener('mousemove', updateSeekPosition, { passive: false });
+        document.addEventListener('mouseup', endSeek, { passive: false });
+        
+        // Touch support for mobile
+        progressBar.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousedown', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            startSeek(mouseEvent);
+        }, { passive: false });
+        
+        document.addEventListener('touchmove', (e) => {
+            if (isSeeking) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousemove', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                updateSeekPosition(mouseEvent);
+            }
+        }, { passive: false });
+        
+        document.addEventListener('touchend', (e) => {
+            if (isSeeking) {
+                e.preventDefault();
+                endSeek(e);
+            }
+        }, { passive: false });
+
+        // Volume control
+        function updateVolume() {
+            const volume = video.volume;
+            volumeFilled.style.width = (volume * 100) + '%';
+            
+            if (volume === 0 || isMuted) {
+                volumeIcon.className = 'fas fa-volume-mute';
+            } else if (volume < 0.5) {
+                volumeIcon.className = 'fas fa-volume-down';
+            } else {
+                volumeIcon.className = 'fas fa-volume-up';
+            }
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            video.muted = isMuted;
+            updateVolume();
+        }
+
+        function setVolume(e) {
+            const rect = volumeSlider.getBoundingClientRect();
+            const pos = (e.clientX - rect.left) / rect.width;
+            video.volume = Math.max(0, Math.min(1, pos));
+            updateVolume();
+        }
+
+        volumeSlider.addEventListener('mousedown', setVolume);
+        document.addEventListener('mousemove', (e) => {
+            if (e.buttons === 1 && volumeSlider.contains(e.target)) {
+                setVolume(e);
+            }
+        });
+
+        // Controls visibility
+        function showControls() {
+            if (isLocked) return;
+            controlsOverlay.classList.add('visible');
+            clearTimeout(controlsTimeout);
+            controlsTimeout = setTimeout(() => {
+                controlsOverlay.classList.remove('visible');
+            }, 3000);
+        }
+
+        function hideControls() {
+            if (isLocked) return;
+            controlsOverlay.classList.remove('visible');
+        }
+
+        // Show tap overlay
+        function showTapOverlay() {
+            console.log('showTapOverlay called');
+            if (isLocked) {
+                console.log('Screen is locked, not showing overlay');
+                return;
+            }
+            console.log('Adding visible class to tap overlay');
+            tapOverlay.classList.add('visible');
+            controlsOverlay.classList.add('visible');
+            tapOverlayVisible = true;
+            updateCenterPlayButton();
+            
+            // Clear existing timeout and set new one
+            clearTimeout(controlsTimeout);
+            controlsTimeout = setTimeout(() => {
+                hideTapOverlay();
+            }, 3000);
+        }
+
+        // Hide tap overlay
+        function hideTapOverlay() {
+            tapOverlay.classList.remove('visible');
+            controlsOverlay.classList.remove('visible');
+            tapOverlayVisible = false;
+        }
+
+        // Toggle tap overlay
+        function toggleTapOverlay() {
+            console.log('toggleTapOverlay called, current state:', tapOverlayVisible);
+            if (tapOverlayVisible) {
+                hideTapOverlay();
+            } else {
+                showTapOverlay();
+            }
+        }
+
+        // Handle tap zone clicks
+        function handleTapZoneClick(action) {
+            // Reset the auto-hide timer when user interacts
+            clearTimeout(controlsTimeout);
+            controlsTimeout = setTimeout(() => {
+                hideTapOverlay();
+            }, 3000);
+            
+            switch(action) {
+                case 'rewind':
+                    video.currentTime = Math.max(0, video.currentTime - 10);
+                    showTapFeedback('leftFeedback', '-10s');
+                    break;
+                case 'playpause':
+                    togglePlayPause();
+                    showTapFeedback('centerFeedback', isPlaying ? 'Pause' : 'Play');
+                    break;
+                case 'forward':
+                    video.currentTime = Math.min(video.duration, video.currentTime + 10);
+                    showTapFeedback('rightFeedback', '+10s');
+                    break;
+            }
+        }
+
+        // Show tap feedback below buttons
+        function showTapFeedback(elementId, text) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = text;
+                element.classList.add('visible');
+                setTimeout(() => {
+                    element.classList.remove('visible');
+                }, 1500);
+            }
+        }
+
+        // Enhanced Touch gestures (MX Player style)
+        function handleTouchStart(e) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = Date.now();
+            gestureStartX = touchStartX;
+            gestureStartY = touchStartY;
+            
+            // Clear any existing timers
+            clearTimeout(longPressTimer);
+            clearTimeout(doubleTapTimer);
+            
+            // Start long press timer
+            longPressTimer = setTimeout(() => {
+                if (!isLocked) {
+                    showGestureIndicator('🔒 Long Press - Lock Screen');
+                    toggleLock();
+                }
+            }, 500);
+            
+            // Check for double tap
+            const currentTime = Date.now();
+            if (currentTime - lastTapTime < 300) {
+                tapCount++;
+                if (tapCount === 2) {
+                    clearTimeout(longPressTimer);
+                    handleDoubleTap();
+                    tapCount = 0;
+                }
+            } else {
+                tapCount = 1;
+            }
+            lastTapTime = currentTime;
+        }
+
+        function handleTouchMove(e) {
+            if (isLocked) return;
+            
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            const deltaX = currentX - gestureStartX;
+            const deltaY = currentY - gestureStartY;
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            
+            // Cancel long press if finger moved
+            if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+                clearTimeout(longPressTimer);
+            }
+            
+            // Determine gesture type based on starting position
+            if (!isSeeking && !isVolumeGesturing && !isBrightnessGesturing) {
+                if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                    // Horizontal gesture - seeking
+                    if (Math.abs(deltaX) > 30) {
+                        isSeeking = true;
+                        initialVolume = video.volume;
+                        showGestureIndicator('⏩ Seeking...');
+                    }
+                } else {
+                    // Vertical gesture
+                    if (gestureStartX < screenWidth / 3) {
+                        // Left side - brightness
+                        isBrightnessGesturing = true;
+                        showGestureIndicator('🔆 Brightness');
+                    } else if (gestureStartX > screenWidth * 2 / 3) {
+                        // Right side - volume
+                        isVolumeGesturing = true;
+                        initialVolume = video.volume;
+                        showGestureIndicator('🔊 Volume');
+                    }
+                }
+            }
+            
+            // Handle ongoing gestures
+            if (isSeeking) {
+                const seekAmount = (deltaX / screenWidth) * video.duration;
+                const newTime = Math.max(0, Math.min(video.duration, video.currentTime + seekAmount));
+                video.currentTime = newTime;
+                showGestureIndicator(formatTime(newTime));
+            } else if (isVolumeGesturing) {
+                const volumeChange = -(deltaY / screenHeight);
+                const newVolume = Math.max(0, Math.min(1, initialVolume + volumeChange));
+                video.volume = newVolume;
+                showGestureIndicator('🔊 ' + Math.round(newVolume * 100) + '%');
+            } else if (isBrightnessGesturing) {
+                const brightnessChange = -(deltaY / screenHeight);
+                currentBrightness = Math.max(0, Math.min(1, initialBrightness + brightnessChange));
+                applyBrightness(currentBrightness);
+                showGestureIndicator('🔆 ' + Math.round(currentBrightness * 100) + '%');
+            }
+        }
+
+        function handleTouchEnd(e) {
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+            const deltaTime = Date.now() - touchStartTime;
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            
+            // Clear timers
+            clearTimeout(longPressTimer);
+            clearTimeout(doubleTapTimer);
+            
+            // Reset gesture states
+            if (isSeeking) {
+                showGestureIndicator('⏩ Seek Complete');
+                isSeeking = false;
+            } else if (isVolumeGesturing) {
+                isVolumeGesturing = false;
+            } else if (isBrightnessGesturing) {
+                isBrightnessGesturing = false;
+            }
+            
+            // Handle single tap (if not a swipe and not double tap)
+            if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10 && deltaTime < 200 && tapCount === 1) {
+                doubleTapTimer = setTimeout(() => {
+                    handleSingleTap(touchStartX, touchStartY, screenWidth);
+                    tapCount = 0;
+                }, 300);
+            }
+            
+            // Handle swipe gestures
+            if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) && deltaTime < 500) {
+                handleSwipe(deltaX, touchStartX, screenWidth);
+            }
+        }
+
+        function handleSingleTap(x, y, screenWidth) {
+            if (isLocked) {
+                showGestureIndicator('🔓 Screen Unlocked');
+                isLocked = false;
+                showControls();
+                return;
+            }
+            
+            // Tap zones for different actions
+            if (x < screenWidth * 0.3) {
+                // Left side - rewind 10 seconds
+                video.currentTime = Math.max(0, video.currentTime - 10);
+                showGestureIndicator('⏪ -10s');
+            } else if (x > screenWidth * 0.7) {
+                // Right side - forward 10 seconds
+                video.currentTime = Math.min(video.duration, video.currentTime + 10);
+                showGestureIndicator('⏩ +10s');
+            } else {
+                // Center - play/pause
+                togglePlayPause();
+            }
+        }
+
+        function handleDoubleTap() {
+            if (isLocked) return;
+            
+            // Double tap center to toggle fullscreen
+            toggleFullscreen();
+            showGestureIndicator('📱 Fullscreen');
+        }
+
+        function handleSwipe(deltaX, startX, screenWidth) {
+            if (isLocked) return;
+            
+            // Horizontal swipe for seeking (already handled in touchMove)
+            // This is for additional swipe actions if needed
+            if (startX < screenWidth * 0.1) {
+                // Swipe from left edge - could trigger menu or other action
+                showGestureIndicator('📋 Menu');
+                toggleMenu();
+            }
+        }
+
+        function applyBrightness(brightness) {
+            // Apply brightness filter to video
+            video.style.filter = `brightness(${brightness})`;
+            // Show gesture indicator
+        }
+
+        function showGestureIndicator(text) {
+            gestureIndicator.textContent = text;
+            gestureIndicator.style.opacity = '1';
+            clearTimeout(gestureIndicatorTimeout);
+            gestureIndicatorTimeout = setTimeout(() => {
+                gestureIndicator.style.opacity = '0';
+            }, 1500);
+        }
+
+        // Hide gesture indicator
+        function hideGestureIndicator() {
+            gestureIndicator.style.opacity = '0';
+            clearTimeout(gestureIndicatorTimeout);
+        }
+
+        // Menu functions
+        function toggleMenu() {
+            mxMenu.classList.toggle('visible');
+        }
+
+        function changePlaybackSpeed() {
+            const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
+            const currentIndex = speeds.indexOf(playbackSpeed);
+            playbackSpeed = speeds[(currentIndex + 1) % speeds.length];
+            video.playbackRate = playbackSpeed;
+            showGestureIndicator(playbackSpeed + 'x');
+            toggleMenu();
+        }
+
+        function toggleSubtitleStyle() {
+            subtitlesEnabled = !subtitlesEnabled;
+            subtitleContainer.style.display = subtitlesEnabled ? 'block' : 'none';
+            showGestureIndicator(subtitlesEnabled ? 'CC ON' : 'CC OFF');
+            toggleMenu();
+        }
+
+        function toggleAudioTrack() {
+            showGestureIndicator('Audio Track');
+            toggleMenu();
+        }
+
+        function toggleLock() {
+            isLocked = !isLocked;
+            showGestureIndicator(isLocked ? '🔒' : '🔓');
+            toggleMenu();
+            if (isLocked) {
+                hideControls();
+            } else {
+                showControls();
+            }
+        }
+
+        function shareVideo() {
+            if (navigator.share) {
+                navigator.share({
+                    title: title,
+                    url: window.location.href
+                });
+            } else {
+                navigator.clipboard.writeText(window.location.href);
+                showGestureIndicator('Link Copied');
+            }
+            toggleMenu();
+        }
+
+        function togglePlayback() {
+            if (event.target.closest('.fa-step-backward')) {
+                video.currentTime -= 10;
+            } else if (event.target.closest('.fa-step-forward')) {
+                video.currentTime += 10;
+            }
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+
+        // Utility functions
+        function formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            
+            if (hours > 0) {
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            } else {
+                return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+        }
+
+        function showError(message) {
+            videoTitle.textContent = 'Error: ' + message;
+        }
+
+        // Video event listeners
+        video.addEventListener('timeupdate', updateProgress);
+        video.addEventListener('progress', updateBuffered);
+        video.addEventListener('volumechange', updateVolume);
+        video.addEventListener('waiting', () => loadingSpinner.classList.add('active'));
+        video.addEventListener('canplay', () => loadingSpinner.classList.remove('active'));
+        video.addEventListener('ended', () => {
+            isPlaying = false;
+            updatePlayPauseButton();
+            updateCenterPlayButton();
+        });
+
+        // Touch event listeners
+        video.addEventListener('touchstart', handleTouchStart);
+        video.addEventListener('touchend', handleTouchEnd);
+
+        // Mouse/touch events for controls
+        video.addEventListener('click', (e) => {
+            if (!isLocked) {
+                console.log('Video clicked, showing tap overlay');
+                toggleTapOverlay();
+            }
+        });
+
+        controlsOverlay.addEventListener('click', (e) => {
+            if (e.target === controlsOverlay || e.target.closest('.bottom-controls')) {
+                showControls();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case ' ':
+                    e.preventDefault();
+                    togglePlayPause();
+                    break;
+                case 'ArrowRight':
+                    video.currentTime += 10;
+                    break;
+                case 'ArrowLeft':
+                    video.currentTime -= 10;
+                    break;
+                case 'ArrowUp':
+                    video.volume = Math.min(1, video.volume + 0.1);
+                    break;
+                case 'ArrowDown':
+                    video.volume = Math.max(0, video.volume - 0.1);
+                    break;
+                case 'f':
+                    toggleFullscreen();
+                    break;
+                case 'm':
+                    toggleMute();
+                    break;
+                case 'Escape':
+                    hideTapOverlay();
+                    break;
+                case 'Enter':
+                    toggleTapOverlay();
+                    break;
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, initializing...');
+            
+            // Check if tap overlay exists
+            if (!tapOverlay) {
+                console.error('Tap overlay element not found!');
+            } else {
+                console.log('Tap overlay element found:', tapOverlay);
+            }
+            
+            initVideo();
+            showControls();
+        });
+    </script>
+</body>
+</html>

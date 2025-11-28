@@ -737,9 +737,27 @@
         // Initialize video
         function initVideo() {
             if (videoSrc) {
+                // Remove any existing <track> elements
+                const oldTracks = video.querySelectorAll('track');
+                oldTracks.forEach(track => track.remove());
+
+                // Add subtitle tracks before loading video
+                if (movieDatabase[normalizedTitle] && movieDatabase[normalizedTitle].subtitles) {
+                    const subtitleData = movieDatabase[normalizedTitle].subtitles;
+                    subtitleData.forEach(subtitle => {
+                        const track = document.createElement('track');
+                        track.kind = 'subtitles';
+                        track.label = subtitle.label;
+                        track.srclang = subtitle.srclang;
+                        track.src = subtitle.src;
+                        if (subtitle.default) track.default = true;
+                        video.appendChild(track);
+                    });
+                }
+
                 video.src = videoSrc;
                 video.load();
-                
+
                 // Auto-play when ready
                 video.addEventListener('canplay', () => {
                     video.play().then(() => {
@@ -749,15 +767,10 @@
                         console.log('Auto-play failed:', err);
                     });
                 });
-                
+
                 // Initialize subtitle container first
                 initSubtitleContainer();
-                
-                // Load subtitles if available
-                if (movieDatabase[normalizedTitle] && movieDatabase[normalizedTitle].subtitles) {
-                    loadSubtitles(movieDatabase[normalizedTitle].subtitles);
-                }
-                
+
                 // Set up subtitle track listeners after video loads
                 video.addEventListener('loadedmetadata', () => {
                     setupSubtitleTracks();
@@ -796,57 +809,7 @@
         }
 
         // Load subtitles
-        function loadSubtitles(subtitleData) {
-            console.log('Loading subtitles:', subtitleData);
-            
-            subtitleData.forEach(async (subtitle, index) => {
-                try {
-                    // Test if subtitle file is accessible
-                    console.log(`Testing subtitle URL ${index + 1}:`, subtitle.src);
-                    const response = await fetch(subtitle.src, { method: 'HEAD' });
-                    console.log(`Subtitle ${index + 1} status:`, response.status);
-                    
-                    if (response.ok) {
-                        const track = document.createElement('track');
-                        track.kind = 'subtitles';
-                        track.label = subtitle.label;
-                        track.srclang = subtitle.srclang;
-                        track.src = subtitle.src;
-                        if (subtitle.default) track.default = true;
-                        video.appendChild(track);
-                        console.log('Added subtitle track:', subtitle.src);
-                        
-                        // Set up track event listeners
-                        track.addEventListener('load', () => {
-                            console.log(`Subtitle track ${subtitle.label} loaded successfully`);
-                            track.mode = subtitlesEnabled ? 'showing' : 'hidden';
-                        });
-                        
-                        track.addEventListener('error', (e) => {
-                            console.error(`Error loading subtitle track ${subtitle.label}:`, e);
-                        });
-                    } else {
-                        console.error(`Subtitle file not accessible: ${subtitle.src} (Status: ${response.status})`);
-                        // Create fallback subtitle
-                        createFallbackSubtitle();
-                    }
-                } catch (error) {
-                    console.error('Error testing subtitle URL (CORS or network issue):', error);
-                    // Create fallback subtitle for CORS issues
-                    createFallbackSubtitle();
-                }
-            });
-            
-            // Set up subtitle event listeners
-            video.textTracks.addEventListener('addtrack', (e) => {
-                const track = e.target;
-                if (track.kind === 'subtitles') {
-                    track.mode = subtitlesEnabled ? 'showing' : 'hidden';
-                    track.addEventListener('cuechange', handleCueChange);
-                    console.log('Subtitle track added:', track.label);
-                }
-            });
-        }
+        // (No longer needed: subtitles are added in initVideo before video.load())
 
         // Create fallback subtitle when CORS blocks external files
         function createFallbackSubtitle() {

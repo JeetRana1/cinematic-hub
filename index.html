@@ -4260,9 +4260,7 @@
       </div>
       <div class="stream-buttons">
         <button class="stream-btn" id="streamBtn" aria-disabled="false">Stream</button>
-        <a href="player-2.html" style="text-decoration:none;display:inline-block;">
-          <button class="stream-btn" id="streamBtn2" aria-disabled="false" style="margin-left: 0.5rem;">Stream 2</button>
-        </a>
+        <button class="stream-btn" id="streamBtn2" aria-disabled="false" style="margin-left: 0.5rem;">Stream 2</button>
       </div>
       <div class="cast-section">
         <div class="cast-title">Cast</div>
@@ -6209,6 +6207,53 @@
 
     // Open Modal (lazy-load trailer iframe on demand)
     function openMovieModal(movie) {
+            // Set up Stream 2 button to open player-2.html with the same logic as Stream
+            const streamBtn2 = document.getElementById('streamBtn2');
+            if (streamBtn2) {
+              streamBtn2.onclick = null;
+              streamBtn2.onclick = (e) => {
+                e.preventDefault();
+                const isAvailable = streamBtn.dataset.available === '1';
+                if (!isAvailable) {
+                  showToast('error', 'Stream Unavailable', 'This stream is not available currently!');
+                  return;
+                }
+                // Build the player-2.html URL with the current movie's details
+                const params = new URLSearchParams();
+                params.append('id', movie.id);
+                params.append('movieId', movie.id);
+                params.append('title', movie.title);
+                if (movie.posterUrl) params.append('poster', movie.posterUrl);
+                const normTitle = String(movie.title || '').trim().toLowerCase();
+                let player2Url = null;
+                const mp4Url = mp4Overrides[normTitle];
+                if (mp4Url) {
+                  params.append('type', 'mp4');
+                  params.append('src', mp4Url);
+                  player2Url = `player-2.html?${params.toString()}`;
+                } else if (driveMovieMappings[String(movie.id)]) {
+                  params.append('type', 'drive');
+                  params.append('id', driveMovieMappings[String(movie.id)]);
+                  player2Url = `player-2.html?${params.toString()}`;
+                } else if (movie.trailerUrl) {
+                  const ytKey = extractYouTubeId(movie.trailerUrl);
+                  if (ytKey) {
+                    params.append('type', 'youtube');
+                    params.append('id', ytKey);
+                    player2Url = `player-2.html?${params.toString()}`;
+                  }
+                } else if (movie.streamUrl) {
+                  params.append('type', 'mp4');
+                  params.append('src', movie.streamUrl);
+                  player2Url = `player-2.html?${params.toString()}`;
+                }
+                if (player2Url) {
+                  window.open(player2Url, '_blank');
+                } else {
+                  showToast('error', 'Stream Unavailable', 'Stream is not available for this movie yet.');
+                }
+              };
+            }
       currentMovie = movie;
 
       // Update or add resume button in modal

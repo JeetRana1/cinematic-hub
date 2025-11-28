@@ -55,12 +55,6 @@
             background: #000;
         }
 
-        /* Move native subtitle (track) display higher */
-        video::cue {
-            position: absolute;
-            bottom: 12vh;
-        }
-
         /* MX Player Style Controls */
         .controls-overlay {
             position: absolute;
@@ -953,10 +947,22 @@ Try hosting subtitles on same server as video`;
         }
 
         // Handle subtitle cue changes
-        // Remove custom subtitle rendering to avoid duplicate subtitles
-        // Native browser rendering will be used
         function handleCueChange(e) {
-            // No-op: let the browser render subtitles
+            const track = e.target;
+            const cues = track.activeCues;
+            subtitleContainer.innerHTML = '';
+            
+            console.log('Cue change triggered, active cues:', cues ? cues.length : 0);
+            
+            if (cues && cues.length > 0) {
+                Array.from(cues).forEach(cue => {
+                    const subtitleDiv = document.createElement('div');
+                    subtitleDiv.className = 'subtitle';
+                    subtitleDiv.textContent = cue.text;
+                    subtitleContainer.appendChild(subtitleDiv);
+                    console.log('Subtitle text:', cue.text);
+                });
+            }
         }
 
         // Toggle subtitles
@@ -1221,17 +1227,21 @@ Try hosting subtitles on same server as video`;
         }
 
         // Enhanced Touch gestures (MX Player style)
+        // Gesture tap logic: double/triple tap for skip, center double tap for fullscreen
+        let tapZone = null;
+        let tapSequence = [];
+        let tapTimer = null;
         function handleTouchStart(e) {
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
             touchStartTime = Date.now();
             gestureStartX = touchStartX;
             gestureStartY = touchStartY;
-            
+
             // Clear any existing timers
             clearTimeout(longPressTimer);
             clearTimeout(doubleTapTimer);
-            
+
             // Start long press timer
             longPressTimer = setTimeout(() => {
                 if (!isLocked) {
@@ -1239,20 +1249,45 @@ Try hosting subtitles on same server as video`;
                     toggleLock();
                 }
             }, 500);
-            
-            // Check for double tap
-            const currentTime = Date.now();
-            if (currentTime - lastTapTime < 300) {
-                tapCount++;
-                if (tapCount === 2) {
-                    clearTimeout(longPressTimer);
-                    handleDoubleTap();
-                    tapCount = 0;
-                }
+
+            // Determine tap zone: left, center, right
+            const screenWidth = window.innerWidth;
+            if (touchStartX < screenWidth * 0.3) {
+                tapZone = 'left';
+            } else if (touchStartX > screenWidth * 0.7) {
+                tapZone = 'right';
             } else {
-                tapCount = 1;
+                tapZone = 'center';
             }
-            lastTapTime = currentTime;
+
+            // Tap sequence logic
+            tapSequence.push(tapZone);
+            if (tapTimer) clearTimeout(tapTimer);
+            tapTimer = setTimeout(() => {
+                // Count taps in each zone
+                const leftTaps = tapSequence.filter(z => z === 'left').length;
+                const rightTaps = tapSequence.filter(z => z === 'right').length;
+                const centerTaps = tapSequence.filter(z => z === 'center').length;
+                if (leftTaps === 2) {
+                    video.currentTime = Math.max(0, video.currentTime - 10);
+                    showGestureIndicator('⏪ -10s');
+                } else if (leftTaps >= 3) {
+                    video.currentTime = Math.max(0, video.currentTime - 30);
+                    showGestureIndicator('⏪ -30s');
+                } else if (rightTaps === 2) {
+                    video.currentTime = Math.min(video.duration, video.currentTime + 10);
+                    showGestureIndicator('⏩ +10s');
+                } else if (rightTaps >= 3) {
+                    video.currentTime = Math.min(video.duration, video.currentTime + 30);
+                    showGestureIndicator('⏩ +30s');
+                } else if (centerTaps === 2) {
+                    toggleFullscreen();
+                    showGestureIndicator('📱 Fullscreen');
+                } else if (centerTaps === 1) {
+                    togglePlayPause();
+                }
+                tapSequence = [];
+            }, 350);
         }
 
         function handleTouchMove(e) {

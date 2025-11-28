@@ -735,24 +735,16 @@
         }
 
         // Initialize video
-        function initVideo() {
+        async function initVideo() {
             if (videoSrc) {
                 // Remove any existing <track> elements
                 const oldTracks = video.querySelectorAll('track');
                 oldTracks.forEach(track => track.remove());
 
-                // Add subtitle tracks before loading video
+                // Add subtitle tracks before loading video (with CORS proxy logic)
                 if (movieDatabase[normalizedTitle] && movieDatabase[normalizedTitle].subtitles) {
                     const subtitleData = movieDatabase[normalizedTitle].subtitles;
-                    subtitleData.forEach(subtitle => {
-                        const track = document.createElement('track');
-                        track.kind = 'subtitles';
-                        track.label = subtitle.label;
-                        track.srclang = subtitle.srclang;
-                        track.src = subtitle.src;
-                        if (subtitle.default) track.default = true;
-                        video.appendChild(track);
-                    });
+                    await loadSubtitlesWithProxy(subtitleData);
                 }
 
                 video.src = videoSrc;
@@ -778,6 +770,105 @@
             } else {
                 videoTitle.textContent = 'No video source available';
                 showError('No video source available');
+            }
+        }
+
+        // Robust subtitle loader with CORS proxy and blob URL support
+        async function loadSubtitlesWithProxy(subtitleArray) {
+            if (!subtitleArray || subtitleArray.length === 0) {
+                console.log('No subtitles to load');
+                return;
+            }
+
+            for (let i = 0; i < subtitleArray.length; i++) {
+                const subtitle = subtitleArray[i];
+                const isRemoteUrl = subtitle.src.startsWith('http://') || subtitle.src.startsWith('https://');
+                let subtitleUrl = subtitle.src;
+                if (isRemoteUrl) {
+                    subtitleUrl = await fetchSubtitleAsBlob(subtitle.src);
+                    if (!subtitleUrl) {
+                        console.warn('Skipping subtitle track due to load failure:', subtitle.label);
+                        continue;
+                    }
+                }
+                const track = document.createElement('track');
+                track.kind = 'subtitles';
+                track.label = subtitle.label || `Subtitle ${i + 1}`;
+                track.srclang = subtitle.srclang || 'en';
+                track.src = subtitleUrl;
+                if (subtitle.default) track.default = true;
+                video.appendChild(track);
+            }
+        }
+
+        // Fetch remote subtitle and convert to blob URL (with CORS proxy fallback)
+        async function fetchSubtitleAsBlob(url) {
+            try {
+                console.log('Fetching remote subtitle:', url);
+
+                const proxyCandidates = [];
+                let isCrossOrigin = false;
+
+                try {
+                    isCrossOrigin = new URL(url, window.location.href).origin !== window.location.origin;
+                } catch (e) {
+                    isCrossOrigin = true; // Assume cross-origin if URL parsing fails
+                }
+
+                // 1. If same origin, try direct first (fastest)
+                if (!isCrossOrigin) {
+                    proxyCandidates.push({ url: url, name: 'Direct (Local)' });
+                }
+
+                // 2. Add robust CORS proxies
+                proxyCandidates.push({ url: `https://corsproxy.io/?${encodeURIComponent(url)}`, name: 'corsproxy.io' });
+                proxyCandidates.push({ url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`, name: 'codetabs.com' });
+                proxyCandidates.push({ url: `https://thingproxy.freeboard.io/fetch/${url}`, name: 'thingproxy' });
+                proxyCandidates.push({ url: `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, name: 'allorigins.win' });
+
+                let lastError = null;
+
+                for (let i = 0; i < proxyCandidates.length; i++) {
+                    const candidate = proxyCandidates[i];
+                    try {
+                        console.log(`Trying method ${i + 1}/${proxyCandidates.length}: ${candidate.name}`);
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 15000);
+                        try {
+                            const response = await fetch(candidate.url, {
+                                signal: controller.signal,
+                                mode: 'cors',
+                                cache: 'default'
+                            });
+                            clearTimeout(timeoutId);
+                            if (!response.ok) {
+                                throw new Error(`HTTP ${response.status}`);
+                            }
+                            const text = await response.text();
+                            if (!text.includes('WEBVTT') && !text.includes('1\n00:')) {
+                                if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+                                    throw new Error('Received HTML instead of VTT');
+                                }
+                            }
+                            const blob = new Blob([text], { type: 'text/vtt' });
+                            const blobUrl = URL.createObjectURL(blob);
+                            console.log(`✓ Subtitle loaded successfully via ${candidate.name}`);
+                            return blobUrl;
+                        } catch (fetchErr) {
+                            clearTimeout(timeoutId);
+                            throw fetchErr;
+                        }
+                    } catch (err) {
+                        lastError = err;
+                        console.warn(`${i + 1}. Failed (${candidate.name}):`, err.name === 'AbortError' ? 'Timeout' : err.message);
+                        continue;
+                    }
+                }
+                console.warn('All proxy methods failed. Subtitles unavailable.');
+                throw lastError || new Error('All subtitle loading methods failed');
+            } catch (error) {
+                console.error('Could not load subtitle:', error.message);
+                return null;
             }
         }
 

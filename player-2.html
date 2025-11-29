@@ -153,40 +153,89 @@
             }
             .controls-overlay {
                 padding-bottom: 0;
+                justify-content: flex-end;
             }
             .bottom-controls {
-                padding: 8px 8px 4px 8px;
+                padding: 0 0 8px 0;
                 bottom: 0;
                 position: absolute;
                 left: 0;
                 right: 0;
                 z-index: 20;
+                background: linear-gradient(to top, rgba(0,0,0,0.7) 60%, transparent 100%);
             }
             .progress-container {
-                margin-bottom: 6px;
+                margin-bottom: 2px;
             }
             .time-display {
-                margin-bottom: 6px;
+                margin-bottom: 2px;
+                font-size: 13px;
             }
             .main-controls {
-                flex-direction: column;
-                gap: 8px;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                gap: 0;
             }
             .left-controls, .right-controls {
-                gap: 8px;
+                gap: 4px;
             }
             .play-pause-btn {
-                width: 40px;
-                height: 40px;
-                font-size: 16px;
+                width: 44px;
+                height: 44px;
+                font-size: 22px;
             }
             .control-btn {
-                width: 32px;
-                height: 32px;
-                font-size: 14px;
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
             }
             .volume-slider {
-                width: 60px;
+                width: 50px;
+            }
+            .tap-overlay {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                position: absolute;
+                top: 55%;
+                left: 0;
+                width: 100%;
+                height: 0;
+                pointer-events: none;
+                z-index: 30;
+            }
+            .tap-zone {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                pointer-events: none;
+            }
+            .tap-indicator {
+                background: none;
+                color: #fff;
+                font-size: 32px;
+                font-weight: bold;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                pointer-events: none;
+            }
+            .tap-indicator span {
+                font-size: 18px;
+                font-weight: 600;
+                margin-top: 2px;
+                letter-spacing: 1px;
+            }
+            .center-zone .tap-indicator {
+                font-size: 40px;
+            }
+            .center-zone .tap-indicator span {
+                font-size: 20px;
             }
         }
 

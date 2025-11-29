@@ -53,7 +53,7 @@
             height: 100vh !important;
             max-width: 100vw !important;
             max-height: 100vh !important;
-            object-fit: cover !important;
+            object-fit: cover;
             background: #000 !important;
             display: block !important;
             margin: 0 !important;
@@ -75,6 +75,60 @@
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                overflow: hidden !important;
+            }
+            video {
+                width: 100vw !important;
+                height: 100vh !important;
+                max-width: 100vw !important;
+                max-height: 100vh !important;
+                object-fit: cover;
+                object-position: center center !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                background: #000 !important;
+                transform: none !important;
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+            }
+        }
+        /* Mobile-specific landscape mode fix */
+        @media (orientation: landscape) and (max-width: 900px) {
+            body {
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+                width: 100vw !important;
+                height: 100vh !important;
+            }
+            .video-container {
+                width: 100vw !important;
+                height: 100vh !important;
+                max-width: 100vw !important;
+                max-height: 100vh !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border-radius: 0 !important;
+                background: #000 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                overflow: hidden !important;
+                transform: translateZ(0) !important;
             }
             video {
                 width: 100vw !important;
@@ -88,10 +142,16 @@
                 box-shadow: none !important;
                 background: #000 !important;
                 transform: none !important;
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
             }
         }
+
         video:fullscreen, video:-webkit-full-screen {
-            object-fit: cover !important;
+            object-fit: cover;
             width: 100vw !important;
             height: 100vh !important;
             background: #000 !important;
@@ -328,6 +388,13 @@
             display: flex;
             align-items: center;
             gap: 15px;
+        }
+
+        .screen-mode-container {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+            margin-right: 8px;
         }
 
         .play-pause-btn {
@@ -682,6 +749,11 @@
                     </div>
                     
                     <div class="right-controls">
+                        <div class="screen-mode-container" style="display:inline-flex;gap:4px;align-items:center;margin-right:8px;">
+                            <button class="control-btn" id="screenModeToggle" data-tooltip="Stretch" title="Stretch">
+                                <i class="fas fa-expand-arrows-alt" id="screenModeIcon"></i>
+                            </button>
+                        </div>
                         <div class="volume-container">
                             <button class="control-btn" onclick="toggleMute()" title="Mute/Unmute">
                                 <i class="fas fa-volume-up" id="volumeIcon"></i>
@@ -828,6 +900,15 @@
         let lastTapTime = 0;
         let tapCount = 0;
 
+        // Screen mode global variables
+        let screenModeBtn, screenModeIcon;
+        const modes = [
+            { fit: 'fill', icon: 'fa-expand-arrows-alt', label: 'Stretch' },
+            { fit: 'cover', icon: 'fa-arrows-alt-h', label: 'Wide' },
+            { fit: 'contain', icon: 'fa-compress', label: 'Contain' }
+        ];
+        let currentScreenMode = 0;
+
         // Set video title
         videoTitle.textContent = title;
 
@@ -848,6 +929,56 @@
             console.log('Movie has subtitles:', !!movieData.subtitles);
         } else {
             console.log('Movie not found in database, using URL parameters');
+        }
+
+        // Initialize screen mode functionality
+        function initScreenMode() {
+            console.log('initScreenMode() called');
+            screenModeBtn = document.getElementById('screenModeToggle');
+            screenModeIcon = document.getElementById('screenModeIcon');
+            
+            console.log('screenModeBtn:', screenModeBtn);
+            console.log('screenModeIcon:', screenModeIcon);
+            console.log('video element:', video);
+            
+            if (!screenModeBtn || !screenModeIcon) {
+                console.warn('Screen mode elements not found');
+                return;
+            }
+
+            // Screen mode function
+            function updateScreenMode() {
+                console.log('updateScreenMode() called, currentScreenMode:', currentScreenMode);
+                console.log('Setting object-fit to:', modes[currentScreenMode].fit);
+                video.style.objectFit = modes[currentScreenMode].fit;
+                screenModeIcon.className = 'fas ' + modes[currentScreenMode].icon;
+                screenModeBtn.setAttribute('data-tooltip', modes[currentScreenMode].label);
+                screenModeBtn.setAttribute('title', modes[currentScreenMode].label);
+                console.log('Screen mode changed to:', modes[currentScreenMode].label, 'object-fit:', modes[currentScreenMode].fit);
+                console.log('Current video style.objectFit:', video.style.objectFit);
+            }
+
+            // Add screen mode event listener
+            screenModeBtn.addEventListener('click', function (e) {
+                console.log('Screen mode button clicked!');
+                currentScreenMode = (currentScreenMode + 1) % modes.length;
+                updateScreenMode();
+            });
+
+            // Initialize with default mode
+            updateScreenMode();
+            console.log('Screen mode initialized');
+        }
+
+        // Function to preserve screen mode (call this after video operations)
+        function preserveScreenMode() {
+            if (screenModeBtn && screenModeIcon && video) {
+                video.style.objectFit = modes[currentScreenMode].fit;
+                screenModeIcon.className = 'fas ' + modes[currentScreenMode].icon;
+                screenModeBtn.setAttribute('data-tooltip', modes[currentScreenMode].label);
+                screenModeBtn.setAttribute('title', modes[currentScreenMode].label);
+                console.log('Screen mode preserved:', modes[currentScreenMode].label);
+            }
         }
 
         // Initialize video
@@ -874,6 +1005,9 @@
                     }).catch(err => {
                         console.log('Auto-play failed:', err);
                     });
+
+                    // Initialize screen mode functionality after video is ready
+                    initScreenMode();
                 });
 
                 // Initialize subtitle container first
@@ -1320,6 +1454,8 @@ Try hosting subtitles on same server as video`;
                 case 'rewind':
                     video.currentTime = Math.max(0, video.currentTime - 10);
                     showTapFeedback('leftFeedback', '-10s');
+                    // Preserve screen mode after skipping
+                    setTimeout(preserveScreenMode, 50);
                     break;
                 case 'playpause':
                     togglePlayPause();
@@ -1328,6 +1464,8 @@ Try hosting subtitles on same server as video`;
                 case 'forward':
                     video.currentTime = Math.min(video.duration, video.currentTime + 10);
                     showTapFeedback('rightFeedback', '+10s');
+                    // Preserve screen mode after skipping
+                    setTimeout(preserveScreenMode, 50);
                     break;
             }
         }
@@ -1516,10 +1654,14 @@ Try hosting subtitles on same server as video`;
                 // Left side - rewind 10 seconds
                 video.currentTime = Math.max(0, video.currentTime - 10);
                 showGestureIndicator('⏪ -10s');
+                // Preserve screen mode after skipping
+                setTimeout(preserveScreenMode, 50);
             } else if (x > screenWidth * 0.7) {
                 // Right side - forward 10 seconds
                 video.currentTime = Math.min(video.duration, video.currentTime + 10);
                 showGestureIndicator('⏩ +10s');
+                // Preserve screen mode after skipping
+                setTimeout(preserveScreenMode, 50);
             } else {
                 // Center - play/pause
                 togglePlayPause();
@@ -1623,6 +1765,8 @@ Try hosting subtitles on same server as video`;
             } else if (event.target.closest('.fa-step-forward')) {
                 video.currentTime += 10;
             }
+            // Preserve screen mode after skipping
+            setTimeout(preserveScreenMode, 50);
         }
 
         function toggleFullscreen() {
@@ -1671,6 +1815,10 @@ Try hosting subtitles on same server as video`;
         video.addEventListener('volumechange', updateVolume);
         video.addEventListener('waiting', () => loadingSpinner.classList.add('active'));
         video.addEventListener('canplay', () => loadingSpinner.classList.remove('active'));
+        video.addEventListener('seeked', () => {
+            // Preserve screen mode after seeking/seeking completes
+            setTimeout(preserveScreenMode, 50);
+        });
         video.addEventListener('ended', () => {
             isPlaying = false;
             updatePlayPauseButton();
@@ -1732,6 +1880,10 @@ Try hosting subtitles on same server as video`;
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM loaded, initializing...');
+            
+            // Test if screen mode button exists
+            const testBtn = document.getElementById('screenModeToggle');
+            console.log('Screen mode button found on DOM load:', testBtn);
             
             // Check if tap overlay exists
             if (!tapOverlay) {

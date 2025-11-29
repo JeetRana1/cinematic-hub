@@ -482,6 +482,8 @@
             display: none;
             pointer-events: none;
             z-index: 200;
+            background: none !important;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .tap-overlay.visible {
@@ -766,7 +768,7 @@
         let isVolumeGesturing = false;
         let isBrightnessGesturing = false;
         let isSeeking = false;
-        let subtitlesEnabled = true;
+        let subtitlesEnabled = false;
         let playbackSpeed = 1;
         let currentBrightness = 1;
         let initialBrightness = 1;
@@ -965,7 +967,7 @@
             const tracks = video.textTracks;
             for (let i = 0; i < tracks.length; i++) {
                 if (tracks[i].kind === 'subtitles') {
-                    tracks[i].mode = subtitlesEnabled ? 'showing' : 'hidden';
+                    tracks[i].mode = 'hidden'; // Always start hidden
                     tracks[i].addEventListener('cuechange', handleCueChange);
                 }
             }
@@ -1581,9 +1583,20 @@ Try hosting subtitles on same server as video`;
 
         function toggleFullscreen() {
             if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
+                document.documentElement.requestFullscreen().then(() => {
+                    // If in portrait, try to force landscape
+                    if (window.screen.orientation && window.screen.orientation.lock) {
+                        if (window.matchMedia('(orientation: portrait)').matches) {
+                            window.screen.orientation.lock('landscape').catch(() => {});
+                        }
+                    }
+                });
             } else {
                 document.exitFullscreen();
+                // Optionally unlock orientation on exit
+                if (window.screen.orientation && window.screen.orientation.unlock) {
+                    window.screen.orientation.unlock();
+                }
             }
         }
 

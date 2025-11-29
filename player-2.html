@@ -138,10 +138,56 @@
         /* Bottom Controls */
         .bottom-controls {
             position: absolute;
-            bottom: 0;
             left: 0;
             right: 0;
+            bottom: 0;
             padding: 20px;
+            z-index: 20;
+        }
+
+        @media (max-width: 600px) and (orientation: portrait) {
+            .video-container {
+                height: 100vh;
+                min-height: 100vh;
+                max-height: 100vh;
+            }
+            .controls-overlay {
+                padding-bottom: 0;
+            }
+            .bottom-controls {
+                padding: 8px 8px 4px 8px;
+                bottom: 0;
+                position: absolute;
+                left: 0;
+                right: 0;
+                z-index: 20;
+            }
+            .progress-container {
+                margin-bottom: 6px;
+            }
+            .time-display {
+                margin-bottom: 6px;
+            }
+            .main-controls {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .left-controls, .right-controls {
+                gap: 8px;
+            }
+            .play-pause-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+            .control-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            .volume-slider {
+                width: 60px;
+            }
         }
 
         .progress-container {

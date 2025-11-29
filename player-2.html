@@ -51,8 +51,7 @@
         video {
             width: 100vw !important;
             height: 100vh !important;
-            object-fit: cover !important;
-            object-position: left center !important;
+            object-fit: contain !important;
             background: #000 !important;
             max-width: 100vw !important;
             max-height: 100vh !important;
@@ -61,12 +60,18 @@
             top: 0;
             left: 0;
         }
-        video:fullscreen, video:-webkit-full-screen {
-            object-fit: cover !important;
-            object-position: left center !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            background: #000 !important;
+        @media (orientation: landscape) {
+            video {
+                object-fit: cover !important;
+                object-position: left center !important;
+            }
+            video:fullscreen, video:-webkit-full-screen {
+                object-fit: cover !important;
+                object-position: left center !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background: #000 !important;
+            }
         }
         video:fullscreen, video:-webkit-full-screen {
             object-fit: cover !important;

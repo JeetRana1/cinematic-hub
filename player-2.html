@@ -1143,39 +1143,41 @@ Try hosting subtitles on same server as video`;
             hideGestureIndicator();
         }
 
-        // Enhanced seek event listeners
+        // Enhanced seek event listeners (desktop)
         progressBar.addEventListener('mousedown', startSeek, { passive: false });
         document.addEventListener('mousemove', updateSeekPosition, { passive: false });
         document.addEventListener('mouseup', endSeek, { passive: false });
-        
-        // Touch support for mobile
-        progressBar.addEventListener('touchstart', (e) => {
-            e.preventDefault();
+
+        // Touch support for mobile (fix: allow drag and tap seek)
+        progressBar.addEventListener('touchstart', function(e) {
+            if (!video.duration) return;
+            isSeeking = true;
             const touch = e.touches[0];
-            const mouseEvent = new MouseEvent('mousedown', {
-                clientX: touch.clientX,
-                clientY: touch.clientY
-            });
-            startSeek(mouseEvent);
+            const rect = progressBar.getBoundingClientRect();
+            const pos = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width));
+            const newTime = pos * video.duration;
+            video.currentTime = newTime;
+            updateSeekPosition({ clientX: touch.clientX });
+            e.preventDefault();
         }, { passive: false });
-        
-        document.addEventListener('touchmove', (e) => {
-            if (isSeeking) {
-                e.preventDefault();
-                const touch = e.touches[0];
-                const mouseEvent = new MouseEvent('mousemove', {
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
-                });
-                updateSeekPosition(mouseEvent);
-            }
+
+        progressBar.addEventListener('touchmove', function(e) {
+            if (!isSeeking || !video.duration) return;
+            const touch = e.touches[0];
+            updateSeekPosition({ clientX: touch.clientX });
+            e.preventDefault();
         }, { passive: false });
-        
-        document.addEventListener('touchend', (e) => {
-            if (isSeeking) {
-                e.preventDefault();
-                endSeek(e);
+
+        progressBar.addEventListener('touchend', function(e) {
+            if (!isSeeking) return;
+            const touch = (e.changedTouches && e.changedTouches[0]) || (e.touches && e.touches[0]);
+            if (touch) {
+                updateSeekPosition({ clientX: touch.clientX });
             }
+            isSeeking = false;
+            if (isPlaying) video.play();
+            hideGestureIndicator();
+            e.preventDefault();
         }, { passive: false });
 
         // Volume control

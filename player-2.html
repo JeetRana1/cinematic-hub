@@ -5,11 +5,12 @@
         <script src="js/continue-watching.js"></script>
         <script src="js/player-continue-watching.js"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
     <title>MX Player - Cinematic Hub</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/subtitles-v2.css">
     <style>
         :root {
             --mx-primary: #1976d2;
@@ -38,19 +39,19 @@
             top: 0 !important;
             right: 0 !important;
             bottom: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            min-width: 100vw !important;
-            min-height: 100vh !important;
-            max-width: 100vw !important;
-            max-height: 100vh !important;
+            width: 100dvw !important;
+            height: 100dvh !important;
+            min-width: 100dvw !important;
+            min-height: 100dvh !important;
+            max-width: 100dvw !important;
+            max-height: 100dvh !important;
         }
 
         html, body {
             margin: 0 !important;
             padding: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
+            width: 100dvw !important;
+            height: 100dvh !important;
             overflow: hidden !important;
             background: #000 !important;
             position: fixed !important;
@@ -93,17 +94,17 @@
         video {
             position: fixed !important;
             top: 0 !important;
-            left: -5vw !important;
+            left: 0 !important;
             right: 0 !important;
             bottom: 0 !important;
-            width: 110vw !important;
+            width: 100vw !important;
             height: 100vh !important;
-            min-width: 110vw !important;
+            min-width: 100vw !important;
             min-height: 100vh !important;
-            max-width: 110vw !important;
+            max-width: 100vw !important;
             max-height: 100vh !important;
             object-fit: cover !important;
-            object-position: left top !important;
+            object-position: center center !important;
             background: #000 !important;
             display: block !important;
             margin: 0 !important;
@@ -116,19 +117,18 @@
             html, body {
                 margin: 0 !important;
                 padding: 0 !important;
-                width: 100vw !important;
-                height: 100vh !important;
+                width: 100dvw !important;
+                height: 100dvh !important;
                 overflow: hidden !important;
                 position: fixed !important;
                 top: 0 !important;
-                left: -100px !important;
+                left: 0 !important;
             }
             .video-container {
-                width: 100vw !important;
-                height: 100vh !important;
-                max-width: 100vw !important;
-                max-height: 100vh !important;
-                left: 0 !important;
+                width: 100dvw !important;
+                height: 100dvh !important;
+                max-width: 100dvw !important;
+                max-height: 100dvh !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 border-radius: 0 !important;
@@ -142,13 +142,12 @@
                 overflow: hidden !important;
             }
             video {
-                width: 110vw !important;
-                height: 100vh !important;
-                max-width: 110vw !important;
-                max-height: 100vh !important;
-                left: -5vw !important;
+                width: 100dvw !important;
+                height: 100dvh !important;
+                max-width: 100dvw !important;
+                max-height: 100dvh !important;
                 object-fit: cover !important;
-                object-position: left top !important;
+                object-position: center center !important;
                 margin: 0 !important;
                 border-radius: 0 !important;
                 box-shadow: none !important;
@@ -156,7 +155,7 @@
                 transform: none !important;
                 position: absolute !important;
                 top: 0 !important;
-                left: -5vw !important;
+                left: 0 !important;
                 right: 0 !important;
                 bottom: 0 !important;
                 z-index: 1 !important;
@@ -171,8 +170,8 @@
                 margin: 0 !important;
                 padding: 0 !important;
                 overflow: hidden !important;
-                width: 100vw !important;
-                height: 100vh !important;
+                width: 100dvw !important;
+                height: 100dvh !important;
                 position: fixed !important;
                 top: 0 !important;
                 left: 0 !important;
@@ -180,10 +179,10 @@
                 bottom: 0 !important;
             }
             .video-container {
-                width: 100vw !important;
-                height: 100vh !important;
-                max-width: 100vw !important;
-                max-height: 100vh !important;
+                width: 100dvw !important;
+                height: 100dvh !important;
+                max-width: 100dvw !important;
+                max-height: 100dvh !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 border-radius: 0 !important;
@@ -199,13 +198,12 @@
                 z-index: 0 !important;
             }
             video {
-                width: 110vw !important;
-                height: 100vh !important;
-                max-width: 110vw !important;
-                max-height: 100vh !important;
-                left: -5vw !important;
+                width: 100dvw !important;
+                height: 100dvh !important;
+                max-width: 100dvw !important;
+                max-height: 100dvh !important;
                 object-fit: cover !important;
-                object-position: left top !important;
+                object-position: center center !important;
                 margin: 0 !important;
                 border-radius: 0 !important;
                 box-shadow: none !important;
@@ -213,7 +211,7 @@
                 transform: none !important;
                 position: absolute !important;
                 top: 0 !important;
-                left: -5vw !important;
+                left: 0 !important;
                 right: 0 !important;
                 bottom: 0 !important;
                 z-index: 1 !important;
@@ -228,6 +226,7 @@
             width: 100vw !important;
             height: 100vh !important;
             background: #000 !important;
+            left: 0 !important;
         }
 
         /* MX Player Style Controls */
@@ -626,15 +625,17 @@
         /* Subtitle Container */
         .subtitle-container {
             position: absolute;
-            bottom: 100px;
+            bottom: 150px;
             left: 50%;
+            border-radius: 8px;
             transform: translateX(-50%);
             width: 90%;
             max-width: 800px;
             text-align: center;
             pointer-events: none;
-            z-index: 100;
-            display: block;
+            z-index: 2001; /* Above controls overlay */
+            display: block !important;
+            opacity: 1 !important;
         }
 
         .subtitle {
@@ -791,11 +792,93 @@
         .right-feedback {
             background: rgba(76, 175, 80, 0.9);
         }
+                /* --- SUBTITLE STYLES MOVED FROM subtitles-v2.css --- */
+                .subtitle-container {
+                    position: absolute;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 90%;
+                    max-width: 800px;
+                    text-align: center;
+                    pointer-events: none;
+                    z-index: 100;
+                    display: block;
+                    border-radius: 8px;
+                    /* Default position when NOT fullscreen */
+                    bottom: 150px;
+                }
+
+                /* Only apply dynamic positioning in fullscreen */
+                video:fullscreen ~ .subtitle-container,
+                video:-webkit-full-screen ~ .subtitle-container {
+                    bottom: 35%;
+                }
+                video:fullscreen ~ .subtitle-container.mode-stretch,
+                video:-webkit-full-screen ~ .subtitle-container.mode-stretch {
+                    bottom: 20%;
+                }
+                video:fullscreen ~ .subtitle-container.mode-contain,
+                video:-webkit-full-screen ~ .subtitle-container.mode-contain {
+                    bottom: 40px;
+                }
+                @media (orientation: landscape) {
+                    video:fullscreen ~ .subtitle-container,
+                    video:-webkit-full-screen ~ .subtitle-container {
+                        bottom: 18% !important;
+                    }
+                }
+
+                .video-subtitles {
+                    position: fixed;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    max-width: 90%;
+                    font-size: 22.5px;
+                    font-weight: bold;
+                    color: white;
+                    padding: 10px 20px;
+                    text-align: center;
+                    line-height: 1.4;
+                    white-space: pre-line;
+                    word-break: break-word;
+                    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8), 
+                                             -1px -1px 3px rgba(0, 0, 0, 0.8),
+                                                1px -1px 3px rgba(0, 0, 0, 0.8),
+                                             -1px 1px 3px rgba(0, 0, 0, 0.8);
+                    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.7);
+                    font-family: Arial, sans-serif;
+                    pointer-events: none;
+                    z-index: 9999;
+                    background-color: rgba(0, 0, 0, 0.1);
+                    border-radius: 8px;
+                    backdrop-filter: blur(2px);
+                    opacity: 1 !important;
+                    display: block !important;
+                    transition: opacity 0.2s ease, transform 0.2s ease, bottom 0.2s ease;
+                    will-change: transform, opacity, bottom;
+                    box-sizing: border-box;
+                }
+
+                .video-subtitles.mode-cover {
+                    bottom: 35%;
+                }
+                .video-subtitles.mode-stretch {
+                    bottom: 20%;
+                }
+                .video-subtitles.mode-contain {
+                    bottom: 150px;
+                }
+                @media (orientation: landscape) {
+                    .video-subtitles {
+                        bottom: 18% !important;
+                        font-size: 20px;
+                    }
+                }
     </style>
 </head>
 <body>
     <div class="video-container">
-        <video id="videoPlayer" preload="metadata"></video>
+        <video id="videoPlayer" preload="metadata" autoplay></video>
         
         <!-- Loading Spinner -->
         <div class="loading-spinner" id="loadingSpinner"></div>
@@ -924,35 +1007,196 @@
     <script>
         // Movie database (same as original)
         const movieDatabase = {
-            "tourist family": {
-                src: "https://ia601005.us.archive.org/3/items/tourist-family-2025-hindi-1080p/Tourist%20Family-%282025%29-Hindi-1080p.mp4",
-                type: "mp4",
-                subtitles: [
-                    { src: 'https://archive.org/download/tourist-family-2025-hindi-1080p/Tourist-Family-%282025%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                ]
-            },
-            "manjummel boys": {
-                src: "https://ia800304.us.archive.org/11/items/manjummel-boys-2024/Manjummel%20Boys%20%282024%29.ia.mp4",
-                type: "mp4",
-                subtitles: [
-                    { src: 'https://archive.org/download/manjummel-boys-2024/Manjummel-Boys-%282024%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                ]
-            },
-            "kaithi": {
-                src: "https://ia601009.us.archive.org/23/items/kaithi-2019-1080p-hindi/Kaithi%2B2019%2B1080p%2BHindi.ia.mp4",
-                type: "mp4",
-                subtitles: [
-                    { src: 'https://archive.org/download/kaithi-2019-1080p-hindi/Kaithi-2019-en.vtt', srclang: 'en', label: 'English', default: false }
-                ]
-            },
-            "vikram": {
-                src: "https://ia902807.us.archive.org/8/items/vikram-2022-lcu.mp-4/Vikram-%25282022%2529-%255BLCU%255D.mp4.mp4",
-                type: "mp4",
-                subtitles: [
-                    { src: 'https://archive.org/download/vikram-2022-lcu.mp-4/Vikram-2022-en.vtt', srclang: 'en', label: 'English', default: false }
-                ]
-            }
-        };
+                        "tourist family": {
+                                src: "https://ia601005.us.archive.org/3/items/tourist-family-2025-hindi-1080p/Tourist%20Family-%282025%29-Hindi-1080p.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/tourist-family-2025-hindi-1080p/Tourist-Family-%282025%29-en.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "manjummel boys": {
+                                src: "https://ia800304.us.archive.org/11/items/manjummel-boys-2024/Manjummel%20Boys%20%282024%29.ia.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/manjummel-boys-2024/Manjummel-Boys-%282024%29-en.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "kaithi": {
+                                src: "https://ia601009.us.archive.org/23/items/kaithi-2019-1080p-hindi/Kaithi%2B2019%2B1080p%2BHindi.ia.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/kaithi-2019-1080p-hindi/Kaithi-2019-en.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "vikram": {
+                                src: "https://ia601007.us.archive.org/8/items/vikram-2022-lcu.mp-4/Vikram-%282022%29-%5BLCU%5D.mp4.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/vikram-2022-lcu.mp-4/Vikram-%282022%29-en.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "leo": {
+                                src: "https://ia600602.us.archive.org/19/items/leo-2023-south-hindi-dubbed-un-cut-hd-1080p/Leo-%282023%29-South-Hindi-Dubbed-UnCut-HD-1080p.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/leo-2023-south-hindi-dubbed-un-cut-hd-1080p/Leo-%282023%29-en.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "coolie": {
+                                src: "https://ia601002.us.archive.org/23/items/coolie-2025-1080p-hindi/Coolie-2025-1080p-Hindi.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/coolie-2025-1080p-hindi/Coolie-%282025%29-en.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "maharaja": {
+                                src: "https://ia800404.us.archive.org/14/items/maharaja-2024-hindi-tamil-dual-audio-un-cut-movie-hd-1080p-esub/Maharaja%20%282024%29%20%28Hindi%20%2B%20Tamil%29%20Dual%20Audio%20UnCut%20Movie%20HD%201080p%20ESub.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/maharaja-2024-hindi-tamil-dual-audio-un-cut-movie-hd-1080p-esub/Maharaja-%282024%29-en.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "hi papa": {
+                                src: "https://ia600801.us.archive.org/34/items/hi-papa-hi-nanna-2023-hindi-1080p/Hi%20Papa-%28Hi%20Nanna%29-%282023%29-%7BHindi-1080p%29.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/hi-papa-hi-nanna-2023-hindi-1080p/Hi-Nanna-%282023%29-en.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "kantara": {
+                                src: "https://ia600404.us.archive.org/34/items/kantara-2022-hindi-dubbed-1080p/Kantara%20%282022%29%20Hindi%20Dubbed%201080p.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/kantara-2022-hindi-dubbed-1080p/Kantara-%282022%29-en.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "hridayam": {
+                                src: "https://ia601003.us.archive.org/33/items/hridayam-2022-hindi-1080p/Hridayam%20%282022%29%20Hindi%201080p.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/hridayam-2022-hindi-1080p/Hridayam-%282022%29-en.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "lokah chapter 1": {
+                                src: "https://ia601709.us.archive.org/32/items/lokah.-chapter.-1-chandra.-2025-hindi/Lokah.Chapter.1-Chandra.2025-hindi.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/lokah.-chapter.-1-chandra-en/Lokah.Chapter.1-Chandra-en.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "lucky bhaskar": {
+                                src: "https://ia600301.us.archive.org/4/items/lucky-baskhar-2024-hindi-hd-1080p/Lucky-Baskhar-%282024%29-Hindi-HD-1080p.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/lucky-baskhar-2024-hindi-hd-1080p/Lucky-Baskhar-2024-en.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "court - state vs. a nobody": {
+                                src: "https://ia601001.us.archive.org/20/items/court-state-vs-a-nobody-2025-hindi-hd-1080p/Court-State-Vs-A-Nobody-%282025%29-Hindi-HD-1080p.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/court-state-vs-a-nobody-2025-hindi-hd-1080p/court-state-vs-a-nobody-2025-en.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "master": {
+                                src: "https://ia902807.us.archive.org/0/items/master-2021-1080p-hindi/Master-2021-1080p-Hindi.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/master-2021-1080p-hindi/MASTER-%282021%29-en.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "hit: the first case": {
+                                src: "https://ia801003.us.archive.org/22/items/hit-the-first-case-2020-1080p-hindi/HIT-The-First-Case-2020-1080p-Hindi.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/hit-the-first-case-2020-1080p-hindi/HIT-The-First-Case-%282020%29-en.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "hit: the second case": {
+                                src: "https://ia801003.us.archive.org/22/items/hit-the-2nd-case-2022-1080p-hindi/HIT-The-2nd-Case-2022-1080p-Hindi.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/hit-the-2nd-case-2022-1080p-hindi/HIT-The-Second-Case-2022-en.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "hit: the third case": {
+                                src: "https://ia800505.us.archive.org/35/items/hit-the-third-case-2025-1080p-hindi/HIT-The-Third-Case-2025-1080p-Hindi.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/hit-the-third-case-2025-1080p-hindi/HIT-The-Third-Case-%282025%29-en.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "retro": {
+                                src: "https://ia600301.us.archive.org/10/items/retro-2025-hindi-1080p/Retro-%282025%29-Hindi-1080p.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/retro-2025-hindi-1080p/Retro-2025-en.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "kuberaa": {
+                                src: "https://ia601302.us.archive.org/0/items/kuberaa-2025-hindi-1080p/Kuberaa-%282025%29-Hindi-1080p.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/kuberaa-2025-hindi-1080p/kuberaa-2025-en.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "thalaivan thalaivii": {
+                                src: "https://ia600201.us.archive.org/14/items/thalaivan-thalaivii-2025-hindi-1080p/Thalaivan-Thalaivii-%282025%29-Hindi-1080p.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/thalaivan-thalaivii-2025-hindi-1080p/Thalaivan-Thalaivii-%282025%29-en.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "dil se..": {
+                                src: "https://ia801607.us.archive.org/32/items/dil-se..-1998/Dil%20Se..%20%281998%29.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/dil-se..-1998/Dil%20Se..%281998%29.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "mohabbatein": {
+                                src: "https://ia601207.us.archive.org/5/items/mohabbatein-2000_202511/Mohabbatein-%282000%29.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/mohabbatein-2000_202511/Mohabbatein-%282000%29-Eng.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "bhool bhulaiyaa": {
+                                src: "https://ia600500.us.archive.org/23/items/bhool-bhulaiyaa-2007/Bhool-Bhulaiyaa-%282007%29.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/bhool-bhulaiyaa-2007/Bhool-Bhulaiyaa-%282007%29.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "dude": {
+                                src: "https://ia903101.us.archive.org/35/items/dude.-2025.1080p-hindi/Dude.2025.1080p-Hindi.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/dude.-2025.1080p-hindi/Dude.2025.1080p-eng.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "they call him og": {
+                                src: "https://ia903104.us.archive.org/12/items/they-call-him-og-2025-hindi_202511/They%20Call%20Him%20OG%20%282025%29-%28Hindi%29.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/they-call-him-og-2025-hindi_202511/They%20Call%20Him%20OG%20%282025%29-%28Hindi%29.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "bombay": {
+                                src: "https://ia601700.us.archive.org/11/items/bombay-1995_202511/Bombay-1995.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/bombay-1995_202511/Bombay-1995-eng.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        },
+                        "dilwale dulhania le jayenge": {
+                                src: "https://ia801701.us.archive.org/24/items/dilwale-dulhania-le-jayenge-1995_202511/Dilwale%20Dulhania%20Le%20Jayenge%20%281995%29.mp4",
+                                type: "mp4",
+                                subtitles: [
+                                    { src: 'https://archive.org/download/dilwale-dulhania-le-jayenge-1995_202511/Dilwale%20Dulhania%20Le%20Jayenge%20%281995%29.vtt', srclang: 'en', label: 'English', default: false }
+                                ]
+                        }
+                };
 
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
@@ -1227,7 +1471,12 @@
                 console.log('No subtitles to load');
                 return;
             }
+            // Remove all existing <track> elements
+            const existingTracks = video.querySelectorAll('track');
+            existingTracks.forEach(track => track.remove());
 
+            let trackAdded = false;
+            let fetchError = false;
             for (let i = 0; i < subtitleArray.length; i++) {
                 const subtitle = subtitleArray[i];
                 const isRemoteUrl = subtitle.src.startsWith('http://') || subtitle.src.startsWith('https://');
@@ -1235,7 +1484,8 @@
                 if (isRemoteUrl) {
                     subtitleUrl = await fetchSubtitleAsBlob(subtitle.src);
                     if (!subtitleUrl) {
-                        console.warn('Skipping subtitle track due to load failure:', subtitle.label);
+                        console.error('Subtitle fetch failed for:', subtitle.src);
+                        fetchError = true;
                         continue;
                     }
                 }
@@ -1245,8 +1495,45 @@
                 track.srclang = subtitle.srclang || 'en';
                 track.src = subtitleUrl;
                 if (subtitle.default) track.default = true;
+                // Add to video
                 video.appendChild(track);
+                trackAdded = true;
+                // On load, set mode to hidden and attach cuechange
+                track.addEventListener('load', function () {
+                    try {
+                        if (track.track) {
+                            track.track.mode = 'hidden';
+                            track.track.addEventListener('cuechange', handleCueChange);
+                        }
+                    } catch (e) { console.warn('Error setting subtitle track mode:', e); }
+                });
+                // Add error handler for debugging
+                track.addEventListener('error', function (e) {
+                    console.error('✗ Error loading subtitle track:', this.label, this.src, e);
+                });
             }
+            // If all fetches failed, show error and add fallback
+            if (fetchError && !trackAdded) {
+                subtitleContainer.innerHTML = '<div class="subtitle">Subtitle file could not be loaded (CORS or network error). Using fallback.</div>';
+                createFallbackSubtitle();
+                return;
+            }
+            // After a short delay, show the first subtitle track if enabled
+            setTimeout(() => {
+                const textTracks = video.textTracks;
+                let found = false;
+                for (let j = 0; j < textTracks.length; j++) {
+                    if (textTracks[j].kind === 'subtitles') {
+                        textTracks[j].mode = subtitlesEnabled ? 'showing' : 'hidden';
+                        found = true;
+                    }
+                }
+                if (!found && subtitlesEnabled && trackAdded) {
+                    subtitleContainer.innerHTML = '<div class="subtitle">No subtitles found or failed to load. Using fallback.' +
+                        '<br>Check browser console for [Subtitle Debug] logs.</div>';
+                    createFallbackSubtitle();
+                }
+            }, 2000);
         }
 
         // Fetch remote subtitle and convert to blob URL (with CORS proxy fallback)
@@ -1416,21 +1703,41 @@ Try hosting subtitles on same server as video`;
         // Toggle subtitles
         function toggleSubtitle() {
             subtitlesEnabled = !subtitlesEnabled;
-            
             // Initialize container if needed
             initSubtitleContainer();
-            
-            const tracks = video.textTracks;
-            
-            // Toggle all subtitle tracks
-            for (let i = 0; i < tracks.length; i++) {
-                if (tracks[i].kind === 'subtitles') {
-                    tracks[i].mode = subtitlesEnabled ? 'showing' : 'hidden';
+            // Always reload subtitles when toggling ON
+            if (subtitlesEnabled) {
+                // Log normalizedTitle and all movieDatabase keys
+                console.log('[Subtitle Debug] normalizedTitle:', normalizedTitle);
+                console.log('[Subtitle Debug] movieDatabase keys:', Object.keys(movieDatabase));
+                // Try to find the best match for the title
+                let foundKey = null;
+                const norm = s => s && s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+                const normTitle = norm(normalizedTitle);
+                for (const key of Object.keys(movieDatabase)) {
+                    if (norm(key) === normTitle) {
+                        foundKey = key;
+                        break;
+                    }
+                }
+                if (foundKey && movieDatabase[foundKey].subtitles) {
+                    console.log('[Subtitle Debug] toggleSubtitle() loading subtitles for', foundKey);
+                    loadSubtitlesWithProxy(movieDatabase[foundKey].subtitles);
+                } else {
+                    console.log('[Subtitle Debug] toggleSubtitle() called, but no subtitles found for', normalizedTitle, 'or', foundKey);
+                }
+            } else {
+                // Hide all subtitle tracks
+                const tracks = video.textTracks;
+                for (let i = 0; i < tracks.length; i++) {
+                    if (tracks[i].kind === 'subtitles') {
+                        tracks[i].mode = 'hidden';
+                    }
                 }
             }
-            
             subtitleContainer.style.display = subtitlesEnabled ? 'block' : 'none';
             showGestureIndicator(subtitlesEnabled ? 'CC ON' : 'CC OFF');
+                    console.log('[Subtitle Debug] loadSubtitlesWithProxy called', subtitleArray);
         }
 
         // Play/Pause toggle
@@ -2062,7 +2369,7 @@ Try hosting subtitles on same server as video`;
         }
 
         function goBack() {
-            window.history.back();
+            window.location.href = 'index.html';
         }
 
         // Utility functions
@@ -2083,6 +2390,17 @@ Try hosting subtitles on same server as video`;
         }
 
         // Video event listeners
+        video.addEventListener('play', () => {
+            isPlaying = true;
+            updatePlayPauseButton();
+            updateCenterPlayButton();
+            hideTapOverlay();
+        });
+        video.addEventListener('pause', () => {
+            isPlaying = false;
+            updatePlayPauseButton();
+            updateCenterPlayButton();
+        });
         video.addEventListener('timeupdate', updateProgress);
         video.addEventListener('progress', updateBuffered);
         video.addEventListener('volumechange', updateVolume);

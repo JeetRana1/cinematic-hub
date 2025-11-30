@@ -478,7 +478,35 @@
             height: 100%;
             background: var(--mx-primary);
             border-radius: 2px;
-            width: 70%;
+            transition: width 0.1s ease;
+        }
+
+        .volume-thumb {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 12px;
+            height: 12px;
+            background: var(--mx-primary);
+            border: 2px solid var(--mx-white);
+            border-radius: 50%;
+            cursor: grab;
+            opacity: 1;
+            transition: opacity 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .volume-thumb:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+
+        .volume-thumb.dragging {
+            cursor: grabbing;
+            transform: translate(-50%, -50%) scale(1.3);
+        }
+
+        .volume-slider:hover .volume-thumb {
+            opacity: 1;
         }
 
         /* Gesture Indicators */
@@ -803,6 +831,7 @@
                             </button>
                             <div class="volume-slider" id="volumeSlider" title="Volume">
                                 <div class="volume-filled" id="volumeFilled"></div>
+                                <div class="volume-thumb" id="volumeThumb"></div>
                             </div>
                         </div>
                         <button class="control-btn" onclick="toggleFullscreen()" title="Fullscreen">
@@ -994,17 +1023,23 @@
                 console.log('updateScreenMode() called, currentScreenMode:', currentScreenMode);
                 console.log('Setting object-fit to:', modes[currentScreenMode].fit);
                 
-                // Force video to reposition and fill container
+                // Force video to fill entire screen aggressively
                 video.style.setProperty('object-fit', modes[currentScreenMode].fit, 'important');
-                video.style.setProperty('position', 'absolute', 'important');
+                video.style.setProperty('position', 'fixed', 'important');
                 video.style.setProperty('top', '0', 'important');
                 video.style.setProperty('left', '0', 'important');
+                video.style.setProperty('right', '0', 'important');
+                video.style.setProperty('bottom', '0', 'important');
                 video.style.setProperty('width', '100vw', 'important');
                 video.style.setProperty('height', '100vh', 'important');
+                video.style.setProperty('min-width', '100vw', 'important');
+                video.style.setProperty('min-height', '100vh', 'important');
                 video.style.setProperty('max-width', '100vw', 'important');
                 video.style.setProperty('max-height', '100vh', 'important');
                 video.style.setProperty('margin', '0', 'important');
                 video.style.setProperty('padding', '0', 'important');
+                video.style.setProperty('border', 'none', 'important');
+                video.style.setProperty('transform', 'none', 'important');
                 
                 screenModeIcon.className = 'fas ' + modes[currentScreenMode].icon;
                 screenModeBtn.setAttribute('data-tooltip', modes[currentScreenMode].label);
@@ -1014,6 +1049,13 @@
                 
                 // Force a reflow to ensure styles are applied
                 video.offsetHeight;
+                
+                // Additional force - remove any conflicting styles
+                setTimeout(() => {
+                    video.style.setProperty('left', '0', 'important');
+                    video.style.setProperty('width', '100vw', 'important');
+                    video.offsetHeight;
+                }, 10);
             }
 
             // Add screen mode event listener
@@ -1047,17 +1089,23 @@
         // Function to preserve screen mode (call this after video operations)
         function preserveScreenMode() {
             if (screenModeBtn && screenModeIcon && video) {
-                // Force video to reposition and fill container
+                // Force video to fill entire screen aggressively
                 video.style.setProperty('object-fit', modes[currentScreenMode].fit, 'important');
-                video.style.setProperty('position', 'absolute', 'important');
+                video.style.setProperty('position', 'fixed', 'important');
                 video.style.setProperty('top', '0', 'important');
                 video.style.setProperty('left', '0', 'important');
+                video.style.setProperty('right', '0', 'important');
+                video.style.setProperty('bottom', '0', 'important');
                 video.style.setProperty('width', '100vw', 'important');
                 video.style.setProperty('height', '100vh', 'important');
+                video.style.setProperty('min-width', '100vw', 'important');
+                video.style.setProperty('min-height', '100vh', 'important');
                 video.style.setProperty('max-width', '100vw', 'important');
                 video.style.setProperty('max-height', '100vh', 'important');
                 video.style.setProperty('margin', '0', 'important');
                 video.style.setProperty('padding', '0', 'important');
+                video.style.setProperty('border', 'none', 'important');
+                video.style.setProperty('transform', 'none', 'important');
                 
                 screenModeIcon.className = 'fas ' + modes[currentScreenMode].icon;
                 screenModeBtn.setAttribute('data-tooltip', modes[currentScreenMode].label);
@@ -1066,6 +1114,13 @@
                 
                 // Force a reflow to ensure styles are applied
                 video.offsetHeight;
+                
+                // Additional force - remove any conflicting styles
+                setTimeout(() => {
+                    video.style.setProperty('left', '0', 'important');
+                    video.style.setProperty('width', '100vw', 'important');
+                    video.offsetHeight;
+                }, 10);
             }
         }
 
@@ -1463,6 +1518,81 @@ Try hosting subtitles on same server as video`;
             video.muted = isMuted;
             updateVolume();
         }
+
+        // Draggable Volume Slider
+        const volumeThumb = document.getElementById('volumeThumb');
+        let isDraggingVolume = false;
+
+        function updateVolumeSlider() {
+            const volume = video.volume;
+            const percentage = volume * 100;
+            volumeFilled.style.width = percentage + '%';
+            volumeThumb.style.left = percentage + '%';
+        }
+
+        function setVolumeFromPosition(x) {
+            const rect = volumeSlider.getBoundingClientRect();
+            const percentage = Math.max(0, Math.min(100, ((x - rect.left) / rect.width) * 100));
+            const volume = percentage / 100;
+            
+            video.volume = volume;
+            video.muted = false;
+            isMuted = false;
+            updateVolume();
+            updateVolumeSlider();
+        }
+
+        // Volume slider click
+        volumeSlider.addEventListener('click', (e) => {
+            setVolumeFromPosition(e.clientX);
+        });
+
+        // Volume thumb drag events
+        volumeThumb.addEventListener('mousedown', (e) => {
+            isDraggingVolume = true;
+            volumeThumb.classList.add('dragging');
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDraggingVolume) {
+                setVolumeFromPosition(e.clientX);
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDraggingVolume) {
+                isDraggingVolume = false;
+                volumeThumb.classList.remove('dragging');
+            }
+        });
+
+        // Touch events for mobile
+        volumeThumb.addEventListener('touchstart', (e) => {
+            isDraggingVolume = true;
+            volumeThumb.classList.add('dragging');
+            e.preventDefault();
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (isDraggingVolume) {
+                const touch = e.touches[0];
+                setVolumeFromPosition(touch.clientX);
+            }
+        });
+
+        document.addEventListener('touchend', () => {
+            if (isDraggingVolume) {
+                isDraggingVolume = false;
+                volumeThumb.classList.remove('dragging');
+            }
+        });
+
+        // Update volume slider when volume changes
+        video.addEventListener('volumechange', updateVolumeSlider);
+
+        // Initialize volume slider
+        updateVolumeSlider();
 
         function setVolume(e) {
             const rect = volumeSlider.getBoundingClientRect();

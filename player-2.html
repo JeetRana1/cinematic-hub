@@ -68,14 +68,19 @@
         }
 
         video {
-            position: absolute !important;
+            position: fixed !important;
             top: 0 !important;
             left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
+            min-width: 100vw !important;
+            min-height: 100vh !important;
             max-width: 100vw !important;
             max-height: 100vh !important;
-            object-fit: cover;
+            object-fit: cover !important;
+            object-position: center center !important;
             background: #000 !important;
             display: block !important;
             margin: 0 !important;
@@ -979,7 +984,7 @@
             { fit: 'cover', icon: 'fa-arrows-alt-h', label: 'Wide' },
             { fit: 'contain', icon: 'fa-compress', label: 'Contain' }
         ];
-        let currentScreenMode = 2; // Start with "Contain" mode (index 2)
+        let currentScreenMode = 1; // Start with "Wide" mode (index 1, which is 'cover')
 
         // Set video title
         videoTitle.textContent = title;

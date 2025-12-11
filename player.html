@@ -500,42 +500,10 @@
   <script src="js/continue-watching.js"></script>
   <!-- Removed continue-watching-ui on player page to prevent conflicts; player resume logic handles UI needs -->
 
-  <!-- Initialize ContinueWatchingUI early -->
+  <!-- ContinueWatchingUI legacy removed; cloud manager handles resume -->
   <script>
-    // Initialize continue watching UI
     window.continueWatchingUI = null;
-    window.continueWatchingUIReady = false;
-
-    // Function to initialize the ContinueWatchingUI
-    function initContinueWatchingUI() {
-      if (window.ContinueWatchingUI && !window.continueWatchingUI) {
-        try {
-          window.continueWatchingUI = new ContinueWatchingUI();
-          console.log('ContinueWatchingUI initialized:', !!window.continueWatchingUI);
-          window.continueWatchingUIReady = true;
-
-          // Dispatch an event that the UI is ready
-          const event = new Event('ContinueWatchingUIInitialized');
-          document.dispatchEvent(event);
-
-          return true;
-        } catch (error) {
-          console.error('Error initializing ContinueWatchingUI:', error);
-          return false;
-        }
-      }
-      return false;
-    }
-
-    // Try to initialize immediately
-    if (!initContinueWatchingUI()) {
-      // If not ready, set up a listener for when ContinueWatchingUI is available
-      const checkUI = setInterval(() => {
-        if (initContinueWatchingUI()) {
-          clearInterval(checkUI);
-        }
-      }, 100);
-    }
+    window.continueWatchingUIReady = true;
   </script>
 
   <!-- Player resume logic: prompts to resume on refresh or fresh load -->
@@ -3514,8 +3482,8 @@
         }
       }
 
-      // Initialize continue watching UI
-      let continueWatchingUI;
+      // Initialize continue watching UI (legacy var kept null)
+      let continueWatchingUI = null;
 
       // Show resume prompt modal when there's saved progress
       function showResumePromptModal(movie) {
@@ -3592,10 +3560,11 @@
             window.__resumedFromPrompt = true;
 
             // Get the saved position and seek to it
-            if (window.continueWatchingUI) {
-              const savedProgress = window.continueWatchingUI.getSavedProgress(movie.id);
-              if (savedProgress && savedProgress.position > 0) {
-                video.currentTime = savedProgress.position;
+            if (window.ContinueWatchingManager && movie.id) {
+              // Use cloud manager to get saved position
+              const saved = window.ContinueWatchingManager.getMovieProgress(movie.id);
+              if (saved && saved.currentTime > 0) {
+                video.currentTime = saved.currentTime;
                 const playPromise = video.play();
                 if (playPromise !== undefined) {
                   playPromise.catch(error => {
@@ -3616,9 +3585,7 @@
             modal.remove();
 
             // Clear the resume position if needed
-            if (window.continueWatchingUI && movie.id) {
-              window.continueWatchingUI.clearResumePosition(movie.id);
-            }
+            // Cloud manager will overwrite progress on save; no clear needed
 
             // Start from the beginning
             video.currentTime = 0;
@@ -5048,7 +5015,7 @@
           }
         }
       })();
-      // State
+      // State (declare early to avoid temporal dead zone)
       let hideControlsTimeout;
       let isScrubbing = false;
       let wasPlayingBeforeScrubbing = false;

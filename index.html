@@ -5720,15 +5720,22 @@
         // Get continue watching data from Firebase (cloud-only)
         let continueWatching = {};
         
-        // Try ContinueWatchingManager first (uses Firebase)
-        if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.getAllProgress === 'function') {
+        // Try ContinueWatchingManager async method first (uses Firebase)
+        if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.getAllProgressAsync === 'function') {
+          continueWatching = await window.ContinueWatchingManager.getAllProgressAsync();
+        } else if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.getAllProgress === 'function') {
+          // Fallback to sync version (might use cache)
           continueWatching = window.ContinueWatchingManager.getAllProgress();
+          // If empty, try async
+          if (Object.keys(continueWatching).length === 0 && window.ContinueWatchingManager.getAllProgressAsync) {
+            continueWatching = await window.ContinueWatchingManager.getAllProgressAsync();
+          }
         } else if (window.FirebaseSync && window.FirebaseSync.initialized) {
           // Fallback to FirebaseSync
           continueWatching = await window.FirebaseSync.getContinueWatching();
         }
 
-        console.log('Continue watching data from cloud:', continueWatching);
+        console.log('Continue watching data from cloud:', continueWatching, 'Items:', Object.keys(continueWatching).length);
 
         // Get movies that have progress
         const continueWatchingMovies = Object.entries(continueWatching).map(([id, movie]) => ({
@@ -5923,7 +5930,7 @@
             clearButton.parentNode.replaceChild(newClearButton, clearButton);
             
             // Attach the new event listener
-            newClearButton.addEventListener('click', (e) => {
+            newClearButton.addEventListener('click', async (e) => {
               e.stopPropagation();
               // Trigger dustbin animation on icon
               const iconEl = newClearButton.querySelector('i');
@@ -5932,17 +5939,28 @@
                 void iconEl.offsetWidth; // reflow to restart animation
                 iconEl.classList.add('dump-anim');
               }
-              showClearConfirmation(() => {
-                // Use the ContinueWatchingManager's clearAll method
+              showClearConfirmation(async () => {
+                // Use the ContinueWatchingManager's clearAll method (cloud-only)
                 if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.clearAll === 'function') {
                   window.ContinueWatchingManager.clearAll();
-                } else {
-                  // Fallback to direct localStorage removal
-                  const key = getContinueWatchingKey();
-                  localStorage.removeItem(key);
+                } else if (window.FirebaseSync && window.FirebaseSync.initialized) {
+                  // Fallback to FirebaseSync
+                  await window.FirebaseSync.saveContinueWatching({});
+                  if (window.FirebaseSync.cache) {
+                    window.FirebaseSync.cache['continueWatching'] = {};
+                  }
                 }
+                
+                // Hide the section immediately
                 section.style.display = 'none';
+                
+                // Show success message
                 UIToast.success('Cleared', 'All continue watching items removed');
+                
+                // Wait a moment then reload to ensure UI is in sync
+                setTimeout(() => {
+                  loadContinueWatching(false);
+                }, 100);
               });
             });
           }

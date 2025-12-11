@@ -11,6 +11,96 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="css/subtitles-v2.css">
+    
+    <!-- Initialize Continue Watching Tracking -->
+    <script>
+    (function() {
+      'use strict';
+      console.log('[Tracking] Initializing explicit video tracking for player-2...');
+
+      // Wait for DOM and video element
+      function initializeTracking() {
+        const video = document.getElementById('video');
+        if (!video) {
+          console.warn('[Tracking] Video element not found, retrying...');
+          setTimeout(initializeTracking, 100);
+          return;
+        }
+
+        // Get movie data from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const movieId = urlParams.get('movieId') || urlParams.get('id') || `movie_${Date.now()}`;
+        const title = urlParams.get('title') || 'Unknown Movie';
+        const poster = urlParams.get('poster') || urlParams.get('thumbnail') || '';
+
+        const movieData = {
+          movieId: movieId,
+          title: title,
+          posterUrl: poster,
+          thumbnail: poster
+        };
+
+        console.log('[Tracking] Movie data:', movieData);
+
+        // Wait for ContinueWatchingManager
+        function startTracking() {
+          if (!window.ContinueWatchingManager) {
+            console.warn('[Tracking] Manager not ready, waiting...');
+            setTimeout(startTracking, 100);
+            return;
+          }
+
+          console.log('[Tracking] ✅ ContinueWatchingManager found!');
+
+          // Initialize tracking when video metadata loads
+          const initOnReady = () => {
+            if (video.readyState >= 1 && video.duration > 0) {
+              console.log('[Tracking] ✅ Video ready, starting tracking');
+              console.log('[Tracking] Duration:', video.duration, 'seconds');
+
+              try {
+                window.ContinueWatchingManager.initializeVideoTracking(video, movieData);
+                console.log('[Tracking] ✅ Tracking initialized successfully');
+              } catch (e) {
+                console.error('[Tracking] ❌ Error initializing tracking:', e);
+              }
+            } else {
+              console.log('[Tracking] Video not ready yet, waiting... (readyState:', video.readyState, ')');
+            }
+          };
+
+          // Try now
+          initOnReady();
+
+          // Also listen for events
+          video.addEventListener('loadedmetadata', () => {
+            console.log('[Tracking] loadedmetadata event fired');
+            initOnReady();
+          }, { once: true });
+
+          video.addEventListener('canplay', () => {
+            console.log('[Tracking] canplay event fired');
+            initOnReady();
+          }, { once: true });
+
+          // Force check after 2 seconds
+          setTimeout(() => {
+            console.log('[Tracking] Force check after 2s');
+            initOnReady();
+          }, 2000);
+        }
+
+        startTracking();
+      }
+
+      // Start initialization
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeTracking);
+      } else {
+        initializeTracking();
+      }
+    })();
+    </script>
     <style>
         :root {
             --mx-primary: #1976d2;

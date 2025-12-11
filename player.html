@@ -3623,7 +3623,8 @@
         video.preload = 'auto';
         video.setAttribute('preload', 'auto');
         video.muted = false;
-        video.autoplay = true;
+        // Disable autoplay if we have a resume time parameter (show prompt first)
+        video.autoplay = !(window.__shouldShowResumePrompt && window.__resumeTimeParam > 0);
         video.controls = false;
         video.style.width = '100%';
         video.style.height = '100%';
@@ -3662,11 +3663,16 @@
 
         // Enhanced function to check and show resume prompt with async/await support
         const checkAndShowResumePrompt = async (source = 'unknown') => {
-          console.log(`Resume check triggered by: ${source}`);
+          console.log(`Resume check triggered by: ${source}`, {
+            hasResumeParam: window.__shouldShowResumePrompt,
+            resumeTime: window.__resumeTimeParam,
+            videoReady: video ? video.readyState : 'no-video',
+            movieId: movie ? movie.id : 'no-movie'
+          });
 
-          // Make sure video element exists and has metadata
-          if (!video || video.readyState < 1) {
-            console.log('Video not ready yet, will retry...');
+          // Make sure video element exists
+          if (!video) {
+            console.log('Video element not found, will retry...');
             return false;
           }
 
@@ -3683,6 +3689,7 @@
             
             // Show the resume prompt with the resume time
             showResumePromptModal(movie);
+            console.log('Resume modal shown');
             
             // Update the resume Yes button to use the URL resume time
             const resumeYesBtn = document.getElementById('resumeYes');
@@ -3692,11 +3699,12 @@
                 if (modal) modal.remove();
                 
                 // Seek to the resume time
+                console.log('Resuming from:', resumeTime);
                 if (video.duration && resumeTime < video.duration) {
                   video.currentTime = resumeTime;
                 }
                 video.play();
-              }, { once: true });
+              });
             }
             
             // Update the resume No button to start from beginning
@@ -3706,9 +3714,10 @@
                 const modal = document.getElementById('resumePromptModal');
                 if (modal) modal.remove();
                 
+                console.log('Starting from beginning');
                 video.currentTime = 0;
                 video.play();
-              }, { once: true });
+              });
             }
             
             // Clear the flags

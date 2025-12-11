@@ -20,23 +20,6 @@ class ContinueWatchingUI {
       this.render();
     });
 
-    // Re-render when profile/user changes or storage for CW changes
-    window.addEventListener('storage', (e) => {
-      try {
-        const key = this.manager && typeof this.manager.getStorageKey === 'function'
-          ? this.manager.getStorageKey()
-          : 'continueWatching';
-        if (!e.key || e.key === key || e.key.startsWith('continueWatching')) {
-          this.render();
-        }
-      } catch (_) {}
-    });
-
-    // Optional: listen for a custom profile change event if the app emits one
-    window.addEventListener('profileChanged', () => {
-      this.render();
-    });
-
     // Initial render - fetch from Firebase if available
     this.render();
   }
@@ -129,11 +112,9 @@ class ContinueWatchingUI {
             <div class="progress" style="width: ${movie.progressPercent}%"></div>
           </div>
           <div class="resume-overlay">
-            <div class="resume-button" aria-label="Resume">
-              <svg class="resume-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M8 5v14l11-7-11-7z"></path>
-              </svg>
-              <span class="resume-label">Resume</span>
+            <div class="resume-button">
+              <i class="fas fa-play"></i>
+              Resume
             </div>
           </div>
           <div class="remove-button" title="Remove from Continue Watching">

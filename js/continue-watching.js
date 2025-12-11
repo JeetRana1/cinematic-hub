@@ -41,29 +41,16 @@ class ContinueWatchingManager {
   }
 
   /**
-   * Get all continue watching data from localStorage
+   * Get all continue watching data from Firebase cloud (no localStorage)
    */
-  getAllProgress() {
+  async getAllProgress() {
     try {
-      const scopedKey = this.getStorageKey();
-      let data = localStorage.getItem(scopedKey);
-      if (!data) {
-        const legacy = localStorage.getItem(this.BASE_STORAGE_KEY);
-        const user = (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function')
-          ? window.FirebaseAuth.getUser()
-          : null;
-        const uid = user && user.uid;
-        const sel = uid ? localStorage.getItem(`fb_selected_profile_${uid}`) : null;
-        const migratedFlag = uid && sel ? `cw_migrated_${uid}_${sel}` : null;
-        if (legacy && migratedFlag && !localStorage.getItem(migratedFlag)) {
-          try {
-            localStorage.setItem(scopedKey, legacy);
-            localStorage.setItem(migratedFlag, '1');
-            data = legacy;
-          } catch (_) { }
-        }
+      if (window.FirebaseSync && window.FirebaseSync.initialized) {
+        const data = await window.FirebaseSync.getContinueWatching();
+        return data || {};
       }
-      return JSON.parse(data || '{}');
+      console.warn('FirebaseSync not available - returning empty (cloud-only mode)');
+      return {};
     } catch (error) {
       console.error('Error reading continue watching data:', error);
       return {};
@@ -71,17 +58,18 @@ class ContinueWatchingManager {
   }
 
   /**
-   * Get progress for a specific movie
+   * Get progress for a specific movie from cloud
    */
-  getMovieProgress(movieId) {
-    const allProgress = this.getAllProgress();
+  async getMovieProgress(movieId) {
+    const allProgress = await this.getAllProgress();
     return allProgress[movieId] || null;
   }
 
   /**
    * Save progress for a movie with enhanced data including poster
+   * CLOUD-ONLY: Only saves to Firebase, no localStorage
    */
-  saveMovieProgress(movieId, progressData, force = false) {
+  async saveMovieProgress(movieId, progressData, force = false) {
     try {
       // Validate progress data - check for undefined/null/NaN, not falsy (0 is valid!)
       if (progressData.currentTime == null || progressData.duration == null ||
@@ -101,8 +89,19 @@ class ContinueWatchingManager {
         return;
       }
 
-      const allProgress = this.getAllProgress();
-      allProgress[movieId] = {
+      const user = (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function')
+        ? window.FirebaseAuth.getUser()
+        : null;
+      const uid = user && user.uid;
+      const profileId = (
+        localStorage.getItem(`fb_selected_profile_${uid}`) ||
+        localStorage.getItem('selectedProfileId') ||
+        localStorage.getItem(`profile_selected_${uid}`) ||
+        localStorage.getItem('activeProfileId') ||
+        null
+      );
+
+      const movieRecord = {
         movieId: movieId,
         title: progressData.title || 'Unknown Movie',
         posterUrl: progressData.posterUrl || progressData.thumbnail || '',
@@ -111,27 +110,29 @@ class ContinueWatchingManager {
         progress: Math.round((progressData.currentTime / progressData.duration) * 100),
         updatedAt: Date.now(),
         validUntil: Date.now() + (7 * 24 * 60 * 60 * 1000), // 7 days
-        // Additional metadata for better resume experience
         playbackRate: progressData.playbackRate || 1,
         volume: progressData.volume || 1,
-        muted: progressData.muted || false
+        muted: progressData.muted || false,
+        uid: uid || 'guest',
+        profileId: profileId || 'default'
       };
 
-      localStorage.setItem(this.getStorageKey(), JSON.stringify(allProgress));
       this.lastSavedTime = progressData.currentTime;
-
       console.log('Progress saved for', movieId, ':', Math.round(progressData.currentTime), 's');
 
-      // Dispatch custom event for live updates
-      window.dispatchEvent(new CustomEvent('continueWatchingUpdated', {
-        detail: { movieId, progressData: allProgress[movieId] }
-      }));
-
-      // Also sync to Firebase if available
+      // CLOUD-ONLY: Save to Firebase only, no localStorage
       if (window.FirebaseSync && window.FirebaseSync.initialized) {
-        window.FirebaseSync.saveContinueWatching(allProgress).catch(err => {
-          console.warn('Failed to sync continue watching to Firebase:', err);
-        });
+        try {
+          await window.FirebaseSync.saveMovieProgress(movieId, movieRecord);
+          // Dispatch custom event for live updates
+          window.dispatchEvent(new CustomEvent('continueWatchingUpdated', {
+            detail: { movieId, progressData: movieRecord }
+          }));
+        } catch (err) {
+          console.error('Failed to save continue watching to Firebase:', err);
+        }
+      } else {
+        console.warn('FirebaseSync not available - progress not saved (cloud-only mode)');
       }
     } catch (error) {
       console.error('Error saving continue watching data:', error);
@@ -139,26 +140,20 @@ class ContinueWatchingManager {
   }
 
   /**
-   * Remove a movie from continue watching
+   * Remove a movie from continue watching (cloud-only)
    */
-  removeMovieProgress(movieId) {
+  async removeMovieProgress(movieId) {
     try {
-      const allProgress = this.getAllProgress();
-      delete allProgress[movieId];
-      localStorage.setItem(this.getStorageKey(), JSON.stringify(allProgress));
-
-      console.log('Removed progress for', movieId);
-
-      // Dispatch custom event for live updates
-      window.dispatchEvent(new CustomEvent('continueWatchingUpdated', {
-        detail: { movieId, removed: true }
-      }));
-
-      // Also sync to Firebase if available
       if (window.FirebaseSync && window.FirebaseSync.initialized) {
-        window.FirebaseSync.saveContinueWatching(allProgress).catch(err => {
-          console.warn('Failed to sync continue watching removal to Firebase:', err);
-        });
+        await window.FirebaseSync.removeMovieProgress(movieId);
+        console.log('Removed progress for', movieId);
+        
+        // Dispatch custom event for live updates
+        window.dispatchEvent(new CustomEvent('continueWatchingUpdated', {
+          detail: { movieId, removed: true }
+        }));
+      } else {
+        console.warn('FirebaseSync not available - cannot remove (cloud-only mode)');
       }
     } catch (error) {
       console.error('Error removing continue watching data:', error);
@@ -166,14 +161,31 @@ class ContinueWatchingManager {
   }
 
   /**
-   * Get movies suitable for continue watching with proper poster URLs
+   * Get movies suitable for continue watching from cloud
    */
-  getContinueWatchingMovies() {
-    const allProgress = this.getAllProgress();
+  async getContinueWatchingMovies() {
+    const allProgress = await this.getAllProgress();
     const movies = [];
     const now = Date.now();
 
+    // Filter by current user/profile
+    const user = (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function')
+      ? window.FirebaseAuth.getUser()
+      : null;
+    const uid = user && user.uid;
+    const profileId = (
+      localStorage.getItem(`fb_selected_profile_${uid}`) ||
+      localStorage.getItem('selectedProfileId') ||
+      localStorage.getItem(`profile_selected_${uid}`) ||
+      localStorage.getItem('activeProfileId') ||
+      null
+    );
+
     for (const [movieId, data] of Object.entries(allProgress)) {
+      // Skip if different user/profile
+      if (uid && data.uid && data.uid !== uid) continue;
+      if (profileId && data.profileId && data.profileId !== profileId) continue;
+
       // Skip expired entries
       if (data.validUntil && data.validUntil < now) {
         continue;

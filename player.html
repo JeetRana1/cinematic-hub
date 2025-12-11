@@ -1127,7 +1127,7 @@
       right: 0;
       background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
       padding: 20px;
-      opacity: 0;
+      opacity: 1;
       transition: opacity 0.3s ease;
       z-index: 10;
       overflow: visible;
@@ -1135,6 +1135,10 @@
 
     .controls-container.visible {
       opacity: 1;
+    }
+
+    .controls-container.hidden {
+      opacity: 0;
     }
 
     .controls {

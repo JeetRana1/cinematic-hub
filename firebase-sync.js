@@ -213,6 +213,20 @@
       return await this.saveContinueWatching(continueWatching);
     }
 
+    // Individual movie progress methods (for cloud-only ContinueWatchingManager)
+    async saveMovieProgress(movieId, movieData) {
+      const continueWatching = await this.getContinueWatching();
+      continueWatching[movieId] = {
+        ...movieData,
+        timestamp: Date.now()
+      };
+      return await this.saveContinueWatching(continueWatching);
+    }
+
+    async removeMovieProgress(movieId) {
+      return await this.removeContinueWatchingItem(movieId);
+    }
+
     // Bookmarks (My List) Methods
     async getBookmarks() {
       return await this.getFromFirestore('bookmarks', {});

@@ -163,12 +163,13 @@ class ContinueWatchingUI {
     // Calculate the time to resume from (in seconds)
     const resumeTime = Math.floor(movie.currentTime);
 
-    // Generate the base URL
-    let resumeUrl = `player.html?title=${encodeURIComponent(movie.title)}`;
+    // Generate the base URL with movieId
+    let resumeUrl = `player.html?id=${encodeURIComponent(movie.movieId || 'unknown')}&title=${encodeURIComponent(movie.title)}`;
 
     // Add optional parameters if they exist
     if (movie.year) resumeUrl += `&year=${encodeURIComponent(movie.year)}`;
     if (movie.poster) resumeUrl += `&poster=${encodeURIComponent(movie.poster)}`;
+    if (movie.posterUrl) resumeUrl += `&poster=${encodeURIComponent(movie.posterUrl)}`;
     if (movie.thumbnail) resumeUrl += `&thumbnail=${encodeURIComponent(movie.thumbnail)}`;
 
     // Add the resume time parameter

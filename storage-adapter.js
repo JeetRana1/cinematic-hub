@@ -147,9 +147,12 @@
           e.preventDefault();
           e.stopPropagation();
           const movieId = movieCard.dataset.movieId;
-          console.log('Resuming movie:', movieId);
-          // Get the player URL - adjust based on your movie ID format
-          const playerUrl = `player.html?id=${encodeURIComponent(movieId)}`;
+          const title = movie.title || 'Unknown';
+          const poster = movie.posterUrl || movie.poster || '';
+          
+          console.log('Resuming movie:', movieId, title);
+          // Navigate to player with all necessary parameters
+          const playerUrl = `player.html?id=${encodeURIComponent(movieId)}&title=${encodeURIComponent(title)}&poster=${encodeURIComponent(poster)}`;
           window.location.href = playerUrl;
         });
         

@@ -120,7 +120,12 @@ class ContinueWatchingManager {
         detail: { movieId, progressData: allProgress[movieId] }
       }));
 
-      // Firestore sync removed: progress is now stored only in localStorage
+      // Also sync to Firebase if available
+      if (window.FirebaseSync && window.FirebaseSync.initialized) {
+        window.FirebaseSync.saveContinueWatching(allProgress).catch(err => {
+          console.warn('Failed to sync continue watching to Firebase:', err);
+        });
+      }
     } catch (error) {
       console.error('Error saving continue watching data:', error);
     }
@@ -141,6 +146,13 @@ class ContinueWatchingManager {
       window.dispatchEvent(new CustomEvent('continueWatchingUpdated', {
         detail: { movieId, removed: true }
       }));
+
+      // Also sync to Firebase if available
+      if (window.FirebaseSync && window.FirebaseSync.initialized) {
+        window.FirebaseSync.saveContinueWatching(allProgress).catch(err => {
+          console.warn('Failed to sync continue watching removal to Firebase:', err);
+        });
+      }
     } catch (error) {
       console.error('Error removing continue watching data:', error);
     }

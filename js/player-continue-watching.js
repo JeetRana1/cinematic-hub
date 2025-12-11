@@ -289,9 +289,9 @@
 
     const resumeTime = getValidResumeTime();
 
-    // ALWAYS show resume prompt if there's saved progress > 10 seconds
-    // This ensures it works on every page reload/refresh
-    const shouldShowResumePrompt = savedProgress?.currentTime > 10;
+    // ALWAYS show resume prompt if there's saved progress > 10 seconds OR a URL resume time > 10 seconds
+    // This ensures it works on every page reload/refresh and when clicking resume from continue watching
+    const shouldShowResumePrompt = (savedProgress?.currentTime > 10) || (urlResumeSeconds && urlResumeSeconds > 10);
 
     // Handle setting the video time with retry logic
     const setVideoTimeSafely = (time) => {

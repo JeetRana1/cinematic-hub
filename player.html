@@ -2718,22 +2718,14 @@
 
       // Initialize player elements
       const video = document.getElementById('video');
-      // If a start time (?t=seconds) was provided, seek after metadata loads
+      // If a start time (?t=seconds) was provided, show resume prompt
       const startTimeParam = parseInt(urlParams.get('t') || '0', 10);
-      // Block auto-seek to 0:00 if resume progress exists and show modal instead
+      
+      // Store the resume time for later use
       if (!isNaN(startTimeParam) && startTimeParam > 0) {
-        const applyStartTime = () => {
-          try {
-            if (video.duration && startTimeParam < video.duration) {
-              video.currentTime = startTimeParam;
-            } else {
-              setTimeout(applyStartTime, 200);
-            }
-          } catch (e) {
-            setTimeout(applyStartTime, 200);
-          }
-        };
-        video.addEventListener('loadedmetadata', applyStartTime, { once: true });
+        window.__resumeTimeParam = startTimeParam;
+        window.__shouldShowResumePrompt = true;
+        console.log('Resume time parameter found:', startTimeParam, 'seconds');
       } else {
         // Check for continue watching progress and block auto-seek to 0:00
         setTimeout(() => {
@@ -3682,6 +3674,48 @@
           if (!movie || !movie.id) {
             console.warn('No valid movie data available for resume prompt');
             return false;
+          }
+
+          // Check if we have a resume time parameter from the URL
+          if (window.__shouldShowResumePrompt && window.__resumeTimeParam > 0) {
+            console.log('Showing resume prompt for URL parameter resume time:', window.__resumeTimeParam);
+            const resumeTime = window.__resumeTimeParam;
+            
+            // Show the resume prompt with the resume time
+            showResumePromptModal(movie);
+            
+            // Update the resume Yes button to use the URL resume time
+            const resumeYesBtn = document.getElementById('resumeYes');
+            if (resumeYesBtn) {
+              resumeYesBtn.addEventListener('click', function() {
+                const modal = document.getElementById('resumePromptModal');
+                if (modal) modal.remove();
+                
+                // Seek to the resume time
+                if (video.duration && resumeTime < video.duration) {
+                  video.currentTime = resumeTime;
+                }
+                video.play();
+              }, { once: true });
+            }
+            
+            // Update the resume No button to start from beginning
+            const resumeNoBtn = document.getElementById('resumeNo');
+            if (resumeNoBtn) {
+              resumeNoBtn.addEventListener('click', function() {
+                const modal = document.getElementById('resumePromptModal');
+                if (modal) modal.remove();
+                
+                video.currentTime = 0;
+                video.play();
+              }, { once: true });
+            }
+            
+            // Clear the flags
+            window.__shouldShowResumePrompt = false;
+            window.__resumeTimeParam = 0;
+            
+            return true;
           }
 
           console.log(`Checking resume prompt (${source}) for movie:`, movie.id, movie.title);

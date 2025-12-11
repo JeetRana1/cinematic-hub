@@ -61,8 +61,9 @@ class ContinueWatchingUI {
       timeRemaining: this.calculateTimeRemaining(movie.currentTime || 0, movie.duration || 1),
       ...movie
     })).filter(movie => {
-      // Only show movies with valid progress
-      return movie.progressPercent > 0 && movie.progressPercent < 95 && movie.title && movie.title !== 'Untitled';
+      // Only show movies with valid progress AND valid poster URL (no placeholders)
+      const hasValidPoster = movie.thumbnail && !movie.thumbnail.includes('placeholder');
+      return movie.progressPercent > 0 && movie.progressPercent < 95 && movie.title && movie.title !== 'Untitled' && hasValidPoster;
     }).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   }
 
@@ -97,12 +98,15 @@ class ContinueWatchingUI {
   }
 
   createMovieCard(movie) {
-    const thumbnailUrl = movie.thumbnail || `https://via.placeholder.com/300x450?text=${encodeURIComponent(movie.title)}`;
+    // Skip movies without valid poster (no placeholders)
+    if (!movie.thumbnail || movie.thumbnail.includes('placeholder')) {
+      return '';
+    }
 
     return `
       <div class="continue-watching-card" data-movie-id="${movie.movieId}">
         <div class="continue-watching-poster">
-          <img src="${thumbnailUrl}" alt="${movie.title}" loading="lazy" />
+          <img src="${movie.thumbnail}" alt="${movie.title}" loading="lazy" />
           <div class="progress-bar">
             <div class="progress" style="width: ${movie.progressPercent}%"></div>
           </div>

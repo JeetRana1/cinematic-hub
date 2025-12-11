@@ -106,11 +106,15 @@
 
       // Render the continue watching cards
       validMovies.forEach(movie => {
-        const thumbnailUrl = movie.poster || movie.posterUrl || `https://via.placeholder.com/300x450?text=${encodeURIComponent(movie.title)}`;
+        const thumbnailUrl = movie.poster || movie.posterUrl;
+        
+        // Skip movies without valid poster URL (don't show placeholders)
+        if (!thumbnailUrl) {
+          console.warn('Skipping movie without poster:', movie.title);
+          return;
+        }
+        
         const progressPercent = Math.round(movie.progress || 0);
-        const timeRemaining = movie.duration && movie.currentTime 
-          ? Math.max(0, movie.duration - movie.currentTime) 
-          : 0;
         
         const movieCard = document.createElement('div');
         movieCard.className = 'continue-watching-card';
@@ -134,10 +138,36 @@
             <p>${progressPercent}% watched</p>
           </div>
         `;
+        
+        // Add event listeners
+        const resumeBtn = movieCard.querySelector('.resume-button');
+        const removeBtn = movieCard.querySelector('.remove-button');
+        
+        resumeBtn?.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const movieId = movieCard.dataset.movieId;
+          console.log('Resuming movie:', movieId);
+          // Get the player URL - adjust based on your movie ID format
+          const playerUrl = `player.html?id=${encodeURIComponent(movieId)}`;
+          window.location.href = playerUrl;
+        });
+        
+        removeBtn?.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const movieId = movieCard.dataset.movieId;
+          console.log('Removing from continue watching:', movieId);
+          if (window.ContinueWatchingManager) {
+            const manager = new window.ContinueWatchingManager();
+            manager.removeMovieProgress(movieId);
+          }
+          movieCard.remove();
+        });
+        
         container.appendChild(movieCard);
       });
 
-      // Just log the movies for now - they're loaded and will be displayed by existing UI
       console.log('Continue watching movies loaded:', validMovies.length);
 
     } catch (error) {

@@ -5845,20 +5845,33 @@
                 e.stopPropagation();
 
                 // Remove from localStorage
-                const continueWatching = JSON.parse(localStorage.getItem(getContinueWatchingKey()) || '{}');
                 const movieId = movie.id || movie.movieId;
-
-                if (movieId && continueWatching[movieId]) {
-                  delete continueWatching[movieId];
-                  localStorage.setItem(getContinueWatchingKey(), JSON.stringify(continueWatching));
-
-                  // Remove the card
-                  card.remove();
-
-                  // If no more items, hide the section
-                  if (container.children.length === 0) {
-                    section.style.display = 'none';
+                if (movieId) {
+                  const continueWatching = JSON.parse(localStorage.getItem(getContinueWatchingKey()) || '{}');
+                  if (continueWatching[movieId]) {
+                    delete continueWatching[movieId];
+                    localStorage.setItem(getContinueWatchingKey(), JSON.stringify(continueWatching));
+                    
+                    // Also remove via ContinueWatchingManager if available
+                    if (window.ContinueWatchingManager && window.continueWatchingManager) {
+                      window.continueWatchingManager.removeMovieProgress(movieId);
+                    }
                   }
+
+                  // Remove the card with animation
+                  card.style.opacity = '0';
+                  card.style.transition = 'opacity 0.2s ease';
+                  setTimeout(() => {
+                    card.remove();
+                    
+                    // Update trash icon after removal
+                    updateTrashIcon();
+                    
+                    // If no more items, hide the section
+                    if (container.children.length === 0) {
+                      section.style.display = 'none';
+                    }
+                  }, 200);
                 }
               });
             }
@@ -5924,6 +5937,12 @@
 
           // Show the section only if not in search mode
           section.style.display = isSearching ? 'none' : 'block';
+          
+          // Listen for continue watching updates from other sources (Firebase sync, etc.)
+          const handleContinueWatchingUpdate = () => {
+            loadContinueWatching(false);
+          };
+          window.addEventListener('continueWatchingUpdated', handleContinueWatchingUpdate);
         }
 
       } catch (error) {

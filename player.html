@@ -3940,7 +3940,7 @@
 
             // Load subtitles for the current video
             const videoId = urlParams.get('id');
-            if (videoId && videoSources[videoId] && videoSources[videoId].subtitles) {
+            if (typeof videoSources !== 'undefined' && videoId && videoSources[videoId] && videoSources[videoId].subtitles) {
               // Initialize subtitle container first
               initSubtitleContainer();
 
@@ -4729,7 +4729,7 @@
       // Function to load video subtitles
       function loadVideoSubtitles() {
         const videoId = urlParams.get('id');
-        if (videoId && videoSources[videoId] && videoSources[videoId].subtitles) {
+        if (typeof videoSources !== 'undefined' && videoId && videoSources[videoId] && videoSources[videoId].subtitles) {
           // Initialize subtitle container first
           initSubtitleContainer();
 

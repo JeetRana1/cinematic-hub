@@ -182,13 +182,8 @@ body.searching .continue-watching-section {
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease, background 0.3s ease;
 }
 
-.resume-button .resume-icon {
-  width: 16px;
-  height: 16px;
-}
-
-.resume-button .resume-label {
-  line-height: 1;
+.resume-button i {
+  font-size: 1rem;
 }
 
 .resume-button:hover {

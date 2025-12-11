@@ -1,0 +1,72 @@
+[debug] [2025-12-11T01:34:32.515Z] ----------------------------------------------------------------------
+[debug] [2025-12-11T01:34:32.517Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Jeet\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only firestore:rules
+[debug] [2025-12-11T01:34:32.517Z] CLI Version:   14.17.0
+[debug] [2025-12-11T01:34:32.517Z] Platform:      win32
+[debug] [2025-12-11T01:34:32.517Z] Node Version:  v25.2.0
+[debug] [2025-12-11T01:34:32.518Z] Time:          Wed Dec 10 2025 20:34:32 GMT-0500 (GMT-05:00)
+[debug] [2025-12-11T01:34:32.518Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-12-11T01:34:32.626Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-11T01:34:32.627Z] > authorizing via signed-in user (jeetrana790@gmail.com)
+[debug] [2025-12-11T01:34:32.627Z] [iam] checking project auth-implemented for permissions ["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]
+[debug] [2025-12-11T01:34:32.627Z] Checked if tokens are valid: true, expires at: 1765420217758
+[debug] [2025-12-11T01:34:32.628Z] Checked if tokens are valid: true, expires at: 1765420217758
+[debug] [2025-12-11T01:34:32.628Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/auth-implemented:testIamPermissions [none]
+[debug] [2025-12-11T01:34:32.628Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/auth-implemented:testIamPermissions x-goog-quota-user=projects/auth-implemented
+[debug] [2025-12-11T01:34:32.628Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/auth-implemented:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]}
+[debug] [2025-12-11T01:34:32.864Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/auth-implemented:testIamPermissions 200
+[debug] [2025-12-11T01:34:32.864Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/auth-implemented:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]}
+[info] 
+[info] === Deploying to 'auth-implemented'...
+[info] 
+[info] i  deploying firestore 
+[info] i  cloud.firestore: checking firestore.rules for compilation errors... 
+[debug] [2025-12-11T01:34:32.867Z] Checked if tokens are valid: true, expires at: 1765420217758
+[debug] [2025-12-11T01:34:32.867Z] Checked if tokens are valid: true, expires at: 1765420217758
+[debug] [2025-12-11T01:34:32.868Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/auth-implemented:test [none]
+[debug] [2025-12-11T01:34:32.868Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/auth-implemented:test [omitted]
+[debug] [2025-12-11T01:34:33.024Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/auth-implemented:test 200
+[debug] [2025-12-11T01:34:33.024Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/auth-implemented:test {}
+[info] +  cloud.firestore: rules file firestore.rules compiled successfully 
+[debug] [2025-12-11T01:34:33.025Z] Checked if tokens are valid: true, expires at: 1765420217758
+[debug] [2025-12-11T01:34:33.025Z] Checked if tokens are valid: true, expires at: 1765420217758
+[debug] [2025-12-11T01:34:33.025Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/auth-implemented/databases/(default) [none]
+[debug] [2025-12-11T01:34:33.368Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/auth-implemented/databases/(default) 200
+[debug] [2025-12-11T01:34:33.368Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/auth-implemented/databases/(default) {"name":"projects/auth-implemented/databases/(default)","uid":"24938266-de04-451f-b56d-d28f40e2928d","createTime":"2025-09-27T03:07:45.747649Z","updateTime":"2025-09-27T03:07:45.747649Z","locationId":"nam5","type":"FIRESTORE_NATIVE","concurrencyMode":"PESSIMISTIC","versionRetentionPeriod":"3600s","earliestVersionTime":"2025-12-11T00:34:37.906294Z","appEngineIntegrationMode":"DISABLED","keyPrefix":"s","pointInTimeRecoveryEnablement":"POINT_IN_TIME_RECOVERY_DISABLED","deleteProtectionState":"DELETE_PROTECTION_DISABLED","databaseEdition":"STANDARD","freeTier":true,"realtimeUpdatesMode":"REALTIME_UPDATES_MODE_ENABLED","etag":"IPytja+ytJEDMJPC9az7948D"}
+[debug] [2025-12-11T01:34:33.368Z] Checked if tokens are valid: true, expires at: 1765420217758
+[debug] [2025-12-11T01:34:33.368Z] Checked if tokens are valid: true, expires at: 1765420217758
+[debug] [2025-12-11T01:34:33.369Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/auth-implemented/releases pageSize=10&pageToken=
+[debug] [2025-12-11T01:34:33.534Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/auth-implemented/releases 200
+[debug] [2025-12-11T01:34:33.535Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/auth-implemented/releases {"releases":[{"name":"projects/auth-implemented/releases/cloud.firestore","rulesetName":"projects/auth-implemented/rulesets/e8950722-47ae-45eb-989b-6aefeaa45a81","createTime":"2025-09-27T03:07:47.436601Z","updateTime":"2025-12-11T01:30:25.128135Z"}]}
+[debug] [2025-12-11T01:34:33.535Z] Checked if tokens are valid: true, expires at: 1765420217758
+[debug] [2025-12-11T01:34:33.535Z] Checked if tokens are valid: true, expires at: 1765420217758
+[debug] [2025-12-11T01:34:33.535Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/auth-implemented/rulesets/e8950722-47ae-45eb-989b-6aefeaa45a81 [none]
+[debug] [2025-12-11T01:34:33.734Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/auth-implemented/rulesets/e8950722-47ae-45eb-989b-6aefeaa45a81 200
+[debug] [2025-12-11T01:34:33.734Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/auth-implemented/rulesets/e8950722-47ae-45eb-989b-6aefeaa45a81 [omitted]
+[info] i  firestore: uploading rules firestore.rules... 
+[debug] [2025-12-11T01:34:33.736Z] Checked if tokens are valid: true, expires at: 1765420217758
+[debug] [2025-12-11T01:34:33.736Z] Checked if tokens are valid: true, expires at: 1765420217758
+[debug] [2025-12-11T01:34:33.737Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/auth-implemented/rulesets [none]
+[debug] [2025-12-11T01:34:33.737Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/auth-implemented/rulesets [omitted]
+[debug] [2025-12-11T01:34:33.969Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/auth-implemented/rulesets 200
+[debug] [2025-12-11T01:34:33.969Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/auth-implemented/rulesets {"name":"projects/auth-implemented/rulesets/aba63d9c-0afb-4c74-8977-032810270965","source":{"files":[{"content":"rules_version = '2';\r\nservice cloud.firestore {\r\n  match /databases/{database}/documents {\r\n    \r\n    // User data - only accessible by the authenticated user\r\n    match /users/{userId} {\r\n      // Allow read/write if the user is authenticated and accessing their own data\r\n      allow read, write: if request.auth != null && request.auth.uid == userId;\r\n      \r\n      // Profile-specific data\r\n      match /profiles/{profileId} {\r\n        allow read, write: if request.auth != null && request.auth.uid == userId;\r\n        \r\n        // Subcollections within profiles (if needed in future)\r\n        match /{document=**} {\r\n          allow read, write: if request.auth != null && request.auth.uid == userId;\r\n        }\r\n      }\r\n      \r\n      // Settings subcollection\r\n      match /settings/{settingId} {\r\n        allow read, write: if request.auth != null && request.auth.uid == userId;\r\n      }\r\n      \r\n      // Any other subcollections under user\r\n      match /{subcollection}/{document} {\r\n        allow read, write: if request.auth != null && request.auth.uid == userId;\r\n      }\r\n    }\r\n    \r\n    // Deny all other access\r\n    match /{document=**} {\r\n      allow read, write: if false;\r\n    }\r\n  }\r\n}\r\n","name":"firestore.rules"}]},"createTime":"2025-12-11T01:34:38.479039Z","metadata":{"services":["cloud.firestore"]}}
+[debug] [2025-12-11T01:34:33.970Z] [rules] created ruleset projects/auth-implemented/rulesets/aba63d9c-0afb-4c74-8977-032810270965
+[debug] [2025-12-11T01:34:33.970Z] [rules] releasing cloud.firestore/(default) with ruleset projects/auth-implemented/rulesets/aba63d9c-0afb-4c74-8977-032810270965
+[debug] [2025-12-11T01:34:33.970Z] Checked if tokens are valid: true, expires at: 1765420217758
+[debug] [2025-12-11T01:34:33.970Z] Checked if tokens are valid: true, expires at: 1765420217758
+[debug] [2025-12-11T01:34:33.970Z] >>> [apiv2][query] PATCH https://firebaserules.googleapis.com/v1/projects/auth-implemented/releases/cloud.firestore/(default) [none]
+[debug] [2025-12-11T01:34:33.970Z] >>> [apiv2][body] PATCH https://firebaserules.googleapis.com/v1/projects/auth-implemented/releases/cloud.firestore/(default) {"release":{"name":"projects/auth-implemented/releases/cloud.firestore/(default)","rulesetName":"projects/auth-implemented/rulesets/aba63d9c-0afb-4c74-8977-032810270965"}}
+[debug] [2025-12-11T01:34:34.245Z] <<< [apiv2][status] PATCH https://firebaserules.googleapis.com/v1/projects/auth-implemented/releases/cloud.firestore/(default) 200
+[debug] [2025-12-11T01:34:34.245Z] <<< [apiv2][body] PATCH https://firebaserules.googleapis.com/v1/projects/auth-implemented/releases/cloud.firestore/(default) {"name":"projects/auth-implemented/releases/cloud.firestore","rulesetName":"projects/auth-implemented/rulesets/aba63d9c-0afb-4c74-8977-032810270965","createTime":"2025-09-27T03:07:47.436601Z","updateTime":"2025-12-11T01:34:38.749381Z"}
+[debug] [2025-12-11T01:34:34.245Z] [rules] updated release projects/auth-implemented/releases/cloud.firestore
+[info] +  firestore: released rules firestore.rules to cloud.firestore 
+[info] 
+[info] +  Deploy complete! 
+[info] 
+[info] Project Console: https://console.firebase.google.com/project/auth-implemented/overview
+[debug] [2025-12-11T01:34:39.386Z] Error: Timed out.
+    at Timeout._onTimeout (C:\Users\Jeet\AppData\Roaming\npm\node_modules\firebase-tools\lib\utils.js:275:49)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7)
+[error] 
+[error] Error: An unexpected error has occurred.

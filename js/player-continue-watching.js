@@ -114,7 +114,7 @@
         return;
       }
 
-      let movieId = urlParams.get('movieId');
+      let movieId = urlParams.get('movieId') || urlParams.get('id');
       if (!movieId) {
         // Try to generate a consistent ID from title and year (matching player.html logic)
         const title = urlParams.get('title');
@@ -212,7 +212,7 @@
     // Check for URL resume parameter with validation
     const getUrlResumeTime = () => {
       try {
-        const timeParam = urlParams.get('t') || urlParams.get('time') || '';
+        const timeParam = urlParams.get('t') || urlParams.get('time') || urlParams.get('resume') || '';
         const time = parseFloat(timeParam);
         return isFinite(time) && time > 0 ? time : null;
       } catch (e) {
@@ -291,7 +291,7 @@
 
     // ALWAYS show resume prompt if there's saved progress > 10 seconds OR a URL resume time > 10 seconds
     // This ensures it works on every page reload/refresh and when clicking resume from continue watching
-    const shouldShowResumePrompt = (savedProgress?.currentTime > 10) || (urlResumeSeconds && urlResumeSeconds > 10);
+    const shouldShowResumePrompt = (savedProgress?.currentTime > 0) || (urlResumeSeconds && urlResumeSeconds > 0);
 
     // Handle setting the video time with retry logic
     const setVideoTimeSafely = (time) => {
@@ -331,11 +331,16 @@
       const validResumeTime = Math.min(resumeTime, maxResumeTime);
 
       if (validResumeTime > 0) {
+        const promptProgress = savedProgress || {
+          currentTime: validResumeTime,
+          duration: video.duration && isFinite(video.duration) ? video.duration : validResumeTime + 60
+        };
+
         if (shouldShowResumePrompt) {
           // Pause video immediately and show prompt
           try { video.pause(); } catch (e) { }
           window.__resumePromptActive = true;
-          showEnhancedResumePrompt(validResumeTime, savedProgress, video, movieData);
+          showEnhancedResumePrompt(validResumeTime, promptProgress, video, movieData);
         } else if (validResumeTime > 0) {
           setVideoTimeSafely(validResumeTime);
         }
@@ -394,7 +399,7 @@
     // CRITICAL: Direct check for saved progress on page load
     // This is a safety mechanism that bypasses all other checks
     // to ensure the modal ALWAYS shows when there's saved progress
-    if (shouldShowResumePrompt && savedProgress && !resumePromptShown) {
+    if (shouldShowResumePrompt && !resumePromptShown) {
       console.log('[Resume] Direct check: Saved progress found, will show prompt when ready');
 
       // Wait a bit for video to be ready, then force show the prompt
@@ -405,7 +410,12 @@
           try { video.pause(); } catch (e) { }
           window.__resumePromptActive = true;
           resumePromptShown = true;
-          showEnhancedResumePrompt(savedProgress.currentTime, savedProgress, video, movieData);
+          const promptProgress = savedProgress || {
+            currentTime: resumeTime,
+            duration: video.duration && isFinite(video.duration) ? video.duration : resumeTime + 60
+          };
+          const promptTime = savedProgress?.currentTime || resumeTime || 0;
+          showEnhancedResumePrompt(promptTime, promptProgress, video, movieData);
         }
       }, 200);
 

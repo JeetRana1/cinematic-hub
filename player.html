@@ -2718,6 +2718,11 @@
 
       // Initialize player elements
       const video = document.getElementById('video');
+      
+      // IMPORTANT: Disable autoplay IMMEDIATELY before checking for resume parameter
+      video.autoplay = false;
+      video.pause();
+      
       // If a start time (?t=seconds) was provided, show resume prompt
       const startTimeParam = parseInt(urlParams.get('t') || '0', 10);
       
@@ -2725,11 +2730,7 @@
       if (!isNaN(startTimeParam) && startTimeParam > 0) {
         window.__resumeTimeParam = startTimeParam;
         window.__shouldShowResumePrompt = true;
-        console.log('Resume time parameter found:', startTimeParam, 'seconds');
-        
-        // Pause the video immediately to prevent autoplay
-        video.pause();
-        video.autoplay = false;
+        console.log('Resume time parameter found:', startTimeParam, 'seconds - AUTOPLAY DISABLED');
         
         // Show resume prompt as soon as video can play
         const showPromptWhenReady = () => {
@@ -3739,8 +3740,13 @@
         video.preload = 'auto';
         video.setAttribute('preload', 'auto');
         video.muted = false;
-        // Disable autoplay if we have a resume time parameter (show prompt first)
-        video.autoplay = !(window.__shouldShowResumePrompt && window.__resumeTimeParam > 0);
+        // CRITICAL: Keep autoplay disabled if we have a resume prompt
+        if (window.__shouldShowResumePrompt && window.__resumeTimeParam > 0) {
+          video.autoplay = false;
+          console.log('Keeping autoplay disabled for resume prompt');
+        } else {
+          video.autoplay = true;
+        }
         video.controls = false;
         video.style.width = '100%';
         video.style.height = '100%';

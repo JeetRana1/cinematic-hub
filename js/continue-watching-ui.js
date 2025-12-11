@@ -63,7 +63,8 @@ class ContinueWatchingUI {
     })).filter(movie => {
       // Only show movies with valid progress AND valid poster URL (no placeholders)
       const hasValidPoster = movie.thumbnail && !movie.thumbnail.includes('placeholder');
-      return movie.progressPercent > 0 && movie.progressPercent < 95 && movie.title && movie.title !== 'Untitled' && hasValidPoster;
+      const isNotTestMovie = !movie.title.toLowerCase().includes('test');
+      return movie.progressPercent > 0 && movie.progressPercent < 95 && movie.title && movie.title !== 'Untitled' && hasValidPoster && isNotTestMovie;
     }).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   }
 

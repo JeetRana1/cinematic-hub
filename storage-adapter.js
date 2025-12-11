@@ -76,7 +76,9 @@
         const hasProgress = movie.progress > 0 && movie.progress < 95;
         const hasValidId = movie.id || movie.movieId;
         const hasTitle = movie.title && movie.title !== 'Untitled';
-        return hasProgress && hasValidId && hasTitle;
+        const isNotTestMovie = !movie.title.toLowerCase().includes('test');
+        const hasValidPoster = movie.poster || movie.posterUrl;
+        return hasProgress && hasValidId && hasTitle && isNotTestMovie && hasValidPoster;
       });
 
       validMovies.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));

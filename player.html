@@ -498,25 +498,48 @@
   <script src="storage-adapter.js"></script>
   <!-- Continue Watching Scripts -->
   <script src="js/continue-watching.js"></script>
-  <!-- Removed continue-watching-ui on player page to prevent conflicts; player resume logic handles UI needs -->
+  <script src="js/continue-watching-ui.js"></script>
 
-  <!-- ContinueWatchingUI legacy removed; cloud manager handles resume -->
+  <!-- Initialize ContinueWatchingUI early -->
   <script>
+    // Initialize continue watching UI
     window.continueWatchingUI = null;
-    window.continueWatchingUIReady = true;
+    window.continueWatchingUIReady = false;
+
+    // Function to initialize the ContinueWatchingUI
+    function initContinueWatchingUI() {
+      if (window.ContinueWatchingUI && !window.continueWatchingUI) {
+        try {
+          window.continueWatchingUI = new ContinueWatchingUI();
+          console.log('ContinueWatchingUI initialized:', !!window.continueWatchingUI);
+          window.continueWatchingUIReady = true;
+
+          // Dispatch an event that the UI is ready
+          const event = new Event('ContinueWatchingUIInitialized');
+          document.dispatchEvent(event);
+
+          return true;
+        } catch (error) {
+          console.error('Error initializing ContinueWatchingUI:', error);
+          return false;
+        }
+      }
+      return false;
+    }
+
+    // Try to initialize immediately
+    if (!initContinueWatchingUI()) {
+      // If not ready, set up a listener for when ContinueWatchingUI is available
+      const checkUI = setInterval(() => {
+        if (initContinueWatchingUI()) {
+          clearInterval(checkUI);
+        }
+      }, 100);
+    }
   </script>
 
   <!-- Player resume logic: prompts to resume on refresh or fresh load -->
   <script src="js/player-continue-watching.js"></script>
-
-  <!-- Record last-used player for resume routing -->
-  <script>
-    window.addEventListener('DOMContentLoaded', function() {
-      try {
-        localStorage.setItem('lastPlayerUsed', 'player');
-      } catch (_) {}
-    });
-  </script>
 
   <!-- Explicit tracking initialization -->
   <script>
@@ -1095,7 +1118,7 @@
       right: 0;
       background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
       padding: 20px;
-      opacity: 1;
+      opacity: 0;
       transition: opacity 0.3s ease;
       z-index: 10;
       overflow: visible;
@@ -1103,10 +1126,6 @@
 
     .controls-container.visible {
       opacity: 1;
-    }
-
-    .controls-container.hidden {
-      opacity: 0;
     }
 
     .controls {
@@ -2756,8 +2775,6 @@
           }
         }, 100);
       }
-
-      // Get control elements
       const videoContainer = document.getElementById('videoContainer');
       const controlsContainer = document.getElementById('controlsContainer');
       const playPauseBtn = document.getElementById('playPauseBtn');
@@ -2766,19 +2783,9 @@
       const timeDisplay = document.getElementById('timeDisplay');
       const progressBar = document.getElementById('progressBar');
       const progressBuffer = document.getElementById('progressBuffer');
-      const progressContainer = document.getElementById('progressContainer');
+      const progressBarContainer = document.getElementById('progressContainer');
       const fullscreenBtn = document.getElementById('fullscreenBtn');
       const subtitleBtn = document.getElementById('subtitleBtn');
-
-      if (!playPauseBtn || !video) {
-        console.error('Critical player elements not found');
-      } else {
-        // Make controls visible by default
-        if (controlsContainer) {
-          controlsContainer.classList.add('visible');
-        }
-        console.log('Player controls elements loaded successfully');
-      }
 
       // Subtitle variables
       let subtitleTracks = [];
@@ -3482,8 +3489,8 @@
         }
       }
 
-      // Initialize continue watching UI (legacy var kept null)
-      let continueWatchingUI = null;
+      // Initialize continue watching UI
+      let continueWatchingUI;
 
       // Show resume prompt modal when there's saved progress
       function showResumePromptModal(movie) {
@@ -3560,11 +3567,10 @@
             window.__resumedFromPrompt = true;
 
             // Get the saved position and seek to it
-            if (window.ContinueWatchingManager && movie.id) {
-              // Use cloud manager to get saved position
-              const saved = window.ContinueWatchingManager.getMovieProgress(movie.id);
-              if (saved && saved.currentTime > 0) {
-                video.currentTime = saved.currentTime;
+            if (window.continueWatchingUI) {
+              const savedProgress = window.continueWatchingUI.getSavedProgress(movie.id);
+              if (savedProgress && savedProgress.position > 0) {
+                video.currentTime = savedProgress.position;
                 const playPromise = video.play();
                 if (playPromise !== undefined) {
                   playPromise.catch(error => {
@@ -3585,7 +3591,9 @@
             modal.remove();
 
             // Clear the resume position if needed
-            // Cloud manager will overwrite progress on save; no clear needed
+            if (window.continueWatchingUI && movie.id) {
+              window.continueWatchingUI.clearResumePosition(movie.id);
+            }
 
             // Start from the beginning
             video.currentTime = 0;
@@ -5015,7 +5023,7 @@
           }
         }
       })();
-      // State (declare early to avoid temporal dead zone)
+      // State
       let hideControlsTimeout;
       let isScrubbing = false;
       let wasPlayingBeforeScrubbing = false;
@@ -5655,8 +5663,6 @@
       if (subtitleBtn) {
         subtitleBtn.addEventListener('click', toggleSubtitleMenu);
       }
-
-      console.log('Player controls initialized successfully');
 
       // Global fullscreen change handler for subtitles
       const handleGlobalFullscreenChange = () => {

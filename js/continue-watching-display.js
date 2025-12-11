@@ -14,8 +14,8 @@ class ContinueWatchingDisplay {
   /**
    * Create the Continue Watching section with proper thumbnail handling
    */
-  async createContinueWatchingSection() {
-    const continueWatchingMovies = await this.getContinueWatchingMovies();
+  createContinueWatchingSection() {
+    const continueWatchingMovies = this.getContinueWatchingMovies();
     
     if (continueWatchingMovies.length === 0) {
       return null;
@@ -91,11 +91,9 @@ class ContinueWatchingDisplay {
           <div class="progress" style="width: ${progress}%"></div>
         </div>
         <div class="resume-overlay">
-          <div class="resume-button" aria-label="Resume">
-            <svg class="resume-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M8 5v14l11-7-11-7z"></path>
-            </svg>
-            <span class="resume-label">Resume</span>
+          <div class="resume-button">
+            <i class="fas fa-play"></i>
+            Resume
           </div>
         </div>
         <div class="remove-button" title="Remove from Continue Watching">
@@ -414,17 +412,33 @@ class ContinueWatchingDisplay {
   }
 
   /**
-   * Get continue watching movies from cloud (async)
+   * Get continue watching movies from localStorage
    */
-  async getContinueWatchingMovies() {
+  getContinueWatchingMovies() {
     try {
-      // Use ContinueWatchingManager cloud-only method
-      if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.getContinueWatchingMovies === 'function') {
-        const movies = await window.ContinueWatchingManager.getContinueWatchingMovies();
-        return movies || [];
+      const allProgress = JSON.parse(localStorage.getItem('continueWatching') || '{}');
+      const movies = [];
+      const now = Date.now();
+      const COMPLETION_THRESHOLD = 5;
+      const MIN_WATCH_TIME = 30;
+
+      for (const [movieId, data] of Object.entries(allProgress)) {
+        // Skip expired entries
+        if (data.validUntil && data.validUntil < now) continue;
+
+        // Only include movies that aren't completed and have meaningful progress
+        const timeRemaining = data.duration - data.currentTime;
+        if (timeRemaining > COMPLETION_THRESHOLD && data.currentTime >= MIN_WATCH_TIME) {
+          movies.push({
+            ...data,
+            timeRemaining,
+            progressPercent: Math.round((data.currentTime / data.duration) * 100),
+            lastWatched: new Date(data.updatedAt).toLocaleDateString()
+          });
+        }
       }
-      console.warn('ContinueWatchingManager not available');
-      return [];
+
+      return movies.sort((a, b) => b.updatedAt - a.updatedAt);
     } catch (error) {
       console.error('Error getting continue watching movies:', error);
       return [];

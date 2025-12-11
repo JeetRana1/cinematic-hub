@@ -5698,9 +5698,9 @@
       }
     }
 
-    // Load continue watching from cloud (async)
-    async function loadContinueWatching(forceShow = false) {
-      // Wait for auth/profile to be ready
+    // Load continue watching from localStorage
+    function loadContinueWatching(forceShow = false) {
+      // Wait for auth/profile to be ready to avoid flicker with wrong storage key
       try {
         if (!window.FirebaseAuth || typeof window.FirebaseAuth.getUser !== 'function' || !window.FirebaseAuth.getUser()) {
           // Try again shortly
@@ -5715,51 +5715,58 @@
         return;
       }
 
-      console.log('=== DEBUG: loadContinueWatching() called (cloud-only) ===');
+      console.log('=== DEBUG: loadContinueWatching() called ===');
       try {
-        // Use new Continue Watching Display component
-        if (window.ContinueWatchingDisplay) {
-          const existingSection = document.getElementById('continueWatchingSection');
-          if (existingSection) {
-            existingSection.remove();
-          }
+        // Get and parse continue watching data
+        const continueWatchingStr = localStorage.getItem(getContinueWatchingKey());
+        const continueWatching = continueWatchingStr ? JSON.parse(continueWatchingStr) : {};
 
-          const section = await window.ContinueWatchingDisplay.createContinueWatchingSection();
-          if (section) {
-            const moviesContainer = document.getElementById('moviesContainer');
-            if (moviesContainer && moviesContainer.firstChild) {
-              moviesContainer.insertBefore(section, moviesContainer.firstChild);
-            } else if (moviesContainer) {
-              moviesContainer.appendChild(section);
-            }
-          }
-          return;
-        }
-
-        // Fallback: Use ContinueWatchingManager directly
-        const continueWatchingMovies = await window.ContinueWatchingManager.getContinueWatchingMovies();
-
-        // Normalize movie data from cloud (already filtered and sorted)
-        const validMovies = (continueWatchingMovies || []).map(movie => ({
+        // Get movies that have progress
+        const continueWatchingMovies = Object.entries(continueWatching).map(([id, movie]) => ({
           ...movie,
-          id: movie.movieId || movie.id,
+          id: movie.id || id, // Ensure we have an ID
           title: movie.title || 'Untitled',
-          progress: Math.round(movie.progress || 0),
+          progress: parseFloat(movie.progress) || 0,
           currentTime: parseFloat(movie.currentTime) || 0,
           duration: parseFloat(movie.duration) || 0,
-          timestamp: parseInt(movie.updatedAt || movie.timestamp) || 0,
-          poster: movie.posterUrl || movie.poster || movie.thumbnail || '',
+          timestamp: parseInt(movie.timestamp) || 0,
+          poster: movie.poster || movie.posterUrl || movie.thumbnail || '',
           posterUrl: movie.posterUrl || movie.poster || movie.thumbnail || ''
         }));
 
-        if (!validMovies || validMovies.length === 0) {
+        let validMovies = continueWatchingMovies.filter(movie => {
+          const hasProgress = movie.progress > 0 && movie.progress < 95;
+          const hasValidId = movie.id || movie.movieId;
+          const hasTitle = movie.title && movie.title !== 'Untitled';
+          return hasProgress && hasValidId && hasTitle;
+        });
+
+        // Deduplicate by normalized title, prefer the most recent/most progressed entry
+        if (validMovies.length > 1) {
+          const byTitle = new Map();
+          for (const m of validMovies) {
+            const key = String(m.title || '').toLowerCase().trim();
+            if (!key) continue;
+            const existing = byTitle.get(key);
+            const ts = Number(m.updatedAt || m.timestamp || 0);
+            const existingTs = Number(existing?.updatedAt || existing?.timestamp || 0);
+            // Choose the newer entry; if timestamps equal/missing, pick higher progress
+            if (!existing || ts > existingTs || (ts === existingTs && (m.progress || 0) > (existing.progress || 0))) {
+              byTitle.set(key, m);
+            }
+          }
+          validMovies = Array.from(byTitle.values());
+        }
+
+        if (validMovies.length === 0) {
           console.log('No valid continue watching items to display');
           const section = document.getElementById('continueWatchingSection');
           if (section) section.style.display = 'none';
           return;
         }
 
-        // Data from cloud is already sorted by most recent
+        // Sort by most recently watched (fall back to updatedAt)
+        validMovies.sort((a, b) => (Number(b.updatedAt || b.timestamp || 0)) - (Number(a.updatedAt || a.timestamp || 0)));
 
         // Don't create the section if we're in search mode
         if (isSearching && !forceShow) {
@@ -7233,8 +7240,6 @@
   <script src="auth-firebase.js?v=3"></script>
   <script src="firebase-sync.js"></script>
   <script src="storage-adapter.js"></script>
-  <script src="js/continue-watching.js"></script>
-  <script src="js/continue-watching-display.js"></script>
   <script src="ui.js"></script>
   <script>
     // Particle background functionality

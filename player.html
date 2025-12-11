@@ -2726,6 +2726,113 @@
         window.__resumeTimeParam = startTimeParam;
         window.__shouldShowResumePrompt = true;
         console.log('Resume time parameter found:', startTimeParam, 'seconds');
+        
+        // Show resume prompt as soon as video can play
+        const showPromptWhenReady = () => {
+          console.log('Video event triggered, checking if we should show resume prompt');
+          if (window.__shouldShowResumePrompt && window.__resumeTimeParam > 0) {
+            // Get movie data from window
+            if (window.currentMovie && window.currentMovie.title) {
+              console.log('Showing resume prompt immediately for resume time:', window.__resumeTimeParam);
+              
+              // Create minimal movie object for the prompt
+              const movieForPrompt = {
+                id: window.currentMovie.id || 'unknown',
+                title: window.currentMovie.title || 'Movie'
+              };
+              
+              // Show the prompt
+              const modalHTML = `
+                <div id="resumePromptModal" class="resume-prompt-modal" style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.8);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 10000;
+                    backdrop-filter: blur(5px);
+                ">
+                    <div class="resume-prompt-content" style="
+                        background: #1a1a1a;
+                        padding: 2rem;
+                        border-radius: 12px;
+                        max-width: 500px;
+                        width: 90%;
+                        text-align: center;
+                        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
+                    ">
+                        <h3 style="margin-top: 0; color: #fff; font-size: 1.5rem; margin-bottom: 1rem;">
+                            Continue Watching?
+                        </h3>
+                        <p style="color: #ccc; margin-bottom: 2rem;">
+                            You were watching <strong>${movieForPrompt.title}</strong>. Would you like to continue where you left off?
+                        </p>
+                        <div style="display: flex; gap: 1rem; justify-content: center;">
+                            <button id="resumeYes" style="
+                                background: #4CAF50;
+                                color: white;
+                                border: none;
+                                padding: 0.75rem 1.5rem;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-weight: 600;
+                                transition: background 0.2s;
+                            ">Continue Watching</button>
+                            <button id="resumeNo" style="
+                                background: #333;
+                                color: #fff;
+                                border: 1px solid #555;
+                                padding: 0.75rem 1.5rem;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-weight: 500;
+                                transition: background 0.2s;
+                            ">Start Over</button>
+                        </div>
+                    </div>
+                </div>`;
+              
+              document.body.insertAdjacentHTML('beforeend', modalHTML);
+              
+              const resumeTime = window.__resumeTimeParam;
+              
+              // Handle continue watching button
+              document.getElementById('resumeYes').addEventListener('click', function() {
+                const modal = document.getElementById('resumePromptModal');
+                if (modal) modal.remove();
+                console.log('User chose to continue from:', resumeTime);
+                video.currentTime = resumeTime;
+                video.play();
+              });
+              
+              // Handle start over button
+              document.getElementById('resumeNo').addEventListener('click', function() {
+                const modal = document.getElementById('resumePromptModal');
+                if (modal) modal.remove();
+                console.log('User chose to start over');
+                video.currentTime = 0;
+                video.play();
+              });
+              
+              // Clear the flags
+              window.__shouldShowResumePrompt = false;
+              window.__resumeTimeParam = 0;
+              
+              // Remove this listener since we showed the prompt
+              video.removeEventListener('canplay', showPromptWhenReady);
+              video.removeEventListener('loadedmetadata', showPromptWhenReady);
+            }
+          }
+        };
+        
+        // Listen for video to be ready
+        video.addEventListener('canplay', showPromptWhenReady, { once: true });
+        video.addEventListener('loadedmetadata', showPromptWhenReady, { once: true });
       } else {
         // Check for continue watching progress and block auto-seek to 0:00
         setTimeout(() => {

@@ -3167,19 +3167,8 @@
     }
 
     .continue-watching-container:empty::before {
-
-      content: 'No Continue Watching Items';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: rgba(255, 255, 255, 0.5);
-      font-size: 1rem;
-      text-align: center;
-      width: 100%;
-      display: block;
-      pointer-events: none;
-      /* Prevent the message from being interactive */
+      /* Hidden by default - only shows when container is actually empty */
+      display: none;
     }
 
     .continue-watching-container::-webkit-scrollbar-track {

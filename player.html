@@ -2788,35 +2788,29 @@
           }
         }, 100);
       }
-      // Wait for DOM to be ready
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initPlayerControls);
+
+      // Get control elements
+      const videoContainer = document.getElementById('videoContainer');
+      const controlsContainer = document.getElementById('controlsContainer');
+      const playPauseBtn = document.getElementById('playPauseBtn');
+      const muteBtn = document.getElementById('muteBtn');
+      const volumeSlider = document.getElementById('volumeSlider');
+      const timeDisplay = document.getElementById('timeDisplay');
+      const progressBar = document.getElementById('progressBar');
+      const progressBuffer = document.getElementById('progressBuffer');
+      const progressContainer = document.getElementById('progressContainer');
+      const fullscreenBtn = document.getElementById('fullscreenBtn');
+      const subtitleBtn = document.getElementById('subtitleBtn');
+
+      if (!playPauseBtn || !video) {
+        console.error('Critical player elements not found');
       } else {
-        initPlayerControls();
-      }
-
-      function initPlayerControls() {
-        const videoContainer = document.getElementById('videoContainer');
-        const controlsContainer = document.getElementById('controlsContainer');
-        const playPauseBtn = document.getElementById('playPauseBtn');
-        const muteBtn = document.getElementById('muteBtn');
-        const volumeSlider = document.getElementById('volumeSlider');
-        const timeDisplay = document.getElementById('timeDisplay');
-        const progressBar = document.getElementById('progressBar');
-        const progressBuffer = document.getElementById('progressBuffer');
-        const progressBarContainer = document.getElementById('progressContainer');
-        const fullscreenBtn = document.getElementById('fullscreenBtn');
-        const subtitleBtn = document.getElementById('subtitleBtn');
-
-        if (!playPauseBtn || !video) {
-          console.error('Critical player elements not found');
-          return;
-        }
-
         // Make controls visible by default
         if (controlsContainer) {
           controlsContainer.classList.add('visible');
         }
+        console.log('Player controls elements loaded successfully');
+      }
 
       // Subtitle variables
       let subtitleTracks = [];
@@ -5696,7 +5690,6 @@
       }
 
       console.log('Player controls initialized successfully');
-      } // End initPlayerControls
 
       // Global fullscreen change handler for subtitles
       const handleGlobalFullscreenChange = () => {

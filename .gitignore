@@ -8,3 +8,5 @@ emailConfig.js
 # Allow public config files to be committed
 !public/firebaseConfig.js
 !public/emailConfig.js
+.vercel
+.env*.local

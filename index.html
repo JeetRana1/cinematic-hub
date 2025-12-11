@@ -5698,8 +5698,8 @@
       }
     }
 
-    // Load continue watching from localStorage
-    function loadContinueWatching(forceShow = false) {
+    // Load continue watching from Firebase (cloud-only, no localStorage)
+    async function loadContinueWatching(forceShow = false) {
       // Wait for auth/profile to be ready to avoid flicker with wrong storage key
       try {
         if (!window.FirebaseAuth || typeof window.FirebaseAuth.getUser !== 'function' || !window.FirebaseAuth.getUser()) {
@@ -5717,9 +5717,18 @@
 
       console.log('=== DEBUG: loadContinueWatching() called ===');
       try {
-        // Get and parse continue watching data
-        const continueWatchingStr = localStorage.getItem(getContinueWatchingKey());
-        const continueWatching = continueWatchingStr ? JSON.parse(continueWatchingStr) : {};
+        // Get continue watching data from Firebase (cloud-only)
+        let continueWatching = {};
+        
+        // Try ContinueWatchingManager first (uses Firebase)
+        if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.getAllProgress === 'function') {
+          continueWatching = window.ContinueWatchingManager.getAllProgress();
+        } else if (window.FirebaseSync && window.FirebaseSync.initialized) {
+          // Fallback to FirebaseSync
+          continueWatching = await window.FirebaseSync.getContinueWatching();
+        }
+
+        console.log('Continue watching data from cloud:', continueWatching);
 
         // Get movies that have progress
         const continueWatchingMovies = Object.entries(continueWatching).map(([id, movie]) => ({
@@ -5841,22 +5850,18 @@
             // Remove button
             const removeButton = card.querySelector('.remove-button');
             if (removeButton) {
-              removeButton.addEventListener('click', (e) => {
+              removeButton.addEventListener('click', async (e) => {
                 e.stopPropagation();
 
-                // Remove from localStorage
+                // Remove from cloud storage only
                 const movieId = movie.id || movie.movieId;
                 if (movieId) {
-                  // Use ContinueWatchingManager if available
+                  // Use ContinueWatchingManager (cloud-only)
                   if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.removeMovieProgress === 'function') {
                     window.ContinueWatchingManager.removeMovieProgress(movieId);
-                  } else {
-                    // Fallback to direct localStorage removal
-                    const continueWatching = JSON.parse(localStorage.getItem(getContinueWatchingKey()) || '{}');
-                    if (continueWatching[movieId]) {
-                      delete continueWatching[movieId];
-                      localStorage.setItem(getContinueWatchingKey(), JSON.stringify(continueWatching));
-                    }
+                  } else if (window.FirebaseSync && window.FirebaseSync.initialized) {
+                    // Fallback to FirebaseSync
+                    await window.FirebaseSync.removeContinueWatchingItem(movieId);
                   }
 
                   // Remove the card with animation

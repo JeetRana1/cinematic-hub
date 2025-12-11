@@ -164,8 +164,13 @@ class ContinueWatchingUI {
     // Calculate the time to resume from (in seconds)
     const resumeTime = Math.floor(movie.currentTime);
 
+    // Honor whichever player was last used (player.html or player-2.html)
+    const lastPlayer = localStorage.getItem('lastPlayerUsed') === 'player2' ? 'player-2.html' : 'player.html';
+
     // Generate the base URL with movieId (use movieId param to match player resume logic)
-    let resumeUrl = `player.html?movieId=${encodeURIComponent(movie.movieId || 'unknown')}&title=${encodeURIComponent(movie.title)}`;
+    let resumeUrl = `${lastPlayer}?movieId=${encodeURIComponent(movie.movieId || 'unknown')}&title=${encodeURIComponent(movie.title)}`;
+    // Also include legacy id param for compatibility with player-2
+    resumeUrl += `&id=${encodeURIComponent(movie.movieId || 'unknown')}`;
 
     // Add optional parameters if they exist
     if (movie.year) resumeUrl += `&year=${encodeURIComponent(movie.year)}`;

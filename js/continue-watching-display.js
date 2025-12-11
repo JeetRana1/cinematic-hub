@@ -324,16 +324,20 @@ class ContinueWatchingDisplay {
    */
   resumeMovie(movie) {
     console.log('Resuming movie:', movie.title);
-    
+
+    // Honor whichever player was last used
+    const playerBase = localStorage.getItem('lastPlayerUsed') === 'player2' ? 'player-2.html' : 'player.html';
+
     // Build resume URL
     const params = new URLSearchParams();
     params.append('movieId', movie.movieId);
+    params.append('id', movie.movieId); // legacy id support
     params.append('title', movie.title);
     if (movie.posterUrl) params.append('poster', movie.posterUrl);
     params.append('t', Math.floor(movie.currentTime));
     
     // Determine video source type and add appropriate parameters
-    const resumeUrl = this.buildResumeUrl(movie, params);
+    const resumeUrl = this.buildResumeUrl(movie, params, playerBase);
     
     if (resumeUrl) {
       window.open(resumeUrl, '_blank');
@@ -345,7 +349,7 @@ class ContinueWatchingDisplay {
   /**
    * Build resume URL with proper video source
    */
-  buildResumeUrl(movie, params) {
+  buildResumeUrl(movie, params, playerBase = 'player.html') {
     // Check for available video sources (you'll need to adapt this to your video source logic)
     const movieId = movie.movieId;
     const title = movie.title.toLowerCase();
@@ -354,18 +358,18 @@ class ContinueWatchingDisplay {
     if (window.mp4Overrides && window.mp4Overrides[title]) {
       params.append('type', 'mp4');
       params.append('src', window.mp4Overrides[title]);
-      return `player.html?${params.toString()}`;
+      return `${playerBase}?${params.toString()}`;
     }
     
     // Check Drive mappings (adapt to your driveMovieMappings object)
     if (window.driveMovieMappings && window.driveMovieMappings[movieId]) {
       params.append('type', 'drive');
       params.append('id', window.driveMovieMappings[movieId]);
-      return `player.html?${params.toString()}`;
+      return `${playerBase}?${params.toString()}`;
     }
     
     // Fallback to basic player URL
-    return `player.html?${params.toString()}`;
+    return `${playerBase}?${params.toString()}`;
   }
 
   /**

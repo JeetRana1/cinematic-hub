@@ -917,6 +917,11 @@
     </style>
 </head>
 <body>
+        <script>
+            try {
+                localStorage.setItem('lastPlayerUsed', 'player2');
+            } catch (_) {}
+        </script>
     <div class="video-container">
         <video id="videoPlayer" preload="metadata" autoplay></video>
         

@@ -14,8 +14,8 @@ class ContinueWatchingDisplay {
   /**
    * Create the Continue Watching section with proper thumbnail handling
    */
-  createContinueWatchingSection() {
-    const continueWatchingMovies = this.getContinueWatchingMovies();
+  async createContinueWatchingSection() {
+    const continueWatchingMovies = await this.getContinueWatchingMovies();
     
     if (continueWatchingMovies.length === 0) {
       return null;
@@ -414,33 +414,17 @@ class ContinueWatchingDisplay {
   }
 
   /**
-   * Get continue watching movies from localStorage
+   * Get continue watching movies from cloud (async)
    */
-  getContinueWatchingMovies() {
+  async getContinueWatchingMovies() {
     try {
-      const allProgress = JSON.parse(localStorage.getItem('continueWatching') || '{}');
-      const movies = [];
-      const now = Date.now();
-      const COMPLETION_THRESHOLD = 5;
-      const MIN_WATCH_TIME = 30;
-
-      for (const [movieId, data] of Object.entries(allProgress)) {
-        // Skip expired entries
-        if (data.validUntil && data.validUntil < now) continue;
-
-        // Only include movies that aren't completed and have meaningful progress
-        const timeRemaining = data.duration - data.currentTime;
-        if (timeRemaining > COMPLETION_THRESHOLD && data.currentTime >= MIN_WATCH_TIME) {
-          movies.push({
-            ...data,
-            timeRemaining,
-            progressPercent: Math.round((data.currentTime / data.duration) * 100),
-            lastWatched: new Date(data.updatedAt).toLocaleDateString()
-          });
-        }
+      // Use ContinueWatchingManager cloud-only method
+      if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.getContinueWatchingMovies === 'function') {
+        const movies = await window.ContinueWatchingManager.getContinueWatchingMovies();
+        return movies || [];
       }
-
-      return movies.sort((a, b) => b.updatedAt - a.updatedAt);
+      console.warn('ContinueWatchingManager not available');
+      return [];
     } catch (error) {
       console.error('Error getting continue watching movies:', error);
       return [];

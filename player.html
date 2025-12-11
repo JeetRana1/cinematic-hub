@@ -2788,17 +2788,35 @@
           }
         }, 100);
       }
-      const videoContainer = document.getElementById('videoContainer');
-      const controlsContainer = document.getElementById('controlsContainer');
-      const playPauseBtn = document.getElementById('playPauseBtn');
-      const muteBtn = document.getElementById('muteBtn');
-      const volumeSlider = document.getElementById('volumeSlider');
-      const timeDisplay = document.getElementById('timeDisplay');
-      const progressBar = document.getElementById('progressBar');
-      const progressBuffer = document.getElementById('progressBuffer');
-      const progressBarContainer = document.getElementById('progressContainer');
-      const fullscreenBtn = document.getElementById('fullscreenBtn');
-      const subtitleBtn = document.getElementById('subtitleBtn');
+      // Wait for DOM to be ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPlayerControls);
+      } else {
+        initPlayerControls();
+      }
+
+      function initPlayerControls() {
+        const videoContainer = document.getElementById('videoContainer');
+        const controlsContainer = document.getElementById('controlsContainer');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const muteBtn = document.getElementById('muteBtn');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const timeDisplay = document.getElementById('timeDisplay');
+        const progressBar = document.getElementById('progressBar');
+        const progressBuffer = document.getElementById('progressBuffer');
+        const progressBarContainer = document.getElementById('progressContainer');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const subtitleBtn = document.getElementById('subtitleBtn');
+
+        if (!playPauseBtn || !video) {
+          console.error('Critical player elements not found');
+          return;
+        }
+
+        // Make controls visible by default
+        if (controlsContainer) {
+          controlsContainer.classList.add('visible');
+        }
 
       // Subtitle variables
       let subtitleTracks = [];
@@ -5676,6 +5694,9 @@
       if (subtitleBtn) {
         subtitleBtn.addEventListener('click', toggleSubtitleMenu);
       }
+
+      console.log('Player controls initialized successfully');
+      } // End initPlayerControls
 
       // Global fullscreen change handler for subtitles
       const handleGlobalFullscreenChange = () => {

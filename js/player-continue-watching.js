@@ -459,13 +459,20 @@
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     `;
 
-    const progressPercent = Math.round((resumeTime / savedProgress.duration) * 100);
+    // Gracefully handle cases where savedProgress is missing (e.g., resume via URL param only)
+    const effectiveDuration = (savedProgress && isFinite(savedProgress.duration) && savedProgress.duration > 0)
+      ? savedProgress.duration
+      : (isFinite(video.duration) && video.duration > 0
+        ? video.duration
+        : Math.max(resumeTime + 1, 1));
+
+    const progressPercent = Math.min(100, Math.round((resumeTime / effectiveDuration) * 100));
     const timeFormatted = formatTime(resumeTime);
-    const totalFormatted = formatTime(savedProgress.duration);
+    const totalFormatted = formatTime(effectiveDuration);
 
     promptBox.innerHTML = `
       <div style="margin-bottom: 1.5rem;">
-        <i class="fas fa-play-circle" style="font-size: 3rem; color: #e50914; margin-bottom: 1rem;"></i>
+        <i class="fas fa-history" style="font-size: 3rem; color: #e50914; margin-bottom: 1rem;"></i>
         <h2 style="margin: 0 0 0.5rem; font-size: 1.5rem; font-weight: 600;">Continue Watching?</h2>
         <p style="margin: 0; color: rgba(255, 255, 255, 0.8); font-size: 1rem;">
           "${movieData.title}"

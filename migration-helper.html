@@ -1,0 +1,108 @@
+<!-- Migration Notice Modal -->
+<div id="migrationModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center;">
+  <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 2rem; border-radius: 12px; max-width: 500px; margin: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+    <h2 style="color: #fff; margin-bottom: 1rem; font-size: 1.5rem;">🔄 Sync Your Data to Cloud</h2>
+    <p style="color: rgba(255,255,255,0.8); margin-bottom: 1.5rem; line-height: 1.6;">
+      Your watch history and bookmarks are currently stored on this device only. 
+      Would you like to sync them to the cloud so you can access them from any device?
+    </p>
+    <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+      <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem; margin-bottom: 0.5rem;">✅ Access from phone, tablet, and laptop</p>
+      <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem; margin-bottom: 0.5rem;">✅ Automatic sync across devices</p>
+      <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">✅ Never lose your progress</p>
+    </div>
+    <div style="display: flex; gap: 1rem;">
+      <button id="migrateLaterBtn" style="flex: 1; padding: 0.75rem; background: rgba(255,255,255,0.1); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem;">
+        Later
+      </button>
+      <button id="migrateNowBtn" style="flex: 1; padding: 0.75rem; background: linear-gradient(90deg, #a78bfa, #fb7185); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600;">
+        Sync Now
+      </button>
+    </div>
+    <p style="color: rgba(255,255,255,0.5); font-size: 0.8rem; margin-top: 1rem; text-align: center;">
+      Your data stays private and secure
+    </p>
+  </div>
+</div>
+
+<script>
+(function() {
+  // Check if user needs to migrate
+  function checkMigrationNeeded() {
+    const user = window.FirebaseAuth && window.FirebaseAuth.getUser();
+    if (!user) return;
+
+    // Check if already migrated
+    const migrated = localStorage.getItem('firebase_migrated');
+    if (migrated === 'true') return;
+
+    // Check if user has local data
+    const hasLocalData = localStorage.getItem('continueWatching') || 
+                         localStorage.getItem('myList') ||
+                         Object.keys(localStorage).some(key => 
+                           key.includes('continueWatching_') || 
+                           key.includes('myList_')
+                         );
+
+    if (hasLocalData) {
+      showMigrationModal();
+    } else {
+      // No local data, mark as migrated
+      localStorage.setItem('firebase_migrated', 'true');
+    }
+  }
+
+  function showMigrationModal() {
+    const modal = document.getElementById('migrationModal');
+    if (modal) {
+      modal.style.display = 'flex';
+      
+      document.getElementById('migrateNowBtn').onclick = async function() {
+        this.textContent = 'Migrating...';
+        this.disabled = true;
+        
+        try {
+          const success = await window.FirebaseSync.migrateFromLocalStorage();
+          if (success) {
+            localStorage.setItem('firebase_migrated', 'true');
+            modal.style.display = 'none';
+            
+            // Show success message
+            alert('✅ Migration successful! Your data is now synced across all devices.');
+            
+            // Reload to apply changes
+            window.location.reload();
+          } else {
+            throw new Error('Migration failed');
+          }
+        } catch (error) {
+          console.error('Migration error:', error);
+          alert('Migration error. Please try again later.');
+          this.textContent = 'Sync Now';
+          this.disabled = false;
+        }
+      };
+      
+      document.getElementById('migrateLaterBtn').onclick = function() {
+        modal.style.display = 'none';
+        localStorage.setItem('migration_reminded', Date.now());
+      };
+    }
+  }
+
+  // Check migration after auth state loads
+  window.addEventListener('load', function() {
+    setTimeout(checkMigrationNeeded, 2000);
+  });
+
+  // Listen for auth changes
+  if (window.FirebaseAuth) {
+    const checkInterval = setInterval(function() {
+      if (window.FirebaseAuth.getUser && window.FirebaseAuth.getUser()) {
+        clearInterval(checkInterval);
+        setTimeout(checkMigrationNeeded, 1000);
+      }
+    }, 500);
+  }
+})();
+</script>

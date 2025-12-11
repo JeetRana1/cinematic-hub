@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firebase Sync Test</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #1a1a2e;
+      color: #fff;
+    }
+    .test-section {
+      background: rgba(255,255,255,0.05);
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      border-left: 4px solid #a78bfa;
+    }
+    button {
+      background: linear-gradient(90deg, #a78bfa, #fb7185);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 5px;
+      font-size: 14px;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .status {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+    .status.success {
+      background: rgba(34, 197, 94, 0.2);
+      border: 1px solid #22c55e;
+    }
+    .status.error {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid #ef4444;
+    }
+    .status.info {
+      background: rgba(59, 130, 246, 0.2);
+      border: 1px solid #3b82f6;
+    }
+    pre {
+      background: rgba(0,0,0,0.3);
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    h1 {
+      text-align: center;
+      color: #a78bfa;
+    }
+    h2 {
+      color: #fb7185;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔥 Firebase Sync Test Page</h1>
+  
+  <div class="test-section">
+    <h2>1. Connection Status</h2>
+    <div id="connectionStatus" class="status info">Checking...</div>
+    <button onclick="checkConnection()">Refresh Status</button>
+  </div>
+
+  <div class="test-section">
+    <h2>2. Test Continue Watching</h2>
+    <button onclick="testContinueWatching()">Add Test Movie</button>
+    <button onclick="viewContinueWatching()">View Data</button>
+    <button onclick="clearContinueWatching()">Clear All</button>
+    <pre id="continueWatchingData">Click "View Data" to see your continue watching list</pre>
+  </div>
+
+  <div class="test-section">
+    <h2>3. Test Bookmarks</h2>
+    <button onclick="testBookmark()">Add Test Bookmark</button>
+    <button onclick="viewBookmarks()">View Bookmarks</button>
+    <button onclick="clearBookmarks()">Clear All</button>
+    <pre id="bookmarksData">Click "View Bookmarks" to see your list</pre>
+  </div>
+
+  <div class="test-section">
+    <h2>4. Test Theme Sync</h2>
+    <button onclick="setTheme('glossy')">Set Glossy</button>
+    <button onclick="setTheme('minimalist')">Set Minimalist</button>
+    <button onclick="viewTheme()">View Current</button>
+    <pre id="themeData">Click "View Current" to see your theme</pre>
+  </div>
+
+  <div class="test-section">
+    <h2>5. Migration Tools</h2>
+    <button onclick="runMigration()">Migrate from localStorage</button>
+    <button onclick="viewCache()">View Cache</button>
+    <pre id="migrationData">Migration status will appear here</pre>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="public/firebaseConfig.js"></script>
+  <script src="auth-firebase.js"></script>
+  <script src="firebase-sync.js"></script>
+
+  <script>
+    // Wait for everything to load
+    window.addEventListener('load', async function() {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      checkConnection();
+    });
+
+    async function checkConnection() {
+      const statusDiv = document.getElementById('connectionStatus');
+      
+      try {
+        // Check if user is logged in
+        const user = FirebaseAuth.getUser();
+        if (!user) {
+          statusDiv.className = 'status error';
+          statusDiv.innerHTML = '❌ Not logged in. Please <a href="login.html" style="color: #3b82f6;">sign in</a> first.';
+          return;
+        }
+
+        // Check Firebase Sync
+        await FirebaseSync.init();
+        
+        // Try to read from Firestore
+        const theme = await FirebaseSync.getTheme();
+        
+        statusDiv.className = 'status success';
+        statusDiv.innerHTML = `
+          ✅ Connected to Firebase<br>
+          👤 User: ${user.email}<br>
+          🔥 Firestore: Active<br>
+          📱 Profile: ${FirebaseSync.getCurrentProfile() || 'Default'}<br>
+          🎨 Current Theme: ${theme}
+        `;
+      } catch (error) {
+        statusDiv.className = 'status error';
+        statusDiv.innerHTML = `❌ Error: ${error.message}`;
+      }
+    }
+
+    async function testContinueWatching() {
+      try {
+        const testMovie = {
+          id: 'test-' + Date.now(),
+          title: 'Test Movie ' + new Date().toLocaleTimeString(),
+          progress: Math.random() * 100,
+          currentTime: 1234,
+          duration: 5400,
+          poster: 'https://via.placeholder.com/300x450',
+          timestamp: Date.now()
+        };
+        
+        await FirebaseSync.updateContinueWatchingItem(testMovie.id, testMovie);
+        alert('✅ Test movie added!');
+        viewContinueWatching();
+      } catch (error) {
+        alert('❌ Error: ' + error.message);
+      }
+    }
+
+    async function viewContinueWatching() {
+      try {
+        const data = await FirebaseSync.getContinueWatching();
+        document.getElementById('continueWatchingData').textContent = 
+          JSON.stringify(data, null, 2);
+      } catch (error) {
+        alert('❌ Error: ' + error.message);
+      }
+    }
+
+    async function clearContinueWatching() {
+      if (!confirm('Clear all continue watching data?')) return;
+      try {
+        await FirebaseSync.saveContinueWatching({});
+        alert('✅ Cleared!');
+        viewContinueWatching();
+      } catch (error) {
+        alert('❌ Error: ' + error.message);
+      }
+    }
+
+    async function testBookmark() {
+      try {
+        const testMovie = {
+          id: 'bookmark-' + Date.now(),
+          title: 'Bookmarked Movie ' + new Date().toLocaleTimeString(),
+          poster: 'https://via.placeholder.com/300x450',
+          rating: (Math.random() * 5 + 5).toFixed(1),
+          year: 2024,
+          genres: ['Action', 'Thriller']
+        };
+        
+        await FirebaseSync.addBookmark(testMovie);
+        alert('✅ Bookmark added!');
+        viewBookmarks();
+      } catch (error) {
+        alert('❌ Error: ' + error.message);
+      }
+    }
+
+    async function viewBookmarks() {
+      try {
+        const data = await FirebaseSync.getBookmarks();
+        document.getElementById('bookmarksData').textContent = 
+          JSON.stringify(data, null, 2);
+      } catch (error) {
+        alert('❌ Error: ' + error.message);
+      }
+    }
+
+    async function clearBookmarks() {
+      if (!confirm('Clear all bookmarks?')) return;
+      try {
+        await FirebaseSync.saveBookmarks({});
+        alert('✅ Cleared!');
+        viewBookmarks();
+      } catch (error) {
+        alert('❌ Error: ' + error.message);
+      }
+    }
+
+    async function setTheme(theme) {
+      try {
+        await FirebaseSync.saveTheme(theme);
+        alert(`✅ Theme set to: ${theme}`);
+        viewTheme();
+      } catch (error) {
+        alert('❌ Error: ' + error.message);
+      }
+    }
+
+    async function viewTheme() {
+      try {
+        const theme = await FirebaseSync.getTheme();
+        document.getElementById('themeData').textContent = 
+          `Current theme: ${theme}`;
+      } catch (error) {
+        alert('❌ Error: ' + error.message);
+      }
+    }
+
+    async function runMigration() {
+      try {
+        const result = await FirebaseSync.migrateFromLocalStorage();
+        const dataDiv = document.getElementById('migrationData');
+        if (result) {
+          dataDiv.textContent = '✅ Migration successful!\n\nYour data has been moved to Firestore.';
+        } else {
+          dataDiv.textContent = '⚠️ Migration completed with warnings.\nCheck console for details.';
+        }
+      } catch (error) {
+        document.getElementById('migrationData').textContent = 
+          '❌ Migration failed: ' + error.message;
+      }
+    }
+
+    async function viewCache() {
+      try {
+        const cache = FirebaseSync.cache;
+        document.getElementById('migrationData').textContent = 
+          JSON.stringify(cache, null, 2);
+      } catch (error) {
+        alert('❌ Error: ' + error.message);
+      }
+    }
+  </script>
+</body>
+</html>

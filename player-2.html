@@ -6,7 +6,7 @@
         <script src="js/player-continue-watching.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
-    <title>MX Player - Cinematic Hub</title>
+    <title>Cinematic Hub Movies</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -443,6 +443,47 @@
             left: 0;
         }
 
+        /* Video Thumbnail Preview */
+        .thumbnail-preview {
+            position: absolute;
+            bottom: 25px;
+            left: 0;
+            transform: translateX(-50%);
+            display: none;
+            pointer-events: none;
+            z-index: 10000;
+            width: 160px;
+            height: auto;
+        }
+
+        .thumbnail-preview.visible {
+            display: block;
+        }
+
+        .thumbnail-preview canvas {
+            display: block;
+            width: 160px !important;
+            height: 90px !important;
+            border: 3px solid var(--mx-white);
+            border-radius: 6px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.9);
+            background: #000;
+        }
+
+        .thumbnail-preview .thumbnail-time {
+            display: block;
+            margin-top: 5px;
+            text-align: center;
+            background: rgba(0,0,0,0.95);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
         .time-display {
             display: flex;
             justify-content: space-between;
@@ -585,46 +626,44 @@
             100% { transform: translate(-50%, -50%) rotate(360deg); }
         }
 
-        /* MX Player Menu */
-        .mx-menu {
+        /* Floating lock button shown while locked */
+        .lock-floating-btn {
             position: absolute;
-            top: 50%;
-            right: 0;
-            transform: translateY(-50%);
-            background: rgba(0,0,0,0.9);
-            border-radius: 10px 0 0 10px;
-            padding: 20px 10px;
-            display: none;
-            flex-direction: column;
-            gap: 15px;
-            z-index: 100;
-        }
-
-        .mx-menu.visible {
-            display: flex;
-        }
-
-        .menu-item {
-            background: rgba(255,255,255,0.1);
-            border: none;
-            color: var(--mx-white);
-            width: 45px;
-            height: 45px;
+            top: 16px;
+            right: 16px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.3s ease;
+            z-index: 3000;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
         }
 
-        .menu-item:hover {
-            background: var(--mx-primary);
+        .lock-floating-btn.is-hidden {
+            display: none;
+        }
+
+        .lock-floating-btn i {
+            pointer-events: none;
+            font-size: 18px;
+        }
+
+        /* Hide native browser subtitles (only show custom container) */
+        video::cue {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            display: none !important;
         }
 
         /* Subtitle Container */
         .subtitle-container {
-            position: absolute;
+            position: fixed;
             bottom: 150px;
             left: 50%;
             border-radius: 8px;
@@ -633,7 +672,7 @@
             max-width: 800px;
             text-align: center;
             pointer-events: none;
-            z-index: 2001; /* Above controls overlay */
+            z-index: 4000; /* Keep above video/controls in all modes */
             display: block !important;
             opacity: 1 !important;
         }
@@ -794,15 +833,16 @@
         }
                 /* --- SUBTITLE STYLES MOVED FROM subtitles-v2.css --- */
                 .subtitle-container {
-                    position: absolute;
+                    position: fixed;
                     left: 50%;
                     transform: translateX(-50%);
                     width: 90%;
                     max-width: 800px;
                     text-align: center;
                     pointer-events: none;
-                    z-index: 100;
-                    display: block;
+                    z-index: 4000;
+                    display: block !important;
+                    opacity: 1 !important;
                     border-radius: 8px;
                     /* Default position when NOT fullscreen */
                     bottom: 150px;
@@ -898,8 +938,8 @@
                     <button class="control-btn" onclick="toggleSubtitle()" title="Toggle Subtitles">
                         <i class="fas fa-closed-captioning"></i>
                     </button>
-                    <button class="control-btn" onclick="toggleMenu()" title="More Options">
-                        <i class="fas fa-ellipsis-v"></i>
+                    <button class="control-btn" id="lockButton" onclick="toggleLock()" title="Lock/Unlock Controls">
+                        <i class="fas fa-lock" id="lockIcon"></i>
                     </button>
                 </div>
             </div>
@@ -911,6 +951,10 @@
                         <div class="progress-buffered" id="progressBuffered"></div>
                         <div class="progress-filled" id="progressFilled">
                             <div class="progress-thumb"></div>
+                        </div>
+                        <div class="thumbnail-preview" id="thumbnailPreview">
+                            <canvas id="thumbnailCanvas"></canvas>
+                            <div class="thumbnail-time" id="thumbnailTime">00:00</div>
                         </div>
                     </div>
                 </div>
@@ -956,24 +1000,10 @@
             </div>
         </div>
         
-        <!-- MX Player Menu -->
-        <div class="mx-menu" id="mxMenu">
-            <button class="menu-item" onclick="changePlaybackSpeed()">
-                <i class="fas fa-tachometer-alt"></i>
-            </button>
-            <button class="menu-item" onclick="toggleSubtitleStyle()">
-                <i class="fas fa-text-height"></i>
-            </button>
-            <button class="menu-item" onclick="toggleAudioTrack()">
-                <i class="fas fa-headphones"></i>
-            </button>
-            <button class="menu-item" onclick="toggleLock()">
-                <i class="fas fa-lock"></i>
-            </button>
-            <button class="menu-item" onclick="shareVideo()">
-                <i class="fas fa-share"></i>
-            </button>
-        </div>
+        <!-- Floating unlock button (visible only when locked) -->
+        <button class="lock-floating-btn is-hidden" id="lockFloatingButton" onclick="toggleLock()" title="Unlock Controls">
+            <i class="fas fa-lock-open"></i>
+        </button>
         
         <!-- Subtitle Container -->
         <div class="subtitle-container" id="subtitleContainer"></div>
@@ -1220,7 +1250,17 @@
         const gestureIndicator = document.getElementById('gestureIndicator');
         const loadingSpinner = document.getElementById('loadingSpinner');
         const subtitleContainer = document.getElementById('subtitleContainer');
-        const mxMenu = document.getElementById('mxMenu');
+        const lockButton = document.getElementById('lockButton');
+        const lockIcon = document.getElementById('lockIcon');
+        const lockFloatingButton = document.getElementById('lockFloatingButton');
+        const thumbnailPreview = document.getElementById('thumbnailPreview');
+        const thumbnailCanvas = document.getElementById('thumbnailCanvas');
+        const thumbnailTime = document.getElementById('thumbnailTime');
+        const thumbnailCtx = thumbnailCanvas.getContext('2d');
+
+        // Set canvas size
+        thumbnailCanvas.width = 160;
+        thumbnailCanvas.height = 90;
 
         // Variables
         let isPlaying = false;
@@ -1254,7 +1294,7 @@
             { fit: 'cover', icon: 'fa-arrows-alt-h', label: 'Wide' },
             { fit: 'contain', icon: 'fa-compress', label: 'Contain' }
         ];
-        let currentScreenMode = 1; // Start with "Wide" mode (index 1, which is 'cover')
+        let currentScreenMode = 2; // Start with "Wide" mode (index 1, which is 'cover')
 
         // Set video title
         videoTitle.textContent = title;
@@ -1617,7 +1657,7 @@
             // Check if current movie has subtitles
             const currentMovie = movieDatabase[normalizedTitle];
             if (subtitlesEnabled && currentMovie && currentMovie.subtitles) {
-                subtitleContainer.innerHTML = '<div class="subtitle">Loading subtitles...</div>';
+                subtitleContainer.innerHTML = '<div class="subtitle"></div>';
             } else if (subtitlesEnabled) {
                 subtitleContainer.innerHTML = '<div class="subtitle">No subtitles available for this movie</div>';
             }
@@ -1737,7 +1777,6 @@ Try hosting subtitles on same server as video`;
             }
             subtitleContainer.style.display = subtitlesEnabled ? 'block' : 'none';
             showGestureIndicator(subtitlesEnabled ? 'CC ON' : 'CC OFF');
-                    console.log('[Subtitle Debug] loadSubtitlesWithProxy called', subtitleArray);
         }
 
         // Play/Pause toggle
@@ -1780,11 +1819,13 @@ Try hosting subtitles on same server as video`;
         }
 
         // Enhanced seek functionality
+        let wasPlayingBeforeSeek = false;
         function startSeek(e) {
             if (!video.duration) return;
             isSeeking = true;
+            wasPlayingBeforeSeek = !video.paused; // Remember if video was playing
             updateSeekPosition(e);
-            video.pause(); // Pause video while seeking
+            // Don't pause - let video continue playing while seeking
         }
 
         function updateSeekPosition(e) {
@@ -1817,12 +1858,36 @@ Try hosting subtitles on same server as video`;
             isSeeking = false;
             
             // Resume video if it was playing before seeking
-            if (isPlaying) {
-                video.play();
+            if (wasPlayingBeforeSeek && video.paused) {
+                video.play().catch(err => console.log('Play after seek failed:', err));
             }
             
             hideGestureIndicator();
+            
+            // Auto-hide controls after seeking
+            showControls();
         }
+
+        // Thumbnail preview on hover - timestamp only (CORS-friendly)
+        progressBar.addEventListener('mousemove', function(e) {
+            if (!video.duration || isSeeking) return;
+            
+            const rect = progressBar.getBoundingClientRect();
+            const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            const previewTime = pos * video.duration;
+            
+            // Position and show timestamp preview
+            thumbnailPreview.style.left = (pos * 100) + '%';
+            thumbnailTime.textContent = formatTime(previewTime);
+            thumbnailPreview.classList.add('visible');
+            
+            // Hide canvas since we can't capture frames due to CORS
+            thumbnailCanvas.style.display = 'none';
+        });
+
+        progressBar.addEventListener('mouseleave', function() {
+            thumbnailPreview.classList.remove('visible');
+        });
 
         // Enhanced seek event listeners (desktop)
         progressBar.addEventListener('mousedown', startSeek, { passive: false });
@@ -1856,8 +1921,14 @@ Try hosting subtitles on same server as video`;
                 updateSeekPosition({ clientX: touch.clientX });
             }
             isSeeking = false;
-            if (isPlaying) video.play();
+            if (wasPlayingBeforeSeek && video.paused) {
+                video.play().catch(err => console.log('Play after seek failed:', err));
+            }
             hideGestureIndicator();
+            
+            // Auto-hide controls after seeking
+            showControls();
+            
             e.preventDefault();
         }, { passive: false });
 
@@ -1980,8 +2051,8 @@ Try hosting subtitles on same server as video`;
             }, 3000);
         }
 
-        function hideControls() {
-            if (isLocked) return;
+        function hideControls(force = false) {
+            if (isLocked && !force) return;
             controlsOverlay.classList.remove('visible');
         }
 
@@ -2260,12 +2331,7 @@ Try hosting subtitles on same server as video`;
             if (isLocked) return;
             
             // Horizontal swipe for seeking (already handled in touchMove)
-            // This is for additional swipe actions if needed
-            if (startX < screenWidth * 0.1) {
-                // Swipe from left edge - could trigger menu or other action
-                showGestureIndicator('📋 Menu');
-                toggleMenu();
-            }
+            // Placeholder: no extra swipe action needed
         }
 
         function applyBrightness(brightness) {
@@ -2289,54 +2355,26 @@ Try hosting subtitles on same server as video`;
             clearTimeout(gestureIndicatorTimeout);
         }
 
-        // Menu functions
-        function toggleMenu() {
-            mxMenu.classList.toggle('visible');
-        }
-
-        function changePlaybackSpeed() {
-            const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
-            const currentIndex = speeds.indexOf(playbackSpeed);
-            playbackSpeed = speeds[(currentIndex + 1) % speeds.length];
-            video.playbackRate = playbackSpeed;
-            showGestureIndicator(playbackSpeed + 'x');
-            toggleMenu();
-        }
-
-        function toggleSubtitleStyle() {
-            subtitlesEnabled = !subtitlesEnabled;
-            subtitleContainer.style.display = subtitlesEnabled ? 'block' : 'none';
-            showGestureIndicator(subtitlesEnabled ? 'CC ON' : 'CC OFF');
-            toggleMenu();
-        }
-
-        function toggleAudioTrack() {
-            showGestureIndicator('Audio Track');
-            toggleMenu();
-        }
-
+        // Lock controls
         function toggleLock() {
             isLocked = !isLocked;
-            showGestureIndicator(isLocked ? '🔒' : '🔓');
-            toggleMenu();
-            if (isLocked) {
-                hideControls();
-            } else {
-                showControls();
-            }
-        }
 
-        function shareVideo() {
-            if (navigator.share) {
-                navigator.share({
-                    title: title,
-                    url: window.location.href
-                });
+            if (isLocked) {
+                hideControls(true);
+                tapOverlay.classList.remove('visible');
+                lockFloatingButton.classList.remove('is-hidden');
+                lockIcon.classList.remove('fa-lock-open');
+                lockIcon.classList.add('fa-lock');
+                lockFloatingButton.querySelector('i').classList.remove('fa-lock');
+                lockFloatingButton.querySelector('i').classList.add('fa-lock-open');
+                showGestureIndicator('🔒 Screen Locked');
             } else {
-                navigator.clipboard.writeText(window.location.href);
-                showGestureIndicator('Link Copied');
+                lockFloatingButton.classList.add('is-hidden');
+                lockIcon.classList.remove('fa-lock');
+                lockIcon.classList.add('fa-lock-open');
+                showControls();
+                showGestureIndicator('🔓 Screen Unlocked');
             }
-            toggleMenu();
         }
 
         function togglePlayback() {

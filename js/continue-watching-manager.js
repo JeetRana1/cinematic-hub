@@ -74,16 +74,17 @@ class ContinueWatchingManager {
   /**
    * Save progress for a movie with enhanced data including poster
    */
-  saveMovieProgress(movieId, progressData) {
+  saveMovieProgress(movieId, progressData, force = false) {
     try {
-      // Validate progress data
-      if (!progressData.currentTime || !progressData.duration) {
+      // Validate progress data - check for undefined/null/NaN, not falsy (0 is valid!)
+      if (progressData.currentTime == null || progressData.duration == null ||
+        isNaN(progressData.currentTime) || isNaN(progressData.duration)) {
         console.warn('Invalid progress data:', progressData);
         return;
       }
 
-      // Don't save if current time is too close to the last saved time
-      if (Math.abs(progressData.currentTime - this.lastSavedTime) < 2) {
+      // Don't save if current time is too close to the last saved time (unless forced)
+      if (!force && Math.abs(progressData.currentTime - this.lastSavedTime) < 2) {
         return;
       }
 
@@ -153,8 +154,78 @@ class ContinueWatchingManager {
       window.dispatchEvent(new CustomEvent('continueWatchingUpdated', {
         detail: { movieId, removed: true }
       }));
+
+      // Also sync to Firebase if available
+      if (window.FirebaseSync && window.FirebaseSync.initialized) {
+        window.FirebaseSync.saveContinueWatching(allProgress).catch(err => {
+          console.warn('Failed to sync continue watching to Firebase:', err);
+        });
+      }
+
+      // Sync to Firestore for cross-device support
+      if (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function') {
+        const user = window.FirebaseAuth.getUser();
+        if (user && user.uid && window.FirebaseAuth.firestore) {
+          const docRef = window.FirebaseAuth.firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('continueWatching')
+            .doc(movieId);
+          docRef.delete().catch((err) => {
+            console.error('Failed to delete continue watching from Firestore:', err);
+          });
+        }
+      }
     } catch (error) {
       console.error('Error removing continue watching data:', error);
+    }
+  }
+
+  /**
+   * Clear all continue watching data
+   */
+  clearAll() {
+    try {
+      const storageKey = this.getStorageKey();
+      localStorage.removeItem(storageKey);
+
+      console.log('Cleared all continue watching data');
+
+      // Dispatch custom event for live updates
+      window.dispatchEvent(new CustomEvent('continueWatchingUpdated', {
+        detail: { cleared: true }
+      }));
+
+      // Also sync to Firebase if available
+      if (window.FirebaseSync && window.FirebaseSync.initialized) {
+        window.FirebaseSync.saveContinueWatching({}).catch(err => {
+          console.warn('Failed to sync continue watching to Firebase:', err);
+        });
+      }
+
+      // Sync to Firestore for cross-device support
+      if (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function') {
+        const user = window.FirebaseAuth.getUser();
+        if (user && user.uid && window.FirebaseAuth.firestore) {
+          // Delete all continue watching documents for this user
+          const collectionRef = window.FirebaseAuth.firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('continueWatching');
+          
+          collectionRef.get().then(snapshot => {
+            const batch = window.FirebaseAuth.firestore.batch();
+            snapshot.docs.forEach(doc => {
+              batch.delete(doc.ref);
+            });
+            return batch.commit();
+          }).catch((err) => {
+            console.error('Failed to clear continue watching from Firestore:', err);
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error clearing all continue watching data:', error);
     }
   }
 

@@ -5847,14 +5847,15 @@
                 // Remove from localStorage
                 const movieId = movie.id || movie.movieId;
                 if (movieId) {
-                  const continueWatching = JSON.parse(localStorage.getItem(getContinueWatchingKey()) || '{}');
-                  if (continueWatching[movieId]) {
-                    delete continueWatching[movieId];
-                    localStorage.setItem(getContinueWatchingKey(), JSON.stringify(continueWatching));
-                    
-                    // Also remove via ContinueWatchingManager if available
-                    if (window.ContinueWatchingManager && window.continueWatchingManager) {
-                      window.continueWatchingManager.removeMovieProgress(movieId);
+                  // Use ContinueWatchingManager if available
+                  if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.removeMovieProgress === 'function') {
+                    window.ContinueWatchingManager.removeMovieProgress(movieId);
+                  } else {
+                    // Fallback to direct localStorage removal
+                    const continueWatching = JSON.parse(localStorage.getItem(getContinueWatchingKey()) || '{}');
+                    if (continueWatching[movieId]) {
+                      delete continueWatching[movieId];
+                      localStorage.setItem(getContinueWatchingKey(), JSON.stringify(continueWatching));
                     }
                   }
 
@@ -5927,8 +5928,14 @@
                 iconEl.classList.add('dump-anim');
               }
               showClearConfirmation(() => {
-                const key = getContinueWatchingKey();
-                localStorage.removeItem(key);
+                // Use the ContinueWatchingManager's clearAll method
+                if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.clearAll === 'function') {
+                  window.ContinueWatchingManager.clearAll();
+                } else {
+                  // Fallback to direct localStorage removal
+                  const key = getContinueWatchingKey();
+                  localStorage.removeItem(key);
+                }
                 section.style.display = 'none';
                 UIToast.success('Cleared', 'All continue watching items removed');
               });

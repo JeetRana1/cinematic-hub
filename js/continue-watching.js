@@ -24,7 +24,14 @@ class ContinueWatchingManager {
         : null;
       const uid = user && user.uid;
       if (!uid) return `${this.BASE_STORAGE_KEY}_guest`;
-      const selectedProfileId = localStorage.getItem(`fb_selected_profile_${uid}`);
+      // Try multiple known keys for selected profile id
+      const selectedProfileId = (
+        localStorage.getItem(`fb_selected_profile_${uid}`) ||
+        localStorage.getItem('selectedProfileId') ||
+        localStorage.getItem(`profile_selected_${uid}`) ||
+        localStorage.getItem('activeProfileId') ||
+        null
+      );
       return selectedProfileId
         ? `${this.BASE_STORAGE_KEY}_${uid}_${selectedProfileId}`
         : `${this.BASE_STORAGE_KEY}_${uid}`;

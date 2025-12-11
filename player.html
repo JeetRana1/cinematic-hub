@@ -498,7 +498,7 @@
   <script src="storage-adapter.js"></script>
   <!-- Continue Watching Scripts -->
   <script src="js/continue-watching.js"></script>
-  <script src="js/continue-watching-ui.js"></script>
+  <!-- Removed continue-watching-ui on player page to prevent conflicts; player resume logic handles UI needs -->
 
   <!-- Initialize ContinueWatchingUI early -->
   <script>
@@ -540,6 +540,15 @@
 
   <!-- Player resume logic: prompts to resume on refresh or fresh load -->
   <script src="js/player-continue-watching.js"></script>
+
+  <!-- Record last-used player for resume routing -->
+  <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      try {
+        localStorage.setItem('lastPlayerUsed', 'player');
+      } catch (_) {}
+    });
+  </script>
 
   <!-- Explicit tracking initialization -->
   <script>

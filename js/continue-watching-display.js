@@ -91,9 +91,11 @@ class ContinueWatchingDisplay {
           <div class="progress" style="width: ${progress}%"></div>
         </div>
         <div class="resume-overlay">
-          <div class="resume-button">
-            <i class="fas fa-play"></i>
-            Resume
+          <div class="resume-button" aria-label="Resume">
+            <svg class="resume-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M8 5v14l11-7-11-7z"></path>
+            </svg>
+            <span class="resume-label">Resume</span>
           </div>
         </div>
         <div class="remove-button" title="Remove from Continue Watching">

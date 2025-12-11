@@ -3519,7 +3519,7 @@
     }
 
     .resume-button::before {
-      content: '▶';
+      content: '';
       font-size: 0.8rem;
     }
 
@@ -5879,6 +5879,7 @@
               icon.className = 'fas fa-trash-alt';
               clearButton.style.opacity = '1';
               clearButton.style.pointerEvents = 'auto';
+              clearButton.style.cursor = 'pointer';
               clearButton.classList.add('has-items');
               clearButton.classList.remove('is-empty');
             } else {
@@ -5886,6 +5887,7 @@
               icon.className = 'far fa-trash-alt';
               clearButton.style.opacity = '0.6';
               clearButton.style.pointerEvents = 'none';
+              clearButton.style.cursor = 'default';
               clearButton.classList.add('is-empty');
               clearButton.classList.remove('has-items');
             }
@@ -5897,10 +5899,15 @@
           // Add clear all button functionality
           const clearButton = section.querySelector('#clearContinueWatching');
           if (clearButton) {
-            clearButton.addEventListener('click', (e) => {
+            // Remove old event listeners by cloning and replacing
+            const newClearButton = clearButton.cloneNode(true);
+            clearButton.parentNode.replaceChild(newClearButton, clearButton);
+            
+            // Attach the new event listener
+            newClearButton.addEventListener('click', (e) => {
               e.stopPropagation();
               // Trigger dustbin animation on icon
-              const iconEl = clearButton.querySelector('i');
+              const iconEl = newClearButton.querySelector('i');
               if (iconEl) {
                 iconEl.classList.remove('dump-anim');
                 void iconEl.offsetWidth; // reflow to restart animation

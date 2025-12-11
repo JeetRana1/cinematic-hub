@@ -1,14 +1,15 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow authenticated users to read/write their own data in any structure
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Deny all other access
-    match /{document=**} {
-      allow read, write: if false;
+    // Allow authenticated users to read/write anything under their user ID
+    match /users/{userId} {
+      allow create, read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // All subcollections and nested documents under a user
+      match /{allPaths=**} {
+        allow create, read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
   }
 }
+

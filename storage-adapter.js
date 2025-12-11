@@ -104,6 +104,39 @@
 
       container.innerHTML = '';
 
+      // Render the continue watching cards
+      validMovies.forEach(movie => {
+        const thumbnailUrl = movie.poster || movie.posterUrl || `https://via.placeholder.com/300x450?text=${encodeURIComponent(movie.title)}`;
+        const progressPercent = Math.round(movie.progress || 0);
+        const timeRemaining = movie.duration && movie.currentTime 
+          ? Math.max(0, movie.duration - movie.currentTime) 
+          : 0;
+        
+        const movieCard = document.createElement('div');
+        movieCard.className = 'continue-watching-card';
+        movieCard.dataset.movieId = movie.id || movie.movieId;
+        movieCard.innerHTML = `
+          <div class="continue-watching-poster">
+            <img src="${thumbnailUrl}" alt="${movie.title}" loading="lazy" />
+            <div class="progress-bar">
+              <div class="progress" style="width: ${progressPercent}%"></div>
+            </div>
+            <div class="resume-overlay">
+              <div class="resume-button">
+                <i class="fas fa-play"></i>
+                Resume
+              </div>
+            </div>
+            <div class="remove-button" title="Remove from Continue Watching">×</div>
+          </div>
+          <div class="continue-watching-info">
+            <h3>${movie.title}</h3>
+            <p>${progressPercent}% watched</p>
+          </div>
+        `;
+        container.appendChild(movieCard);
+      });
+
       // Just log the movies for now - they're loaded and will be displayed by existing UI
       console.log('Continue watching movies loaded:', validMovies.length);
 

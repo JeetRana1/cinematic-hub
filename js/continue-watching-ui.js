@@ -20,12 +20,26 @@ class ContinueWatchingUI {
       this.render();
     });
 
-    // Initial render
+    // Initial render - fetch from Firebase if available
     this.render();
   }
 
-  render() {
-    const movies = this.manager.getContinueWatchingMovies();
+  async render() {
+    let movies;
+    
+    // Try to get data from Firebase first (for cloud sync)
+    if (window.FirebaseSync && window.FirebaseSync.initialized) {
+      try {
+        const firebaseData = await window.FirebaseSync.getContinueWatching();
+        movies = this.convertFirebaseDataToMovies(firebaseData);
+      } catch (error) {
+        console.warn('Failed to fetch from Firebase, falling back to localStorage:', error);
+        movies = this.manager.getContinueWatchingMovies();
+      }
+    } else {
+      // Fallback to localStorage if Firebase not available
+      movies = this.manager.getContinueWatchingMovies();
+    }
 
     if (movies.length === 0) {
       this.removeContinueWatchingSection();
@@ -33,6 +47,28 @@ class ContinueWatchingUI {
     }
 
     this.createOrUpdateContinueWatchingSection(movies);
+  }
+
+  convertFirebaseDataToMovies(firebaseData) {
+    // Convert Firebase format to UI format
+    return Object.entries(firebaseData).map(([id, movie]) => ({
+      movieId: movie.movieId || id,
+      title: movie.title || 'Untitled',
+      thumbnail: movie.posterUrl || movie.poster || movie.thumbnail || '',
+      progressPercent: Math.round(movie.progress || 0),
+      currentTime: movie.currentTime || 0,
+      duration: movie.duration || 1,
+      timeRemaining: this.calculateTimeRemaining(movie.currentTime || 0, movie.duration || 1),
+      ...movie
+    })).filter(movie => {
+      // Only show movies with valid progress
+      return movie.progressPercent > 0 && movie.progressPercent < 95 && movie.title && movie.title !== 'Untitled';
+    }).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  }
+
+  calculateTimeRemaining(currentTime, duration) {
+    const remaining = Math.max(0, duration - currentTime);
+    return this.manager.formatTime ? this.manager.formatTime(remaining) : `${Math.round(remaining / 60)}m`;
   }
 
   createOrUpdateContinueWatchingSection(movies) {

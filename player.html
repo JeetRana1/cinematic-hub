@@ -2719,129 +2719,30 @@
       // Initialize player elements
       const video = document.getElementById('video');
       
-      // IMPORTANT: Disable autoplay IMMEDIATELY before checking for resume parameter
-      video.autoplay = false;
-      video.pause();
-      
-      // If a start time (?t=seconds) was provided, show resume prompt
+      // If a start time (?t=seconds) was provided, seek to it when video is ready
       const startTimeParam = parseInt(urlParams.get('t') || '0', 10);
       
-      // Store the resume time for later use
       if (!isNaN(startTimeParam) && startTimeParam > 0) {
-        window.__resumeTimeParam = startTimeParam;
-        window.__shouldShowResumePrompt = true;
-        console.log('Resume time parameter found:', startTimeParam, 'seconds - AUTOPLAY DISABLED');
+        console.log('Resume time parameter found:', startTimeParam, 'seconds - will seek when ready');
         
-        // Show resume prompt as soon as video can play
-        const showPromptWhenReady = () => {
-          console.log('Video event triggered, checking if we should show resume prompt');
-          if (window.__shouldShowResumePrompt && window.__resumeTimeParam > 0) {
-            // Get movie data from window or URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const movieTitle = (window.currentMovie && window.currentMovie.title) || urlParams.get('title') || 'Movie';
-            const movieId = (window.currentMovie && window.currentMovie.id) || urlParams.get('id') || 'unknown';
-            
-            console.log('Showing resume prompt immediately for resume time:', window.__resumeTimeParam);
-            
-            // Create minimal movie object for the prompt
-            const movieForPrompt = {
-              id: movieId,
-              title: movieTitle
-            };
-            
-            // Show the prompt
-            const modalHTML = `
-              <div id="resumePromptModal" class="resume-prompt-modal" style="
-                  position: fixed;
-                  top: 0;
-                  left: 0;
-                  right: 0;
-                  bottom: 0;
-                  background: rgba(0, 0, 0, 0.8);
-                  display: flex;
-                  justify-content: center;
-                  align-items: center;
-                  z-index: 10000;
-                  backdrop-filter: blur(5px);
-              ">
-                  <div class="resume-prompt-content" style="
-                      background: #1a1a1a;
-                      padding: 2rem;
-                      border-radius: 12px;
-                      max-width: 500px;
-                      width: 90%;
-                      text-align: center;
-                      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-                      border: 1px solid rgba(255, 255, 255, 0.1);
-                  ">
-                      <h3 style="margin-top: 0; color: #fff; font-size: 1.5rem; margin-bottom: 1rem;">
-                          Continue Watching?
-                      </h3>
-                      <p style="color: #ccc; margin-bottom: 2rem;">
-                          You were watching <strong>${movieForPrompt.title}</strong>. Would you like to continue where you left off?
-                      </p>
-                      <div style="display: flex; gap: 1rem; justify-content: center;">
-                          <button id="resumeYes" style="
-                              background: #4CAF50;
-                              color: white;
-                              border: none;
-                              padding: 0.75rem 1.5rem;
-                              border-radius: 6px;
-                              cursor: pointer;
-                              font-weight: 600;
-                              transition: background 0.2s;
-                          ">Continue Watching</button>
-                          <button id="resumeNo" style="
-                              background: #333;
-                              color: #fff;
-                              border: 1px solid #555;
-                              padding: 0.75rem 1.5rem;
-                              border-radius: 6px;
-                              cursor: pointer;
-                              font-weight: 500;
-                              transition: background 0.2s;
-                          ">Start Over</button>
-                      </div>
-                  </div>
-              </div>`;
-            
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
-            
-            const resumeTime = window.__resumeTimeParam;
-            
-            // Handle continue watching button
-            document.getElementById('resumeYes').addEventListener('click', function() {
-              const modal = document.getElementById('resumePromptModal');
-              if (modal) modal.remove();
-              console.log('User chose to continue from:', resumeTime);
-              video.currentTime = resumeTime;
-              video.play();
-            });
-            
-            // Handle start over button
-            document.getElementById('resumeNo').addEventListener('click', function() {
-              const modal = document.getElementById('resumePromptModal');
-              if (modal) modal.remove();
-              console.log('User chose to start over');
-              video.currentTime = 0;
-              video.play();
-            });
-            
-            // Clear the flags
-            window.__shouldShowResumePrompt = false;
-            window.__resumeTimeParam = 0;
+        // Function to seek to the resume time
+        const seekToResumeTime = () => {
+          if (video.readyState >= 2) { // HAVE_CURRENT_DATA or higher
+            console.log('Video ready, seeking to:', startTimeParam);
+            video.currentTime = startTimeParam;
+            video.play().catch(err => console.log('Play interrupted:', err));
+          } else {
+            console.log('Video not ready yet, waiting... readyState:', video.readyState);
           }
         };
         
-        // Try to show the prompt immediately if video is already ready
-        if (video.readyState >= 1) {
-          console.log('Video already ready, showing prompt immediately');
-          showPromptWhenReady();
+        // Try immediately if already ready
+        if (video.readyState >= 2) {
+          seekToResumeTime();
         } else {
-          // Listen for video to be ready
-          console.log('Waiting for video to be ready...');
-          video.addEventListener('canplay', showPromptWhenReady, { once: true });
-          video.addEventListener('loadedmetadata', showPromptWhenReady, { once: true });
+          // Listen for when video is ready
+          video.addEventListener('loadeddata', seekToResumeTime, { once: true });
+          video.addEventListener('canplay', seekToResumeTime, { once: true });
         }
       } else {
         // Check for continue watching progress and block auto-seek to 0:00
@@ -3740,13 +3641,7 @@
         video.preload = 'auto';
         video.setAttribute('preload', 'auto');
         video.muted = false;
-        // CRITICAL: Keep autoplay disabled if we have a resume prompt
-        if (window.__shouldShowResumePrompt && window.__resumeTimeParam > 0) {
-          video.autoplay = false;
-          console.log('Keeping autoplay disabled for resume prompt');
-        } else {
-          video.autoplay = true;
-        }
+        video.autoplay = true;
         video.controls = false;
         video.style.width = '100%';
         video.style.height = '100%';

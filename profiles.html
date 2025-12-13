@@ -1732,6 +1732,10 @@
 
     // Header button to open create modal
     addProfileBtn.addEventListener('click', async () => {
+      if (!currentUser) {
+        UIToast.error('Auth failed', 'User not authenticated. Please login.');
+        return;
+      }
       const profiles = await FirebaseAuth.getProfiles(currentUser.uid);
       if (profiles.length >= 4) { UIToast.info('Limit reached', 'You can have up to 4 profiles'); return; }
       openCreateModal();
@@ -1851,6 +1855,7 @@
     // One-time migration to set avatarUrl where missing
     async function migrateMissingAvatars(profiles) {
       try {
+        if (!currentUser) return false; // No user yet, skip migration
         const key = `migrated_avatars_${currentUser.uid}`;
         if (localStorage.getItem(key)) return false;
         const missing = profiles.filter(p => !p.avatarUrl);
@@ -1991,6 +1996,10 @@
       // disable confirm button immediately to avoid rapid double-clicks/presses
       if (confirmBtn) confirmBtn.disabled = true;
       try {
+        if (!currentUser) {
+          UIToast.error('Auth failed', 'User not authenticated. Please login.');
+          return;
+        }
         await ensureNet();
         const existing = await FirebaseAuth.getProfiles(currentUser.uid);
         if (existing.length >= 4) { UIToast.error('Max profiles reached', 'You can only create up to 4 profiles'); return; }
@@ -2167,6 +2176,10 @@
       if (confirmEditBtn) confirmEditBtn.disabled = true;
 
       try {
+        if (!currentUser) {
+          UIToast.error('Auth failed', 'User not authenticated. Please login.');
+          return;
+        }
         await ensureNet();
         const name = editNameInput.value.trim();
         if (!name) {

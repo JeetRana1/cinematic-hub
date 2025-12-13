@@ -6008,14 +6008,20 @@
 
           // Add clear all button functionality
           const clearButton = section.querySelector('#clearContinueWatching');
+          console.log('[ClearButton] Found clear button:', !!clearButton);
           if (clearButton) {
             // Remove old event listeners by cloning and replacing
             const newClearButton = clearButton.cloneNode(true);
             clearButton.parentNode.replaceChild(newClearButton, clearButton);
             
+            console.log('[ClearButton] Event listener attached');
+            
             // Attach the new event listener
             newClearButton.addEventListener('click', async (e) => {
+              console.log('[ClearButton] 🗑️ Clear button clicked!');
+              e.preventDefault();
               e.stopPropagation();
+              
               // Trigger dustbin animation on icon
               const iconEl = newClearButton.querySelector('i');
               if (iconEl) {
@@ -6023,19 +6029,26 @@
                 void iconEl.offsetWidth; // reflow to restart animation
                 iconEl.classList.add('dump-anim');
               }
+              
+              console.log('[ClearButton] Showing confirmation dialog');
               showClearConfirmation(async () => {
+                console.log('[ClearButton] User confirmed, clearing...');
                 try {
                   // Clear from Firebase Cloud (primary storage)
                   if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.clearAll === 'function') {
+                    console.log('[ClearButton] Clearing via ContinueWatchingManager...');
                     await window.ContinueWatchingManager.clearAll();
-                    console.log('✅ Cleared via ContinueWatchingManager');
+                    console.log('[ClearButton] ✅ Cleared via ContinueWatchingManager');
                   } else if (window.FirebaseSync && window.FirebaseSync.initialized) {
+                    console.log('[ClearButton] Clearing via FirebaseSync...');
                     // Fallback to FirebaseSync
                     await window.FirebaseSync.saveContinueWatching({});
                     if (window.FirebaseSync.cache) {
                       window.FirebaseSync.cache['continueWatching'] = {};
                     }
-                    console.log('✅ Cleared via FirebaseSync');
+                    console.log('[ClearButton] ✅ Cleared via FirebaseSync');
+                  } else {
+                    console.warn('[ClearButton] ⚠️ Neither ContinueWatchingManager nor FirebaseSync available!');
                   }
                   
                   // Clear any remaining localStorage keys (cleanup)

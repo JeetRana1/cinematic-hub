@@ -198,16 +198,46 @@
 
     console.log('[Resume] Page reload detected:', isPageReload);
 
+    // Wait for Firebase to be initialized before checking progress
+    const waitForFirebase = () => {
+      return new Promise((resolve) => {
+        if (window.FirebaseSync && window.FirebaseSync.initialized) {
+          console.log('[Resume] ✅ Firebase already initialized');
+          resolve();
+        } else {
+          console.log('[Resume] ⏳ Waiting for Firebase to initialize...');
+          let attempts = 0;
+          const checkInterval = setInterval(() => {
+            attempts++;
+            if (window.FirebaseSync && window.FirebaseSync.initialized) {
+              console.log('[Resume] ✅ Firebase initialized after', attempts, 'attempts');
+              clearInterval(checkInterval);
+              resolve();
+            } else if (attempts > 30) {
+              console.warn('[Resume] ⚠️ Firebase initialization timeout after 3 seconds');
+              clearInterval(checkInterval);
+              resolve(); // Continue anyway
+            }
+          }, 100);
+        }
+      });
+    };
+
     // Check for existing progress with retry mechanism
-    const getSavedProgress = () => {
+    const getSavedProgress = async () => {
       try {
+        // Wait for Firebase first
+        await waitForFirebase();
+        
+        // Give cache a moment to populate
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
         return window.ContinueWatchingManager?.getMovieProgress?.(movieData.movieId) || null;
       } catch (e) {
-        console.warn('Error getting saved progress, retrying...', e);
+        console.warn('[Resume] Error getting saved progress:', e);
         return null;
       }
     };
-
 
     // Check for URL resume parameter with validation
     const getUrlResumeTime = () => {
@@ -216,17 +246,19 @@
         const time = parseFloat(timeParam);
         return isFinite(time) && time > 0 ? time : null;
       } catch (e) {
-        console.warn('Error parsing URL resume time', e);
+        console.warn('[Resume] Error parsing URL resume time', e);
         return null;
       }
     };
 
-    console.log('[Resume] Checking for saved progress...');
-    console.log('[Resume] MovieID:', movieData.movieId);
-    console.log('[Resume] Movie Title:', movieData.title);
+    // Make the resume check async
+    (async () => {
+      console.log('[Resume] Checking for saved progress...');
+      console.log('[Resume] MovieID:', movieData.movieId);
+      console.log('[Resume] Movie Title:', movieData.title);
 
-    const savedProgress = getSavedProgress();
-    console.log('[Resume] Saved progress result:', savedProgress);
+      const savedProgress = await getSavedProgress();
+      console.log('[Resume] Saved progress result:', savedProgress);
 
     if (savedProgress) {
       console.log('[Resume] ✅ Found saved progress!');
@@ -422,6 +454,7 @@
       // Timeout after 10 seconds
       setTimeout(() => clearInterval(directCheckInterval), 10000);
     }
+    })(); // Close the async IIFE
   }
 
   async function showEnhancedResumePrompt(resumeTime, savedProgress, video, movieData) {

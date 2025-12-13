@@ -104,7 +104,8 @@ class ContinueWatchingManager {
 
       // Save to Firebase immediately (cloud-only)
       if (window.FirebaseSync && window.FirebaseSync.initialized) {
-        window.FirebaseSync.saveContinueWatching(allProgress).then(() => {
+        // Use updateContinueWatchingItem for individual saves (more efficient)
+        window.FirebaseSync.updateContinueWatchingItem(movieId, allProgress[movieId]).then(() => {
           console.log('✅ Progress synced to Firebase cloud');
           // Dispatch custom event for live updates after successful save
           window.dispatchEvent(new CustomEvent('continueWatchingUpdated', {
@@ -113,8 +114,20 @@ class ContinueWatchingManager {
         }).catch(err => {
           console.error('❌ Failed to sync continue watching to Firebase:', err);
         });
+      } else if (window.FirebaseSync && !window.FirebaseSync.initialized) {
+        // Firebase is loading, wait and retry
+        console.log('⏳ Firebase initializing, will retry save...');
+        setTimeout(() => {
+          if (window.FirebaseSync && window.FirebaseSync.initialized) {
+            window.FirebaseSync.updateContinueWatchingItem(movieId, allProgress[movieId]).then(() => {
+              console.log('✅ Progress synced to Firebase cloud (retry)');
+            }).catch(err => {
+              console.error('❌ Failed to sync (retry):', err);
+            });
+          }
+        }, 2000);
       } else {
-        console.warn('⚠️ Firebase not initialized, progress not saved');
+        console.warn('⚠️ Firebase not available, progress not saved');
       }
     } catch (error) {
       console.error('Error saving continue watching data:', error);

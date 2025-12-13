@@ -5893,7 +5893,7 @@
                 if (movieId) {
                   // Use ContinueWatchingManager (cloud-only)
                   if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.removeMovieProgress === 'function') {
-                    window.ContinueWatchingManager.removeMovieProgress(movieId);
+                    await window.ContinueWatchingManager.removeMovieProgress(movieId);
                   } else if (window.FirebaseSync && window.FirebaseSync.initialized) {
                     // Fallback to FirebaseSync
                     await window.FirebaseSync.removeContinueWatchingItem(movieId);
@@ -5970,7 +5970,7 @@
               showClearConfirmation(async () => {
                 // Use the ContinueWatchingManager's clearAll method (cloud-only)
                 if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.clearAll === 'function') {
-                  window.ContinueWatchingManager.clearAll();
+                  await window.ContinueWatchingManager.clearAll();
                 } else if (window.FirebaseSync && window.FirebaseSync.initialized) {
                   // Fallback to FirebaseSync
                   await window.FirebaseSync.saveContinueWatching({});
@@ -5988,7 +5988,7 @@
                 // Wait a moment then reload to ensure UI is in sync
                 setTimeout(() => {
                   loadContinueWatching(false);
-                }, 100);
+                }, 500);
               });
             });
           }

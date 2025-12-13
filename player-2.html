@@ -36,14 +36,26 @@
         const title = urlParams.get('title') || 'Unknown Movie';
         const poster = urlParams.get('poster') || urlParams.get('thumbnail') || '';
 
+        console.log('[Tracking] URL Parameters:', {
+          movieId,
+          title,
+          poster: poster ? 'Yes - ' + poster.substring(0, 50) : 'No'
+        });
+
         const movieData = {
           movieId: movieId,
           title: title,
           posterUrl: poster,
-          thumbnail: poster
+          thumbnail: poster,
+          poster: poster
         };
 
-        console.log('[Tracking] Movie data:', movieData);
+        console.log('[Tracking] Movie data created:', {
+          movieId: movieData.movieId,
+          title: movieData.title,
+          hasPoster: !!movieData.posterUrl,
+          posterUrl: movieData.posterUrl ? movieData.posterUrl.substring(0, 50) : 'empty'
+        });
 
         // Wait for ContinueWatchingManager
         function startTracking() {

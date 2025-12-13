@@ -134,27 +134,17 @@ class ContinueWatchingManager {
   /**
    * Remove a movie from continue watching
    */
-  removeMovieProgress(movieId) {
+  async removeMovieProgress(movieId) {
     try {
-      const allProgress = this.getAllProgress();
-      delete allProgress[movieId];
-      localStorage.setItem(this.getStorageKey(), JSON.stringify(allProgress));
+      console.log('Removing progress from cloud for', movieId);
 
-      console.log('Removed progress for', movieId);
-
-      // Dispatch custom event for live updates
-      window.dispatchEvent(new CustomEvent('continueWatchingUpdated', {
-        detail: { movieId, removed: true }
-      }));
-
-      // Also sync to Firebase if available
-      if (window.FirebaseSync && window.FirebaseSync.initialized) {
-        window.FirebaseSync.saveContinueWatching(allProgress).catch(err => {
-          console.warn('Failed to sync continue watching removal to Firebase:', err);
-        });
+      // Remove from Firebase Sync cache immediately
+      if (window.FirebaseSync && window.FirebaseSync.cache && window.FirebaseSync.cache['continueWatching']) {
+        delete window.FirebaseSync.cache['continueWatching'][movieId];
       }
 
-      // Sync to Firestore for cross-device support
+      // Remove from Firestore first
+      let deleteSuccess = false;
       if (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function') {
         const user = window.FirebaseAuth.getUser();
         if (user && user.uid && window.FirebaseAuth.firestore) {
@@ -163,11 +153,20 @@ class ContinueWatchingManager {
             .doc(user.uid)
             .collection('continueWatching')
             .doc(movieId);
-          docRef.delete().catch((err) => {
+          try {
+            await docRef.delete();
+            console.log('Successfully deleted from Firestore:', movieId);
+            deleteSuccess = true;
+          } catch (err) {
             console.error('Failed to delete continue watching from Firestore:', err);
-          });
+          }
         }
       }
+
+      // Dispatch custom event for live updates only after successful deletion
+      window.dispatchEvent(new CustomEvent('continueWatchingUpdated', {
+        detail: { movieId, removed: true, success: deleteSuccess }
+      }));
     } catch (error) {
       console.error('Error removing continue watching data:', error);
     }
@@ -176,46 +175,54 @@ class ContinueWatchingManager {
   /**
    * Clear all continue watching data
    */
-  clearAll() {
+  async clearAll() {
     try {
-      const storageKey = this.getStorageKey();
-      localStorage.removeItem(storageKey);
+      console.log('Clearing all continue watching data from cloud');
 
-      console.log('Cleared all continue watching data');
-
-      // Dispatch custom event for live updates
-      window.dispatchEvent(new CustomEvent('continueWatchingUpdated', {
-        detail: { cleared: true }
-      }));
+      // Clear Firebase Sync cache immediately
+      if (window.FirebaseSync && window.FirebaseSync.cache) {
+        window.FirebaseSync.cache['continueWatching'] = {};
+      }
 
       // Also sync to Firebase if available
       if (window.FirebaseSync && window.FirebaseSync.initialized) {
-        window.FirebaseSync.saveContinueWatching({}).catch(err => {
+        try {
+          await window.FirebaseSync.saveContinueWatching({});
+          console.log('Firebase sync cleared successfully');
+        } catch (err) {
           console.warn('Failed to sync continue watching to Firebase:', err);
-        });
+        }
       }
 
-      // Sync to Firestore for cross-device support
+      // Clear all documents from Firestore
+      let clearSuccess = false;
       if (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function') {
         const user = window.FirebaseAuth.getUser();
         if (user && user.uid && window.FirebaseAuth.firestore) {
-          // Delete all continue watching documents for this user
           const collectionRef = window.FirebaseAuth.firestore
             .collection('users')
             .doc(user.uid)
             .collection('continueWatching');
           
-          collectionRef.get().then(snapshot => {
+          try {
+            const snapshot = await collectionRef.get();
             const batch = window.FirebaseAuth.firestore.batch();
             snapshot.docs.forEach(doc => {
               batch.delete(doc.ref);
             });
-            return batch.commit();
-          }).catch((err) => {
+            await batch.commit();
+            console.log('Successfully cleared', snapshot.docs.length, 'documents from Firestore');
+            clearSuccess = true;
+          } catch (err) {
             console.error('Failed to clear continue watching from Firestore:', err);
-          });
+          }
         }
       }
+
+      // Dispatch custom event for live updates after successful clearing
+      window.dispatchEvent(new CustomEvent('continueWatchingUpdated', {
+        detail: { cleared: true, success: clearSuccess }
+      }));
     } catch (error) {
       console.error('Error clearing all continue watching data:', error);
     }
@@ -407,10 +414,15 @@ class ContinueWatchingManager {
       return;
     }
 
+    // Ensure poster is passed along with all its possible field names
+    const posterValue = movieData.posterUrl || movieData.poster || movieData.thumbnail || '';
+
     const progressData = {
       movieId: movieData.movieId,
       title: movieData.title,
-      posterUrl: movieData.posterUrl || movieData.thumbnail,
+      posterUrl: posterValue,
+      poster: posterValue,
+      thumbnail: posterValue,
       currentTime: Math.floor(video.currentTime),
       duration: Math.floor(video.duration),
       progress: Math.round((video.currentTime / video.duration) * 100),

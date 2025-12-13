@@ -149,7 +149,9 @@ class ContinueWatchingManager {
       const movieProgress = {
         movieId: movieId,
         title: progressData.title || 'Unknown Movie',
-        posterUrl: progressData.posterUrl || progressData.thumbnail || '',
+        posterUrl: progressData.posterUrl || progressData.thumbnail || progressData.poster || '',
+        poster: progressData.posterUrl || progressData.thumbnail || progressData.poster || '',
+        thumbnail: progressData.posterUrl || progressData.thumbnail || progressData.poster || '',
         currentTime: Math.floor(progressData.currentTime),
         duration: Math.floor(progressData.duration),
         progress: Math.round((progressData.currentTime / progressData.duration) * 100),
@@ -163,7 +165,7 @@ class ContinueWatchingManager {
 
       this.lastSavedTime = progressData.currentTime;
 
-      console.log('Progress saved to cloud for', movieId, ':', Math.round(progressData.currentTime), 's');
+      console.log('Progress saved to cloud for', movieId, ':', Math.round(progressData.currentTime), 's', '| Poster:', movieProgress.posterUrl ? 'Yes' : 'No');
 
       // Save to Firestore ONLY (cloud-only, no localStorage)
       const user = (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function')
@@ -177,8 +179,9 @@ class ContinueWatchingManager {
           .collection('continueWatching')
           .doc(movieId);
         
-        docRef.set(movieProgress).then(() => {
-          console.log('Successfully saved to Firestore');
+        // Use set with merge to preserve existing fields like posterUrl
+        docRef.set(movieProgress, { merge: true }).then(() => {
+          console.log('Successfully saved to Firestore with poster:', movieProgress.posterUrl ? 'Yes' : 'No');
           
           // Update Firebase Sync cache if available
           if (window.FirebaseSync && window.FirebaseSync.cache) {

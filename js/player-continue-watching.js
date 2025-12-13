@@ -442,17 +442,21 @@
     const overlay = document.createElement('div');
     overlay.className = 'resume-prompt-overlay';
     overlay.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.9);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      backdrop-filter: blur(5px);
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      background: rgba(0, 0, 0, 0.95) !important;
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center !important;
+      z-index: 999999 !important;
+      backdrop-filter: blur(5px) !important;
+      pointer-events: all !important;
+      touch-action: auto !important;
     `;
 
     const promptBox = document.createElement('div');
@@ -467,6 +471,10 @@
       color: white;
       font-family: 'Netflix Sans', Arial, sans-serif;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      pointer-events: all !important;
+      touch-action: auto !important;
+      position: relative;
+      z-index: 1000000 !important;
     `;
 
     // Gracefully handle cases where savedProgress is missing (e.g., resume via URL param only)
@@ -503,7 +511,7 @@
         </div>
       </div>
       
-      <div style="display: flex; gap: 1rem; justify-content: center;">
+      <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
         <button id="resumeYesBtn" style="
           background: #e50914;
           color: white;
@@ -516,7 +524,12 @@
           transition: all 0.2s ease;
           display: flex;
           align-items: center;
+          justify-content: center;
           gap: 0.5rem;
+          min-width: 150px;
+          pointer-events: all;
+          touch-action: manipulation;
+          -webkit-tap-highlight-color: transparent;
         ">
           <i class="fas fa-play"></i>
           Resume from ${timeFormatted}
@@ -533,7 +546,12 @@
           transition: all 0.2s ease;
           display: flex;
           align-items: center;
+          justify-content: center;
           gap: 0.5rem;
+          min-width: 150px;
+          pointer-events: all;
+          touch-action: manipulation;
+          -webkit-tap-highlight-color: transparent;
         ">
           <i class="fas fa-redo"></i>
           Start Over
@@ -543,10 +561,37 @@
 
     overlay.appendChild(promptBox);
 
-    // Add hover effects
+    // Add hover and touch effects for both desktop and mobile
     const resumeYesBtn = promptBox.querySelector('#resumeYesBtn');
     const resumeNoBtn = promptBox.querySelector('#resumeNoBtn');
 
+    // Touch/click feedback for Resume button
+    resumeYesBtn.addEventListener('touchstart', () => {
+      resumeYesBtn.style.background = '#f40612';
+      resumeYesBtn.style.transform = 'scale(0.98)';
+    }, { passive: true });
+    
+    resumeYesBtn.addEventListener('touchend', () => {
+      setTimeout(() => {
+        resumeYesBtn.style.background = '#e50914';
+        resumeYesBtn.style.transform = 'scale(1)';
+      }, 100);
+    }, { passive: true });
+
+    // Touch/click feedback for Start Over button
+    resumeNoBtn.addEventListener('touchstart', () => {
+      resumeNoBtn.style.background = 'rgba(255, 255, 255, 0.2)';
+      resumeNoBtn.style.transform = 'scale(0.98)';
+    }, { passive: true });
+    
+    resumeNoBtn.addEventListener('touchend', () => {
+      setTimeout(() => {
+        resumeNoBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+        resumeNoBtn.style.transform = 'scale(1)';
+      }, 100);
+    }, { passive: true });
+
+    // Desktop hover effects
     resumeYesBtn.addEventListener('mouseenter', () => {
       resumeYesBtn.style.background = '#f40612';
       resumeYesBtn.style.transform = 'translateY(-1px)';

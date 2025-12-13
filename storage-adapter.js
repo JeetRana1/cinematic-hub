@@ -60,26 +60,47 @@
       // Get data from Firebase Sync instead of localStorage
       const continueWatching = await window.FirebaseSync.getContinueWatching();
 
-      const continueWatchingMovies = Object.entries(continueWatching).map(([id, movie]) => ({
-        ...movie,
-        id: movie.id || id,
-        title: movie.title || 'Untitled',
-        progress: parseFloat(movie.progress) || 0,
-        currentTime: parseFloat(movie.currentTime) || 0,
-        duration: parseFloat(movie.duration) || 0,
-        timestamp: parseInt(movie.timestamp) || 0,
-        poster: movie.poster || movie.posterUrl || movie.thumbnail || '',
-        posterUrl: movie.posterUrl || movie.poster || movie.thumbnail || ''
-      }));
+      const continueWatchingMovies = Object.entries(continueWatching).map(([id, movie]) => {
+        const mapped = {
+          ...movie,
+          id: movie.movieId || movie.id || id,
+          movieId: movie.movieId || movie.id || id,
+          title: movie.title || 'Untitled',
+          progress: parseFloat(movie.progress) || 0,
+          currentTime: parseFloat(movie.currentTime) || 0,
+          duration: parseFloat(movie.duration) || 0,
+          timestamp: parseInt(movie.updatedAt || movie.timestamp) || 0,
+          poster: movie.posterUrl || movie.poster || movie.thumbnail || '',
+          posterUrl: movie.posterUrl || movie.poster || movie.thumbnail || ''
+        };
+        console.log('[StorageAdapter] Mapped movie:', mapped.title, '| Progress:', mapped.progress, '% | Poster:', mapped.posterUrl ? 'Yes' : 'No');
+        return mapped;
+      });
 
       let validMovies = continueWatchingMovies.filter(movie => {
         const hasProgress = movie.progress > 0 && movie.progress < 95;
         const hasValidId = movie.id || movie.movieId;
-        const hasTitle = movie.title && movie.title !== 'Untitled';
+        const hasTitle = movie.title && movie.title !== 'Untitled' && movie.title !== 'Unknown Movie';
         const isNotTestMovie = !movie.title.toLowerCase().includes('test');
         const hasValidPoster = movie.poster || movie.posterUrl;
-        return hasProgress && hasValidId && hasTitle && isNotTestMovie && hasValidPoster;
+        
+        const isValid = hasProgress && hasValidId && hasTitle && isNotTestMovie && hasValidPoster;
+        
+        if (!isValid) {
+          console.log('[StorageAdapter] Filtered out:', movie.title, {
+            hasProgress,
+            hasValidId,
+            hasTitle,
+            isNotTestMovie,
+            hasValidPoster: !!hasValidPoster,
+            poster: movie.posterUrl
+          });
+        }
+        
+        return isValid;
       });
+      
+      console.log('[StorageAdapter] Valid movies:', validMovies.length, validMovies.map(m => m.title));
 
       validMovies.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 

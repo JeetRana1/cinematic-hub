@@ -5720,22 +5720,28 @@
         // Get continue watching data from Firebase (cloud-only)
         let continueWatching = {};
         
-        // Try ContinueWatchingManager async method first (uses Firebase)
+        // ALWAYS use async method to ensure we get latest data from Firebase
         if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.getAllProgressAsync === 'function') {
+          console.log('Loading continue watching from ContinueWatchingManager (async)...');
           continueWatching = await window.ContinueWatchingManager.getAllProgressAsync();
-        } else if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.getAllProgress === 'function') {
-          // Fallback to sync version (might use cache)
-          continueWatching = window.ContinueWatchingManager.getAllProgress();
-          // If empty, try async
-          if (Object.keys(continueWatching).length === 0 && window.ContinueWatchingManager.getAllProgressAsync) {
-            continueWatching = await window.ContinueWatchingManager.getAllProgressAsync();
-          }
+          console.log('ContinueWatchingManager returned:', Object.keys(continueWatching).length, 'items');
         } else if (window.FirebaseSync && window.FirebaseSync.initialized) {
-          // Fallback to FirebaseSync
+          console.log('Loading continue watching from FirebaseSync...');
           continueWatching = await window.FirebaseSync.getContinueWatching();
+          console.log('FirebaseSync returned:', Object.keys(continueWatching).length, 'items');
+        } else {
+          console.warn('No Firebase source available, trying ContinueWatchingManager sync...');
+          if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.getAllProgress === 'function') {
+            continueWatching = window.ContinueWatchingManager.getAllProgress();
+          }
         }
 
         console.log('Continue watching data from cloud:', continueWatching, 'Items:', Object.keys(continueWatching).length);
+        
+        // Log each item for debugging
+        Object.entries(continueWatching).forEach(([id, movie]) => {
+          console.log('  -', movie.title || 'Untitled', '|', movie.progress || 0, '% | ID:', id);
+        });
 
         // Get movies that have progress
         const continueWatchingMovies = Object.entries(continueWatching).map(([id, movie]) => {

@@ -73,9 +73,13 @@ class ContinueWatchingManager {
    */
   async getAllProgressAsync() {
     try {
+      console.log('[ContinueWatching] getAllProgressAsync called');
+      
       // Try FirebaseSync first
       if (window.FirebaseSync && window.FirebaseSync.initialized) {
+        console.log('[ContinueWatching] Using FirebaseSync');
         const data = await window.FirebaseSync.getContinueWatching();
+        console.log('[ContinueWatching] FirebaseSync returned', Object.keys(data || {}).length, 'items');
         return data || {};
       }
 
@@ -85,22 +89,28 @@ class ContinueWatchingManager {
         : null;
       
       if (user && user.uid && window.FirebaseAuth.firestore) {
+        console.log('[ContinueWatching] Using Firestore direct access for user:', user.uid);
         const snapshot = await window.FirebaseAuth.firestore
           .collection('users')
           .doc(user.uid)
           .collection('continueWatching')
           .get();
         
+        console.log('[ContinueWatching] Firestore returned', snapshot.docs.length, 'documents');
+        
         const data = {};
         snapshot.docs.forEach(doc => {
-          data[doc.id] = doc.data();
+          const docData = doc.data();
+          console.log('[ContinueWatching] Document:', doc.id, docData.title || 'Untitled', docData.progress || 0, '%');
+          data[doc.id] = docData;
         });
         return data;
       }
 
+      console.warn('[ContinueWatching] No Firebase source available');
       return {};
     } catch (error) {
-      console.error('Error reading continue watching data async:', error);
+      console.error('[ContinueWatching] Error reading continue watching data async:', error);
       return {};
     }
   }

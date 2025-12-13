@@ -5738,24 +5738,46 @@
         console.log('Continue watching data from cloud:', continueWatching, 'Items:', Object.keys(continueWatching).length);
 
         // Get movies that have progress
-        const continueWatchingMovies = Object.entries(continueWatching).map(([id, movie]) => ({
-          ...movie,
-          id: movie.id || id, // Ensure we have an ID
-          title: movie.title || 'Untitled',
-          progress: parseFloat(movie.progress) || 0,
-          currentTime: parseFloat(movie.currentTime) || 0,
-          duration: parseFloat(movie.duration) || 0,
-          timestamp: parseInt(movie.timestamp) || 0,
-          poster: movie.poster || movie.posterUrl || movie.thumbnail || '',
-          posterUrl: movie.posterUrl || movie.poster || movie.thumbnail || ''
-        }));
+        const continueWatchingMovies = Object.entries(continueWatching).map(([id, movie]) => {
+          const mapped = {
+            ...movie,
+            id: movie.movieId || movie.id || id, // Use movieId first, then id, then key
+            movieId: movie.movieId || movie.id || id,
+            title: movie.title || 'Untitled',
+            progress: parseFloat(movie.progress) || 0,
+            currentTime: parseFloat(movie.currentTime) || 0,
+            duration: parseFloat(movie.duration) || 0,
+            timestamp: parseInt(movie.updatedAt || movie.timestamp) || 0,
+            updatedAt: parseInt(movie.updatedAt || movie.timestamp) || 0,
+            poster: movie.poster || movie.posterUrl || movie.thumbnail || '',
+            posterUrl: movie.posterUrl || movie.poster || movie.thumbnail || ''
+          };
+          console.log('Mapped movie:', mapped.title, 'Progress:', mapped.progress, 'ID:', mapped.id);
+          return mapped;
+        });
 
         let validMovies = continueWatchingMovies.filter(movie => {
           const hasProgress = movie.progress > 0 && movie.progress < 95;
           const hasValidId = movie.id || movie.movieId;
-          const hasTitle = movie.title && movie.title !== 'Untitled';
-          return hasProgress && hasValidId && hasTitle;
+          const hasTitle = movie.title && movie.title !== 'Untitled' && movie.title !== 'Unknown Movie';
+          const isValid = hasProgress && hasValidId && hasTitle;
+          
+          if (!isValid) {
+            console.log('Filtered out movie:', movie.title, {
+              hasProgress,
+              hasValidId,
+              hasTitle,
+              progress: movie.progress,
+              id: movie.id,
+              movieId: movie.movieId,
+              title: movie.title
+            });
+          }
+          
+          return isValid;
         });
+        
+        console.log('Valid movies after filter:', validMovies.length, validMovies.map(m => m.title));
 
         // Deduplicate by normalized title, prefer the most recent/most progressed entry
         if (validMovies.length > 1) {

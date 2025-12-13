@@ -2719,31 +2719,13 @@
       // Initialize player elements
       const video = document.getElementById('video');
       
-      // If a start time (?t=seconds) was provided, seek to it when video is ready
+      // If a start time (?t=seconds) was provided, let player-continue-watching.js handle it
       const startTimeParam = parseInt(urlParams.get('t') || '0', 10);
       
       if (!isNaN(startTimeParam) && startTimeParam > 0) {
-        console.log('Resume time parameter found:', startTimeParam, 'seconds - will seek when ready');
-        
-        // Function to seek to the resume time
-        const seekToResumeTime = () => {
-          if (video.readyState >= 2) { // HAVE_CURRENT_DATA or higher
-            console.log('Video ready, seeking to:', startTimeParam);
-            video.currentTime = startTimeParam;
-            video.play().catch(err => console.log('Play interrupted:', err));
-          } else {
-            console.log('Video not ready yet, waiting... readyState:', video.readyState);
-          }
-        };
-        
-        // Try immediately if already ready
-        if (video.readyState >= 2) {
-          seekToResumeTime();
-        } else {
-          // Listen for when video is ready
-          video.addEventListener('loadeddata', seekToResumeTime, { once: true });
-          video.addEventListener('canplay', seekToResumeTime, { once: true });
-        }
+        console.log('Resume time parameter found:', startTimeParam, 'seconds - will be handled by player-continue-watching.js');
+        // Don't auto-seek here - let player-continue-watching.js show the resume prompt
+        // This ensures consistent behavior across all resume scenarios
       } else {
         // Check for continue watching progress and block auto-seek to 0:00
         setTimeout(() => {

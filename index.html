@@ -5698,7 +5698,7 @@
       }
     }
 
-    // Load continue watching from Firebase (cloud-only, no localStorage)
+    // Load continue watching from Firebase AND localStorage (merged)
     async function loadContinueWatching(forceShow = false) {
       // Wait for auth/profile to be ready to avoid flicker with wrong storage key
       try {
@@ -5717,26 +5717,63 @@
 
       console.log('=== DEBUG: loadContinueWatching() called ===');
       try {
-        // Get continue watching data from Firebase (cloud-only)
-        let continueWatching = {};
+        // 1. Get Cloud Data
+        let cloudData = {};
         
         // ALWAYS use async method to ensure we get latest data from Firebase
         if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.getAllProgressAsync === 'function') {
           console.log('Loading continue watching from ContinueWatchingManager (async)...');
-          continueWatching = await window.ContinueWatchingManager.getAllProgressAsync();
-          console.log('ContinueWatchingManager returned:', Object.keys(continueWatching).length, 'items');
+          cloudData = await window.ContinueWatchingManager.getAllProgressAsync();
         } else if (window.FirebaseSync && window.FirebaseSync.initialized) {
           console.log('Loading continue watching from FirebaseSync...');
-          continueWatching = await window.FirebaseSync.getContinueWatching();
-          console.log('FirebaseSync returned:', Object.keys(continueWatching).length, 'items');
+          cloudData = await window.FirebaseSync.getContinueWatching();
         } else {
           console.warn('No Firebase source available, trying ContinueWatchingManager sync...');
           if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.getAllProgress === 'function') {
-            continueWatching = window.ContinueWatchingManager.getAllProgress();
+            cloudData = window.ContinueWatchingManager.getAllProgress();
           }
         }
 
-        console.log('Continue watching data from cloud:', continueWatching, 'Items:', Object.keys(continueWatching).length);
+        // 2. Get Local Data (from Player 2 or offline)
+        let localData = {};
+        try {
+            const user = window.FirebaseAuth.getUser();
+            const uid = user ? user.uid : null;
+            const profileId = uid ? localStorage.getItem(`fb_selected_profile_${uid}`) : null;
+            
+            // Check all possible keys
+            const keys = ['continueWatching'];
+            if (uid) keys.push(`continueWatching_${uid}`);
+            if (uid && profileId) keys.push(`continueWatching_${uid}_${profileId}`);
+            
+            keys.forEach(key => {
+                try {
+                    const data = JSON.parse(localStorage.getItem(key) || '{}');
+                    Object.assign(localData, data);
+                } catch(e) {}
+            });
+            console.log('Loaded local continue watching data:', Object.keys(localData).length, 'items');
+        } catch (e) { console.warn('Error reading local continue watching:', e); }
+
+        // 3. Merge Data (Cloud wins on conflict, unless Local is newer)
+        let continueWatching = { ...cloudData };
+        
+        Object.entries(localData).forEach(([id, localMovie]) => {
+            const cloudMovie = continueWatching[id];
+            if (!cloudMovie) {
+                continueWatching[id] = localMovie;
+            } else {
+                // Compare timestamps
+                const localTime = Number(localMovie.updatedAt || localMovie.timestamp || 0);
+                const cloudTime = Number(cloudMovie.updatedAt || cloudMovie.timestamp || 0);
+                if (localTime > cloudTime) {
+                    continueWatching[id] = localMovie;
+                    console.log('Using newer local data for:', localMovie.title);
+                }
+            }
+        });
+
+        console.log('Merged continue watching data:', Object.keys(continueWatching).length, 'items');
         
         // Log each item for debugging
         Object.entries(continueWatching).forEach(([id, movie]) => {
@@ -5888,16 +5925,35 @@
               removeButton.addEventListener('click', async (e) => {
                 e.stopPropagation();
 
-                // Remove from cloud storage only
                 const movieId = movie.id || movie.movieId;
                 if (movieId) {
-                  // Use ContinueWatchingManager (cloud-only)
+                  // 1. Remove from Cloud
                   if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.removeMovieProgress === 'function') {
                     await window.ContinueWatchingManager.removeMovieProgress(movieId);
                   } else if (window.FirebaseSync && window.FirebaseSync.initialized) {
-                    // Fallback to FirebaseSync
                     await window.FirebaseSync.removeContinueWatchingItem(movieId);
                   }
+
+                  // 2. Remove from Local Storage
+                  try {
+                      const user = window.FirebaseAuth.getUser();
+                      const uid = user ? user.uid : null;
+                      const profileId = uid ? localStorage.getItem(`fb_selected_profile_${uid}`) : null;
+                      
+                      const keys = ['continueWatching'];
+                      if (uid) keys.push(`continueWatching_${uid}`);
+                      if (uid && profileId) keys.push(`continueWatching_${uid}_${profileId}`);
+                      
+                      keys.forEach(key => {
+                          try {
+                              const data = JSON.parse(localStorage.getItem(key) || '{}');
+                              if (data[movieId]) {
+                                  delete data[movieId];
+                                  localStorage.setItem(key, JSON.stringify(data));
+                              }
+                          } catch(e) {}
+                      });
+                  } catch(e) {}
 
                   // Remove the card with animation
                   card.style.opacity = '0';
@@ -5968,7 +6024,7 @@
                 iconEl.classList.add('dump-anim');
               }
               showClearConfirmation(async () => {
-                // Use the ContinueWatchingManager's clearAll method (cloud-only)
+                // 1. Clear Cloud
                 if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.clearAll === 'function') {
                   await window.ContinueWatchingManager.clearAll();
                 } else if (window.FirebaseSync && window.FirebaseSync.initialized) {
@@ -5978,6 +6034,21 @@
                     window.FirebaseSync.cache['continueWatching'] = {};
                   }
                 }
+                
+                // 2. Clear Local Storage
+                try {
+                      const user = window.FirebaseAuth.getUser();
+                      const uid = user ? user.uid : null;
+                      const profileId = uid ? localStorage.getItem(`fb_selected_profile_${uid}`) : null;
+                      
+                      const keys = ['continueWatching'];
+                      if (uid) keys.push(`continueWatching_${uid}`);
+                      if (uid && profileId) keys.push(`continueWatching_${uid}_${profileId}`);
+                      
+                      keys.forEach(key => {
+                          localStorage.removeItem(key);
+                      });
+                } catch(e) {}
                 
                 // Hide the section immediately
                 section.style.display = 'none';

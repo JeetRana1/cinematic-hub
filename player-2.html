@@ -20,12 +20,15 @@
 
       // Wait for DOM and video element
       function initializeTracking() {
-        const video = document.getElementById('video');
+        // Player-2 uses 'videoPlayer' as the ID
+        const video = document.getElementById('videoPlayer') || document.getElementById('video');
         if (!video) {
           console.warn('[Tracking] Video element not found, retrying...');
           setTimeout(initializeTracking, 100);
           return;
         }
+        
+        console.log('[Tracking] Video element found:', video.id);
 
         // Get movie data from URL
         const urlParams = new URLSearchParams(window.location.search);

@@ -6024,42 +6024,68 @@
                 iconEl.classList.add('dump-anim');
               }
               showClearConfirmation(async () => {
-                // 1. Clear Cloud
-                if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.clearAll === 'function') {
-                  await window.ContinueWatchingManager.clearAll();
-                } else if (window.FirebaseSync && window.FirebaseSync.initialized) {
-                  // Fallback to FirebaseSync
-                  await window.FirebaseSync.saveContinueWatching({});
-                  if (window.FirebaseSync.cache) {
-                    window.FirebaseSync.cache['continueWatching'] = {};
+                try {
+                  // Clear from Firebase Cloud (primary storage)
+                  if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.clearAll === 'function') {
+                    await window.ContinueWatchingManager.clearAll();
+                    console.log('✅ Cleared via ContinueWatchingManager');
+                  } else if (window.FirebaseSync && window.FirebaseSync.initialized) {
+                    // Fallback to FirebaseSync
+                    await window.FirebaseSync.saveContinueWatching({});
+                    if (window.FirebaseSync.cache) {
+                      window.FirebaseSync.cache['continueWatching'] = {};
+                    }
+                    console.log('✅ Cleared via FirebaseSync');
+                  }
+                  
+                  // Clear any remaining localStorage keys (cleanup)
+                  try {
+                    const user = window.FirebaseAuth.getUser();
+                    const uid = user ? user.uid : null;
+                    const profileId = uid ? localStorage.getItem(`fb_selected_profile_${uid}`) : null;
+                    
+                    const keys = ['continueWatching'];
+                    if (uid) keys.push(`continueWatching_${uid}`);
+                    if (uid && profileId) keys.push(`continueWatching_${uid}_${profileId}`);
+                    
+                    keys.forEach(key => {
+                      localStorage.removeItem(key);
+                    });
+                    console.log('✅ Cleared localStorage keys:', keys.length);
+                  } catch(e) {
+                    console.warn('Error clearing localStorage:', e);
+                  }
+                  
+                  // Hide the section immediately with animation
+                  section.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                  section.style.opacity = '0';
+                  section.style.transform = 'translateY(-20px)';
+                  
+                  setTimeout(() => {
+                    section.style.display = 'none';
+                    section.style.opacity = '';
+                    section.style.transform = '';
+                  }, 300);
+                  
+                  // Show success message
+                  if (window.UIToast) {
+                    UIToast.success('Cleared', 'All continue watching items removed');
+                  } else {
+                    alert('All continue watching items cleared!');
+                  }
+                  
+                  // Wait for animation then reload to ensure UI is in sync
+                  setTimeout(() => {
+                    loadContinueWatching(false);
+                  }, 600);
+                } catch (error) {
+                  console.error('Error clearing continue watching:', error);
+                  if (window.UIToast) {
+                    UIToast.error('Error', 'Failed to clear continue watching');
+                  } else {
+                    alert('Error clearing continue watching. Please try again.');
                   }
                 }
-                
-                // 2. Clear Local Storage
-                try {
-                      const user = window.FirebaseAuth.getUser();
-                      const uid = user ? user.uid : null;
-                      const profileId = uid ? localStorage.getItem(`fb_selected_profile_${uid}`) : null;
-                      
-                      const keys = ['continueWatching'];
-                      if (uid) keys.push(`continueWatching_${uid}`);
-                      if (uid && profileId) keys.push(`continueWatching_${uid}_${profileId}`);
-                      
-                      keys.forEach(key => {
-                          localStorage.removeItem(key);
-                      });
-                } catch(e) {}
-                
-                // Hide the section immediately
-                section.style.display = 'none';
-                
-                // Show success message
-                UIToast.success('Cleared', 'All continue watching items removed');
-                
-                // Wait a moment then reload to ensure UI is in sync
-                setTimeout(() => {
-                  loadContinueWatching(false);
-                }, 500);
               });
             });
           }

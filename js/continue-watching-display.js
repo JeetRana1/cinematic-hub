@@ -373,50 +373,66 @@ class ContinueWatchingDisplay {
   }
 
   /**
-   * Remove movie from continue watching
+   * Remove movie from continue watching (cloud-only)
    */
-  removeMovie(movie, cardElement) {
+  async removeMovie(movie, cardElement) {
     const title = movie.title || 'this movie';
     
     if (confirm(`Remove "${title}" from Continue Watching?`)) {
-      // Remove from localStorage
-      if (window.ContinueWatchingManager) {
-        window.ContinueWatchingManager.removeMovieProgress(movie.movieId);
-      } else {
-        // Fallback removal
-        const allProgress = JSON.parse(localStorage.getItem('continueWatching') || '{}');
-        delete allProgress[movie.movieId];
-        localStorage.setItem('continueWatching', JSON.stringify(allProgress));
-      }
-      
-      // Animate card removal
-      cardElement.style.transition = 'all 0.3s ease';
-      cardElement.style.transform = 'translateY(-20px)';
-      cardElement.style.opacity = '0';
-      
-      setTimeout(() => {
-        cardElement.remove();
-        
-        // Check if section is now empty
-        const container = document.getElementById('continueWatchingContainer');
-        if (container && container.children.length === 0) {
-          const section = container.closest('.continue-watching-section');
-          if (section) {
-            section.remove();
-          }
+      try {
+        // Remove from Firebase Cloud (primary storage)
+        if (window.ContinueWatchingManager) {
+          await window.ContinueWatchingManager.removeMovieProgress(movie.movieId);
+          console.log('✅ Removed from Firebase:', movie.movieId);
         }
-      }, 300);
-      
-      this.showToast('success', 'Removed', `"${title}" removed from Continue Watching`);
+        
+        // Clear from Firebase Sync cache immediately
+        if (window.FirebaseSync && window.FirebaseSync.cache && window.FirebaseSync.cache['continueWatching']) {
+          delete window.FirebaseSync.cache['continueWatching'][movie.movieId];
+          console.log('✅ Cleared from Firebase cache');
+        }
+        
+        // Animate card removal
+        cardElement.style.transition = 'all 0.3s ease';
+        cardElement.style.transform = 'translateY(-20px)';
+        cardElement.style.opacity = '0';
+        
+        setTimeout(() => {
+          cardElement.remove();
+          
+          // Check if section is now empty
+          const container = document.getElementById('continueWatchingContainer');
+          if (container && container.children.length === 0) {
+            const section = container.closest('.continue-watching-section');
+            if (section) {
+              section.style.transition = 'opacity 0.3s ease';
+              section.style.opacity = '0';
+              setTimeout(() => section.remove(), 300);
+            }
+          }
+        }, 300);
+        
+        this.showToast('success', 'Removed', `"${title}" removed from Continue Watching`);
+      } catch (error) {
+        console.error('Error removing movie:', error);
+        this.showToast('error', 'Error', 'Failed to remove movie. Please try again.');
+      }
     }
   }
 
   /**
-   * Get continue watching movies from localStorage
+   * Get continue watching movies from Firebase (cloud-only)
    */
   getContinueWatchingMovies() {
     try {
-      const allProgress = JSON.parse(localStorage.getItem('continueWatching') || '{}');
+      // Always use Firebase cache
+      let allProgress = {};
+      if (window.FirebaseSync && window.FirebaseSync.cache && window.FirebaseSync.cache['continueWatching']) {
+        allProgress = window.FirebaseSync.cache['continueWatching'];
+      } else if (window.ContinueWatchingManager) {
+        allProgress = window.ContinueWatchingManager.getAllProgress();
+      }
+      
       const movies = [];
       const now = Date.now();
       const COMPLETION_THRESHOLD = 5;

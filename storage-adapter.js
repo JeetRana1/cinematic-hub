@@ -57,7 +57,14 @@
 
     console.log('=== DEBUG: loadContinueWatching() called ===');
     try {
-      // Get data from Firebase Sync instead of localStorage
+      // Wait for FirebaseSync to be initialized
+      if (!window.FirebaseSync || !window.FirebaseSync.initialized) {
+        console.log('[ContinueWatching] Waiting for Firebase to initialize...');
+        setTimeout(() => loadContinueWatching(forceShow), 500);
+        return;
+      }
+
+      // Get data from Firebase Sync (cloud only)
       const continueWatching = await window.FirebaseSync.getContinueWatching();
 
       const continueWatchingMovies = Object.entries(continueWatching).map(([id, movie]) => {
@@ -179,16 +186,23 @@
           window.location.href = playerUrl;
         });
         
-        removeBtn?.addEventListener('click', (e) => {
+        removeBtn?.addEventListener('click', async (e) => {
           e.preventDefault();
           e.stopPropagation();
           const movieId = movieCard.dataset.movieId;
           console.log('Removing from continue watching:', movieId);
           if (window.ContinueWatchingManager) {
-            const manager = new window.ContinueWatchingManager();
-            manager.removeMovieProgress(movieId);
+            await window.ContinueWatchingManager.removeMovieProgress(movieId);
           }
-          movieCard.remove();
+          // Animate removal
+          movieCard.style.transition = 'opacity 0.3s, transform 0.3s';
+          movieCard.style.opacity = '0';
+          movieCard.style.transform = 'scale(0.8)';
+          setTimeout(() => {
+            movieCard.remove();
+            // Reload to check if section should be hidden
+            loadContinueWatching(forceShow);
+          }, 300);
         });
         
         container.appendChild(movieCard);

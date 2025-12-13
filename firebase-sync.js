@@ -88,9 +88,24 @@
       const uid = this.currentUser.uid;
       const profileId = this.getCurrentProfile();
       if (profileId) {
-        return `users/${uid}/profiles/${profileId}`;
+        // Store profile data under profiles/{profileId}/data document
+        return `users/${uid}/profiles/${profileId}/data/settings`;
       }
-      return `users/${uid}`;
+      // For non-profile data, store under main user document
+      return `users/${uid}/data/settings`;
+    }
+    
+    // Get continue watching collection reference (profile-specific)
+    getContinueWatchingCollectionRef() {
+      if (!this.currentUser) return null;
+      const uid = this.currentUser.uid;
+      const profileId = this.getCurrentProfile();
+      if (profileId) {
+        // Store continue watching under profile's subcollection
+        return this.db.collection('users').doc(uid).collection('profiles').doc(profileId).collection('continueWatching');
+      }
+      // For non-profile users, store under main user collection
+      return this.db.collection('users').doc(uid).collection('continueWatching');
     }
 
     // Load all user data into cache
@@ -101,28 +116,48 @@
       try {
         const docRef = this.db.doc(docPath);
         
-        // Set up real-time listener
+        // Set up real-time listener for settings
         if (this.unsubscribe) this.unsubscribe();
         
         this.unsubscribe = docRef.onSnapshot((doc) => {
           if (doc.exists) {
             const data = doc.data();
-            // Update cache with Firestore data
+            // Update cache with Firestore data (excluding continueWatching - it has its own collection)
             this.cache = {
-              continueWatching: data.continueWatching || {},
+              ...this.cache,
               bookmarks: data.bookmarks || {},
               theme: data.theme || 'glossy',
               subtitleSettings: data.subtitleSettings || {},
               playerSettings: data.playerSettings || {}
             };
-            console.log('Firestore data synced to cache');
+            console.log('Firestore settings synced to cache');
+          }
+        }, (error) => {
+          console.error('Error listening to Firestore settings:', error);
+        });
+        
+        // Set up separate listener for continue watching subcollection
+        const cwCollectionRef = this.getContinueWatchingCollectionRef();
+        if (cwCollectionRef) {
+          if (this.unsubscribeCW) this.unsubscribeCW();
+          
+          this.unsubscribeCW = cwCollectionRef.onSnapshot((snapshot) => {
+            const continueWatching = {};
+            snapshot.docs.forEach(doc => {
+              continueWatching[doc.id] = doc.data();
+            });
+            this.cache['continueWatching'] = continueWatching;
+            console.log('Continue watching synced from Firestore:', Object.keys(continueWatching).length, 'items');
             
             // Trigger custom event for UI updates
             window.dispatchEvent(new CustomEvent('firebase-sync-updated', { detail: this.cache }));
-          }
-        }, (error) => {
-          console.error('Error listening to Firestore:', error);
-        });
+            window.dispatchEvent(new CustomEvent('continueWatchingUpdated', { 
+              detail: { continueWatching, fromCloud: true } 
+            }));
+          }, (error) => {
+            console.error('Error listening to continue watching:', error);
+          });
+        }
       } catch (error) {
         console.error('Error loading user data:', error);
       }
@@ -133,6 +168,10 @@
       if (this.unsubscribe) {
         this.unsubscribe();
         this.unsubscribe = null;
+      }
+      if (this.unsubscribeCW) {
+        this.unsubscribeCW();
+        this.unsubscribeCW = null;
       }
     }
 
@@ -189,38 +228,120 @@
       }
     }
 
-    // Continue Watching Methods
+    // Continue Watching Methods (using subcollections for proper isolation)
     async getContinueWatching() {
-      return await this.getFromFirestore('continueWatching', {});
+      if (this.cache.hasOwnProperty('continueWatching')) {
+        return this.cache['continueWatching'];
+      }
+      
+      const collectionRef = this.getContinueWatchingCollectionRef();
+      if (!collectionRef) return {};
+      
+      try {
+        const snapshot = await collectionRef.get();
+        const continueWatching = {};
+        snapshot.docs.forEach(doc => {
+          continueWatching[doc.id] = doc.data();
+        });
+        this.cache['continueWatching'] = continueWatching;
+        return continueWatching;
+      } catch (error) {
+        console.error('Error getting continue watching:', error);
+        return {};
+      }
     }
 
     async saveContinueWatching(data) {
-      return await this.saveToFirestore('continueWatching', data);
+      const collectionRef = this.getContinueWatchingCollectionRef();
+      if (!collectionRef) {
+        console.warn('No user logged in, data not saved');
+        return false;
+      }
+      
+      try {
+        const batch = this.db.batch();
+        
+        // Clear existing documents first
+        const existingDocs = await collectionRef.get();
+        existingDocs.docs.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+        
+        // Add new documents
+        Object.entries(data).forEach(([movieId, movieData]) => {
+          const docRef = collectionRef.doc(movieId);
+          batch.set(docRef, {
+            ...movieData,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        });
+        
+        await batch.commit();
+        this.cache['continueWatching'] = data;
+        console.log('✅ Continue watching saved to Firestore subcollection');
+        return true;
+      } catch (error) {
+        console.error('Error saving continue watching:', error);
+        return false;
+      }
     }
 
     async updateContinueWatchingItem(movieId, movieData) {
-      const continueWatching = await this.getContinueWatching();
-      continueWatching[movieId] = {
-        ...movieData,
-        timestamp: Date.now()
-      };
-      return await this.saveContinueWatching(continueWatching);
+      const collectionRef = this.getContinueWatchingCollectionRef();
+      if (!collectionRef) {
+        console.warn('No user logged in, data not saved');
+        return false;
+      }
+      
+      try {
+        const docRef = collectionRef.doc(movieId);
+        await docRef.set({
+          ...movieData,
+          movieId: movieId,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        
+        // Update cache
+        if (!this.cache['continueWatching']) {
+          this.cache['continueWatching'] = {};
+        }
+        this.cache['continueWatching'][movieId] = movieData;
+        
+        console.log('✅ Continue watching item updated:', movieId);
+        return true;
+      } catch (error) {
+        console.error('Error updating continue watching item:', error);
+        return false;
+      }
     }
 
     async removeContinueWatchingItem(movieId) {
-      const continueWatching = await this.getContinueWatching();
-      delete continueWatching[movieId];
-      return await this.saveContinueWatching(continueWatching);
+      const collectionRef = this.getContinueWatchingCollectionRef();
+      if (!collectionRef) {
+        console.warn('No user logged in');
+        return false;
+      }
+      
+      try {
+        const docRef = collectionRef.doc(movieId);
+        await docRef.delete();
+        
+        // Update cache
+        if (this.cache['continueWatching']) {
+          delete this.cache['continueWatching'][movieId];
+        }
+        
+        console.log('✅ Continue watching item removed:', movieId);
+        return true;
+      } catch (error) {
+        console.error('Error removing continue watching item:', error);
+        return false;
+      }
     }
 
     // Individual movie progress methods (for cloud-only ContinueWatchingManager)
     async saveMovieProgress(movieId, movieData) {
-      const continueWatching = await this.getContinueWatching();
-      continueWatching[movieId] = {
-        ...movieData,
-        timestamp: Date.now()
-      };
-      return await this.saveContinueWatching(continueWatching);
+      return await this.updateContinueWatchingItem(movieId, movieData);
     }
 
     async removeMovieProgress(movieId) {

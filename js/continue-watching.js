@@ -15,9 +15,10 @@ class ContinueWatchingManager {
   }
 
   /**
-   * Compute storage key scoped to current user/profile
+   * Compute storage key scoped to current user/profile (legacy compatibility only)
    */
   getStorageKey() {
+    // This is only for backward compatibility - not used for primary storage
     try {
       const user = (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function')
         ? window.FirebaseAuth.getUser()
@@ -34,29 +35,16 @@ class ContinueWatchingManager {
   }
 
   /**
-   * Get all continue watching data from localStorage
+   * Get all continue watching data from Firebase (cloud-only)
    */
   getAllProgress() {
     try {
-      const scopedKey = this.getStorageKey();
-      let data = localStorage.getItem(scopedKey);
-      if (!data) {
-        const legacy = localStorage.getItem(this.BASE_STORAGE_KEY);
-        const user = (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function')
-          ? window.FirebaseAuth.getUser()
-          : null;
-        const uid = user && user.uid;
-        const sel = uid ? localStorage.getItem(`fb_selected_profile_${uid}`) : null;
-        const migratedFlag = uid && sel ? `cw_migrated_${uid}_${sel}` : null;
-        if (legacy && migratedFlag && !localStorage.getItem(migratedFlag)) {
-          try {
-            localStorage.setItem(scopedKey, legacy);
-            localStorage.setItem(migratedFlag, '1');
-            data = legacy;
-          } catch (_) { }
-        }
+      // Always use Firebase cache if available
+      if (window.FirebaseSync && window.FirebaseSync.cache && window.FirebaseSync.cache['continueWatching']) {
+        return window.FirebaseSync.cache['continueWatching'] || {};
       }
-      return JSON.parse(data || '{}');
+      // Return empty if Firebase not ready yet
+      return {};
     } catch (error) {
       console.error('Error reading continue watching data:', error);
       return {};
@@ -110,21 +98,23 @@ class ContinueWatchingManager {
         muted: progressData.muted || false
       };
 
-      localStorage.setItem(this.getStorageKey(), JSON.stringify(allProgress));
       this.lastSavedTime = progressData.currentTime;
 
       console.log('Progress saved for', movieId, ':', Math.round(progressData.currentTime), 's');
 
-      // Dispatch custom event for live updates
-      window.dispatchEvent(new CustomEvent('continueWatchingUpdated', {
-        detail: { movieId, progressData: allProgress[movieId] }
-      }));
-
-      // Also sync to Firebase if available
+      // Save to Firebase immediately (cloud-only)
       if (window.FirebaseSync && window.FirebaseSync.initialized) {
-        window.FirebaseSync.saveContinueWatching(allProgress).catch(err => {
-          console.warn('Failed to sync continue watching to Firebase:', err);
+        window.FirebaseSync.saveContinueWatching(allProgress).then(() => {
+          console.log('✅ Progress synced to Firebase cloud');
+          // Dispatch custom event for live updates after successful save
+          window.dispatchEvent(new CustomEvent('continueWatchingUpdated', {
+            detail: { movieId, progressData: allProgress[movieId] }
+          }));
+        }).catch(err => {
+          console.error('❌ Failed to sync continue watching to Firebase:', err);
         });
+      } else {
+        console.warn('⚠️ Firebase not initialized, progress not saved');
       }
     } catch (error) {
       console.error('Error saving continue watching data:', error);
@@ -132,7 +122,7 @@ class ContinueWatchingManager {
   }
 
   /**
-   * Remove a movie from continue watching
+   * Remove a movie from continue watching (cloud-only)
    */
   async removeMovieProgress(movieId) {
     try {
@@ -143,23 +133,15 @@ class ContinueWatchingManager {
         delete window.FirebaseSync.cache['continueWatching'][movieId];
       }
 
-      // Remove from Firestore first
+      // Remove from Firestore using FirebaseSync (handles subcollections properly)
       let deleteSuccess = false;
-      if (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function') {
-        const user = window.FirebaseAuth.getUser();
-        if (user && user.uid && window.FirebaseAuth.firestore) {
-          const docRef = window.FirebaseAuth.firestore
-            .collection('users')
-            .doc(user.uid)
-            .collection('continueWatching')
-            .doc(movieId);
-          try {
-            await docRef.delete();
-            console.log('Successfully deleted from Firestore:', movieId);
-            deleteSuccess = true;
-          } catch (err) {
-            console.error('Failed to delete continue watching from Firestore:', err);
-          }
+      if (window.FirebaseSync && window.FirebaseSync.initialized) {
+        try {
+          await window.FirebaseSync.removeMovieProgress(movieId);
+          console.log('✅ Successfully deleted from Firestore:', movieId);
+          deleteSuccess = true;
+        } catch (err) {
+          console.error('❌ Failed to delete continue watching from Firestore:', err);
         }
       }
 
@@ -173,7 +155,7 @@ class ContinueWatchingManager {
   }
 
   /**
-   * Clear all continue watching data
+   * Clear all continue watching data (cloud-only)
    */
   async clearAll() {
     try {
@@ -184,38 +166,15 @@ class ContinueWatchingManager {
         window.FirebaseSync.cache['continueWatching'] = {};
       }
 
-      // Also sync to Firebase if available
+      // Clear from Firebase using FirebaseSync (which handles subcollections properly)
+      let clearSuccess = false;
       if (window.FirebaseSync && window.FirebaseSync.initialized) {
         try {
           await window.FirebaseSync.saveContinueWatching({});
-          console.log('Firebase sync cleared successfully');
+          console.log('✅ Firebase sync cleared successfully');
+          clearSuccess = true;
         } catch (err) {
-          console.warn('Failed to sync continue watching to Firebase:', err);
-        }
-      }
-
-      // Clear all documents from Firestore
-      let clearSuccess = false;
-      if (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function') {
-        const user = window.FirebaseAuth.getUser();
-        if (user && user.uid && window.FirebaseAuth.firestore) {
-          const collectionRef = window.FirebaseAuth.firestore
-            .collection('users')
-            .doc(user.uid)
-            .collection('continueWatching');
-          
-          try {
-            const snapshot = await collectionRef.get();
-            const batch = window.FirebaseAuth.firestore.batch();
-            snapshot.docs.forEach(doc => {
-              batch.delete(doc.ref);
-            });
-            await batch.commit();
-            console.log('Successfully cleared', snapshot.docs.length, 'documents from Firestore');
-            clearSuccess = true;
-          } catch (err) {
-            console.error('Failed to clear continue watching from Firestore:', err);
-          }
+          console.error('❌ Failed to sync continue watching to Firebase:', err);
         }
       }
 
@@ -461,8 +420,10 @@ class ContinueWatchingManager {
         }
       }
 
-      if (hasChanges) {
-        localStorage.setItem(this.getStorageKey(), JSON.stringify(allProgress));
+      if (hasChanges && window.FirebaseSync && window.FirebaseSync.initialized) {
+        window.FirebaseSync.saveContinueWatching(allProgress).catch(err => {
+          console.error('Failed to cleanup expired entries in Firebase:', err);
+        });
       }
     } catch (error) {
       console.error('Error cleaning up expired entries:', error);

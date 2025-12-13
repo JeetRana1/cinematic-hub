@@ -105,10 +105,65 @@
   }
   async function deleteProfile(uid, id){
     await ensureUserDoc(uid);
-    await db.collection('users').doc(uid).collection('profiles').doc(id).delete();
+    
+    // Delete all profile-related data from Firestore
+    try {
+      const batch = db.batch();
+      
+      // 1. Delete all continue watching documents in the profile's subcollection
+      const continueWatchingRef = db.collection('users').doc(uid).collection('profiles').doc(id).collection('continueWatching');
+      const cwSnapshot = await continueWatchingRef.get();
+      cwSnapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+      console.log(`Deleting ${cwSnapshot.docs.length} continue watching items`);
+      
+      // 2. Delete all data documents in the profile's data subcollection
+      const profileDataRef = db.collection('users').doc(uid).collection('profiles').doc(id).collection('data');
+      try {
+        const dataSnapshot = await profileDataRef.get();
+        dataSnapshot.docs.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+        console.log(`Deleting ${dataSnapshot.docs.length} profile data items`);
+      } catch (e) {
+        console.log('No profile data subcollection found');
+      }
+      
+      // 3. Delete the profile document itself
+      const profileDocRef = db.collection('users').doc(uid).collection('profiles').doc(id);
+      batch.delete(profileDocRef);
+      
+      // Commit all deletions
+      await batch.commit();
+      console.log('✅ Profile and all associated data deleted from Firestore');
+    } catch (error) {
+      console.error('Error deleting profile data:', error);
+    }
+    
+    // Clear local storage selection
     const key = selectedKey(uid);
     const sel = localStorage.getItem(key);
-    if (sel === id) localStorage.removeItem(key);
+    if (sel === id) {
+      localStorage.removeItem(key);
+      
+      // Clear all profile-related localStorage keys
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const storageKey = localStorage.key(i);
+        if (storageKey && (storageKey.includes(`_${uid}_${id}`) || storageKey.includes(`${id}_`))) {
+          keysToRemove.push(storageKey);
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+      console.log('✅ Cleared', keysToRemove.length, 'localStorage keys for deleted profile');
+    }
+    
+    // Clear Firebase Sync cache
+    if (window.FirebaseSync && window.FirebaseSync.cache) {
+      window.FirebaseSync.cache = {};
+      console.log('✅ Cleared Firebase Sync cache');
+    }
   }
   async function updateProfile(uid, id, partial){
     await ensureUserDoc(uid);

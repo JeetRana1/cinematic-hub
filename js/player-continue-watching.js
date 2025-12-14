@@ -220,16 +220,47 @@
       });
     };
 
+    // Wait for Firebase cache to be populated with data
+    const waitForCacheData = () => {
+      return new Promise((resolve) => {
+        let attempts = 0;
+        const maxAttempts = 30; // 3 seconds max
+        
+        const checkCache = () => {
+          attempts++;
+          
+          // Check if cache has continue watching data
+          const cache = window.FirebaseSync?.cache?.['continueWatching'];
+          const hasData = cache && Object.keys(cache).length > 0;
+          
+          if (hasData) {
+            console.log('[Resume] ✅ Cache populated with', Object.keys(cache).length, 'items after', attempts, 'attempts');
+            resolve(true);
+          } else if (attempts >= maxAttempts) {
+            console.log('[Resume] ⚠️ Cache still empty after', attempts, 'attempts - continuing anyway');
+            resolve(false);
+          } else {
+            setTimeout(checkCache, 100);
+          }
+        };
+        
+        checkCache();
+      });
+    };
+
     // Check for existing progress with retry mechanism
     const getSavedProgress = async () => {
       try {
         // Wait for Firebase first
         await waitForFirebase();
         
-        // Give cache a moment to populate
-        await new Promise(resolve => setTimeout(resolve, 300));
+        // Wait for cache to be populated
+        await waitForCacheData();
         
-        return window.ContinueWatchingManager?.getMovieProgress?.(movieData.movieId) || null;
+        const progress = window.ContinueWatchingManager?.getMovieProgress?.(movieData.movieId) || null;
+        console.log('[Resume] getMovieProgress returned:', progress);
+        
+        return progress;
       } catch (e) {
         console.warn('[Resume] Error getting saved progress:', e);
         return null;

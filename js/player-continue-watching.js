@@ -553,20 +553,19 @@
   }
 
   async function showEnhancedResumePrompt(resumeTime, savedProgress, video, movieData) {
-    if (resumePromptShown) return;
+    console.log('[Resume] 🎭 showEnhancedResumePrompt called');
+    console.log('[Resume] Parameters:', { resumeTime, hasSavedProgress: !!savedProgress, movieTitle: movieData?.title });
+    
+    if (resumePromptShown) {
+      console.log('[Resume] ⚠️ Prompt already shown, returning');
+      return;
+    }
     resumePromptShown = true;
 
-    console.log('[Resume] Showing enhanced resume prompt');
-
-    // Wait for ContinueWatchingUI to be ready if not already
-    if (!window.continueWatchingUIReady) {
-      const uiReady = await waitForContinueWatchingUI();
-      if (!uiReady) {
-        console.warn('ContinueWatchingUI not ready, proceeding with basic resume functionality');
-      }
-    }
+    console.log('[Resume] ✅ Proceeding to show prompt...');
 
     // Create the overlay element
+    console.log('[Resume] 📦 Creating overlay element...');
     const overlay = document.createElement('div');
     overlay.className = 'resume-prompt-overlay';
     overlay.style.cssText = `
@@ -615,6 +614,9 @@
     const progressPercent = Math.min(100, Math.round((resumeTime / effectiveDuration) * 100));
     const timeFormatted = formatTime(resumeTime);
     const totalFormatted = formatTime(effectiveDuration);
+
+    console.log('[Resume] 📊 Progress info:', { progressPercent, timeFormatted, totalFormatted });
+    console.log('[Resume] 🎨 Creating prompt HTML...');
 
     promptBox.innerHTML = `
       <div style="margin-bottom: 1.5rem;">
@@ -687,11 +689,15 @@
       </div>
     `;
 
+    console.log('[Resume] ✅ HTML created, appending promptBox to overlay...');
     overlay.appendChild(promptBox);
+    console.log('[Resume] ✅ PromptBox appended');
 
     // Add hover and touch effects for both desktop and mobile
+      console.log('[Resume] 🔍 Finding buttons...');
     const resumeYesBtn = promptBox.querySelector('#resumeYesBtn');
     const resumeNoBtn = promptBox.querySelector('#resumeNoBtn');
+  console.log('[Resume] Buttons found:', { resumeYesBtn: !!resumeYesBtn, resumeNoBtn: !!resumeNoBtn });
 
     // Touch/click feedback for Resume button
     resumeYesBtn.addEventListener('touchstart', () => {
@@ -829,30 +835,20 @@
     });
 
     // Add to DOM
-    console.log('[Resume] 📍 Appending resume prompt to body...');
+    console.log('[Resume] 📍 Adding modal to DOM...');
     document.body.appendChild(overlay);
-    console.log('[Resume] ✅ Resume prompt added to DOM!');
-    console.log('[Resume] Overlay element:', overlay);
-    console.log('[Resume] Overlay display:', window.getComputedStyle(overlay).display);
-    console.log('[Resume] Overlay z-index:', window.getComputedStyle(overlay).zIndex);
-    
+    console.log('[Resume] ✅ Modal added to DOM, should be visible now');
+    console.log('[Resume] Modal element:', overlay);
+    console.log('[Resume] Modal in document:', document.body.contains(overlay));
+    console.log('[Resume] Modal z-index:', overlay.style.zIndex);
+
     // Force a reflow to ensure styles are applied
     void overlay.offsetHeight;
 
     // Pause video while prompt is shown
     if (!video.paused) {
       video.pause();
-      console.log('[Resume] Video paused for prompt');
     }
-    
-    // Check if overlay is still in DOM after a moment
-    setTimeout(() => {
-      const stillInDom = document.body.contains(overlay);
-      console.log('[Resume] Overlay still in DOM after 100ms:', stillInDom);
-      if (!stillInDom) {
-        console.error('[Resume] ❌ Overlay was removed from DOM!');
-      }
-    }, 100);
   }
 
   function setVideoCurrentTime(video, targetTime, attempt = 1) {

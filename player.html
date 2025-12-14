@@ -591,23 +591,26 @@
 
           console.log('[Tracking] ✅ ContinueWatchingManager found!');
 
-          // Track if already initialized to prevent duplicates
-          let trackingInitialized = false;
+          // Prevent duplicate tracking initialization
+          if (window.__trackingInitialized) {
+            console.log('[Tracking] ⚠️ Already initialized, skipping duplicate');
+            return;
+          }
 
           // Initialize tracking when video metadata loads
           const initOnReady = () => {
-            if (trackingInitialized) {
-              console.log('[Tracking] Already initialized, skipping');
-              return;
-            }
-            
             if (video.readyState >= 1 && video.duration > 0) {
+              if (window.__trackingInitialized) {
+                console.log('[Tracking] ⚠️ Already initialized, skipping');
+                return;
+              }
+              
               console.log('[Tracking] ✅ Video ready, starting tracking');
               console.log('[Tracking] Duration:', video.duration, 'seconds');
 
               try {
                 window.ContinueWatchingManager.initializeVideoTracking(video, movieData);
-                trackingInitialized = true;
+                window.__trackingInitialized = true;
                 console.log('[Tracking] ✅ Tracking initialized successfully');
               } catch (e) {
                 console.error('[Tracking] ❌ Error initializing tracking:', e);
@@ -620,7 +623,7 @@
           // Try now
           initOnReady();
 
-          // Also listen for events (only if not yet initialized)
+          // Also listen for events
           video.addEventListener('loadedmetadata', () => {
             console.log('[Tracking] loadedmetadata event fired');
             initOnReady();
@@ -631,12 +634,10 @@
             initOnReady();
           }, { once: true });
 
-          // Force check after 2 seconds (only if not yet initialized)
+          // Force check after 2 seconds
           setTimeout(() => {
-            if (!trackingInitialized) {
-              console.log('[Tracking] Force check after 2s');
-              initOnReady();
-            }
+            console.log('[Tracking] Force check after 2s');
+            initOnReady();
           }, 2000);
         }
 

@@ -438,7 +438,7 @@
         }
         
         window.__resumePromptActive = true;
-        resumePromptShown = true;
+        // Do NOT set resumePromptShown here; let the prompt set it
         showEnhancedResumePrompt(validResumeTime, promptProgress, video, movieData);
       } else if (validResumeTime > 0) {
         console.log('[Resume] Setting time without prompt to:', validResumeTime);
@@ -533,7 +533,6 @@
           }
           
           window.__resumePromptActive = true;
-          resumePromptShown = true;
           
           const promptProgress = savedProgress || {
             currentTime: resumeTime,
@@ -560,7 +559,6 @@
       console.log('[Resume] ⚠️ Prompt already shown, returning');
       return;
     }
-    resumePromptShown = true;
 
     console.log('[Resume] ✅ Proceeding to show prompt...');
 
@@ -837,6 +835,7 @@
     // Add to DOM
     console.log('[Resume] 📍 Adding modal to DOM...');
     document.body.appendChild(overlay);
+    resumePromptShown = true; // set flag only after modal is mounted
     console.log('[Resume] ✅ Modal added to DOM, should be visible now');
     console.log('[Resume] Modal element:', overlay);
     console.log('[Resume] Modal in document:', document.body.contains(overlay));

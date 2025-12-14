@@ -183,6 +183,12 @@
     }
 
     /* Mini user menu (profiles/settings/logout) */
+      /* New Clear All button styles */
+      .cw-clear-btn { display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border:none; border-radius:10px; background:linear-gradient(135deg,#ff7a7a,#ff3b3b); color:#fff; font-weight:600; box-shadow:0 6px 16px rgba(255,59,59,0.25); cursor:pointer; transition:transform .15s ease, box-shadow .15s ease, filter .15s ease; }
+      .cw-clear-btn:hover { transform:translateY(-1px); box-shadow:0 8px 20px rgba(255,59,59,0.35); filter:saturate(1.1); }
+      .cw-clear-btn:active { transform:translateY(0); box-shadow:0 4px 12px rgba(255,59,59,0.2); }
+      .cw-clear-icon { font-size:18px; line-height:1; }
+      .cw-clear-text { font-size:14px; }
     .app-usermenu {
       margin-left: auto;
       z-index: 1200;
@@ -4171,7 +4177,10 @@
         <h2 class="section-title">
           <i class="fas fa-redo"></i> Continue Watching
         </h2>
-        <!-- Clear All button removed -->
+        <button id="cwClearAll" class="cw-clear-btn" aria-label="Clear all continue watching" title="Clear All">
+          <span class="cw-clear-icon">🧹</span>
+          <span class="cw-clear-text">Clear All</span>
+        </button>
       </div>
       <div class="continue-watching-container" id="continueWatchingContainer"></div>
     </section>
@@ -6817,6 +6826,28 @@
       setTimeout(() => {
         console.log('DOM fully loaded, loading continue watching...');
         loadContinueWatching();
+
+        // Wire up Clear All button
+        const clearBtn = document.getElementById('cwClearAll');
+        if (clearBtn) {
+          clearBtn.addEventListener('click', async () => {
+            try {
+              clearBtn.disabled = true;
+              clearBtn.style.opacity = '0.7';
+              if (!window.FirebaseSync || typeof window.FirebaseSync.clearContinueWatching !== 'function') {
+                console.warn('FirebaseSync.clearContinueWatching not available');
+                return;
+              }
+              const ok = await window.FirebaseSync.clearContinueWatching();
+              if (ok) {
+                await loadContinueWatching(true);
+              }
+            } finally {
+              clearBtn.disabled = false;
+              clearBtn.style.opacity = '1';
+            }
+          });
+        }
 
         // Also listen for continue watching updates from other tabs/windows
         window.addEventListener('storage', (e) => {

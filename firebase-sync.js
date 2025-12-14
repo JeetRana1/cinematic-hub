@@ -290,6 +290,30 @@
       }
     }
 
+    async clearContinueWatching() {
+      const collectionRef = this.getContinueWatchingCollectionRef();
+      if (!collectionRef) {
+        console.warn('No user logged in');
+        return false;
+      }
+
+      try {
+        const batch = this.db.batch();
+        const existingDocs = await collectionRef.get();
+        existingDocs.docs.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
+        this.cache['continueWatching'] = {};
+        window.dispatchEvent(new CustomEvent('continueWatchingUpdated', { detail: { continueWatching: {}, fromCloud: true } }));
+        console.log('🗑️ Cleared all continue watching items');
+        return true;
+      } catch (error) {
+        console.error('Error clearing continue watching:', error);
+        return false;
+      }
+    }
+
     async updateContinueWatchingItem(movieId, movieData) {
       const collectionRef = this.getContinueWatchingCollectionRef();
       if (!collectionRef) {

@@ -114,18 +114,15 @@
         return;
       }
 
-      let movieId = urlParams.get('movieId') || urlParams.get('id');
+      // IMPORTANT: Generate movieId the SAME way as player.html does
+      // This ensures resume check finds the saved progress
+      let movieId = urlParams.get('movieId');
       if (!movieId) {
-        // Try to generate a consistent ID from title and year (matching player.html logic)
-        const title = urlParams.get('title');
+        // Create a consistent ID from the title and year (matching player.html exactly)
+        const title = urlParams.get('title') || 'unknown';
         const year = urlParams.get('year') || '';
-
-        if (title) {
-          movieId = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${year}`;
-        } else {
-          // Fallback to source hash if no title available
-          movieId = btoa(videoSrc).replace(/[^a-zA-Z0-9]/g, '').substring(0, 16);
-        }
+        movieId = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${year}`;
+        console.log('[Resume] Generated movieId from title+year:', movieId);
       }
       const movieData = {
         movieId: movieId,

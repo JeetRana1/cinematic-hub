@@ -253,12 +253,17 @@
 
     // Make the resume check async
     (async () => {
-      console.log('[Resume] Checking for saved progress...');
+      console.log('[Resume] ========== STARTING RESUME CHECK ==========');
       console.log('[Resume] MovieID:', movieData.movieId);
       console.log('[Resume] Movie Title:', movieData.title);
+      console.log('[Resume] URL Params:', window.location.search);
 
       const savedProgress = await getSavedProgress();
-      console.log('[Resume] Saved progress result:', savedProgress);
+      console.log('[Resume] ========== SAVED PROGRESS RESULT ==========');
+      console.log('[Resume] Saved progress:', savedProgress);
+      console.log('[Resume] Type:', typeof savedProgress);
+      console.log('[Resume] Is null?:', savedProgress === null);
+      console.log('[Resume] Is undefined?:', savedProgress === undefined);
 
     if (savedProgress) {
       console.log('[Resume] ✅ Found saved progress!');
@@ -325,7 +330,11 @@
     // ALWAYS show resume prompt if there's valid resume time
     const shouldShowResumePrompt = resumeTime > 5; // More than 5 seconds
     
-    console.log('[Resume] Should show prompt:', shouldShowResumePrompt, '| Resume time:', resumeTime);
+    console.log('[Resume] ========== RESUME DECISION ==========');
+    console.log('[Resume] Resume time:', resumeTime);
+    console.log('[Resume] Should show prompt:', shouldShowResumePrompt);
+    console.log('[Resume] URL resume time:', urlResumeSeconds);
+    console.log('[Resume] Saved progress time:', savedProgress?.currentTime);
 
     // Handle setting the video time with retry logic
     const setVideoTimeSafely = (time) => {
@@ -348,6 +357,12 @@
 
     // Unified handler for when video is ready
     const handleVideoReady = () => {
+      console.log('[Resume] ========== HANDLE VIDEO READY CALLED ==========');
+      console.log('[Resume] hasSetInitialTime:', hasSetInitialTime);
+      console.log('[Resume] resumeTime:', resumeTime);
+      console.log('[Resume] shouldShowResumePrompt:', shouldShowResumePrompt);
+      console.log('[Resume] savedProgress:', savedProgress);
+      
       if (hasSetInitialTime) {
         console.log('[Resume] Already set initial time, skipping');
         return;
@@ -421,22 +436,27 @@
       handleVideoReady();
     };
 
+    // Timeout variable in outer scope
+    let timeoutId = null;
+
     // Clean up event listeners
     const cleanup = () => {
       video.removeEventListener('loadedmetadata', onMetadataLoaded);
       video.removeEventListener('canplay', onCanPlay);
-      clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
     };
 
     // Set up event listeners
     if (video.readyState >= 1) { // HAVE_ENOUGH_DATA
+      console.log('[Resume] Video already ready, calling handleVideoReady immediately');
       onMetadataLoaded();
     } else {
+      console.log('[Resume] Setting up event listeners for video ready state');
       video.addEventListener('loadedmetadata', onMetadataLoaded);
       video.addEventListener('canplay', onCanPlay);
       
       // Timeout as fallback
-      const timeoutId = setTimeout(() => {
+      timeoutId = setTimeout(() => {
         cleanup();
         console.log('[Resume] ⚠️ Timeout waiting for video metadata');
         handleVideoReady();

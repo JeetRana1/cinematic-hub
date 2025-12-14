@@ -3286,7 +3286,7 @@
       padding: 0 1rem 1rem;
     }
 
-    #clearContinueWatching {
+    #clearAllBtn {
       background: var(--glass-bg);
       border: 1px solid var(--glass-border);
       color: var(--text-color);
@@ -3306,29 +3306,29 @@
       box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
     }
 
-    #clearContinueWatching::before {
+    #clearAllBtn::before {
       display: none;
     }
 
-    #clearContinueWatching:hover {
+    #clearAllBtn:hover {
       transform: translateY(-1px);
       border-color: rgba(255, 255, 255, 0.2);
       box-shadow: 0 12px 36px rgba(99, 102, 241, 0.25);
     }
 
-    #clearContinueWatching:hover::before {
+    #clearAllBtn:hover::before {
       display: none;
     }
 
-    #clearContinueWatching:active {
+    #clearAllBtn:active {
       transform: translateY(0);
     }
 
-    #clearContinueWatching i {
+    #clearAllBtn i {
       transition: color 0.2s ease;
     }
 
-    #clearContinueWatching:hover i {
+    #clearAllBtn:hover i {
       color: var(--accent);
     }
 
@@ -4215,8 +4215,8 @@
         <h2 class="section-title">
           <i class="fas fa-redo"></i> Continue Watching
         </h2>
-        <button id="clearContinueWatching" class="clear-button" title="Clear all continue watching">
-          <i class="fas fa-trash"></i> Clear All
+        <button id="clearAllBtn" class="clear-button" title="Clear all continue watching">
+          <i class="fas fa-trash-alt"></i> Clear All
         </button>
       </div>
       <div class="continue-watching-container" id="continueWatchingContainer"></div>
@@ -5514,7 +5514,7 @@
             <h2 class="section-title">
               <i class="fas fa-redo"></i> Continue Watching
             </h2>
-            <button id="clearContinueWatching" class="clear-button" title="Clear all continue watching">
+            <button id="clearAllBtn" class="clear-button" title="Clear all continue watching">
               <i class="fas fa-trash-alt"></i> Clear All
             </button>
           </div>
@@ -5865,7 +5865,7 @@
               <h2 class="section-title">
                 <i class="fas fa-redo"></i> Continue Watching
               </h2>
-              <button id="clearContinueWatching" class="clear-button" title="Clear all continue watching">
+              <button id="clearAllBtn" class="clear-button" title="Clear all continue watching">
                 <i class="fas fa-trash-alt"></i> Clear All
               </button>
             </div>
@@ -5978,7 +5978,7 @@
 
           // Update trash icon based on items
           const updateTrashIcon = () => {
-            const clearButton = section.querySelector('#clearContinueWatching');
+            const clearButton = section.querySelector('#clearAllBtn');
             if (!clearButton) return;
 
             const items = container.querySelectorAll('.continue-watching-card');
@@ -6007,96 +6007,45 @@
           updateTrashIcon();
 
           // Add clear all button functionality
-          const clearButton = section.querySelector('#clearContinueWatching');
-          console.log('[ClearButton] Found clear button:', !!clearButton);
-          if (clearButton) {
-            // Remove old event listeners by cloning and replacing
-            const newClearButton = clearButton.cloneNode(true);
-            clearButton.parentNode.replaceChild(newClearButton, clearButton);
+          const clearAllBtn = document.getElementById('clearAllBtn');
+          if (clearAllBtn) {
+            // Remove any existing listeners
+            const newBtn = clearAllBtn.cloneNode(true);
+            clearAllBtn.parentNode.replaceChild(newBtn, clearAllBtn);
             
-            console.log('[ClearButton] Event listener attached');
-            
-            // Attach the new event listener
-            newClearButton.addEventListener('click', async (e) => {
-              console.log('[ClearButton] 🗑️ Clear button clicked!');
-              e.preventDefault();
-              e.stopPropagation();
-              
-              // Trigger dustbin animation on icon
-              const iconEl = newClearButton.querySelector('i');
-              if (iconEl) {
-                iconEl.classList.remove('dump-anim');
-                void iconEl.offsetWidth; // reflow to restart animation
-                iconEl.classList.add('dump-anim');
-              }
-              
-              console.log('[ClearButton] Showing confirmation dialog');
+            newBtn.addEventListener('click', () => {
               showClearConfirmation(async () => {
-                console.log('[ClearButton] User confirmed, clearing...');
                 try {
-                  // Clear from Firebase Cloud (primary storage)
-                  if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.clearAll === 'function') {
-                    console.log('[ClearButton] Clearing via ContinueWatchingManager...');
-                    await window.ContinueWatchingManager.clearAll();
-                    console.log('[ClearButton] ✅ Cleared via ContinueWatchingManager');
-                  } else if (window.FirebaseSync && window.FirebaseSync.initialized) {
-                    console.log('[ClearButton] Clearing via FirebaseSync...');
-                    // Fallback to FirebaseSync
+                  console.log('[ClearAll] Starting clear operation...');
+                  
+                  // Clear from Firebase
+                  if (window.FirebaseSync && window.FirebaseSync.initialized) {
                     await window.FirebaseSync.saveContinueWatching({});
-                    if (window.FirebaseSync.cache) {
-                      window.FirebaseSync.cache['continueWatching'] = {};
-                    }
-                    console.log('[ClearButton] ✅ Cleared via FirebaseSync');
-                  } else {
-                    console.warn('[ClearButton] ⚠️ Neither ContinueWatchingManager nor FirebaseSync available!');
+                    window.FirebaseSync.cache['continueWatching'] = {};
+                    console.log('[ClearAll] ✅ Cleared from Firebase');
                   }
                   
-                  // Clear any remaining localStorage keys (cleanup)
-                  try {
-                    const user = window.FirebaseAuth.getUser();
-                    const uid = user ? user.uid : null;
-                    const profileId = uid ? localStorage.getItem(`fb_selected_profile_${uid}`) : null;
-                    
-                    const keys = ['continueWatching'];
-                    if (uid) keys.push(`continueWatching_${uid}`);
-                    if (uid && profileId) keys.push(`continueWatching_${uid}_${profileId}`);
-                    
-                    keys.forEach(key => {
-                      localStorage.removeItem(key);
-                    });
-                    console.log('✅ Cleared localStorage keys:', keys.length);
-                  } catch(e) {
-                    console.warn('Error clearing localStorage:', e);
+                  // Clear from ContinueWatchingManager
+                  if (window.ContinueWatchingManager && window.ContinueWatchingManager.clearAll) {
+                    await window.ContinueWatchingManager.clearAll();
+                    console.log('[ClearAll] ✅ Cleared from ContinueWatchingManager');
                   }
                   
-                  // Hide the section immediately with animation
-                  section.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-                  section.style.opacity = '0';
-                  section.style.transform = 'translateY(-20px)';
+                  // Hide section
+                  section.style.display = 'none';
                   
-                  setTimeout(() => {
-                    section.style.display = 'none';
-                    section.style.opacity = '';
-                    section.style.transform = '';
-                  }, 300);
-                  
-                  // Show success message
+                  // Show success
                   if (window.UIToast) {
                     UIToast.success('Cleared', 'All continue watching items removed');
-                  } else {
-                    alert('All continue watching items cleared!');
                   }
                   
-                  // Wait for animation then reload to ensure UI is in sync
-                  setTimeout(() => {
-                    loadContinueWatching(false);
-                  }, 600);
+                  // Reload after a moment
+                  setTimeout(() => loadContinueWatching(false), 500);
+                  
                 } catch (error) {
-                  console.error('Error clearing continue watching:', error);
+                  console.error('[ClearAll] Error:', error);
                   if (window.UIToast) {
-                    UIToast.error('Error', 'Failed to clear continue watching');
-                  } else {
-                    alert('Error clearing continue watching. Please try again.');
+                    UIToast.error('Error', 'Failed to clear items');
                   }
                 }
               });

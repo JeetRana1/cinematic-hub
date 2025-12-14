@@ -84,7 +84,20 @@
         return mapped;
       });
 
-      let validMovies = continueWatchingMovies.filter(movie => {
+      // Deduplicate by normalized movieId/title
+      const seen = new Set();
+      const deduped = [];
+      continueWatchingMovies.forEach(m => {
+        const key = (m.movieId || m.id || '').toString().toLowerCase().trim();
+        if (key && !seen.has(key)) {
+          seen.add(key);
+          deduped.push(m);
+        } else {
+          console.log('[StorageAdapter] Dedup removed:', m.title, '| key:', key);
+        }
+      });
+
+      let validMovies = deduped.filter(movie => {
         const hasProgress = movie.progress > 0 && movie.progress < 95;
         const hasValidId = movie.id || movie.movieId;
         const hasTitle = movie.title && movie.title !== 'Untitled' && movie.title !== 'Unknown Movie';

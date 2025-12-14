@@ -754,26 +754,32 @@
       try {
         // Set the video time and wait for it to complete
         await setVideoCurrentTime(video, resumeTime);
-        console.log('Successfully set video time, removing prompt');
-        removeResumePrompt(overlay);
+        console.log('Successfully set video time');
 
-        // Show confirmation message
-        showResumeConfirmation(`Resuming from ${timeFormatted}`);
+        // Small delay to let currentTime settle before play (autoplay policies)
+        await new Promise(resolve => setTimeout(resolve, 120));
 
         // Resume playback explicitly after user choice
         try {
           await video.play();
           console.log('Video playback resumed successfully');
         } catch (playError) {
-          console.warn('Could not auto-play video:', playError);
-          // Continue anyway, the user can click play manually
+          console.warn('Could not auto-play video, retrying after user gesture delay:', playError);
+          // Retry once more after a brief delay
+          await new Promise(resolve => setTimeout(resolve, 150));
+          try { await video.play(); console.log('Video playback resumed on second attempt'); } catch (_) {}
         }
+
+        // Remove prompt and show confirmation
+        removeResumePrompt(overlay);
+        showResumeConfirmation(`Resuming from ${timeFormatted}`);
       } catch (error) {
         console.error('Error resuming video:', error);
         // Show error to user
         showResumeConfirmation('Error resuming, starting from beginning');
         video.currentTime = 0;
-        try { video.play().catch(() => { }); } catch (_) { }
+        // Attempt to play from beginning
+        try { await video.play(); } catch (_) { }
       } finally {
         removeResumePrompt(overlay);
       }
@@ -793,17 +799,21 @@
         await setVideoCurrentTime(video, 0);
         console.log('Successfully set video to beginning');
 
-        // Show confirmation message
-        showResumeConfirmation('Starting from beginning');
+        // Small delay to let currentTime settle before play
+        await new Promise(resolve => setTimeout(resolve, 120));
 
         // Start playback from beginning
         try {
           await video.play();
           console.log('Video playback started from beginning');
         } catch (playError) {
-          console.warn('Could not auto-play video:', playError);
-          // Continue anyway, the user can click play manually
+          console.warn('Could not auto-play video, retrying:', playError);
+          await new Promise(resolve => setTimeout(resolve, 150));
+          try { await video.play(); console.log('Playback started on second attempt'); } catch (_) {}
         }
+
+        // Show confirmation message
+        showResumeConfirmation('Starting from beginning');
       } catch (error) {
         console.error('Error starting video from beginning:', error);
         showResumeConfirmation('Error, please try again');

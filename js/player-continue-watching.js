@@ -307,23 +307,25 @@
     const getValidResumeTime = () => {
       // Priority: URL parameter > saved progress > 0
       if (urlResumeSeconds) {
-        console.log('Using URL resume time:', urlResumeSeconds);
+        console.log('[Resume] Using URL resume time:', urlResumeSeconds);
         return urlResumeSeconds;
       }
 
       if (savedProgress?.currentTime > 0) {
-        console.log('Using saved progress time:', savedProgress.currentTime);
+        console.log('[Resume] Using saved progress time:', savedProgress.currentTime);
         return savedProgress.currentTime;
       }
 
+      console.log('[Resume] No resume time found');
       return 0;
     };
 
     const resumeTime = getValidResumeTime();
 
-    // ALWAYS show resume prompt if there's saved progress > 10 seconds OR a URL resume time > 10 seconds
-    // This ensures it works on every page reload/refresh and when clicking resume from continue watching
-    const shouldShowResumePrompt = (savedProgress?.currentTime > 0) || (urlResumeSeconds && urlResumeSeconds > 0);
+    // ALWAYS show resume prompt if there's valid resume time
+    const shouldShowResumePrompt = resumeTime > 5; // More than 5 seconds
+    
+    console.log('[Resume] Should show prompt:', shouldShowResumePrompt, '| Resume time:', resumeTime);
 
     // Handle setting the video time with retry logic
     const setVideoTimeSafely = (time) => {
@@ -346,46 +348,64 @@
 
     // Unified handler for when video is ready
     const handleVideoReady = () => {
-      if (hasSetInitialTime) return;
+      if (hasSetInitialTime) {
+        console.log('[Resume] Already set initial time, skipping');
+        return;
+      }
 
       // Set global flag to prevent other resume implementations from interfering
       window.__resumePromptActive = false;
 
       // If we don't have valid duration yet, wait longer
       if (video.duration <= 0 || !isFinite(video.duration)) {
-        console.log('Waiting for valid video duration...');
+        console.log('[Resume] ⏳ Waiting for valid video duration... (current:', video.duration, ')');
         setTimeout(handleVideoReady, 500);
         return;
       }
+
+      console.log('[Resume] ✅ Video ready with duration:', video.duration);
 
       // Validate resume time against video duration
       const maxResumeTime = Math.max(0, video.duration - 10); // Don't resume in last 10 seconds
       const validResumeTime = Math.min(resumeTime, maxResumeTime);
 
-      if (validResumeTime > 0) {
+      console.log('[Resume] Valid resume time:', validResumeTime, '| Should show prompt:', shouldShowResumePrompt);
+
+      if (shouldShowResumePrompt && validResumeTime > 5) {
+        console.log('[Resume] 🎬 Showing resume prompt!');
+        
         const promptProgress = savedProgress || {
           currentTime: validResumeTime,
           duration: video.duration && isFinite(video.duration) ? video.duration : validResumeTime + 60
         };
 
-        if (shouldShowResumePrompt) {
-          // Pause video immediately and show prompt
-          try { video.pause(); } catch (e) { }
-          window.__resumePromptActive = true;
-          showEnhancedResumePrompt(validResumeTime, promptProgress, video, movieData);
-        } else if (validResumeTime > 0) {
-          setVideoTimeSafely(validResumeTime);
+        // Pause video immediately and show prompt
+        try { 
+          video.pause();
+          console.log('[Resume] Video paused');
+        } catch (e) { 
+          console.warn('[Resume] Could not pause video:', e);
         }
+        
+        window.__resumePromptActive = true;
+        resumePromptShown = true;
+        showEnhancedResumePrompt(validResumeTime, promptProgress, video, movieData);
+      } else if (validResumeTime > 0) {
+        console.log('[Resume] Setting time without prompt to:', validResumeTime);
+        setVideoTimeSafely(validResumeTime);
+      } else {
+        console.log('[Resume] Starting from beginning (no resume time)');
       }
 
       // Initialize tracking after handling resume
       try {
         window.ContinueWatchingManager?.initializeVideoTracking?.(video, movieData);
       } catch (e) {
-        console.error('Error initializing video tracking', e);
+        console.error('[Resume] Error initializing video tracking', e);
       }
 
       hasSetInitialTime = true;
+      console.log('[Resume] ✅ Initial time handling complete');
     };
 
     // Set up event listeners with proper cleanup
@@ -412,47 +432,67 @@
     if (video.readyState >= 1) { // HAVE_ENOUGH_DATA
       onMetadataLoaded();
     } else {
-      video.addEventListener('loadedmetadata', onMetadataLoaded, { once: true });
-      video.addEventListener('canplay', onCanPlay, { once: true });
+      video.addEventListener('loadedmetadata', onMetadataLoaded);
+      video.addEventListener('canplay', onCanPlay);
+      
+      // Timeout as fallback
+      const timeoutId = setTimeout(() => {
+        cleanup();
+        console.log('[Resume] ⚠️ Timeout waiting for video metadata');
+        handleVideoReady();
+      }, 5000);
     }
 
-    // Fallback timeout in case events don't fire
-    const timeoutId = setTimeout(() => {
-      if (!hasSetInitialTime) {
-        console.warn('Video ready timeout, forcing initialization');
-        handleVideoReady();
-      }
-    }, 5000);
+    // Direct check: This ensures the modal ALWAYS shows
+    if (shouldShowResumePrompt && resumeTime > 5) {
+      console.log('[Resume] 🎯 Direct check enabled: Will force show prompt when video ready');
+      console.log('[Resume] Resume time:', resumeTime, '| Saved progress:', !!savedProgress);
 
-    // Clean up on video end or error
-    video.addEventListener('ended', cleanup);
-    video.addEventListener('error', cleanup);
-
-    // CRITICAL: Direct check for saved progress on page load
-    // This is a safety mechanism that bypasses all other checks
-    // to ensure the modal ALWAYS shows when there's saved progress
-    if (shouldShowResumePrompt && !resumePromptShown) {
-      console.log('[Resume] Direct check: Saved progress found, will show prompt when ready');
-
-      // Wait a bit for video to be ready, then force show the prompt
+      let checkAttempts = 0;
+      const maxAttempts = 50; // 10 seconds max wait
+      
+      // Aggressive checking every 200ms
       const directCheckInterval = setInterval(() => {
-        if (video.readyState >= 1 && video.duration > 0 && !resumePromptShown) {
+        checkAttempts++;
+        
+        if (resumePromptShown) {
+          console.log('[Resume] ✅ Prompt already shown, stopping direct check');
           clearInterval(directCheckInterval);
-          console.log('[Resume] Direct check: Video ready, showing prompt now');
-          try { video.pause(); } catch (e) { }
+          return;
+        }
+        
+        const isReady = video.readyState >= 1 && video.duration > 0 && isFinite(video.duration);
+        
+        if (checkAttempts % 5 === 0) {
+          console.log('[Resume] 🔍 Direct check attempt', checkAttempts, '| Video ready:', isReady, '| ReadyState:', video.readyState, '| Duration:', video.duration);
+        }
+        
+        if (isReady) {
+          clearInterval(directCheckInterval);
+          console.log('[Resume] 🎬 Direct check: Video ready, forcing prompt NOW!');
+          
+          try { 
+            video.pause();
+          } catch (e) { 
+            console.warn('[Resume] Could not pause:', e);
+          }
+          
           window.__resumePromptActive = true;
           resumePromptShown = true;
+          
           const promptProgress = savedProgress || {
             currentTime: resumeTime,
-            duration: video.duration && isFinite(video.duration) ? video.duration : resumeTime + 60
+            duration: video.duration
           };
-          const promptTime = savedProgress?.currentTime || resumeTime || 0;
-          showEnhancedResumePrompt(promptTime, promptProgress, video, movieData);
+          
+          showEnhancedResumePrompt(resumeTime, promptProgress, video, movieData);
+        } else if (checkAttempts >= maxAttempts) {
+          console.warn('[Resume] ⚠️ Direct check timeout after', maxAttempts, 'attempts');
+          clearInterval(directCheckInterval);
         }
       }, 200);
-
-      // Timeout after 10 seconds
-      setTimeout(() => clearInterval(directCheckInterval), 10000);
+    } else {
+      console.log('[Resume] No direct check needed (no resume time or prompt not required)');
     }
     })(); // Close the async IIFE
   }

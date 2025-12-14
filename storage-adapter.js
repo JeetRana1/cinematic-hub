@@ -84,16 +84,48 @@
         return mapped;
       });
 
-      // Deduplicate by normalized movieId/title
-      const seen = new Set();
+      // Deduplicate by strict movieId + normalized title normalization
+      // This ensures same movie with different progress times only appears once
+      const normalizeTitle = (title) => {
+        if (!title) return '';
+        return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      };
+      
+      const seen = new Map();
       const deduped = [];
       continueWatchingMovies.forEach(m => {
-        const key = (m.movieId || m.id || '').toString().toLowerCase().trim();
-        if (key && !seen.has(key)) {
-          seen.add(key);
-          deduped.push(m);
+        // Use movieId as primary key; also normalize title as fallback
+        let key = (m.movieId || m.id || '').toString().toLowerCase().trim();
+        if (!key) {
+          key = normalizeTitle(m.title);
+        }
+        
+        if (key) {
+          if (!seen.has(key)) {
+            seen.set(key, m);
+            deduped.push(m);
+            console.log('[StorageAdapter] Dedup: Kept', m.title, '| key:', key);
+          } else {
+            // Keep the entry with the most recent progress (highest timestamp or currentTime)
+            const existing = seen.get(key);
+            const existingTime = existing.updatedAt || existing.timestamp || 0;
+            const newTime = m.updatedAt || m.timestamp || 0;
+            const existingProgress = existing.currentTime || 0;
+            const newProgress = m.currentTime || 0;
+            
+            if (newTime > existingTime || (newTime === existingTime && newProgress > existingProgress)) {
+              // Replace with newer entry
+              const idx = deduped.indexOf(existing);
+              if (idx >= 0) deduped[idx] = m;
+              seen.set(key, m);
+              console.log('[StorageAdapter] Dedup: Replaced', existing.title, 'with newer progress:', newProgress, '| key:', key);
+            } else {
+              console.log('[StorageAdapter] Dedup: Removed duplicate', m.title, '| key:', key, '| kept earlier progress:', existingProgress);
+            }
+          }
         } else {
-          console.log('[StorageAdapter] Dedup removed:', m.title, '| key:', key);
+          console.log('[StorageAdapter] Dedup: No valid key for', m.title, '- including anyway');
+          deduped.push(m);
         }
       });
 

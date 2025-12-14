@@ -362,12 +362,18 @@
 
     const resumeTime = getValidResumeTime();
 
-    // ALWAYS show resume prompt if there's valid resume time
-    const shouldShowResumePrompt = resumeTime > 5; // More than 5 seconds
+    // Show resume prompt for any meaningful saved time (>= 1s)
+    // Users expect a prompt even for short progress; avoid noise for <1s
+    const shouldShowResumePrompt = resumeTime >= 1;
+    
+    // Track if resume time came from URL parameter (homepage resume button click)
+    // vs. from saved Firebase progress (page reload)
+    const resumeFromUrlParam = !!urlResumeSeconds;
     
     console.log('[Resume] ========== RESUME DECISION ==========');
     console.log('[Resume] Resume time:', resumeTime);
     console.log('[Resume] Should show prompt:', shouldShowResumePrompt);
+    console.log('[Resume] Resume from URL param (homepage click):', resumeFromUrlParam);
     console.log('[Resume] URL resume time:', urlResumeSeconds);
     console.log('[Resume] Saved progress time:', savedProgress?.currentTime);
 
@@ -422,8 +428,11 @@
       console.log('[Resume] Valid resume time:', validResumeTime, '| Should show prompt:', shouldShowResumePrompt);
 
       // Only show the resume prompt at initial start, not after user seeks around
+      // Exception: if resume came from URL param (homepage resume button), show even if currentTime > 2
       const isInitialPlayback = (video.currentTime || 0) < 2;
-      if (shouldShowResumePrompt && validResumeTime > 5 && isInitialPlayback) {
+      const shouldBypassInitialPlaybackGuard = resumeFromUrlParam;
+      
+      if (shouldShowResumePrompt && validResumeTime >= 1 && (isInitialPlayback || shouldBypassInitialPlaybackGuard)) {
         console.log('[Resume] 🎬 Showing resume prompt!');
         
         const promptProgress = savedProgress || {
@@ -500,8 +509,8 @@
       }, 5000);
     }
 
-    // Direct check: This ensures the modal ALWAYS shows
-    if (shouldShowResumePrompt && resumeTime > 5 && (video.currentTime || 0) < 2) {
+    // Direct check: This ensures the modal ALWAYS shows for URL param resumes
+    if (shouldShowResumePrompt && resumeTime >= 1 && (resumeFromUrlParam || (video.currentTime || 0) < 2)) {
       console.log('[Resume] 🎯 Direct check enabled: Will force show prompt when video ready');
       console.log('[Resume] Resume time:', resumeTime, '| Saved progress:', !!savedProgress);
 

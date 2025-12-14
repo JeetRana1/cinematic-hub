@@ -68,6 +68,19 @@
       const continueWatching = await window.FirebaseSync.getContinueWatching();
 
       const continueWatchingMovies = Object.entries(continueWatching).map(([id, movie]) => {
+        // Convert Firestore Timestamp to milliseconds
+        let timestamp = 0;
+        if (movie.updatedAt) {
+          // Handle Firestore Timestamp object (has toMillis() method)
+          if (typeof movie.updatedAt.toMillis === 'function') {
+            timestamp = movie.updatedAt.toMillis();
+          } else {
+            timestamp = parseInt(movie.updatedAt) || 0;
+          }
+        } else if (movie.timestamp) {
+          timestamp = parseInt(movie.timestamp) || 0;
+        }
+        
         const mapped = {
           ...movie,
           id: movie.movieId || movie.id || id,
@@ -76,11 +89,11 @@
           progress: parseFloat(movie.progress) || 0,
           currentTime: parseFloat(movie.currentTime) || 0,
           duration: parseFloat(movie.duration) || 0,
-          timestamp: parseInt(movie.updatedAt || movie.timestamp) || 0,
+          timestamp: timestamp,
           poster: movie.posterUrl || movie.poster || movie.thumbnail || '',
           posterUrl: movie.posterUrl || movie.poster || movie.thumbnail || ''
         };
-        console.log('[StorageAdapter] Mapped movie:', mapped.title, '| Progress:', mapped.progress, '% | Poster:', mapped.posterUrl ? 'Yes' : 'No');
+        console.log('[StorageAdapter] Mapped movie:', mapped.title, '| Progress:', Math.round(mapped.progress), '% | Time:', Math.round(mapped.currentTime), 's | Timestamp:', mapped.timestamp);
         return mapped;
       });
 
@@ -100,34 +113,46 @@
           key = normalizeTitle(m.title);
         }
         
+        console.log('[StorageAdapter] Processing movie:', m.title, '| key:', key, '| progress:', Math.round(m.progress) + '%', '| timestamp:', m.timestamp);
+        
         if (key) {
           if (!seen.has(key)) {
             seen.set(key, m);
             deduped.push(m);
-            console.log('[StorageAdapter] Dedup: Kept', m.title, '| key:', key);
+            console.log('[StorageAdapter] ✅ Dedup: Kept as first entry -', m.title, '| key:', key);
           } else {
             // Keep the entry with the most recent progress (highest timestamp or currentTime)
             const existing = seen.get(key);
-            const existingTime = existing.updatedAt || existing.timestamp || 0;
-            const newTime = m.updatedAt || m.timestamp || 0;
+            const existingTime = existing.timestamp || 0;
+            const newTime = m.timestamp || 0;
             const existingProgress = existing.currentTime || 0;
             const newProgress = m.currentTime || 0;
             
-            if (newTime > existingTime || (newTime === existingTime && newProgress > existingProgress)) {
-              // Replace with newer entry
+            console.log('[StorageAdapter] ⚠️ Dedup: Found duplicate -', m.title, 
+              '| existing ts:', existingTime, 'progress:', Math.round(existingProgress) + 's',
+              '| new ts:', newTime, 'progress:', Math.round(newProgress) + 's');
+            
+            // Compare timestamps (most recent wins)
+            // If timestamps are equal or very close, use progress (higher wins)
+            const timeEqual = Math.abs(newTime - existingTime) < 2000; // 2 second tolerance
+            const shouldReplace = newTime > existingTime || (timeEqual && newProgress > existingProgress);
+            
+            if (shouldReplace) {
               const idx = deduped.indexOf(existing);
               if (idx >= 0) deduped[idx] = m;
               seen.set(key, m);
-              console.log('[StorageAdapter] Dedup: Replaced', existing.title, 'with newer progress:', newProgress, '| key:', key);
+              console.log('[StorageAdapter] 🔄 Dedup: Replaced with newer entry -', m.title, '| newProgress:', Math.round(newProgress) + 's');
             } else {
-              console.log('[StorageAdapter] Dedup: Removed duplicate', m.title, '| key:', key, '| kept earlier progress:', existingProgress);
+              console.log('[StorageAdapter] 🗑️ Dedup: Removed duplicate -', m.title, '| kept existing progress:', Math.round(existingProgress) + 's');
             }
           }
         } else {
-          console.log('[StorageAdapter] Dedup: No valid key for', m.title, '- including anyway');
+          console.log('[StorageAdapter] ⚠️ Dedup: No valid key for', m.title, '- including anyway');
           deduped.push(m);
         }
       });
+      
+      console.log('[StorageAdapter] After dedup: ' + deduped.length + ' unique movies from ' + continueWatchingMovies.length + ' total');
 
       let validMovies = deduped.filter(movie => {
         const hasProgress = movie.progress > 0 && movie.progress < 95;

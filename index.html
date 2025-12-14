@@ -3286,51 +3286,7 @@
       padding: 0 1rem 1rem;
     }
 
-    #clearAllBtn {
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      color: var(--text-color);
-      border-radius: 999px;
-      padding: 0.7rem 1.15rem 0.7rem 1rem;
-      font-size: 0.95rem;
-      font-weight: 500;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      transition: all 0.2s ease;
-      position: relative;
-      overflow: hidden;
-      backdrop-filter: blur(8px) saturate(120%);
-      -webkit-backdrop-filter: blur(8px) saturate(120%);
-      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
-    }
-
-    #clearAllBtn::before {
-      display: none;
-    }
-
-    #clearAllBtn:hover {
-      transform: translateY(-1px);
-      border-color: rgba(255, 255, 255, 0.2);
-      box-shadow: 0 12px 36px rgba(99, 102, 241, 0.25);
-    }
-
-    #clearAllBtn:hover::before {
-      display: none;
-    }
-
-    #clearAllBtn:active {
-      transform: translateY(0);
-    }
-
-    #clearAllBtn i {
-      transition: color 0.2s ease;
-    }
-
-    #clearAllBtn:hover i {
-      color: var(--accent);
-    }
+    /* Clear All button styles removed */
 
     .continue-watching-section h2.section-title {
       font-size: 1.5rem;
@@ -4215,9 +4171,7 @@
         <h2 class="section-title">
           <i class="fas fa-redo"></i> Continue Watching
         </h2>
-        <button id="clearAllBtn" class="clear-button" title="Clear all continue watching">
-          <i class="fas fa-trash-alt"></i> Clear All
-        </button>
+        <!-- Clear All button removed -->
       </div>
       <div class="continue-watching-container" id="continueWatchingContainer"></div>
     </section>
@@ -5349,95 +5303,7 @@
         });
     }
 
-    // Custom confirmation modal for clearing continue watching
-    function showClearConfirmation(onConfirm) {
-      // Prevent multiple modals
-      if (document.querySelector('.confirm-modal-overlay')) return;
-      // Create modal overlay
-      const overlay = document.createElement('div');
-      overlay.className = 'confirm-modal-overlay';
-
-      const modal = document.createElement('div');
-      modal.className = 'confirm-modal';
-
-      modal.innerHTML = `
-          <div class="confirm-modal-header">
-            <div class="confirm-modal-icon">
-              <i class="fas fa-exclamation-triangle"></i>
-            </div>
-            <h3 class="confirm-modal-title">Clear Continue Watching?</h3>
-          </div>
-          <div class="confirm-modal-message">
-            Do you want to clear all the movies from continue watching?
-          </div>
-          <div class="confirm-modal-buttons">
-            <button class="confirm-modal-btn confirm-modal-btn-cancel">Cancel</button>
-            <button class="confirm-modal-btn confirm-modal-btn-yes">Yes</button>
-          </div>
-        `;
-
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
-      document.body.classList.add('modal-open');
-
-      const yesBtn = modal.querySelector('.confirm-modal-btn-yes');
-      const cancelBtn = modal.querySelector('.confirm-modal-btn-cancel');
-
-      // Close modal function
-      const closeModal = () => {
-        modal.classList.add('closing');
-        overlay.style.animation = 'fadeOut 0.2s ease-out';
-        setTimeout(() => {
-          overlay.remove();
-          document.body.classList.remove('modal-open');
-        }, 200);
-      };
-
-      // First confirmation - "Yes" button
-      yesBtn.addEventListener('click', () => {
-        // Show second confirmation
-        modal.querySelector('.confirm-modal-message').textContent = 'Are you sure? This action cannot be undone.';
-
-        // Update buttons for second confirmation
-        yesBtn.textContent = 'Yes, Clear All';
-        yesBtn.style.background = 'linear-gradient(135deg, #ff6b6b, #ff4444)';
-
-        // Remove old event listener by replacing the button
-        const newYesBtn = yesBtn.cloneNode(true);
-        yesBtn.parentNode.replaceChild(newYesBtn, yesBtn);
-
-        // Second confirmation handler
-        newYesBtn.addEventListener('click', () => {
-          closeModal();
-          document.removeEventListener('keydown', onKeydown);
-          // wait for close animation to finish before showing toast
-          setTimeout(() => onConfirm(), 220);
-        });
-      });
-
-      // Cancel button
-      cancelBtn.addEventListener('click', () => {
-        closeModal();
-        document.removeEventListener('keydown', onKeydown);
-      });
-
-      // Close on overlay click
-      overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-          closeModal();
-          document.removeEventListener('keydown', onKeydown);
-        }
-      });
-
-      // Close on Escape key
-      const onKeydown = (e) => {
-        if (e.key === 'Escape') {
-          closeModal();
-          document.removeEventListener('keydown', onKeydown);
-        }
-      };
-      document.addEventListener('keydown', onKeydown);
-    }
+    // Removed: showClearConfirmation and related Clear All UI
 
     // Create continue watching row (disabled: using unified loadContinueWatching path)
     function createContinueWatchingRow() {
@@ -5514,9 +5380,7 @@
             <h2 class="section-title">
               <i class="fas fa-redo"></i> Continue Watching
             </h2>
-            <button id="clearAllBtn" class="clear-button" title="Clear all continue watching">
-              <i class="fas fa-trash-alt"></i> Clear All
-            </button>
+            <!-- Clear All button removed -->
           </div>
           <div class="continue-watching-container"></div>
         `;
@@ -5865,9 +5729,7 @@
               <h2 class="section-title">
                 <i class="fas fa-redo"></i> Continue Watching
               </h2>
-              <button id="clearAllBtn" class="clear-button" title="Clear all continue watching">
-                <i class="fas fa-trash-alt"></i> Clear All
-              </button>
+              <!-- Clear All button removed -->
             </div>
             <div class="continue-watching-container" id="continueWatchingContainer"></div>
           `;
@@ -6006,51 +5868,7 @@
           // Initial icon update
           updateTrashIcon();
 
-          // Add clear all button functionality
-          const clearAllBtn = document.getElementById('clearAllBtn');
-          if (clearAllBtn) {
-            // Remove any existing listeners
-            const newBtn = clearAllBtn.cloneNode(true);
-            clearAllBtn.parentNode.replaceChild(newBtn, clearAllBtn);
-            
-            newBtn.addEventListener('click', () => {
-              showClearConfirmation(async () => {
-                try {
-                  console.log('[ClearAll] Starting clear operation...');
-                  
-                  // Clear from Firebase
-                  if (window.FirebaseSync && window.FirebaseSync.initialized) {
-                    await window.FirebaseSync.saveContinueWatching({});
-                    window.FirebaseSync.cache['continueWatching'] = {};
-                    console.log('[ClearAll] ✅ Cleared from Firebase');
-                  }
-                  
-                  // Clear from ContinueWatchingManager
-                  if (window.ContinueWatchingManager && window.ContinueWatchingManager.clearAll) {
-                    await window.ContinueWatchingManager.clearAll();
-                    console.log('[ClearAll] ✅ Cleared from ContinueWatchingManager');
-                  }
-                  
-                  // Hide section
-                  section.style.display = 'none';
-                  
-                  // Show success
-                  if (window.UIToast) {
-                    UIToast.success('Cleared', 'All continue watching items removed');
-                  }
-                  
-                  // Reload after a moment
-                  setTimeout(() => loadContinueWatching(false), 500);
-                  
-                } catch (error) {
-                  console.error('[ClearAll] Error:', error);
-                  if (window.UIToast) {
-                    UIToast.error('Error', 'Failed to clear items');
-                  }
-                }
-              });
-            });
-          }
+          // Clear All button removed
 
           // Show the section only if not in search mode
           section.style.display = isSearching ? 'none' : 'block';

@@ -308,6 +308,13 @@
           console.log('[Resume] Total saved movies:', movieIds.length);
           console.log('[Resume] Saved movie IDs:', movieIds);
           console.log('[Resume] Looking for ID:', movieData.movieId);
+          
+          // Check each movie's title and ID
+          console.log('[Resume] Detailed cache contents:');
+          movieIds.forEach(id => {
+            const movie = allProgress[id];
+            console.log(`  - ID: "${id}" | Title: "${movie.title}" | Progress: ${movie.currentTime}s`);
+          });
         }
       } catch (e) {
         console.error('[Resume] Error checking all progress:', e);

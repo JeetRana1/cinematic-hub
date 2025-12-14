@@ -560,9 +560,16 @@
 
         // Get movie data from URL
         const urlParams = new URLSearchParams(window.location.search);
-        const movieId = urlParams.get('movieId') || urlParams.get('id') || `movie_${Date.now()}`;
         const title = urlParams.get('title') || 'Unknown Movie';
+        const year = urlParams.get('year') || '';
         const poster = urlParams.get('poster') || urlParams.get('thumbnail') || '';
+        
+        // IMPORTANT: Generate movieId the SAME way as everywhere else
+        let movieId = urlParams.get('movieId');
+        if (!movieId) {
+          // Create consistent ID from title and year (matching player.html main logic)
+          movieId = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${year}`;
+        }
 
         const movieData = {
           movieId: movieId,
@@ -571,6 +578,7 @@
           thumbnail: poster
         };
 
+        console.log('[Tracking] Generated movieId:', movieId);
         console.log('[Tracking] Movie data:', movieData);
 
         // Wait for ContinueWatchingManager

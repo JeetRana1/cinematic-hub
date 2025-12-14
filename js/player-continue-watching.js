@@ -829,12 +829,30 @@
     });
 
     // Add to DOM
+    console.log('[Resume] 📍 Appending resume prompt to body...');
     document.body.appendChild(overlay);
+    console.log('[Resume] ✅ Resume prompt added to DOM!');
+    console.log('[Resume] Overlay element:', overlay);
+    console.log('[Resume] Overlay display:', window.getComputedStyle(overlay).display);
+    console.log('[Resume] Overlay z-index:', window.getComputedStyle(overlay).zIndex);
+    
+    // Force a reflow to ensure styles are applied
+    void overlay.offsetHeight;
 
     // Pause video while prompt is shown
     if (!video.paused) {
       video.pause();
+      console.log('[Resume] Video paused for prompt');
     }
+    
+    // Check if overlay is still in DOM after a moment
+    setTimeout(() => {
+      const stillInDom = document.body.contains(overlay);
+      console.log('[Resume] Overlay still in DOM after 100ms:', stillInDom);
+      if (!stillInDom) {
+        console.error('[Resume] ❌ Overlay was removed from DOM!');
+      }
+    }, 100);
   }
 
   function setVideoCurrentTime(video, targetTime, attempt = 1) {

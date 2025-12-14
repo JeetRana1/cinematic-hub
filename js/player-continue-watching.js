@@ -421,7 +421,9 @@
 
       console.log('[Resume] Valid resume time:', validResumeTime, '| Should show prompt:', shouldShowResumePrompt);
 
-      if (shouldShowResumePrompt && validResumeTime > 5) {
+      // Only show the resume prompt at initial start, not after user seeks around
+      const isInitialPlayback = (video.currentTime || 0) < 2;
+      if (shouldShowResumePrompt && validResumeTime > 5 && isInitialPlayback) {
         console.log('[Resume] 🎬 Showing resume prompt!');
         
         const promptProgress = savedProgress || {
@@ -499,7 +501,7 @@
     }
 
     // Direct check: This ensures the modal ALWAYS shows
-    if (shouldShowResumePrompt && resumeTime > 5) {
+    if (shouldShowResumePrompt && resumeTime > 5 && (video.currentTime || 0) < 2) {
       console.log('[Resume] 🎯 Direct check enabled: Will force show prompt when video ready');
       console.log('[Resume] Resume time:', resumeTime, '| Saved progress:', !!savedProgress);
 

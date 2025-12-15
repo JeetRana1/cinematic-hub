@@ -340,7 +340,7 @@ class ContinueWatchingDisplay {
     const resumeUrl = this.buildResumeUrl(movie, params, playerBase);
     
     if (resumeUrl) {
-      window.open(resumeUrl, '_blank');
+      window.location.href = resumeUrl;
     } else {
       this.showToast('error', 'Resume Failed', 'Unable to resume this movie. The video source may no longer be available.');
     }

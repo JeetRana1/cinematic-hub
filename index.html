@@ -6207,7 +6207,8 @@
                   player2Url = `player-2.html?${params.toString()}`;
                 }
                 if (player2Url) {
-                  window.open(player2Url, '_blank');
+                  localStorage.setItem('lastPlayerUsed', 'player2');
+                  window.location.href = player2Url;
                 } else {
                   showToast('error', 'Stream Unavailable', 'Stream is not available for this movie yet.');
                 }
@@ -6291,9 +6292,9 @@
             }
 
             if (playerUrl) {
-              // Open the player in a new tab
+              // Navigate in the same tab (resume if available)
               const finalUrl = wantsResume ? `${playerUrl}&t=${Math.floor(resumeTime)}` : playerUrl;
-              window.open(finalUrl, '_blank');
+              window.location.href = finalUrl;
             } else {
               showToast('error', 'Stream Unavailable', 'Stream is not available for this movie yet.');
             }
@@ -6355,8 +6356,8 @@
             }
 
             if (playerUrl) {
-              // Open the player in a new tab
-              window.open(playerUrl, '_blank');
+              // Navigate in the same tab
+              window.location.href = playerUrl;
             } else {
               showToast('error', 'Stream Unavailable', 'Stream is not available for this movie yet.');
             }
@@ -6679,26 +6680,10 @@
       }
     }
 
-    // Stream behavior - Updated to open player in new tab with proper parameters
-    let playerWindow = null; // Track the player window
-
-    // Function to close existing player window
-    function closeExistingPlayer() {
-      if (playerWindow && !playerWindow.closed) {
-        try {
-          playerWindow.close();
-        } catch (e) {
-          console.warn('Could not close existing player window:', e);
-        }
-      }
-    }
-
+    // Stream behavior - open player in the same tab
     streamBtn.addEventListener('click', (e) => {
       e.preventDefault();
       if (!currentMovie) return showSystemMessage('No movie selected.', 'error');
-
-      // Close any existing player window before opening a new one
-      closeExistingPlayer();
 
       const isAvailable = streamBtn.dataset.available === '1';
       if (!isAvailable) {
@@ -6773,16 +6758,41 @@
       }
 
       if (playerUrl) {
-        // Open the player in a new tab and store the reference
-        playerWindow = window.open(playerUrl, 'moviePlayer');
-        if (!playerWindow) {
-          showSystemMessage('Please allow popups to watch the movie.', 'error');
-        }
+        // Navigate in the same tab
+        window.location.href = playerUrl;
       } else {
         // This should not happen as we already check availability, but just in case
         showSystemMessage('Stream is not available for this movie yet.', 'error');
       }
     });
+
+    // Prefetch player pages so first playback starts faster
+    function warmupPlayerPages() {
+      const head = document.head || document.getElementsByTagName('head')[0];
+      const targets = [
+        { href: 'player.html', as: 'document' },
+        { href: 'player-2.html', as: 'document' },
+        { href: 'js/player-continue-watching.js', as: 'script' }
+      ];
+
+      targets.forEach(({ href, as }) => {
+        if (document.querySelector(`link[rel="prefetch"][href="${href}"]`)) return;
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = href;
+        if (as) link.as = as;
+        head.appendChild(link);
+      });
+    }
+
+    function schedulePlayerWarmup() {
+      const run = () => warmupPlayerPages();
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(run, { timeout: 2000 });
+      } else {
+        setTimeout(run, 1000);
+      }
+    }
 
     // Toast helper
     function showToast(type, title, message, timeout = 4000) {
@@ -6821,6 +6831,7 @@
       const key = getScopedThemeKey();
       const savedTheme = localStorage.getItem(key) || 'glossy';
       applyTheme(savedTheme);
+      schedulePlayerWarmup();
 
       // Load continue watching after a short delay to ensure DOM is ready
       setTimeout(() => {

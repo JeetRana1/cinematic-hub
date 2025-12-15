@@ -14,6 +14,10 @@
   <meta name="screen-orientation" content="portrait">
   <meta name="theme-color" content="#000000">
   <title>Cinematic Hub</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://www.youtube.com">
@@ -5783,7 +5787,9 @@
             // Click to resume
             card.addEventListener('click', (e) => {
               if (!e.target.closest('.remove-button')) {
-                const resumeSeconds = Math.floor(movie.currentTime || 0);
+                const durationSeconds = Number(movie.duration) || 0;
+                const progressSeconds = durationSeconds && movie.progress ? (durationSeconds * movie.progress) / 100 : 0;
+                const resumeSeconds = Math.floor(movie.currentTime || progressSeconds || 0);
                 const movieIdParam = movie.id ? `&movieId=${encodeURIComponent(movie.id)}` : '';
                 // Use 't' param so the player resumes directly without showing the prompt
                 window.location.href = `player.html?title=${encodeURIComponent(movie.title)}&poster=${encodeURIComponent(movie.posterUrl || movie.poster || '')}&trailer=${encodeURIComponent(movie.trailerUrl || '')}&t=${resumeSeconds}${movieIdParam}`;

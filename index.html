@@ -6736,12 +6736,26 @@
       const movieId = String(currentMovie.id);
       const title = encodeURIComponent(currentMovie.title || '');
       const poster = encodeURIComponent(currentMovie.posterUrl || '');
-      // Check for watch progress
-      const watchData = JSON.parse(localStorage.getItem('watchProgress') || '{}');
-      const hasProgress = watchData[movieId] && watchData[movieId].progress > 0;
-      const timeParam = hasProgress ? `&t=${Math.floor((watchData[movieId].duration * watchData[movieId].progress) / 100)}` : '';
+      // Check for watch progress (prefer manager, then legacy storage)
+      let resumeSeconds = 0;
+      try {
+        const mgr = window.ContinueWatchingManager;
+        const mgrProgress = mgr && typeof mgr.getMovieProgress === 'function' ? mgr.getMovieProgress(movieId) : null;
+        if (mgrProgress && Number(mgrProgress.currentTime) > 0) {
+          resumeSeconds = Number(mgrProgress.currentTime);
+        }
+      } catch (_) { }
+
+      if (resumeSeconds <= 0) {
+        const watchData = JSON.parse(localStorage.getItem('watchProgress') || '{}');
+        const hasProgress = watchData[movieId] && watchData[movieId].progress > 0;
+        if (hasProgress) {
+          resumeSeconds = Math.floor((watchData[movieId].duration * watchData[movieId].progress) / 100);
+        }
+      }
       // Build the player URL with the current movie's details
       const params = new URLSearchParams();
+      params.append('id', movieId);
       params.append('movieId', movieId);
       params.append('title', currentMovie.title);
       if (currentMovie.posterUrl) params.append('poster', currentMovie.posterUrl);
@@ -6755,13 +6769,13 @@
       if (mp4Url) {
         params.append('type', 'mp4');
         params.append('src', mp4Url);
-        playerUrl = `player.html?${params.toString()}${timeParam}`;
+        playerUrl = `player.html?${params.toString()}`;
       }
       // 2) Check for Google Drive mapping
       else if (driveMovieMappings[movieId]) {
         params.append('type', 'drive');
         params.append('id', driveMovieMappings[movieId]);
-        playerUrl = `player.html?${params.toString()}${timeParam}`;
+        playerUrl = `player.html?${params.toString()}`;
       }
       // 3) Check for YouTube trailer
       else if (currentMovie.trailerUrl) {
@@ -6769,19 +6783,20 @@
         if (ytKey) {
           params.append('type', 'youtube');
           params.append('id', ytKey);
-          playerUrl = `player.html?${params.toString()}${timeParam}`;
+          playerUrl = `player.html?${params.toString()}`;
         }
       }
       // 4) Check for direct stream URL
       else if (currentMovie.streamUrl) {
         params.append('type', 'mp4');
         params.append('src', currentMovie.streamUrl);
-        playerUrl = `player.html?${params.toString()}${timeParam}`;
+        playerUrl = `player.html?${params.toString()}`;
       }
 
       if (playerUrl) {
-        // Navigate in the same tab
-        window.location.href = playerUrl;
+        // Append resume time only if we have it to trigger prompt/resume
+        const finalUrl = resumeSeconds > 0 ? `${playerUrl}&t=${Math.floor(resumeSeconds)}` : playerUrl;
+        window.location.href = finalUrl;
       } else {
         // This should not happen as we already check availability, but just in case
         showSystemMessage('Stream is not available for this movie yet.', 'error');

@@ -5676,7 +5676,33 @@
           return mapped;
         });
 
-        let validMovies = continueWatchingMovies.filter(movie => {
+        // Deduplicate by strong key (movieId/id) first, then fallback to normalized title
+        const dedupMap = new Map();
+        for (const m of continueWatchingMovies) {
+          const keyId = String(m.movieId || m.id || '').trim();
+          const keyTitle = String(m.title || '').toLowerCase().trim();
+          const key = keyId || `title:${keyTitle}`;
+
+          const existing = dedupMap.get(key);
+          if (!existing) {
+            dedupMap.set(key, m);
+            continue;
+          }
+
+          const tsNew = Number(m.updatedAt || m.timestamp || 0);
+          const tsOld = Number(existing.updatedAt || existing.timestamp || 0);
+          const progNew = Number(m.progress || 0);
+          const progOld = Number(existing.progress || 0);
+
+          // Pick newer; if tie, pick higher progress
+          if (tsNew > tsOld || (tsNew === tsOld && progNew > progOld)) {
+            dedupMap.set(key, m);
+          }
+        }
+
+        const dedupedMovies = Array.from(dedupMap.values());
+
+        let validMovies = dedupedMovies.filter(movie => {
           const hasProgress = movie.progress > 0 && movie.progress < 95;
           const hasValidId = movie.id || movie.movieId;
           const hasTitle = movie.title && movie.title !== 'Untitled' && movie.title !== 'Unknown Movie';
@@ -5699,21 +5725,21 @@
         
         console.log('Valid movies after filter:', validMovies.length, validMovies.map(m => m.title));
 
-        // Deduplicate by normalized title, prefer the most recent/most progressed entry
+        // Final dedupe pass by movieId/title to avoid edge duplicates after validation
         if (validMovies.length > 1) {
-          const byTitle = new Map();
+          const byKey = new Map();
           for (const m of validMovies) {
-            const key = String(m.title || '').toLowerCase().trim();
-            if (!key) continue;
-            const existing = byTitle.get(key);
+            const keyId = String(m.movieId || m.id || '').trim();
+            const keyTitle = String(m.title || '').toLowerCase().trim();
+            const key = keyId || `title:${keyTitle}`;
+            const existing = byKey.get(key);
             const ts = Number(m.updatedAt || m.timestamp || 0);
             const existingTs = Number(existing?.updatedAt || existing?.timestamp || 0);
-            // Choose the newer entry; if timestamps equal/missing, pick higher progress
-            if (!existing || ts > existingTs || (ts === existingTs && (m.progress || 0) > (existing.progress || 0))) {
-              byTitle.set(key, m);
+            if (!existing || ts > existingTs || (ts === existingTs && (m.progress || 0) > (existing?.progress || 0))) {
+              byKey.set(key, m);
             }
           }
-          validMovies = Array.from(byTitle.values());
+          validMovies = Array.from(byKey.values());
         }
 
         if (validMovies.length === 0) {

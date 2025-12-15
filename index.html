@@ -5789,10 +5789,26 @@
               if (!e.target.closest('.remove-button')) {
                 const durationSeconds = Number(movie.duration) || 0;
                 const progressSeconds = durationSeconds && movie.progress ? (durationSeconds * movie.progress) / 100 : 0;
-                const resumeSeconds = Math.floor(movie.currentTime || progressSeconds || 0);
+
+                // Freshly fetch progress from manager for most accurate resume time
+                let managerSeconds = 0;
+                try {
+                  const mgr = window.ContinueWatchingManager;
+                  const mgrProgress = mgr && typeof mgr.getMovieProgress === 'function' ? mgr.getMovieProgress(movie.id || movie.movieId) : null;
+                  managerSeconds = mgrProgress && Number(mgrProgress.currentTime) ? Number(mgrProgress.currentTime) : 0;
+                } catch (_) { }
+
+                const resumeSeconds = Math.floor(
+                  managerSeconds || movie.currentTime || progressSeconds || 0
+                );
+
+                const idParam = movie.id ? `&id=${encodeURIComponent(movie.id)}` : '';
                 const movieIdParam = movie.id ? `&movieId=${encodeURIComponent(movie.id)}` : '';
-                // Use 't' param so the player resumes directly without showing the prompt
-                window.location.href = `player.html?title=${encodeURIComponent(movie.title)}&poster=${encodeURIComponent(movie.posterUrl || movie.poster || '')}&trailer=${encodeURIComponent(movie.trailerUrl || '')}&t=${resumeSeconds}${movieIdParam}`;
+                const base = `player.html?title=${encodeURIComponent(movie.title)}&poster=${encodeURIComponent(movie.posterUrl || movie.poster || '')}&trailer=${encodeURIComponent(movie.trailerUrl || '')}${idParam}${movieIdParam}`;
+
+                // Only add t if we have a positive timestamp; otherwise let player prompt using cloud progress
+                const url = resumeSeconds > 0 ? `${base}&t=${resumeSeconds}` : base;
+                window.location.href = url;
               }
             });
 

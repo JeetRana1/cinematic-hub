@@ -114,6 +114,7 @@
       };
       
       const seen = new Map();
+      const seenByTitle = new Map();
       const deduped = [];
       continueWatchingMovies.forEach(m => {
         // First try to normalize the movieId/id
@@ -124,16 +125,23 @@
           key = normalizeTitle(m.title);
         }
         
+        const normalizedTitle = normalizeTitle(m.title);
+        
         console.log('[StorageAdapter] Processing movie:', m.title, '| key:', key, '| progress:', Math.round(m.progress) + '%', '| timestamp:', m.timestamp);
         
         if (key) {
-          if (!seen.has(key)) {
+          // Check if we've already seen this movie by either ID or title
+          let existingByKey = seen.get(key);
+          let existingByTitle = seenByTitle.get(normalizedTitle);
+          let existing = existingByKey || existingByTitle;
+          
+          if (!existing) {
             seen.set(key, m);
+            seenByTitle.set(normalizedTitle, m);
             deduped.push(m);
             console.log('[StorageAdapter] ✅ Dedup: Kept as first entry -', m.title, '| key:', key);
           } else {
             // Keep the entry with the most recent progress (highest timestamp or currentTime)
-            const existing = seen.get(key);
             const existingTime = existing.timestamp || 0;
             const newTime = m.timestamp || 0;
             const existingProgress = existing.currentTime || 0;
@@ -151,7 +159,11 @@
             if (shouldReplace) {
               const idx = deduped.indexOf(existing);
               if (idx >= 0) deduped[idx] = m;
-              seen.set(key, m);
+              // Update both maps
+              if (existingByKey) seen.set(key, m);
+              if (existingByTitle) seenByTitle.set(normalizedTitle, m);
+              if (existingByKey && !existingByTitle) seenByTitle.set(normalizedTitle, m);
+              if (!existingByKey && existingByTitle) seen.set(key, m);
               console.log('[StorageAdapter] 🔄 Dedup: Replaced with newer entry -', m.title, '| newProgress:', Math.round(newProgress) + 's');
             } else {
               console.log('[StorageAdapter] 🗑️ Dedup: Removed duplicate -', m.title, '| kept existing progress:', Math.round(existingProgress) + 's');

@@ -3388,12 +3388,14 @@
       const rating = urlParams.get('rating');
       const description = urlParams.get('description') || 'No description available';
 
-      // Generate a consistent movie ID
-      let movieId = urlParams.get('movieId');
+      // Generate a consistent movie ID - prefer actual ID from database, then movieId, then generate
+      let movieId = urlParams.get('id') || urlParams.get('movieId');
       if (!movieId) {
         // Create a consistent ID from the title and year
         movieId = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${year}`;
         console.log('Generated movieId:', movieId);
+      } else {
+        console.log('Using movieId from URL:', movieId);
       }
 
       // Store movie info in a global variable for easy access
@@ -3632,7 +3634,7 @@
         // Ensure window.currentMovie is properly set
         if (!window.currentMovie) {
           const title = urlParams.get('title') || 'Unknown Movie';
-          const movieId = urlParams.get('movieId') || `generated-${Date.now()}`;
+          const movieId = urlParams.get('id') || urlParams.get('movieId') || `generated-${Date.now()}`;
 
           window.currentMovie = {
             id: movieId,

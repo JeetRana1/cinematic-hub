@@ -4995,6 +4995,7 @@
     function addBookmark(movie) {
       try {
         const key = getBookmarksKey();
+        console.log('Adding bookmark with key:', key, 'Movie:', movie.id, movie.title);
         const bookmarksStr = localStorage.getItem(key);
         const bookmarks = bookmarksStr ? JSON.parse(bookmarksStr) : {};
 
@@ -5009,6 +5010,8 @@
         };
 
         localStorage.setItem(key, JSON.stringify(bookmarks));
+        console.log('Bookmark added successfully. Total bookmarks:', Object.keys(bookmarks).length);
+        console.log('Current bookmarks:', bookmarks);
         return true;
       } catch (e) {
         console.error('Error adding bookmark:', e);
@@ -5020,11 +5023,13 @@
     function removeBookmark(movieId) {
       try {
         const key = getBookmarksKey();
+        console.log('Removing bookmark with key:', key, 'Movie ID:', movieId);
         const bookmarksStr = localStorage.getItem(key);
         const bookmarks = bookmarksStr ? JSON.parse(bookmarksStr) : {};
 
         delete bookmarks[movieId];
         localStorage.setItem(key, JSON.stringify(bookmarks));
+        console.log('Bookmark removed successfully. Remaining bookmarks:', Object.keys(bookmarks).length);
         return true;
       } catch (e) {
         console.error('Error removing bookmark:', e);
@@ -5038,8 +5043,11 @@
         const key = getBookmarksKey();
         const bookmarksStr = localStorage.getItem(key);
         const bookmarks = bookmarksStr ? JSON.parse(bookmarksStr) : {};
-        return !!bookmarks[movieId];
+        const result = !!bookmarks[movieId];
+        console.log('Checking bookmark for movie:', movieId, 'Key:', key, 'Result:', result, 'All bookmarks:', bookmarks);
+        return result;
       } catch (e) {
+        console.error('Error checking bookmark:', e);
         return false;
       }
     }
@@ -5883,10 +5891,10 @@
         trailerHost.dataset.youtubeKey = '';
         // Preload the video in the background (hidden)
         trailerHost.innerHTML = `
-          <video id="preloadTrailerVideo" preload="auto" style="display:none;width:100%;height:100%">
+          <video id="preloadTrailerVideo" preload="auto" style="display:none;width:100%;height:100%" crossorigin="anonymous">
             <source src="${movie.trailerUrl}" type="video/mp4">
           </video>
-          <img id="trailerPlaceholderImg" src="${placeholderImg.src}" alt="Trailer preview" />
+          <img id="trailerPlaceholderImg" src="${placeholderImg.src}" alt="Trailer preview" crossorigin="anonymous" style="max-width:100%;height:auto;" />
           <div class="video-play-btn" title="Play trailer"></div>
         `;
       } else {
@@ -5907,25 +5915,27 @@
       // Keep button clickable so we can show a system message when unavailable
       streamBtn.disabled = false;
 
-      // Update bookmark button state
+    // Update bookmark button state - now async
       const bookmarkBtn = document.getElementById('bookmarkBtn');
       if (bookmarkBtn) {
-        const bookmarked = isBookmarked(movie.id);
-        bookmarkBtn.classList.toggle('bookmarked', bookmarked);
-        bookmarkBtn.title = bookmarked ? 'Remove from My List' : 'Add to My List';
-        bookmarkBtn.setAttribute('aria-label', bookmarked ? 'Remove from My List' : 'Add to My List');
+        // Update button state immediately when modal opens
+        isBookmarked(movie.id).then(bookmarked => {
+          bookmarkBtn.classList.toggle('bookmarked', bookmarked);
+          bookmarkBtn.title = bookmarked ? 'Remove from My List' : 'Add to My List';
+          bookmarkBtn.setAttribute('aria-label', bookmarked ? 'Remove from My List' : 'Add to My List');
 
-        // Update icon
-        const icon = bookmarkBtn.querySelector('i');
-        if (icon) {
-          icon.className = bookmarked ? 'fas fa-bookmark' : 'far fa-bookmark';
-        }
+          // Update icon
+          const icon = bookmarkBtn.querySelector('i');
+          if (icon) {
+            icon.className = bookmarked ? 'fas fa-bookmark' : 'far fa-bookmark';
+          }
 
-        // Update text
-        const textSpan = bookmarkBtn.querySelector('.bookmark-text');
-        if (textSpan) {
-          textSpan.textContent = bookmarked ? 'In My List' : 'Add to My List';
-        }
+          // Update text
+          const textSpan = bookmarkBtn.querySelector('.bookmark-text');
+          if (textSpan) {
+            textSpan.textContent = bookmarked ? 'In My List' : 'Add to My List';
+          }
+        });
       }
 
       // Prevent background scrolling when modal opens
@@ -6448,7 +6458,7 @@
                   host.appendChild(errorMsg);
                   setTimeout(() => errorMsg.remove(), 5000);
                 }
-              }, 30000); // 30 second timeout
+              }, 4000); // 4 second timeout
             });
             v.addEventListener('seeking', showSpinner);
             v.addEventListener('stalled', showSpinner);
@@ -6616,6 +6626,7 @@
         if (!currentMovie) return;
 
         const bookmarked = isBookmarked(currentMovie.id);
+        console.log('Bookmark button clicked. Current state:', bookmarked, 'Movie:', currentMovie.id);
 
         if (bookmarked) {
           // Remove from bookmarks

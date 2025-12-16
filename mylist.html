@@ -1028,43 +1028,30 @@
 
     // Get bookmark storage key (scoped per user/profile)
     function getBookmarksKey() {
-      try {
-        const user = (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function')
-          ? window.FirebaseAuth.getUser()
-          : null;
-        const uid = user && user.uid;
-        if (!uid) return 'myList_guest';
-        const sel = localStorage.getItem(`fb_selected_profile_${uid}`);
-        return sel ? `myList_${uid}_${sel}` : `myList_${uid}`;
-      } catch (e) {
-        console.error('Error getting bookmarks key:', e);
-        return 'myList_guest';
-      }
+      // Now using Firebase Sync - all bookmarks are cloud-stored
+      return 'using-firebase-sync';
     }
 
-    // Load bookmarked movies
-    function loadBookmarks() {
+    // Load bookmarked movies from Firebase
+    async function loadBookmarks() {
       try {
-        const key = getBookmarksKey();
-        const bookmarksStr = localStorage.getItem(key);
-        const bookmarks = bookmarksStr ? JSON.parse(bookmarksStr) : {};
-        return Object.values(bookmarks);
+        console.log('Loading bookmarks from Firebase...');
+        const bookmarks = await window.loadMyList();
+        console.log('Loaded', bookmarks.length, 'bookmarks from Firebase');
+        return bookmarks;
       } catch (e) {
         console.error('Error loading bookmarks:', e);
         return [];
       }
     }
 
-    // Remove bookmark
-    function removeBookmark(movieId) {
+    // Remove bookmark from Firebase
+    async function removeBookmark(movieId) {
       try {
-        const key = getBookmarksKey();
-        const bookmarksStr = localStorage.getItem(key);
-        const bookmarks = bookmarksStr ? JSON.parse(bookmarksStr) : {};
-
-        delete bookmarks[movieId];
-        localStorage.setItem(key, JSON.stringify(bookmarks));
-        return true;
+        console.log('Removing bookmark from Firebase:', movieId);
+        const result = await window.removeBookmark(movieId);
+        console.log('Bookmark removed from Firebase');
+        return result;
       } catch (e) {
         console.error('Error removing bookmark:', e);
         return false;
@@ -1072,10 +1059,11 @@
     }
 
     // Display bookmarked movies
-    function displayBookmarks() {
+    async function displayBookmarks() {
       const container = document.getElementById('moviesContainer');
       const emptyState = document.getElementById('emptyState');
-      const bookmarks = loadBookmarks();
+      const bookmarks = await loadBookmarks();
+      console.log('Displaying bookmarks. Count:', bookmarks.length);
 
       if (bookmarks.length === 0) {
         container.style.display = 'none';
@@ -1119,13 +1107,13 @@
 
         // Remove button
         const removeBtn = movieCard.querySelector('.remove-btn');
-        removeBtn.addEventListener('click', (e) => {
+        removeBtn.addEventListener('click', async (e) => {
           e.stopPropagation();
-          if (removeBookmark(movie.id)) {
+          if (await removeBookmark(movie.id)) {
             movieCard.style.animation = 'slideOut 0.3s ease-out';
-            setTimeout(() => {
+            setTimeout(async () => {
               movieCard.remove();
-              const remaining = loadBookmarks();
+              const remaining = await loadBookmarks();
               if (remaining.length === 0) {
                 container.style.display = 'none';
                 emptyState.style.display = 'block';
@@ -1158,17 +1146,22 @@
     let initAttempts = 0;
     function init() {
       initAttempts++;
+      console.log('Init called, attempt:', initAttempts);
 
       if (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function') {
         const user = window.FirebaseAuth.getUser();
+        console.log('FirebaseAuth ready, user:', user ? user.uid : 'null');
 
         if (!user && initAttempts < 20) {
+          console.log('No user yet, retrying...');
           setTimeout(init, 250);
           return;
         }
 
+        console.log('Displaying bookmarks...');
         displayBookmarks();
       } else {
+        console.log('FirebaseAuth not ready, attempt:', initAttempts);
         if (initAttempts < 20) {
           setTimeout(init, 250);
         } else {

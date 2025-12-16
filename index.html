@@ -6440,39 +6440,52 @@
         
         // Add timeout for stuck loading
         let loadingTimeout;
+        let hasStartedLoading = false;
         
         // Attach spinner events
         setTimeout(() => {
           let v = host.querySelector('video');
           if (v) {
+            // Track if video has started loading data
+            v.addEventListener('loadstart', () => {
+              hasStartedLoading = true;
+              clearTimeout(loadingTimeout);
+              showSpinner();
+              console.log('Trailer: Video data started loading');
+            });
+            
             v.addEventListener('waiting', () => {
               showSpinner();
-              // Set timeout to show error if loading takes too long
+              // Set timeout to show warning if loading takes too long
               clearTimeout(loadingTimeout);
               loadingTimeout = setTimeout(() => {
-                if (spinner.style.display === 'block') {
+                if (spinner.style.display === 'block' && hasStartedLoading) {
+                  // Only show error if data actually started but took too long
                   hideSpinner();
                   const errorMsg = document.createElement('div');
                   errorMsg.style = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;background:rgba(0,0,0,0.8);padding:20px;border-radius:8px;text-align:center;max-width:80%;z-index:100;';
-                  errorMsg.innerHTML = `<p>Trailer is taking too long to load.</p><p style="font-size:0.85em;opacity:0.7;margin-top:8px;">Please check your internet connection or try again later.</p>`;
+                  errorMsg.innerHTML = `<p>Trailer is loading slowly.</p><p style="font-size:0.85em;opacity:0.7;margin-top:8px;">This may be due to network conditions. Please wait or try again.</p>`;
                   host.appendChild(errorMsg);
                   setTimeout(() => errorMsg.remove(), 5000);
                 }
-              }, 4000); // 4 second timeout
+              }, 15000); // 15 second timeout for slow connections
             });
             v.addEventListener('seeking', showSpinner);
             v.addEventListener('stalled', showSpinner);
             v.addEventListener('playing', () => {
               clearTimeout(loadingTimeout);
               hideSpinner();
+              console.log('Trailer: Video playing');
             });
             v.addEventListener('canplay', () => {
               clearTimeout(loadingTimeout);
               hideSpinner();
+              console.log('Trailer: Video ready to play');
             });
             v.addEventListener('canplaythrough', () => {
               clearTimeout(loadingTimeout);
               hideSpinner();
+              console.log('Trailer: Video can play through');
             });
             v.addEventListener('ended', hideSpinner);
             

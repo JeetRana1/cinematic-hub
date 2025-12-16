@@ -6217,10 +6217,20 @@
             // Set up Stream 2 button to open player-2.html with the same logic as Stream
             const streamBtn2 = document.getElementById('streamBtn2');
             if (streamBtn2) {
+              // Get watch data for Stream 2 button too
+              let watchData2 = null;
+              if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.getMovieProgress === 'function') {
+                watchData2 = window.ContinueWatchingManager.getMovieProgress(movie.id);
+              }
+              if (!watchData2) {
+                const legacyCW = JSON.parse(localStorage.getItem('continueWatching') || '{}');
+                watchData2 = legacyCW[movie.id];
+              }
+
               streamBtn2.onclick = null;
               streamBtn2.onclick = (e) => {
                 e.preventDefault();
-                const isAvailable = streamBtn.dataset.available === '1';
+                const isAvailable = streamBtn2.dataset.available === '1';
                 if (!isAvailable) {
                   showToast('error', 'Stream Unavailable', 'This stream is not available currently!');
                   return;
@@ -6255,8 +6265,21 @@
                   player2Url = `player-2.html?${params.toString()}`;
                 }
                 if (player2Url) {
-                  localStorage.setItem('lastPlayerUsed', 'player2');
-                  window.location.href = player2Url;
+                  // Check if we have saved progress and ask whether to resume
+                  if (watchData2 && watchData2.progress > 0 && watchData2.progress < 95) {
+                    const duration = Number(watchData2.duration) || 0;
+                    const savedCurrent = Number(watchData2.currentTime) || 0;
+                    const percentBased = duration > 0 && watchData2.progress ? (duration * watchData2.progress) / 100 : 0;
+                    const resumeTime = savedCurrent > 0 ? savedCurrent : percentBased;
+                    const wantsResume = window.confirm(`You have progress at ${Math.round(watchData2.progress)}%.\n\nOK: Resume from there\nCancel: Start from beginning`);
+                    
+                    localStorage.setItem('lastPlayerUsed', 'player2');
+                    const finalUrl = wantsResume ? `${player2Url}&t=${Math.floor(resumeTime)}` : player2Url;
+                    window.location.href = finalUrl;
+                  } else {
+                    localStorage.setItem('lastPlayerUsed', 'player2');
+                    window.location.href = player2Url;
+                  }
                 } else {
                   showToast('error', 'Stream Unavailable', 'Stream is not available for this movie yet.');
                 }
@@ -6277,140 +6300,88 @@
           watchData = legacyCW[movie.id];
         }
 
+        // Always check for saved progress and show appropriate button label
         if (watchData && watchData.progress > 0 && watchData.progress < 95) {
           streamBtn.innerHTML = `
             <span>Resume (${Math.round(watchData.progress)}%)</span>
             <span class="stream-icon">▶️</span>
           `;
-          // Remove any existing onclick handlers
-          streamBtn.onclick = null;
-          streamBtn.onclick = (e) => {
-            e.preventDefault();
-            const isAvailable = streamBtn.dataset.available === '1';
-            if (!isAvailable) {
-              showToast('error', 'Stream Unavailable', 'This stream is not available currently!');
-              return;
-            }
-
-            // Ask whether to resume or start from beginning
-            const duration = Number(watchData.duration) || 0;
-            const savedCurrent = Number(watchData.currentTime) || 0;
-            const percentBased = duration > 0 && watchData.progress ? (duration * watchData.progress) / 100 : 0;
-            const resumeTime = savedCurrent > 0 ? savedCurrent : percentBased;
-            const wantsResume = window.confirm(`You have progress at ${Math.round(watchData.progress)}%.\n\nOK: Resume from there\nCancel: Start from beginning`);
-
-            // Build the player URL with the movie's details
-            const params = new URLSearchParams();
-            params.append('id', movie.id);
-            params.append('movieId', movie.id);
-            params.append('title', movie.title);
-            if (movie.posterUrl) params.append('poster', movie.posterUrl);
-
-            // Check for available sources in order of preference
-            const normTitle = String(movie.title || '').trim().toLowerCase();
-            let playerUrl = null;
-
-            // 1) Check for direct MP4 override
-            const mp4Url = mp4Overrides[normTitle];
-            if (mp4Url) {
-              params.append('type', 'mp4');
-              params.append('src', mp4Url);
-              playerUrl = `player.html?${params.toString()}`;
-            }
-            // 2) Check for Google Drive mapping
-            else if (driveMovieMappings[String(movie.id)]) {
-              params.append('type', 'drive');
-              params.append('id', driveMovieMappings[String(movie.id)]);
-              playerUrl = `player.html?${params.toString()}`;
-            }
-            // 3) Check for YouTube trailer
-            else if (movie.trailerUrl) {
-              const ytKey = extractYouTubeId(movie.trailerUrl);
-              if (ytKey) {
-                params.append('type', 'youtube');
-                params.append('id', ytKey);
-                playerUrl = `player.html?${params.toString()}`;
-              }
-            }
-            // 4) Check for direct stream URL
-            else if (movie.streamUrl) {
-              params.append('type', 'mp4');
-              params.append('src', movie.streamUrl);
-              playerUrl = `player.html?${params.toString()}`;
-            }
-
-            if (playerUrl) {
-              // Navigate in the same tab (resume if available)
-              const finalUrl = wantsResume ? `${playerUrl}&t=${Math.floor(resumeTime)}` : playerUrl;
-              window.location.href = finalUrl;
-            } else {
-              showToast('error', 'Stream Unavailable', 'Stream is not available for this movie yet.');
-            }
-          };
         } else {
           streamBtn.innerHTML = `
             <span>Watch Now</span>
             <span class="stream-icon">▶️</span>
           `;
-          // Remove any existing onclick handlers
-          streamBtn.onclick = null;
-          streamBtn.onclick = (e) => {
-            e.preventDefault();
-            const isAvailable = streamBtn.dataset.available === '1';
-            if (!isAvailable) {
-              showToast('error', 'Stream Unavailable', 'This stream is not available currently!');
-              return;
-            }
-
-            // Navigate to player.html from the beginning
-            // Build the player URL with the current movie's details
-            const params = new URLSearchParams();
-            params.append('id', movie.id);
-            params.append('movieId', movie.id);
-            params.append('title', movie.title);
-            if (movie.posterUrl) params.append('poster', movie.posterUrl);
-
-            // Check for available sources in order of preference
-            const normTitle = String(movie.title || '').trim().toLowerCase();
-            let playerUrl = null;
-
-            // 1) Check for direct MP4 override
-            const mp4Url = mp4Overrides[normTitle];
-            if (mp4Url) {
-              params.append('type', 'mp4');
-              params.append('src', mp4Url);
-              playerUrl = `player.html?${params.toString()}`;
-            }
-            // 2) Check for Google Drive mapping
-            else if (driveMovieMappings[String(movie.id)]) {
-              params.append('type', 'drive');
-              params.append('id', driveMovieMappings[String(movie.id)]);
-              playerUrl = `player.html?${params.toString()}`;
-            }
-            // 3) Check for YouTube trailer
-            else if (movie.trailerUrl) {
-              const ytKey = extractYouTubeId(movie.trailerUrl);
-              if (ytKey) {
-                params.append('type', 'youtube');
-                params.append('id', ytKey);
-                playerUrl = `player.html?${params.toString()}`;
-              }
-            }
-            // 4) Check for direct stream URL
-            else if (movie.streamUrl) {
-              params.append('type', 'mp4');
-              params.append('src', movie.streamUrl);
-              playerUrl = `player.html?${params.toString()}`;
-            }
-
-            if (playerUrl) {
-              // Navigate in the same tab
-              window.location.href = playerUrl;
-            } else {
-              showToast('error', 'Stream Unavailable', 'Stream is not available for this movie yet.');
-            }
-          };
         }
+
+        // Remove any existing onclick handlers
+        streamBtn.onclick = null;
+        streamBtn.onclick = (e) => {
+          e.preventDefault();
+          const isAvailable = streamBtn.dataset.available === '1';
+          if (!isAvailable) {
+            showToast('error', 'Stream Unavailable', 'This stream is not available currently!');
+            return;
+          }
+
+          // Build the player URL with the movie's details
+          const params = new URLSearchParams();
+          params.append('id', movie.id);
+          params.append('movieId', movie.id);
+          params.append('title', movie.title);
+          if (movie.posterUrl) params.append('poster', movie.posterUrl);
+
+          // Check for available sources in order of preference
+          const normTitle = String(movie.title || '').trim().toLowerCase();
+          let playerUrl = null;
+
+          // 1) Check for direct MP4 override
+          const mp4Url = mp4Overrides[normTitle];
+          if (mp4Url) {
+            params.append('type', 'mp4');
+            params.append('src', mp4Url);
+            playerUrl = `player.html?${params.toString()}`;
+          }
+          // 2) Check for Google Drive mapping
+          else if (driveMovieMappings[String(movie.id)]) {
+            params.append('type', 'drive');
+            params.append('id', driveMovieMappings[String(movie.id)]);
+            playerUrl = `player.html?${params.toString()}`;
+          }
+          // 3) Check for YouTube trailer
+          else if (movie.trailerUrl) {
+            const ytKey = extractYouTubeId(movie.trailerUrl);
+            if (ytKey) {
+              params.append('type', 'youtube');
+              params.append('id', ytKey);
+              playerUrl = `player.html?${params.toString()}`;
+            }
+          }
+          // 4) Check for direct stream URL
+          else if (movie.streamUrl) {
+            params.append('type', 'mp4');
+            params.append('src', movie.streamUrl);
+            playerUrl = `player.html?${params.toString()}`;
+          }
+
+          if (playerUrl) {
+            // Check if we have saved progress and ask whether to resume
+            if (watchData && watchData.progress > 0 && watchData.progress < 95) {
+              const duration = Number(watchData.duration) || 0;
+              const savedCurrent = Number(watchData.currentTime) || 0;
+              const percentBased = duration > 0 && watchData.progress ? (duration * watchData.progress) / 100 : 0;
+              const resumeTime = savedCurrent > 0 ? savedCurrent : percentBased;
+              const wantsResume = window.confirm(`You have progress at ${Math.round(watchData.progress)}%.\n\nOK: Resume from there\nCancel: Start from beginning`);
+              
+              const finalUrl = wantsResume ? `${playerUrl}&t=${Math.floor(resumeTime)}` : playerUrl;
+              window.location.href = finalUrl;
+            } else {
+              // No saved progress, navigate in the same tab
+              window.location.href = playerUrl;
+            }
+          } else {
+            showToast('error', 'Stream Unavailable', 'Stream is not available for this movie yet.');
+          }
+        };
       }
 
       // ... existing code for setting up modal content ...

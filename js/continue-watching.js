@@ -82,9 +82,18 @@ class ContinueWatchingManager {
         return;
       }
 
+      // Normalize the movieId key to prevent duplicates
+      // Prefer numeric IDs (like "4") over generated IDs (like "vikram-")
+      // If movieId looks like a number, keep it; otherwise normalize it
+      let normalizedKey = movieId;
+      if (!/^\d+$/.test(movieId)) {
+        // It's not a pure numeric ID, so normalize it
+        normalizedKey = String(movieId).toLowerCase().trim().replace(/-+$/, '');
+      }
+
       const allProgress = this.getAllProgress();
-      allProgress[movieId] = {
-        movieId: movieId,
+      allProgress[normalizedKey] = {
+        movieId: normalizedKey,
         title: progressData.title || 'Unknown Movie',
         posterUrl: progressData.posterUrl || progressData.thumbnail || '',
         currentTime: Math.floor(progressData.currentTime),
@@ -100,16 +109,16 @@ class ContinueWatchingManager {
 
       this.lastSavedTime = progressData.currentTime;
 
-      console.log('Progress saved for', movieId, ':', Math.round(progressData.currentTime), 's');
+      console.log('Progress saved for', normalizedKey, ':', Math.round(progressData.currentTime), 's');
 
       // Save to Firebase immediately (cloud-only)
       if (window.FirebaseSync && window.FirebaseSync.initialized) {
         // Use updateContinueWatchingItem for individual saves (more efficient)
-        window.FirebaseSync.updateContinueWatchingItem(movieId, allProgress[movieId]).then(() => {
+        window.FirebaseSync.updateContinueWatchingItem(normalizedKey, allProgress[normalizedKey]).then(() => {
           console.log('✅ Progress synced to Firebase cloud');
           // Dispatch custom event for live updates after successful save
           window.dispatchEvent(new CustomEvent('continueWatchingUpdated', {
-            detail: { movieId, progressData: allProgress[movieId] }
+            detail: { movieId: normalizedKey, progressData: allProgress[normalizedKey] }
           }));
         }).catch(err => {
           console.error('❌ Failed to sync continue watching to Firebase:', err);
@@ -119,7 +128,7 @@ class ContinueWatchingManager {
         console.log('⏳ Firebase initializing, will retry save...');
         setTimeout(() => {
           if (window.FirebaseSync && window.FirebaseSync.initialized) {
-            window.FirebaseSync.updateContinueWatchingItem(movieId, allProgress[movieId]).then(() => {
+            window.FirebaseSync.updateContinueWatchingItem(normalizedKey, allProgress[normalizedKey]).then(() => {
               console.log('✅ Progress synced to Firebase cloud (retry)');
             }).catch(err => {
               console.error('❌ Failed to sync (retry):', err);

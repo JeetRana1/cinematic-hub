@@ -104,11 +104,22 @@
         return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
       };
       
+      const normalizeMovieId = (id) => {
+        if (!id) return '';
+        // Convert to string, lowercase, and normalize
+        let normalized = String(id).toLowerCase().trim();
+        // Remove trailing hyphens added by title generation (e.g., "vikram-" -> "vikram")
+        normalized = normalized.replace(/-+$/, '');
+        return normalized;
+      };
+      
       const seen = new Map();
       const deduped = [];
       continueWatchingMovies.forEach(m => {
-        // Use movieId as primary key; also normalize title as fallback
-        let key = (m.movieId || m.id || '').toString().toLowerCase().trim();
+        // First try to normalize the movieId/id
+        let key = normalizeMovieId(m.movieId || m.id);
+        
+        // If no valid movieId, use normalized title as fallback
         if (!key) {
           key = normalizeTitle(m.title);
         }

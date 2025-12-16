@@ -146,8 +146,16 @@ class ContinueWatchingManager {
         return;
       }
 
+      // Normalize the movieId key to prevent duplicates
+      // Prefer numeric IDs (like "4") over generated IDs (like "vikram-")
+      let normalizedKey = movieId;
+      if (!/^\d+$/.test(movieId)) {
+        // It's not a pure numeric ID, so normalize it
+        normalizedKey = String(movieId).toLowerCase().trim().replace(/-+$/, '');
+      }
+
       const movieProgress = {
-        movieId: movieId,
+        movieId: normalizedKey,
         title: progressData.title || 'Unknown Movie',
         posterUrl: progressData.posterUrl || progressData.thumbnail || progressData.poster || '',
         poster: progressData.posterUrl || progressData.thumbnail || progressData.poster || '',
@@ -165,7 +173,7 @@ class ContinueWatchingManager {
 
       this.lastSavedTime = progressData.currentTime;
 
-      console.log('Progress saved to cloud for', movieId, ':', Math.round(progressData.currentTime), 's', '| Poster:', movieProgress.posterUrl ? 'Yes' : 'No');
+      console.log('Progress saved to cloud for', normalizedKey, ':', Math.round(progressData.currentTime), 's', '| Poster:', movieProgress.posterUrl ? 'Yes' : 'No');
 
       // Save to Firestore ONLY (cloud-only, no localStorage)
       const user = (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function')
@@ -177,7 +185,7 @@ class ContinueWatchingManager {
           .collection('users')
           .doc(user.uid)
           .collection('continueWatching')
-          .doc(movieId);
+          .doc(normalizedKey);
         
         // Use set with merge to preserve existing fields like posterUrl
         docRef.set(movieProgress, { merge: true }).then(() => {
@@ -188,12 +196,12 @@ class ContinueWatchingManager {
             if (!window.FirebaseSync.cache['continueWatching']) {
               window.FirebaseSync.cache['continueWatching'] = {};
             }
-            window.FirebaseSync.cache['continueWatching'][movieId] = movieProgress;
+            window.FirebaseSync.cache['continueWatching'][normalizedKey] = movieProgress;
           }
 
           // Dispatch custom event for live updates
           window.dispatchEvent(new CustomEvent('continueWatchingUpdated', {
-            detail: { movieId, progressData: movieProgress }
+            detail: { movieId: normalizedKey, progressData: movieProgress }
           }));
         }).catch((err) => {
           console.error('Failed to save continue watching to Firestore:', err);

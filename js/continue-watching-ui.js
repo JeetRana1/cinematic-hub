@@ -185,7 +185,10 @@ class ContinueWatchingUI {
     params.append('t', resumeTime);
 
     // Use the player that was used when watching this movie
-    const playerBase = movie.playerUsed === 'player2' ? 'player-2.html' : 'player.html';
+    // Default to player1 if playerUsed field is missing
+    const playerUsed = movie.playerUsed || 'player1';
+    const playerBase = playerUsed === 'player2' ? 'player-2.html' : 'player.html';
+    console.log('🎬 Resume URL for', movie.title, 'using player:', playerBase, '(playerUsed:', playerUsed, ')');
     const resumeUrl = `${playerBase}?${params.toString()}`;
 
     // If on mobile, request landscape orientation before opening player

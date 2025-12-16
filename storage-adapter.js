@@ -273,9 +273,11 @@
           const title = movie.title || 'Unknown';
           const poster = movie.posterUrl || movie.poster || '';
           
-          console.log('Resuming movie:', movieId, title);
           // Use the player that was used when watching this movie
-          const playerBase = movie.playerUsed === 'player2' ? 'player-2.html' : 'player.html';
+          // Default to player1 if playerUsed field is missing
+          const playerUsed = movie.playerUsed || 'player1';
+          const playerBase = playerUsed === 'player2' ? 'player-2.html' : 'player.html';
+          console.log('🎬 Resuming movie:', movieId, title, 'in player:', playerBase, '(playerUsed:', playerUsed, ')');
           // Navigate to the correct player with all necessary parameters
           const playerUrl = `${playerBase}?id=${encodeURIComponent(movieId)}&title=${encodeURIComponent(title)}&poster=${encodeURIComponent(poster)}`;
           window.location.href = playerUrl;

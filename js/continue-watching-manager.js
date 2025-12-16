@@ -179,7 +179,7 @@ class ContinueWatchingManager {
 
       this.lastSavedTime = progressData.currentTime;
 
-      console.log('Progress saved to cloud for', normalizedKey, ':', Math.round(progressData.currentTime), 's', '| Poster:', movieProgress.posterUrl ? 'Yes' : 'No');
+      console.log('Progress saved to cloud for', normalizedKey, ':', Math.round(progressData.currentTime), 's', '| Poster:', movieProgress.posterUrl ? 'Yes' : 'No', '| Player:', movieProgress.playerUsed);
 
       // Save to Firestore ONLY (cloud-only, no localStorage)
       const user = (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function')
@@ -195,7 +195,7 @@ class ContinueWatchingManager {
         
         // Use set with merge to preserve existing fields like posterUrl
         docRef.set(movieProgress, { merge: true }).then(() => {
-          console.log('Successfully saved to Firestore with poster:', movieProgress.posterUrl ? 'Yes' : 'No');
+          console.log('Successfully saved to Firestore with poster:', movieProgress.posterUrl ? 'Yes' : 'No', '| Player:', movieProgress.playerUsed);
           
           // Update Firebase Sync cache if available
           if (window.FirebaseSync && window.FirebaseSync.cache) {
@@ -405,7 +405,10 @@ class ContinueWatchingManager {
     params.append('t', Math.floor(movieData.currentTime));
 
     // Use the player that was used when watching this movie
-    const playerBase = movieData.playerUsed === 'player2' ? 'player-2.html' : 'player.html';
+    // Default to player1 if playerUsed field is missing
+    const playerUsed = movieData.playerUsed || 'player1';
+    const playerBase = playerUsed === 'player2' ? 'player-2.html' : 'player.html';
+    console.log('🔗 Building resume URL for', movieData.title, 'with player:', playerBase);
     return `${playerBase}?${params.toString()}`;
   }
 

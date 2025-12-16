@@ -323,11 +323,14 @@ class ContinueWatchingDisplay {
    * Resume movie playback
    */
   resumeMovie(movie) {
-    console.log('Resuming movie:', movie.title, 'with playerUsed:', movie.playerUsed);
+    console.log('🎬 Resuming movie:', movie.title);
+    console.log('📊 Movie data:', JSON.stringify(movie, null, 2));
 
     // Use the player that was used when watching this specific movie
-    const playerBase = movie.playerUsed === 'player2' ? 'player-2.html' : 'player.html';
-    console.log('Resuming in player:', playerBase);
+    // Default to player1 if playerUsed field is missing
+    const playerUsed = movie.playerUsed || 'player1';
+    const playerBase = playerUsed === 'player2' ? 'player-2.html' : 'player.html';
+    console.log('🎮 Resuming in player:', playerBase, '(playerUsed field:', playerUsed, ')');
 
     // Build resume URL
     const params = new URLSearchParams();

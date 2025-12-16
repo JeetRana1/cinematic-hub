@@ -323,11 +323,11 @@ class ContinueWatchingDisplay {
    * Resume movie playback
    */
   resumeMovie(movie) {
-    console.log('Resuming movie:', movie.title);
+    console.log('Resuming movie:', movie.title, 'with playerUsed:', movie.playerUsed);
 
     // Use the player that was used when watching this specific movie
     const playerBase = movie.playerUsed === 'player2' ? 'player-2.html' : 'player.html';
-    console.log('Resuming in player:', playerBase, '(stored:', movie.playerUsed, ')');
+    console.log('Resuming in player:', playerBase);
 
     // Build resume URL
     const params = new URLSearchParams();

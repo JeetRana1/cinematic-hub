@@ -154,6 +154,10 @@ class ContinueWatchingManager {
         normalizedKey = String(movieId).toLowerCase().trim().replace(/-+$/, '');
       }
 
+      // Detect which player is being used from the current page URL
+      const currentPage = window.location.pathname.toLowerCase();
+      const isPlayer2 = currentPage.includes('player-2.html');
+      
       const movieProgress = {
         movieId: normalizedKey,
         title: progressData.title || 'Unknown Movie',
@@ -166,7 +170,7 @@ class ContinueWatchingManager {
         updatedAt: Date.now(),
         validUntil: Date.now() + (7 * 24 * 60 * 60 * 1000), // 7 days
         // Track which player was used for proper resume
-        playerUsed: localStorage.getItem('lastPlayerUsed') || 'player1',
+        playerUsed: isPlayer2 ? 'player2' : 'player1',
         // Additional metadata for better resume experience
         playbackRate: progressData.playbackRate || 1,
         volume: progressData.volume || 1,

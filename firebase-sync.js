@@ -61,7 +61,17 @@
         this.auth.onAuthStateChanged((user) => {
           this.currentUser = user;
           if (user) {
-            this.loadUserData();
+            // Wait a bit for profile to be selected before loading data
+            // This prevents race conditions on page load
+            setTimeout(() => {
+              const profileId = this.getCurrentProfile();
+              if (profileId) {
+                console.log('✅ Profile detected, loading data...');
+                this.loadUserData();
+              } else {
+                console.log('⏳ No profile selected yet, waiting...');
+              }
+            }, 100);
           } else {
             this.clearCache();
           }
@@ -77,13 +87,10 @@
     getCurrentProfile() {
       if (!this.currentUser) return null;
       const uid = this.currentUser.uid;
-      // Check if profile selection is available
-      if (window.FirebaseAuth && typeof window.FirebaseAuth.getSelectedProfile === 'function') {
-        const profile = window.FirebaseAuth.getSelectedProfile();
-        return profile ? profile.id : null;
-      }
-      // Fallback to localStorage (temporary during transition)
-      return localStorage.getItem(`fb_selected_profile_${uid}`);
+      // Always read from localStorage (this is the source of truth)
+      const profileId = localStorage.getItem(`fb_selected_profile_${uid}`);
+      console.log('📌 getCurrentProfile:', profileId, 'for user:', uid);
+      return profileId;
     }
 
     // Get Firestore document path for user data
@@ -91,12 +98,11 @@
       if (!this.currentUser) return null;
       const uid = this.currentUser.uid;
       const profileId = this.getCurrentProfile();
-      if (profileId) {
-        // Store profile data under profiles/{profileId}/data document
-        return `users/${uid}/profiles/${profileId}/data/settings`;
-      }
-      // For non-profile data, store under main user document
-      return `users/${uid}/data/settings`;
+      const path = profileId 
+        ? `users/${uid}/profiles/${profileId}/data/settings`
+        : `users/${uid}/data/settings`;
+      console.log('📂 getUserDocPath:', path);
+      return path;
     }
     
     // Get continue watching collection reference (profile-specific)
@@ -104,18 +110,30 @@
       if (!this.currentUser) return null;
       const uid = this.currentUser.uid;
       const profileId = this.getCurrentProfile();
+      let collectionPath;
       if (profileId) {
         // Store continue watching under profile's subcollection
+        collectionPath = `users/${uid}/profiles/${profileId}/continueWatching`;
+        console.log('🎬 ContinueWatching path:', collectionPath);
         return this.db.collection('users').doc(uid).collection('profiles').doc(profileId).collection('continueWatching');
       }
       // For non-profile users, store under main user collection
+      collectionPath = `users/${uid}/continueWatching`;
+      console.log('🎬 ContinueWatching path (no profile):', collectionPath);
       return this.db.collection('users').doc(uid).collection('continueWatching');
     }
 
     // Load all user data into cache
     async loadUserData() {
+      // Verify we have a profile selected
+      const profileId = this.getCurrentProfile();
+      console.log('🔄 loadUserData called with profile:', profileId);
+      
       const docPath = this.getUserDocPath();
-      if (!docPath) return;
+      if (!docPath) {
+        console.warn('⚠️ No docPath available, skipping loadUserData');
+        return;
+      }
 
       try {
         const docRef = this.db.doc(docPath);
@@ -199,6 +217,26 @@
           detail: { profileId } 
         }));
       }
+    }
+
+    // Initialize data loading for the current profile
+    // Call this after profile is confirmed to be selected
+    async initializeForProfile() {
+      const profileId = this.getCurrentProfile();
+      if (!profileId) {
+        console.warn('⚠️ initializeForProfile called but no profile selected');
+        return;
+      }
+      
+      console.log('🎬 Initializing data for profile:', profileId);
+      
+      // Clear any stale cache
+      this.clearCache();
+      
+      // Load fresh data for this profile
+      await this.loadUserData();
+      
+      console.log('✅ Profile data initialized');
     }
 
     // Save data to Firestore

@@ -7012,6 +7012,12 @@
       // Load selected profile or redirect to profiles page
       const prof = await FirebaseAuth.getSelectedProfile(user.uid);
       if (!prof) { window.location.assign('/profiles.html'); return; }
+      
+      // Initialize FirebaseSync with the confirmed profile
+      if (window.FirebaseSync && typeof window.FirebaseSync.initializeForProfile === 'function') {
+        await window.FirebaseSync.initializeForProfile();
+      }
+      
       // Populate mini user menu
       if (menu) menu.style.display = 'block';
 

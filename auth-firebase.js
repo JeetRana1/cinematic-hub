@@ -176,7 +176,13 @@
     safe.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
     await db.collection('users').doc(uid).collection('profiles').doc(id).set(safe, { merge: true });
   }
-  function selectProfile(uid, id){ localStorage.setItem(selectedKey(uid), id); }
+  async function selectProfile(uid, id){ 
+    localStorage.setItem(selectedKey(uid), id); 
+    // Notify FirebaseSync to reload data for the new profile
+    if (window.FirebaseSync && typeof window.FirebaseSync.switchProfile === 'function') {
+      await window.FirebaseSync.switchProfile(id);
+    }
+  }
   async function getSelectedProfile(uid){
     await ensureUserDoc(uid);
     const id = localStorage.getItem(selectedKey(uid));

@@ -1644,10 +1644,13 @@
         selectBtn.addEventListener('click', async () => {
           try {
             await ensureNet();
+            // Show loading toast while switching
+            UIToast.info('Switching profile', `Loading ${p.name}...`);
+            // Select the profile (this now triggers FirebaseSync.switchProfile)
             await FirebaseAuth.selectProfile(currentUser.uid, p.id);
             // Store the profile name to show welcome message on the next page
             sessionStorage.setItem('welcomeProfileName', p.name);
-            // Redirect immediately
+            // Redirect after profile switch is complete
             window.location.assign('/index.html');
           } catch (e) {
             UIToast.error('Select failed', e.message || 'Unable to select profile');

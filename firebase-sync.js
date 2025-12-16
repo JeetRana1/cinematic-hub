@@ -179,6 +179,28 @@
       }
     }
 
+    // Switch to a different profile and reload data
+    async switchProfile(profileId) {
+      console.log('🔄 Switching to profile:', profileId);
+      
+      // Clear existing cache and listeners
+      this.clearCache();
+      
+      // Update current profile
+      this.currentProfile = profileId;
+      
+      // Reload user data with new profile context
+      if (this.currentUser) {
+        await this.loadUserData();
+        console.log('✅ Profile switched and data reloaded');
+        
+        // Dispatch event to notify UI components
+        window.dispatchEvent(new CustomEvent('profile-switched', { 
+          detail: { profileId } 
+        }));
+      }
+    }
+
     // Save data to Firestore
     async saveToFirestore(key, value) {
       const docPath = this.getUserDocPath();

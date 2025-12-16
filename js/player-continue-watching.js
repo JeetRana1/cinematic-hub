@@ -117,7 +117,7 @@
       // IMPORTANT: Generate movieId the SAME way as player.html does
       // This ensures resume check finds the saved progress
       let movieId = urlParams.get('movieId');
-      if (!movieId) {
+      if (!movieId || movieId === 'undefined' || movieId === 'null') {
         // Create a consistent ID from the title and year (matching player.html exactly)
         const title = urlParams.get('title') || 'unknown';
         const year = urlParams.get('year') || '';
@@ -879,7 +879,7 @@
     }
 
     // If we've tried too many times, give up
-    const MAX_ATTEMPTS = 3;
+    const MAX_ATTEMPTS = 5; // Increased from 3
     if (attempt > MAX_ATTEMPTS) {
       console.warn(`Failed to set video time after ${MAX_ATTEMPTS} attempts`);
       return Promise.reject(new Error('Max retry attempts exceeded'));
@@ -887,16 +887,16 @@
 
     console.log(`[Resume] Attempt ${attempt} to set time to ${targetTime}s`);
 
-    // If video is already at the desired time (within 0.5s), do nothing
-    if (Math.abs(video.currentTime - targetTime) < 0.5) {
+    // If video is already at the desired time (within 1s), do nothing
+    if (Math.abs(video.currentTime - targetTime) < 1.0) {
       console.log('[Resume] Video already at desired time');
       return Promise.resolve();
     }
 
     // If video duration is available and target time is too close to the end, adjust it
     if (video.duration > 0) {
-      // Don't seek to the last 10 seconds to avoid immediate end
-      const safeTime = Math.min(targetTime, video.duration - 10);
+      // Don't seek to the last 5 seconds to avoid immediate end
+      const safeTime = Math.min(targetTime, video.duration - 5);
       if (safeTime <= 0) {
         console.log('[Resume] Target time too close to end, starting from beginning');
         video.currentTime = 0;
@@ -947,7 +947,7 @@
 
       const onTimeUpdate = () => {
         // If we're close to the target time, consider it a success
-        if (Math.abs(video.currentTime - targetTime) < 0.5) {
+        if (Math.abs(video.currentTime - targetTime) < 1.0) {
           console.log(`[Resume] Time update close to target: ${video.currentTime.toFixed(2)}s`);
           completeSeek();
         }
@@ -979,7 +979,7 @@
         const currentTime = video.currentTime;
         const timeDiff = Math.abs(currentTime - targetTime);
 
-        if (timeDiff < 0.5) {
+        if (timeDiff < 1.5) { // Increased tolerance
           console.log(`[Resume] Seek verified: ${currentTime.toFixed(2)}s (target: ${targetTime}s)`);
           completeSeek();
         } else if (attempt < MAX_ATTEMPTS) {
@@ -994,7 +994,13 @@
         } else {
           console.error(`[Resume] Failed to set video time after ${MAX_ATTEMPTS} attempts`);
           cleanup();
-          reject(new Error(`Failed to set video time after ${MAX_ATTEMPTS} attempts`));
+          // Even if verification failed, if we are somewhat close, let's accept it to avoid restarting
+          if (timeDiff < 5.0) {
+             console.warn('[Resume] Seek verification failed but close enough, accepting.');
+             completeSeek();
+          } else {
+             reject(new Error(`Failed to set video time after ${MAX_ATTEMPTS} attempts`));
+          }
         }
       };
 
@@ -1009,7 +1015,7 @@
           console.warn('[Resume] Seek operation timed out, verifying...');
           verifySeek();
         }
-      }, 3000);
+      }, 5000); // Increased timeout
 
       // Finally, attempt to set the time
       try {

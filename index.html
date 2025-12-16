@@ -6621,16 +6621,16 @@
     // Bookmark button handler
     const bookmarkBtn = document.getElementById('bookmarkBtn');
     if (bookmarkBtn) {
-      bookmarkBtn.addEventListener('click', (e) => {
+      bookmarkBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
         if (!currentMovie) return;
 
-        const bookmarked = isBookmarked(currentMovie.id);
+        const bookmarked = await isBookmarked(currentMovie.id);
         console.log('Bookmark button clicked. Current state:', bookmarked, 'Movie:', currentMovie.id);
 
         if (bookmarked) {
           // Remove from bookmarks
-          if (removeBookmark(currentMovie.id)) {
+          if (await removeBookmark(currentMovie.id)) {
             bookmarkBtn.classList.remove('bookmarked');
             bookmarkBtn.title = 'Add to My List';
             bookmarkBtn.setAttribute('aria-label', 'Add to My List');
@@ -6642,7 +6642,7 @@
           }
         } else {
           // Add to bookmarks
-          if (addBookmark(currentMovie)) {
+          if (await addBookmark(currentMovie)) {
             bookmarkBtn.classList.add('bookmarked');
             bookmarkBtn.title = 'Remove from My List';
             bookmarkBtn.setAttribute('aria-label', 'Remove from My List');

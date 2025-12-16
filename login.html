@@ -1125,6 +1125,53 @@
         showLoading(button);
         
         if (action === 'login') {
+          // Check sign-in methods before attempting login
+          try {
+            const signInMethods = await auth.fetchSignInMethodsForEmail(email);
+            
+            // If account exists but only has Google sign-in
+            if (signInMethods.length > 0 && !signInMethods.includes('password')) {
+              hideLoading(button);
+              
+              // Show helpful error message
+              const errorDiv = document.createElement('div');
+              errorDiv.className = 'error-message';
+              errorDiv.style.paddingLeft = '1rem';
+              errorDiv.innerHTML = `
+                <strong>Account found!</strong> This email is registered with Google Sign-In. 
+                Please use the "Sign in with Google" button below.
+              `;
+              
+              const googleBtn = document.getElementById('googleSignIn');
+              if (googleBtn && googleBtn.parentNode) {
+                // Remove existing error if any
+                const existingError = googleBtn.parentNode.querySelector('.error-message');
+                if (existingError) existingError.remove();
+                
+                googleBtn.parentNode.insertBefore(errorDiv, googleBtn);
+                
+                // Highlight Google button
+                googleBtn.style.transform = 'scale(1.05)';
+                googleBtn.style.boxShadow = '0 0 20px rgba(66, 133, 244, 0.4)';
+                setTimeout(() => {
+                  googleBtn.style.transform = '';
+                  googleBtn.style.boxShadow = '';
+                }, 2000);
+                
+                // Auto-remove error after 10 seconds
+                setTimeout(() => {
+                  errorDiv.style.opacity = '0';
+                  setTimeout(() => errorDiv.remove(), 300);
+                }, 10000);
+              }
+              
+              return;
+            }
+          } catch (fetchError) {
+            // If fetch fails, continue with normal login attempt
+            console.warn('Could not fetch sign-in methods:', fetchError);
+          }
+          
           await FirebaseAuth.signInEmailPassword(email, password);
           showSuccess(button, 'Logging in...');
         } else {
@@ -1139,12 +1186,49 @@
         
       } catch (error) {
         console.error(`${action} error:`, error);
-        const errorMessage = error.message || 'An error occurred. Please try again.';
+        
+        // Provide user-friendly error messages
+        let errorMessage = 'An error occurred. Please try again.';
+        
+        if (error.code === 'auth/wrong-password') {
+          errorMessage = 'Incorrect password. Please try again or use "Forgot password?" link.';
+        } else if (error.code === 'auth/user-not-found') {
+          errorMessage = 'No account found with this email. Please sign up first.';
+        } else if (error.code === 'auth/invalid-email') {
+          errorMessage = 'Please enter a valid email address.';
+        } else if (error.code === 'auth/user-disabled') {
+          errorMessage = 'This account has been disabled. Please contact support.';
+        } else if (error.code === 'auth/email-already-in-use') {
+          errorMessage = 'This email is already registered. Please sign in instead.';
+        } else if (error.code === 'auth/weak-password') {
+          errorMessage = 'Password is too weak. Please use at least 6 characters.';
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
         
         if (window.UIToast) {
           UIToast.error(`${action === 'login' ? 'Login' : 'Signup'} Failed`, errorMessage);
         } else {
-          alert(`${action === 'login' ? 'Login' : 'Signup'} failed: ${errorMessage}`);
+          // Show inline error message
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'error-message';
+          errorDiv.style.paddingLeft = '1rem';
+          errorDiv.textContent = errorMessage;
+          
+          const buttonsContainer = document.querySelector('.buttons');
+          if (buttonsContainer) {
+            // Remove existing error if any
+            const existingError = buttonsContainer.parentNode.querySelector('.error-message');
+            if (existingError) existingError.remove();
+            
+            buttonsContainer.parentNode.insertBefore(errorDiv, buttonsContainer);
+            
+            // Auto-remove error after 7 seconds
+            setTimeout(() => {
+              errorDiv.style.opacity = '0';
+              setTimeout(() => errorDiv.remove(), 300);
+            }, 7000);
+          }
         }
         
         // Add shake animation to the form

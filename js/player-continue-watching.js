@@ -257,8 +257,19 @@
         // Wait for cache to be populated
         await waitForCacheData();
         
-        const progress = window.ContinueWatchingManager?.getMovieProgress?.(movieData.movieId) || null;
+        // Try to get progress using generated movieId first
+        let progress = window.ContinueWatchingManager?.getMovieProgress?.(movieData.movieId) || null;
         console.log('[Resume] getMovieProgress returned:', progress);
+        
+        // If not found by generated movieId, try the actual movie id from URL
+        if (!progress) {
+          const actualId = urlParams.get('id') || urlParams.get('movieId');
+          if (actualId && actualId !== movieData.movieId) {
+            console.log('[Resume] Generated movieId not found, trying actual ID:', actualId);
+            progress = window.ContinueWatchingManager?.getMovieProgress?.(actualId) || null;
+            console.log('[Resume] getMovieProgress with actual ID returned:', progress);
+          }
+        }
         
         return progress;
       } catch (e) {

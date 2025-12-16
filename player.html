@@ -2763,7 +2763,16 @@
             if (!movieId) {
               movieId = btoa(videoSrc).replace(/[^a-zA-Z0-9]/g, '').substring(0, 16);
             }
-            const savedProgress = window.ContinueWatchingManager.getMovieProgress(movieId);
+            let savedProgress = window.ContinueWatchingManager.getMovieProgress(movieId);
+            
+            // If not found by generated movieId, try the actual id from URL
+            if (!savedProgress) {
+              const actualId = urlParams.get('id');
+              if (actualId && actualId !== movieId) {
+                savedProgress = window.ContinueWatchingManager.getMovieProgress(actualId);
+              }
+            }
+            
             console.log('Continue watching check - savedProgress:', savedProgress, 'currentTime:', video.currentTime);
             if (savedProgress && savedProgress.currentTime > 0 && video.currentTime === 0) {
               console.log('Setting video to 0 for continue watching');

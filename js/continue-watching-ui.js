@@ -164,17 +164,27 @@ class ContinueWatchingUI {
     // Calculate the time to resume from (in seconds)
     const resumeTime = Math.floor(movie.currentTime);
 
-    // Generate the base URL with movieId (use movieId param to match player resume logic)
-    let resumeUrl = `player.html?movieId=${encodeURIComponent(movie.movieId || 'unknown')}&title=${encodeURIComponent(movie.title)}`;
-
+    // Build URL parameters - use both id and movieId to ensure player can find the saved progress
+    // The movieId is what's used as the key in the continue watching database
+    const params = new URLSearchParams();
+    
+    // Add the movieId (this is the key used to store progress)
+    if (movie.movieId) {
+      params.append('movieId', movie.movieId);
+    }
+    
+    // Add title for display and movieId generation
+    params.append('title', movie.title);
+    
     // Add optional parameters if they exist
-    if (movie.year) resumeUrl += `&year=${encodeURIComponent(movie.year)}`;
-    if (movie.poster) resumeUrl += `&poster=${encodeURIComponent(movie.poster)}`;
-    if (movie.posterUrl) resumeUrl += `&poster=${encodeURIComponent(movie.posterUrl)}`;
-    if (movie.thumbnail) resumeUrl += `&thumbnail=${encodeURIComponent(movie.thumbnail)}`;
+    if (movie.year) params.append('year', movie.year);
+    if (movie.posterUrl) params.append('poster', movie.posterUrl);
+    else if (movie.thumbnail) params.append('poster', movie.thumbnail);
 
-    // Add the resume time parameter
-    resumeUrl += `&t=${resumeTime}`;
+    // Add the resume time parameter - this is the KEY part that was missing!
+    params.append('t', resumeTime);
+
+    const resumeUrl = `player.html?${params.toString()}`;
 
     // If on mobile, request landscape orientation before opening player
     if (window.matchMedia && window.matchMedia('(max-width: 600px)').matches && screen.orientation && screen.orientation.lock) {

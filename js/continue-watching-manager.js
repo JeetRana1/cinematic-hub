@@ -155,8 +155,12 @@ class ContinueWatchingManager {
       }
 
       // Detect which player is being used from the current page URL
-      const currentPage = window.location.pathname.toLowerCase();
-      const isPlayer2 = currentPage.includes('player-2.html');
+      // Check both pathname and href to handle different deployment scenarios
+      const currentLocation = (window.location.pathname + window.location.href).toLowerCase();
+      const isPlayer2 = currentLocation.includes('player-2');
+      
+      console.log('🔍 Player detection - Href:', window.location.href);
+      console.log('🔍 Player detection - IsPlayer2:', isPlayer2);
       
       const movieProgress = {
         movieId: normalizedKey,

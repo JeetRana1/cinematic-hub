@@ -91,6 +91,14 @@ class ContinueWatchingManager {
         normalizedKey = String(movieId).toLowerCase().trim().replace(/-+$/, '');
       }
 
+      // Detect which player is being used from the current page URL
+      // Check both pathname and href to handle different deployment scenarios
+      const currentLocation = (window.location.pathname + window.location.href).toLowerCase();
+      const isPlayer2 = currentLocation.includes('player-2');
+      
+      console.log('🔍 Player detection - Href:', window.location.href);
+      console.log('🔍 Player detection - IsPlayer2:', isPlayer2);
+
       const allProgress = this.getAllProgress();
       allProgress[normalizedKey] = {
         movieId: normalizedKey,
@@ -101,6 +109,8 @@ class ContinueWatchingManager {
         progress: Math.round((progressData.currentTime / progressData.duration) * 100),
         updatedAt: Date.now(),
         validUntil: Date.now() + (7 * 24 * 60 * 60 * 1000), // 7 days
+        // Track which player was used for proper resume
+        playerUsed: isPlayer2 ? 'player2' : 'player1',
         // Additional metadata for better resume experience
         playbackRate: progressData.playbackRate || 1,
         volume: progressData.volume || 1,
@@ -109,7 +119,7 @@ class ContinueWatchingManager {
 
       this.lastSavedTime = progressData.currentTime;
 
-      console.log('Progress saved for', normalizedKey, ':', Math.round(progressData.currentTime), 's');
+      console.log('Progress saved for', normalizedKey, ':', Math.round(progressData.currentTime), 's | Player:', allProgress[normalizedKey].playerUsed);
 
       // Save to Firebase immediately (cloud-only)
       if (window.FirebaseSync && window.FirebaseSync.initialized) {

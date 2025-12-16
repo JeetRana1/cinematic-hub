@@ -5876,12 +5876,13 @@
 
       const trailerHost = document.getElementById('trailerHost');
       const placeholderImg = document.getElementById('trailerPlaceholderImg');
-      // set placeholder image from poster if available; otherwise use YouTube thumbnail
-      if (movie.posterUrl) {
+      
+      // Only set poster image if it's from a fast CDN, skip archive.org images to avoid timeouts
+      if (movie.posterUrl && !movie.posterUrl.includes('archive.org')) {
         placeholderImg.src = movie.posterUrl;
       } else {
         const key = movie.trailerUrl ? extractYouTubeId(movie.trailerUrl) : localTrailers[movie.id];
-        placeholderImg.src = key ? `https://i.ytimg.com/vi/${key}/hqdefault.jpg` : ('https://via.placeholder.com/1280x720?text=' + encodeURIComponent(title));
+        placeholderImg.src = key ? `https://i.ytimg.com/vi/${key}/hqdefault.jpg` : ('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221280%22 height=%22720%22%3E%3Crect fill=%22%23333%22 width=%221280%22 height=%22720%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2250%22 fill=%22%23999%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3EPlay Trailer%3C/text%3E%3C/svg%3E');
       }
 
       // Check if trailerUrl is a direct MP4 or YouTube URL
@@ -5889,19 +5890,16 @@
       if (isMP4) {
         trailerHost.dataset.mp4Url = movie.trailerUrl;
         trailerHost.dataset.youtubeKey = '';
-        // Preload the video in the background (hidden)
+        // Don't preload the video - let it load on demand instead
         trailerHost.innerHTML = `
-          <video id="preloadTrailerVideo" preload="auto" style="display:none;width:100%;height:100%" crossorigin="anonymous">
-            <source src="${movie.trailerUrl}" type="video/mp4">
-          </video>
-          <img id="trailerPlaceholderImg" src="${placeholderImg.src}" alt="Trailer preview" crossorigin="anonymous" style="max-width:100%;height:auto;" />
+          <img id="trailerPlaceholderImg" src="${placeholderImg.src}" alt="Trailer preview" style="max-width:100%;height:auto;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221280%22 height=%22720%22%3E%3Crect fill=%22%23333%22 width=%221280%22 height=%22720%22/%3E%3C/svg%3E'" />
           <div class="video-play-btn" title="Play trailer"></div>
         `;
       } else {
         const key = movie.trailerUrl ? extractYouTubeId(movie.trailerUrl) : localTrailers[movie.id];
         trailerHost.dataset.youtubeKey = key || '';
         trailerHost.dataset.mp4Url = '';
-        trailerHost.innerHTML = `<img id="trailerPlaceholderImg" src="${placeholderImg.src}" alt="Trailer preview" /><div class="video-play-btn" title="Play trailer"></div>`;
+        trailerHost.innerHTML = `<img id="trailerPlaceholderImg" src="${placeholderImg.src}" alt="Trailer preview" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221280%22 height=%22720%22%3E%3Crect fill=%22%23333%22 width=%221280%22 height=%22720%22/%3E%3C/svg%3E'" /><div class="video-play-btn" title="Play trailer"></div>`;
       }
 
       // Stream availability: Drive mapping OR direct MP4 override for this title
@@ -6379,47 +6377,35 @@
       const key = host.dataset.youtubeKey;
 
       if (mp4Url) {
-        // If preloaded video exists, show and play it
-        let video = host.querySelector('#preloadTrailerVideo');
-        if (video) {
-          video.style.display = 'block';
-          video.setAttribute('controls', '');
-          video.setAttribute('autoplay', '');
-          video.setAttribute('controlsList', 'nodownload');
-          video.setAttribute('oncontextmenu', 'return false;');
-          video.setAttribute('preload', 'auto');
-          // Remove placeholder and play button
-          const img = host.querySelector('#trailerPlaceholderImg');
-          if (img) img.remove();
-          const btn = host.querySelector('.video-play-btn');
-          if (btn) btn.remove();
-          
-          // Handle play errors
-          const playPromise = video.play();
-          if (playPromise !== undefined) {
-            playPromise.catch((err) => {
-              console.error('Trailer playback error:', err);
-              // Show error message
-              const errorMsg = document.createElement('div');
-              errorMsg.style = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;background:rgba(0,0,0,0.8);padding:20px;border-radius:8px;text-align:center;max-width:80%;z-index:100;';
-              errorMsg.innerHTML = `<p>Unable to play trailer automatically.</p><p style="font-size:0.85em;opacity:0.7;margin-top:8px;">Click the video controls to play manually.</p>`;
-              host.appendChild(errorMsg);
-              setTimeout(() => errorMsg.remove(), 5000);
-            });
-          }
-        } else {
-          // fallback: create video if not preloaded
-          host.innerHTML = `
-            <div class="video-container">
-              <video class="video-player" controls preload="auto">
-                <source src="${mp4Url}" type="video/mp4">
-                Your browser does not support the video tag.
-              </video>
-              <div class="video-progress">
-                <div class="video-progress-bar"></div>
-              </div>
-            </div>
-          `;
+        // Create video player directly (don't preload)
+        host.innerHTML = `
+          <video id="trailerVideo" class="video-player" controls style="width:100%;height:100%;background:#000;" crossorigin="anonymous">
+            <source src="${mp4Url}" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        `;
+        
+        let video = host.querySelector('#trailerVideo');
+        let retryCount = 0;
+        const maxRetries = 3;
+        
+        function createRetryButton() {
+          const retryBtn = document.createElement('button');
+          retryBtn.style = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);padding:15px 30px;background:#ff6b6b;border:none;border-radius:8px;color:#fff;font-size:1rem;cursor:pointer;z-index:100;';
+          retryBtn.textContent = `Retry Loading (${retryCount + 1}/${maxRetries})`;
+          retryBtn.onclick = (e) => {
+            e.stopPropagation();
+            retryCount++;
+            if (retryCount <= maxRetries) {
+              retryBtn.remove();
+              video.load();
+              showSpinner();
+            } else {
+              retryBtn.textContent = 'Failed to load trailer';
+              retryBtn.disabled = true;
+            }
+          };
+          return retryBtn;
         }
         // Add spinner for trailer buffering
         let spinner = host.querySelector('.trailer-loading-spinner');
@@ -6460,13 +6446,18 @@
               clearTimeout(loadingTimeout);
               loadingTimeout = setTimeout(() => {
                 if (spinner.style.display === 'block' && hasStartedLoading) {
-                  // Only show error if data actually started but took too long
+                  // Show retry button on timeout
                   hideSpinner();
-                  const errorMsg = document.createElement('div');
-                  errorMsg.style = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;background:rgba(0,0,0,0.8);padding:20px;border-radius:8px;text-align:center;max-width:80%;z-index:100;';
-                  errorMsg.innerHTML = `<p>Trailer is loading slowly.</p><p style="font-size:0.85em;opacity:0.7;margin-top:8px;">This may be due to network conditions. Please wait or try again.</p>`;
-                  host.appendChild(errorMsg);
-                  setTimeout(() => errorMsg.remove(), 5000);
+                  if (retryCount < maxRetries) {
+                    const retryBtn = createRetryButton();
+                    host.appendChild(retryBtn);
+                  } else {
+                    const errorMsg = document.createElement('div');
+                    errorMsg.style = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;background:rgba(0,0,0,0.8);padding:20px;border-radius:8px;text-align:center;max-width:80%;z-index:100;';
+                    errorMsg.innerHTML = `<p>Trailer is loading very slowly.</p><p style="font-size:0.85em;opacity:0.7;margin-top:8px;">Maximum retry attempts reached. Please try again later.</p>`;
+                    host.appendChild(errorMsg);
+                    setTimeout(() => errorMsg.remove(), 5000);
+                  }
                 }
               }, 15000); // 15 second timeout for slow connections
             });
@@ -6494,19 +6485,27 @@
               console.error('Trailer video error:', e, v.error);
               clearTimeout(loadingTimeout);
               hideSpinner();
-              const errorMsg = document.createElement('div');
-              errorMsg.style = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;background:rgba(0,0,0,0.8);padding:20px;border-radius:8px;text-align:center;max-width:80%;z-index:100;';
-              let errorDetails = 'The video file may not be available or there was a network error.';
-              if (v.error) {
-                switch(v.error.code) {
-                  case 1: errorDetails = 'Video loading was aborted.'; break;
-                  case 2: errorDetails = 'Network error occurred while loading the video.'; break;
-                  case 3: errorDetails = 'Video decoding failed.'; break;
-                  case 4: errorDetails = 'Video format is not supported.'; break;
+              
+              // Show retry button if retries available
+              if (retryCount < maxRetries) {
+                const retryBtn = createRetryButton();
+                host.appendChild(retryBtn);
+              } else {
+                // Show error message after max retries
+                const errorMsg = document.createElement('div');
+                errorMsg.style = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;background:rgba(0,0,0,0.8);padding:20px;border-radius:8px;text-align:center;max-width:80%;z-index:100;';
+                let errorDetails = 'The video file may not be available or there was a network error.';
+                if (v.error) {
+                  switch(v.error.code) {
+                    case 1: errorDetails = 'Video loading was aborted.'; break;
+                    case 2: errorDetails = 'Network error occurred while loading the video.'; break;
+                    case 3: errorDetails = 'Video decoding failed.'; break;
+                    case 4: errorDetails = 'Video format is not supported.'; break;
+                  }
                 }
+                errorMsg.innerHTML = `<p>Unable to load trailer video.</p><p style="font-size:0.85em;opacity:0.7;margin-top:8px;">${errorDetails}</p>`;
+                host.appendChild(errorMsg);
               }
-              errorMsg.innerHTML = `<p>Unable to load trailer video.</p><p style="font-size:0.85em;opacity:0.7;margin-top:8px;">${errorDetails}</p>`;
-              host.appendChild(errorMsg);
             });
             
             // On mobile/landscape, reload and play after seek

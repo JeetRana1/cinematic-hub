@@ -2823,136 +2823,6 @@
       content: '⏸';
     }
 
-    /* Cast section */
-    .cast-section {
-      margin-top: 1.75rem;
-      border-top: 1px dashed var(--glass-border);
-      padding-top: 1.25rem;
-    }
-
-    .cast-title {
-      font-weight: 600;
-      margin-bottom: 0.75rem;
-      color: var(--text-color);
-      opacity: 0.9;
-    }
-
-    .cast-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 14px;
-    }
-
-    .cast-card {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--glass-border);
-      border-radius: 14px;
-      padding: 10px 10px 12px;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-    }
-
-    .cast-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
-      background: rgba(255, 255, 255, 0.07);
-    }
-
-    .cast-photo {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      border-radius: 50%;
-      overflow: hidden;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      display: block;
-      position: relative;
-    }
-
-    .cast-photo img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .cast-name {
-      text-align: center;
-      margin-top: 8px;
-      font-size: 0.95rem;
-      line-height: 1.2;
-      color: var(--text-color);
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      line-clamp: 2;
-      /* Standard property for compatibility */
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      min-height: 2.4em;
-      /* reserve space for 2 lines */
-    }
-
-    .cast-name-overlay {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      padding: 8px 10px;
-      text-align: center;
-      font-size: 0.9rem;
-      color: #fff;
-      background: linear-gradient(to top, rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0));
-      pointer-events: none;
-    }
-
-    .cast-photo .placeholder {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #ffffff;
-      font-weight: 700;
-      font-size: 1.1rem;
-      letter-spacing: 0.5px;
-      opacity: 0.95;
-      user-select: none;
-    }
-
-    /* Responsive: slightly smaller tiles on very small screens */
-    @media (max-width: 480px) {
-      .cast-list {
-        grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
-        gap: 12px;
-      }
-
-      .cast-name {
-        font-size: 0.9rem;
-        min-height: 2.3em;
-      }
-    }
-
-    .cast-toggle-btn {
-      margin-top: 12px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      border: 1px solid var(--glass-border);
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--text-color);
-      font-family: 'Poppins', sans-serif;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: background 0.2s ease, transform 0.2s ease;
-    }
-
-    .cast-toggle-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      transform: translateY(-1px);
-    }
-
-    [data-theme="light"] .cast-toggle-btn {
-      background: rgba(0, 0, 0, 0.04);
-    }
-
     /* Toast notifications */
     .toast-container {
       position: fixed;
@@ -4218,10 +4088,6 @@
         <button class="stream-btn" id="streamBtn" aria-disabled="false">Stream</button>
         <button class="stream-btn" id="streamBtn2" aria-disabled="false" style="margin-left: 0.5rem;">Stream 2</button>
       </div>
-      <div class="cast-section">
-        <div class="cast-title">Cast</div>
-        <div class="cast-list" id="modalCast"></div>
-      </div>
     </div>
   </div>
 
@@ -4295,9 +4161,6 @@
 
     function createYTPlayerFor(host, key) {
       // host: element to receive iframe
-
-      // ...existing code...
-      // (Removed stray cast array that caused syntax error)
     }
 
         const MOVIE_1 =
@@ -4311,22 +4174,6 @@
       release_date: '2024',
       posterUrl: 'https://archive.org/download/manjummel-boys-poster/Manjummel-Boys-Poster.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Manjummel.Boys.Hindi.Trailer.mp4',
-      cast: [
-        { name: 'Soubin Shahir', photo: 'https://images.filmibeat.com/img/popcorn/profile_photos/soubin-shahir-20250402155334-38732.jpg' },
-        { name: 'Sreenath Bhasi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sreenath-bhasi-20220926160330-28765.jpg' },
-        { name: 'Jean Paul Lal', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/jean-paul-lal-20190624101317-29532.jpg' },
-        { name: 'Ganapathy S Poduval', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ganapathy-s-poduval-20250612103106-16037.jpg' },
-        { name: 'Balu Varghese', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/balu-varghese-20150217142843-31938.jpg' },
-        { name: 'Deepak Parambol', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/deepak-parambol-20140624174708-31104.jpg' },
-        { name: 'Arun kurian', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/arunkurian-20240226190801-36861.jpg' },
-        { name: 'Chandu Salimkumar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/chandusalimkumar-20240226190632-61830.jpg' },
-        { name: 'Abhiram Radhakrishnan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/abhiramradhakrishnan-20240226190918-49925.jpg' },
-        { name: 'Vishnu Reghu', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/vishnureghu-20240226191406-61831.jpg' },
-        { name: 'Khalid Rahman', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/khalid-rahman-20190617125536-35787.jpg' },
-        { name: 'George Maryan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/george-maryan-20190226174038-39972.jpg' },
-        { name: 'Kathiresan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/kathiresan-9757.jpg' },
-        { name: 'Ramachandran Durairaj', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ramachandran-durairaj-20230224101743-35966.jpg' }
-      ]
     };
 
     const MOVIE_2 =
@@ -4339,19 +4186,6 @@
       release_date: '2024',
       posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Tourist-Family-Poster.jpg',
       trailerUrl: 'https://ia801700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Tourist.Family.Hindi.Trailer.mp4',
-      cast: [
-        { name: 'Sasikumar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sasikumar-20190905111822-3368.jpg' },
-        { name: 'Simran Bagga', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/simran-bagga-20190109121606-1257.jpg' },
-        { name: 'MS Bhaskar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ms-bhaskar-2922.jpg' },
-        { name: 'Mithun Jai Shankar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/mithunjaishankar-20240410175155-62783.jpg' },
-        { name: 'Ramesh Thilak', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ramesh-thilak-20150730161304-35019.jpg' },
-        { name: 'Yogi Babu', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/yogi-babu-20191205130221-35602.jpg' },
-        { name: 'Elango Kumaravel', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/elango-kumaravel-20181114154200-33096.jpg' },
-        { name: 'Kamalesh Jagan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/kamalesh-jagan-20250430120655-66559.jpg' },
-        { name: 'Yogalakshmi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/yogalakshmi-20250610121844-66558.jpg' },
-        { name: 'Sreeja Ravi', photo: 'https://media.cinemaexpress.com/cinemaexpress%2Fimport%2F2023%2F5%2F4%2Foriginal%2FBeFunky-collage_-_2023-05-04T200251.jpg' },
-        { name: 'Bagavathi Perumal', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/bagavathi-perumal-20160304101451-31471.jpg' }
-      ]
     };
 
     const MOVIE_3 =
@@ -4364,25 +4198,6 @@
       release_date: '2023',
       posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Kaithi-Poster.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Kaithi.Hindi.Trailer.mp4',
-      cast: [
-        { name: 'Karthi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/karthi-20231016145056-9542.jpg' },
-        { name: 'Narain', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/narain-3871.jpg' },
-        { name: 'George Maryan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/george-maryan-20190226174038-39972.jpg' },
-        { name: 'Ramana', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ramana-20190826124757-3782.jpg' },
-        { name: 'Dheena', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/dheena-20190422152635-40102.jpg' },
-        { name: 'Vatsan Chakravarthy', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/vatsan-chakravarthy-20191014162140-35967.jpg' },
-        { name: 'Krishnamurthy', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/krishnamurthy-20191028155031-3461.jpg' },
-        { name: 'Amzath Khan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/amzath-khan-20191028154729-34979.jpg' },
-        { name: 'Hareesh Peradi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/hareesh-peradi-20190515145158-32690.jpg' },
-        { name: 'Arjun Das', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/arjun-das-20191210121146-46166.jpg' },
-        { name: 'Harish Uthaman', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/harish-uthaman-20141218174209-32635.jpg' },
-        { name: 'Kanna Ravi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/kanna-ravi-20210403170039-40176.jpg' },
-        { name: 'Lallu', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/lallu-20241008123047-46165.jpg' },
-        { name: 'Chetan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/chetan-20240722125346-17617.jpg' },
-        { name: 'R N R Manohar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/r-n-r-manohar-20190315110757-33445.jpg' },
-        { name: 'Malavika Avinash', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/malavika-avinash-25414.jpg' },
-        { name: 'Baby Monika', photo: 'https://images.plex.tv/photo?size=large-1920&scale=1&url=https%3A%2F%2Fmetadata-static.plex.tv%2F6%2Fpeople%2F6a28f367690a4e748007d798cfd66938.jpg' }
-      ]
     };
 
     const MOVIE_4 =
@@ -4396,41 +4211,6 @@
       release_date: '2022',
       posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Vikram-Poster.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Vikram.Hindi.Trailer.mp4',
-      cast: [
-        { name: 'Kamal Haasan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/kamal-haasan-20221107151916-330.jpg' },
-        { name: 'Fahadh Faasil', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/fahadh-faasil-20190128135754-12792.jpg' },
-        { name: 'Vijay Sethupathi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/vijay-sethupathi-20230420112846-28201.jpg' },
-        { name: 'Arjun Das', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/arjun-das-20191210121146-46166.jpg' },
-        { name: 'Narain', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/narain-3871.jpg' },
-        { name: 'Shivani Narayanan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/shivani-narayanan-20201002163005-47748.jpg' },
-        { name: 'Kalidas Jayaram', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/kalidas-jayaram-20190320130549-12229.jpg' },
-        { name: 'Suriya Sivakumar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/suriya-sivakumar-20190423095612-2747.jpg' },
-        { name: 'Chemban Vinod Jose', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/chemban-vinod-20140827152344-32629.jpg' },
-        { name: 'Jaffer Sadiq', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/jaffer-sadiq-20220603161535-48868.jpg' },
-        { name: 'Sampath Ram', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sampath-ram-20220603161847-33629.jpg' },
-        { name: 'Hareesh Peradi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/hareesh-peradi-20190515145158-32690.jpg' },
-        { name: 'Myna Nandhini', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/myna-nandhini-20220603221431-50885.jpg' },
-        { name: 'Maheshwari Chanakyan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/maheswari-chanakyan-20220603221654-37421.jpg' },
-        { name: 'Anish Padmanabhan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/anish-padmanabhan-20220603222036-51862.jpg' },
-        { name: 'Harish Uthaman', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/harish-uthaman-20141218174209-32635.jpg' },
-        { name: 'Gayathrie Shankar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/gayathrie-shankar-20220523111844-25615.jpg' },
-        { name: 'Marimuthu', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/marimuthu-20230908130248-31717.jpg' },
-        { name: 'Ramesh Thilak', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ramesh-thilak-20150730161304-35019.jpg' },
-        { name: 'Aruldoss', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/aruldoss-20160805121611-32798.jpg' },
-        { name: 'Gokul Nath', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/gokul-nath-20220603224334-27902.jpg' },
-        { name: 'Antony Varghese', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/antony-varghese-20180823101843-37795.jpg' },
-        { name: 'Dheena', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/dheena-20190422152635-40102.jpg' },
-        { name: 'Shree Kumar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/shree-kumar-20220604115545-52680.jpg' },
-        { name: 'Elango Kumaravel', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/elango-kumaravel-20181114154200-33096.jpg' },
-        { name: 'Santhana Bharathy', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/santhana-bharathy-20191127101432-10780.jpg' },
-        { name: 'Vasanthi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/vasanthi-20220603225144-52679.jpg' },
-        { name: 'Gowtham Sundararajan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/gowtham-sundararajan-20220603225438-37317.jpg' },
-        { name: 'Karthi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/karthi-20231016145056-9542.jpg' },
-        { name: 'Vinod Munna', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/vinod-munna-20220603231115-41214.jpg' },
-        { name: 'Maya Krishnan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/maya-krishnan-20230930202052-37313.jpg' },
-        { name: 'Swathishta Krishnan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/swathishta-krishnan-20190320102147-43936.jpg' },
-        { name: 'Mahadevan Ganesh', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/mahadevan-ganesh-20220608143536-15898.jpg' }
-      ]
     };
 
     const MOVIE_5 =
@@ -4444,26 +4224,6 @@
       release_date: '2023',
       posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Leo-Poster.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Leo.Hindi.Trailer.mp4',
-      cast: [
-        { name: 'Vijay', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/vijay-20220622092431-662.jpg' },
-        { name: 'Trisha Krishnan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/trisha-krishnan-20240220174622-3549.jpg' },
-        { name: 'Sunjay Dutt', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sanjay-dutt-20230203182745-98.jpg' },
-        { name: 'Arjun Sarja', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/arjun-sarja-20130618131220-9396.jpg' },
-        { name: 'Mathew Thomas', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/mathew-thomas-20230717114230-45367.jpg' },
-        { name: 'Mysskin', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/mysskin-20230203182713-3873.jpg' },
-        { name: 'Gautham Vasudev Menon', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/gautham-vasudev-menon-20230602184751-2749.jpg' },
-        { name: 'Priya Anand', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/priya-anand-20190917123133-4872.jpg' },
-        { name: 'Babu Antony', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/babu-antony-4381.jpg' },
-        { name: 'Mansoor Ali Khan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/mansoor-ali-khan-20190523140747-11327.jpg' },
-        { name: 'Sandy Master', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sandy-master-20190624122525-45105.jpg' },
-        { name: 'Madonna Sebastian', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/madonna-sebastian-20230717111335-35131.jpg' },
-        { name: 'Iyal', photo: 'https://nettv4u.com/imagine/11-10-2024/iyal.jpg' },
-        { name: 'Denzil Smith', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/denzil-smith-20130920101216-15906.jpg' },
-        { name: 'Anurag Kashyap', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/anurag-kashyap-850.jpg' },
-        { name: 'Ramakrishnan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ramakrishnan-10561.jpg' },
-        { name: 'Sachin Mani', photo: 'https://image.tmdb.org/t/p/w500/Xxb1D9GuYfm0A6TEV71Gn42BP3.jpg' },
-        { name: 'Maya Krishnan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/maya-krishnan-20230930202052-37313.jpg' },
-      ]
     };
 
     const MOVIE_6 =
@@ -4477,31 +4237,6 @@
       release_date: '2025',
       posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Coolie-Poster.jpg',
       trailerUrl: 'https://ia801700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Coolie.Hindi.Trailer.mp4',
-      cast: [
-        { name: 'Rajinikanth', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/cQBcrXqcQPfXOQfNfgO3slJM2xi.jpg' },
-        { name: 'Nagarjuna Akkineni', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/i42K59YZY2NbNfqxfo78YoFz6Bv.jpg' },
-        { name: 'Soubin Shahir', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/eFMA1PFOpDtiJ5MlkSAMexvTPsl.jpg' },
-        { name: 'Shruti Haasan', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/1zYJuSccSA45VVBdgozpRcL99Rd.jpg' },
-        { name: 'Upendra', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/lcxwf2cFMmO2JH1fGULGzfBprk.jpg' },
-        { name: 'Rachita Ram', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/yYMsCColotfKj0pC4p1U9hjLOdv.jpg' },
-        { name: 'Sathyaraj', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/lnlBZ7V3K3Z3OIsjCd0zkKx26L3.jpg' },
-        { name: 'Aamir Khan', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/iCBtJHaCmdashFEaFOyO0gSteJk.jpg' },
-        { name: 'Kanna Ravi', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/75Z5x7i9u09eED0a8gFKBpTzAbp.jpg' },
-        { name: 'Lollu Sabha Maaran', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/uWeSvoMN2rOxHsEj5qENJSTGMDZ.jpg' },
-        { name: 'Dhileban', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/fTpaXP17R845EYZqVU41hd9EXea.jpg' },
-        { name: 'Kaali Venkat', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/w36lwArVQb0lDIJEenBECHqSdpG.jpg' },
-        { name: 'Charle', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/fprDHhsu4TJsoUKycYZ6GZ8nqZ6.jpg' },
-        { name: 'Pooja Hegde', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/t09lf8vem5MRk3KaALcdgehreXg.jpg' },
-        { name: 'Reba Monica John', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/dYW3cCnwzEIzKaeZjSopXYd2a50.jpg' },
-        { name: 'Monisha Blessy', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/8EJZJbnf2HyIYZdDW68sbguLsuq.jpg' },
-        { name: 'Rishikanth', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/psIJLUWAZ106KsWnpa4oqJjSuzu.jpg' },
-        { name: 'Mahesh Manjrekar', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/rAAlncxpCKpXjUHsd6pfaSaTl96.jpg' },
-        { name: 'Tamizh', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/67atHtV6UWaWqaJk4NJhj2JHyY9.jpg' },
-        { name: 'Karthikeya Dev', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/pTTR6jnuae9m4dYPVfgq8xTZF99.jpg' },
-        { name: 'Ravi Raghavendra', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/xVlk1yd5YYp1N1ysCxRo7347aWk.jpg' },
-        { name: 'Baburaj', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/nuJ7GhTfuBrlGBWeMPIYr59O8kP.jpg' },
-        { name: 'Shobana', photo: 'https://media.themoviedb.org/t/p/w66_and_h66_face/t6niRFC3xCV6hJSuyC9ACWLSVXu.jpg' },
-      ]
     };
 
     const MOVIE_7 =
@@ -4515,28 +4250,6 @@
       release_date: '2024',
       posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Maharaja-Poster.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Maharaja.Hindi.Trailer.mp4',
-      cast: [
-        { name: 'Vijay Sethupathi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/vijay-sethupathi-20230420112846-28201.jpg' },
-        { name: 'Anurag Kashyap', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/anurag-kashyap-850.jpg' },
-        { name: 'Mamta Mohandas', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/mamta-mohandas-20230412153914-3468.jpg' },
-        { name: 'Natarajan Subramaniam', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/natarajan-subramaniam-20180326111132-3574.jpg' },
-        { name: 'Abhirami', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/abhirami-20141007150704-13388.jpg' },
-        { name: 'Ramdoss', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ramdoss-20161010115646-34038.jpg' },
-        { name: 'Aruldoss', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/aruldoss-20160805121611-32798.jpg' },
-        { name: 'Singam Puli', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/singam-puli-13257.jpg' },
-        { name: 'Bharathiraja', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/bharathiraja-20140717110402-4670.jpg' },
-        { name: 'Divya Bharti', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/divya-bharti-20210112102643-28602.jpg' },
-        { name: 'Manikandan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/manikandan-15450.jpg' },
-        { name: 'Vinod Sagar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/vinod-sagar-20190730110712-27792.jpg' },
-        { name: 'Thenappan P L', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/thenappanpl-20240618093112-35980.jpg' },
-        { name: 'Sachana Namidass', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sachana-namidass-20241006005045-63681.jpg' },
-        { name: 'Mohan Raman', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/mohan-raman-20220708104254-36485.jpg' },
-        { name: 'Poovaiyar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/poovaiyar-20190516151652-44009.jpg' },
-        { name: 'Lizzie Antony', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/lizzie-antony-20230210110254-51332.jpg' },
-        { name: 'Poster Nandakumar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/posternandakumar-20240618093553-38544.jpg' },
-        { name: 'Kaalaiyan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/kaalaiyan-20240618094240-56467.jpg' },
-        { name: 'Kalki Raja', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/kalkiraja-20240618092642-56343.jpg' },
-      ]
     };
 
     const MOVIE_8 =
@@ -4549,20 +4262,6 @@
       release_date: '2023',
       posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Hi-Papa-Poster.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Hi.Papa.Hindi.Trailer.mp4',
-      cast: [
-        { name: 'Nani', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/nani-20180926124353-4485.jpg' },
-        { name: 'Mrunal Thakur', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/mrunal-thakur-20230206101930-38557.jpg' },
-        { name: 'Baby Kiara Khanna', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/baby-kiara-khanna-20231015201943-55684.jpg' },
-        { name: 'Jayaram', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/jayaram-20230103142507-2834.jpg' },
-        { name: 'Shruti Haasan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/shruti-haasan-20200304162127-1002.jpg' },
-        { name: 'Nassar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/nassar-20220719131500-1470.jpg' },
-        { name: 'Priyadarshi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/priyadarshi-20190621121826-36775.jpg' },
-        { name: 'Angad Bedi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/angad-bedi-25311.jpg' },
-        { name: 'Viraj Ashwin', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/viraj-ashwin-20230803121943-46498.jpg' },
-        { name: 'Ritika Nayak', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ritika-nayak-20220506125226-51528.jpg' },
-        { name: 'Shilpa Tulaskar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/shilpa-tulaskar-20170525094324-38101.jpg' },
-        { name: 'Drishty Talwar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/drishty-talwar-20231219104043-61028.jpg' },
-      ]
     };
 
     const MOVIE_9 =
@@ -4575,26 +4274,6 @@
       release_date: '2022',
       posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Kantara-Poster.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Kantara.Hindi.Trailer.mp4',
-      cast: [
-        { name: 'Rishab Shetty', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/rishab-shetty-20221006101512-12681.jpg' },
-        { name: 'Sapthami Gowda', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sapthami-gowda-20250701153601-47256.jpg' },
-        { name: 'Kishore', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/kishore-1972.jpg' },
-        { name: 'Achyuth Kumar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/achyuth-kumar-20140327125834-23336.jpg' },
-        { name: 'Vinay Bidappa', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/vinay-bidappa-20181203163045-42914.jpg' },
-        { name: 'Pramod Shetty', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/pramod-shetty-20191105103318-35683.jpg' },
-        { name: 'Ugramm Ravi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ugramm-ravi-20210124181118-37946.jpg' },
-        { name: 'Prakash Thuminad', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/prakash-thuminad-20190816100003-41265.jpg' },
-        { name: 'Shanil Guru', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/shanil-guru-20221009115040-54304.jpg' },
-        { name: 'Manasi Sudhir', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/manasi-sudhir-20221009115256-43810.jpg' },
-        { name: 'Naveen padil', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/naveen-padil-20210503134025-31182.jpg' },
-        { name: 'Swaraj Shetty', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/swaraj-shetty-20221009115350-54305.jpg' },
-        { name: 'Deepak Rai Panaje', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/deepak-rai-panaje-20221009115532-38184.jpg' },
-        { name: 'Pradeep Shetty', photo: 'https://images.filmibeat.com/img/popcorn/profile_photos/kireeti-reddy-20230308145658-56488.jpg' },
-        { name: 'Raghu Pandeshwar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/raghu-pandeshwar-20190313173757-40846.jpg' },
-        { name: 'Shine Shetty', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/shine-shetty-20200203111101-36831.jpg' },
-        { name: 'Pragathi Rishab Shetty', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/pragathi-rishab-shetty-20221006101431-52674.jpg' },
-        { name: 'Ranjan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ranjan-20221009115926-41261.jpg' },
-      ]
     };
 
     const MOVIE_10 =
@@ -4607,23 +4286,6 @@
       release_date: '2022',
       posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Hridayam-poster.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Hridayam.Hindi.Trailer.mp4',
-      cast: [
-        { name: 'Pranav Mohanlal', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/pranav-mohanlal-20250630104144-12931.jpg' },
-        { name: 'Kalyani Priyadarshan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/kalyani-priyadarshan-20250512103343-38633.jpg' },
-        { name: 'Darshana Rajendran', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/darshana-rajendran-20240903162850-43182.jpg' },
-        { name: 'Aju Varghese', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/aju-varghese-20181212144925-25987.jpg' },
-        { name: 'Vijayaraghavan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/vijayaraghavan-20190329111106-7389.jpg' },
-        { name: 'Adarsh Sukumaran', photo: 'https://images.mubicdn.net/images/cast_member/1128566/cache-926003-1701395119/image-w856.jpg' },
-        { name: 'Meenakshi Raveendran', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/meenakshi-raveendran-20231103000538-49311.jpg' },
-        { name: 'Prashanth Nair', photo: 'https://www.platform-mag.com//uploads_platform/article-heroimg/A340-prashant-nair-2248.jpg' },
-        { name: 'Jojo Jose', photo: 'https://nettv4u.com/imagine/31-03-2023/jojo-jose---actor.jpg' },
-        { name: 'Arun Kurian', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/arunkurian-20240226190801-36861.jpg' },
-        { name: 'Adithyan Chandrashekhar', photo: 'https://in.bmscdn.com/iedb/artist/images/website/poster/large/adithyan-chandrashekar-2025595-1676119963.jpg' },
-        { name: 'Annu Antony', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/annu-antony-20220121113459-49643.jpg' },
-        { name: 'Adarsh Sudhakaran', photo: 'https://images.filmibeat.com/img/popcorn/profile_photos/prithviraj-sukumaran-20221129153535-3791.jpg' },
-        { name: 'Maria Vincent', photo: 'https://www.brandaware.in/uploads/influencers/primary_images/maria-vincent-35fd72ea8a34ca.jpg' },
-        { name: 'Vineeth Sreenivasan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/vineeth-sreenivasan-20190726100201-31212.jpg' },
-      ]
     };
 
     const MOVIE_11 =
@@ -4636,17 +4298,6 @@
       release_date: '2025',
       posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Lokah-Chapter-1-Chandra-Poster.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Lokah.Chapter.1.Chandra.Hindi.Trailer.mp4',
-      cast: [
-        { name: 'Naslen K. Gafoor', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/naslen-k-gafoor-20250416110547-50177.jpg' },
-        { name: 'Kalyani Priyadarshan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/kalyani-priyadarshan-20250512103343-38633.jpg' },
-        { name: 'Tovino Thomas', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/tovino-thomas-20190529125727-31977.jpg' },
-        { name: 'Arun Kurian', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/arunkurian-20240226190801-36861.jpg' },
-        { name: 'Vijayaraghavan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/vijayaraghavan-20190329111106-7389.jpg' },
-        { name: 'Amith Mohan Rajeshwari', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/amith-mohan-rajeshwari-20240814130227-52385.jpg' },
-        { name: 'Sarath Saba', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sarath-saba-20230721122016-58343.jpg' },
-        { name: 'Nishanth Sagar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/nishanth-sagar-20250828113956-52348.jpg' },
-        { name: 'Chandu Salimkumar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/chandusalimkumar-20240226190632-61830.jpg' },
-      ]
     };
 
     const MOVIE_12 =
@@ -4659,28 +4310,6 @@
       release_date: '2024',
       posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Lucky-Baskhar-Poster.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Lucky.Baskhar.Hindi.Trailer.mp4',
-      cast: [
-        { name: 'Dulquer Salmaan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/dulquer-salmaan-20230711114845-26925.jpg' },
-        { name: 'Meenakshi Chaudhary', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/meenakshi-chaudhary-20241104105215-48130.jpg' },
-        { name: 'Tinnu Anand', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/tinnu-anand-148.jpg' },
-        { name: 'ramki', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ramki-20131220102451-15911.jpg' },
-        { name: 'Saikumar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/saikumar-20190726100456-4169.jpg' },
-        { name: 'Sachin Khedekar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sachin-khedekar-20241202130116-1033.jpg' },
-        { name: 'Sarvadaman D Banerjee', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sarvadaman-d-banerjee-20221005160949-54284.jpg' },
-        { name: 'Manik Reddy', photo: 'https://media.themoviedb.org/t/p/w235_and_h235_face/qRvcaafNCcx0XcjchVaks5MVbsK.jpg' },
-        { name: 'Maganti Srinath', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/maganti-srinath-20201118113456-47384.jpg' },
-        { name: 'Sudha', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sudha-10941.jpg' },
-        { name: 'Siva Narayana', photo: 'https://media.themoviedb.org/t/p/w300_and_h450_bestv2/nqG9wFjXEool9NLPRrUsnZbjm72.jpg' },
-        { name: 'Rithvik', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/rithvik-20220613170504-52306.jpg' },
-        { name: 'Raghu Babu', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/raghu-babu-20150113155408-4276.jpg' },
-        { name: 'Prabhas Sreenu', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/prabhas-sreenu-20141030111551-33857.jpg' },
-        { name: 'Yanamadala Kasi Viswanath', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/yanamadala-kasi-viswanath-20140211120846-22026.jpg' },
-        { name: 'Gayatri Bhargavi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/gayatri-bhargavi-20200728120423-29336.jpg' },
-        { name: 'Mathew Varghese', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/mathew-varghese-20231219105205-40595.jpg' },
-        { name: 'Jabardast Mahesh', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/jabardast-mahesh-20190919110445-40492.jpg' },
-        { name: 'Maanasa Choudhary', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/maanasa-choudhary-20241202131101-59793.jpg' },
-        { name: 'Rajkumar Kasireddy', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/rajkumar-kasireddy-20241202125206-46361.jpg' },
-      ]
     };
 
     const MOVIE_13 =
@@ -4693,18 +4322,6 @@
       release_date: '2025',
       posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Court-State-Vs-A-Nobody-Poster.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Court.State.vs.A.Nobody.Trailer.mp4',
-      cast: [
-        { name: 'Priyadarshi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/priyadarshi-20190621121826-36775.jpg' },
-        { name: 'Harsh Roshan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/harsh-roshan-20250310102310-51877.jpg' },
-        { name: 'Sridevi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sridevi-20250310102257-26537.jpg' },
-        { name: 'Shivaji', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/shivaji-20230830202456-4744.jpg' },
-        { name: 'Saikumar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/saikumar-20190726100456-4169.jpg' },
-        { name: 'Rohini', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/rohini-16301.jpg' },
-        { name: 'Harsha Vardhan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/harsha-vardhan-20191114110020-1576.jpg' },
-        { name: 'Subhalekha Sudhakar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/subhalekha-sudhakar-17939.jpg' },
-        { name: 'Surabhi Prabhavati', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/surabhi-prabhavati-20201120111413-48360.jpg' },
-        { name: 'Rajasekhar Aningi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/rajasekhar-aningi-20250310102324-59952.jpg' },
-      ]
     };
 
     const MOVIE_14 =
@@ -4717,39 +4334,6 @@
       release_date: '2021',
       posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Master-Poster.jpg',
       trailerUrl: 'https://ia801700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Master.Hindi.Trailer.mp4',
-      cast: [
-        { name: 'Vijay', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/vijay-20220622092431-662.jpg' },
-        { name: 'Lokesh Kanagaraj', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/lokesh-kanagaraj-20230203194357-36137.jpg' },
-        { name: 'Vijay Sethupathi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/vijay-sethupathi-20230420112846-28201.jpg' },
-        { name: 'Antony Varghese', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/antony-varghese-20180823101843-37795.jpg' },
-        { name: 'Shanthanu Bhagyaraj', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/shanthanu-bhagyaraj-20191003104938-2996.jpg' },
-        { name: 'Malavika Mohanan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/malavika-mohanan-20210210102342-35107.jpg' },
-        { name: 'Brigida', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/brigida-20210113100946-46181.jpg' },
-        { name: 'Andrea Jeremiah', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/andrea-jeremiah-20220726095134-10537.jpg' },
-        { name: 'Gouri G Kishan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/gouri-g-kishan-20230814172836-42121.jpg' },
-        { name: 'Chetan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/chetan-20240722125346-17617.jpg' },
-        { name: 'Sanjeev', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sanjeev-20190125150346-18164.jpg' },
-        { name: 'Sriman', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sriman-20190527143953-3303.jpg' },
-        { name: 'Sreenath', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sreenath-12152.jpg' },
-        { name: 'Ramya Subramanian', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ramya-subramanian-20200101153218-34462.jpg' },
-        { name: 'Arjun Das', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/arjun-das-20191210121146-46166.jpg' },
-        { name: 'Dheena', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/dheena-20190422152635-40102.jpg' },
-        { name: 'Soundarya Nandakumar', photo: 'https://images.plex.tv/photo?size=large-1920&scale=1&url=https%3A%2F%2Fmetadata-static.plex.tv%2F6%2Fpeople%2F6ff503bc034f666ba41915e072d009a7.jpg' },
-        { name: 'Mahanadhi Sankar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/mahanadhi-sankar-10354.jpg' },
-        { name: 'Rathna Kumar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/rathna-kumar-20220603231159-38720.jpg' },
-        { name: 'Nassar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/nassar-20220719131500-1470.jpg' },
-        { name: 'Nagendra Prasad', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/nagendra-prasad-20221219150628-16197.jpg' },
-        { name: 'Ramesh Thilak', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ramesh-thilak-20150730161304-35019.jpg' },
-        { name: 'Prem Kumar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/prem-kumar-20221227122713-36169.jpg' },
-        { name: 'Azhagam Perumal', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/alagam-perumal-20160628155710-17668.jpg' },
-        { name: 'Ciby Bhuvana Chandran', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ciby-bhuvana-chandran-20211003195023-41993.jpg' },
-        { name: 'Lintu Rony', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/lintu-rony-20220228154921-48608.jpg' },
-        { name: 'Sai Dheena', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sai-dheena-20181115104717-42416.jpg' },
-        { name: 'Arun Alexander', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/arun-alexander-20211009191732-36273.jpg' },
-        { name: 'Mahendran', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/mahendran-17412.jpg' },
-        { name: 'Kulappulli Leela', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/kulappulli-leela-20190326151841-11047.jpg' },
-        { name: 'Poovaiyar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/poovaiyar-20190516151652-44009.jpg' },
-      ]
     };
 
     const MOVIE_15 =
@@ -4762,17 +4346,6 @@
       release_date: '2020',
       posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/HIT-The-First-Case-Poster.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/HIT.1st.Case.Hindi.Trailer.mp4',
-      cast: [
-        { name: 'Vishwak Sen', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/vishwak-sen-20190214110550-40865.jpg' },
-        { name: 'Ruhani Sharma', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ruhani-sharma-20180803125403-37681.jpg' },
-        { name: 'Murli Sharma', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/murli-sharma-20171205121038-912.jpg' },
-        { name: 'Brahmaji', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/brahmaji-20131203102813-4389.jpg' },
-        { name: 'Bhanuchander', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/bhanuchander-4375.jpg' },
-        { name: 'Hari Teja', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/hari-teja-20250908184607-36515.jpg' },
-        { name: 'Satya Krishna', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/satya-krishna-20190715125011-7347.jpg' },
-        { name: 'TNR', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/tnr-20191009103538-45972.jpg' },
-        { name: 'Chaitanya Sagiraju', photo: 'https://nettv4u.com/imagine/17-10-2021/chaitanya-sagiraju.jpg' },
-      ]
     };
 
     const MOVIE_16 =
@@ -4785,28 +4358,6 @@
       release_date: '2022',
       posterUrl: 'https://ia801004.us.archive.org/3/items/manjummel-boys-poster/HIT-The-2nd-Case-Poster.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/HIT.2nd.Case.Hindi.Trailer.mp4',
-      cast: [
-        { name: 'Adivi Sesh', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/adivi-sesh-20220808090630-32071.jpg' },
-        { name: 'Meenakshi Chaudhary', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/meenakshi-chaudhary-20241104105215-48130.jpg' },
-        { name: 'Komalee Prasad', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/komalee-prasad-20250819101420-37143.jpg' },
-        { name: 'Rao Ramesh', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/rao-ramesh-20190704174841-10938.jpg' },
-        { name: 'bhanuchander', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/bhanuchander-4375.jpg' },
-        { name: 'Posani Krishna Murali', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/posani-krishna-murali-20190417113815-4297.jpg' },
-        { name: 'Tanikella Bharani', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/tanikella-bharani-4488.jpg' },
-        { name: 'Srinath Maganti', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/srinath-maganti-20190312113740-43893.jpg' },
-        { name: 'Adarsh Balakrishna', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/adarsh-balakrishna-20150522140946-25199.jpg' },
-        { name: 'Temper Vamshi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/temper-vamshi-20211029120724-50858.jpg' },
-        { name: 'Harsha Vardhan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/harsha-vardhan-20191114110020-1576.jpg' },
-        { name: 'brahmaji', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/brahmaji-20131203102813-4389.jpg' },
-        { name: 'Geeta Bhaskar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/geeta-bhaskar-20181218140629-43032.jpg' },
-        { name: 'Srikanth Aiyyengar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/srikanth-aiyyengar-20210808122712-28872.jpg' },
-        { name: 'Kedar Shankar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/kedar-shankar-20160802170918-36776.jpg' },
-        { name: 'Suhas', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/suhas-20190405104738-22449.jpg' },
-        { name: 'Divya Narni', photo: 'https://nettv4u.com/imagine/13-08-2022/divya-narni.jpg' },
-        { name: 'Subba Rao', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/subba-rao-20200310105519-41832.jpg' },
-        { name: 'Nani', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/nani-20180926124353-4485.jpg' },
-        { name: 'Pavani Karanam', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/pavani-karanam-20241224115231-57416.jpg' },
-      ]
     };
 
     const MOVIE_17 =
@@ -4819,16 +4370,6 @@
       release_date: '2025',
       posterUrl: 'https://ia801004.us.archive.org/3/items/manjummel-boys-poster/HIT-The-Third-Case-Poster.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/HIT.3rd.Case.Hindi.Trailer.mp4',
-      cast: [
-        { name: 'Nani', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/nani-20180926124353-4485.jpg' },
-        { name: 'Srinidhi Shetty', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/srinidhi-shetty-20170102144551-37487.jpg' },
-        { name: 'Rao Ramesh', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/rao-ramesh-20190704174841-10938.jpg' },
-        { name: 'Samuthirakani', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/samuthirakani-20190628103559-3370.jpg' },
-        { name: 'Surya Sreenivas', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/surya-sreenivas-20201118113400-37466.jpg' },
-        { name: 'Komalee Prasad', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/komalee-prasad-20250819101420-37143.jpg' },
-        { name: 'Karthi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/karthi-20231016145056-9542.jpg' },
-        { name: 'Adivi Sesh', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/adivi-sesh-20220808090630-32071.jpg' }
-      ]
     };
 
     const MOVIE_18 =
@@ -4841,21 +4382,6 @@
       release_date: '2025',
       posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Retro-Poster.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Retro.Hindi.Trailer.mp4',
-      cast: [
-        { name: 'Suriya Sivakumar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/suriya-sivakumar-20190423095612-2747.jpg' },
-        { name: 'Pooja Hegde', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/pooja-hegde-20230830161511-26828.jpg' },
-        { name: 'Jayaram', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/jayaram-20230103142507-2834.jpg' },
-        { name: 'Karunakaran', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/karunakaran-20140820124942-29458.jpg' },
-        { name: 'Joju George', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/joju-george-20221222151220-33273.jpg' },
-        { name: 'Prakash Raj', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/prakash-raj-20230718123643-152.jpg' },
-        { name: 'Nassar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/nassar-20220719131500-1470.jpg' },
-        { name: 'Sujith Shankar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sujith-shankar-20190128094108-42188.jpg' },
-        { name: 'Remya Suresh', photo: 'https://media.themoviedb.org/t/p/w235_and_h235_face/8yYe2YBNEj0Vt2O1h8gEzyJ8N5g.jpg' },
-        { name: 'Prem Kumar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/prem-kumar-20221227122713-36169.jpg' },
-        { name: 'Shriya Saran', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/shriya-saran-20190517161641-726.jpg' },
-        { name: 'Ramachandran Durairaj', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/ramachandran-durairaj-20230224101743-35966.jpg' },
-        { name: 'Sandeep Raj', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sandeep-raj-20190610112840-44935.jpg' },
-      ]
     };
 
     const MOVIE_19 =
@@ -4868,19 +4394,6 @@
       release_date: '2025',
       posterUrl: 'https://ia801004.us.archive.org/3/items/manjummel-boys-poster/Kuberaa-Poster.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Kuberaa.Hindi.Trailer.mp4',
-      cast: [
-        { name: 'Dhanush', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/dhanush-20240722120631-3667.jpg' },
-        { name: 'Nagarjuna Akkineni', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/nagarjuna-akkineni-20180531112851-1466.jpg' },
-        { name: 'Rashmika Mandanna', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/rashmika-mandanna-20190705125340-37195.jpg' },
-        { name: 'Jim Sarbh', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/jim-sarbh-20190306122806-36207.jpg' },
-        { name: 'Dalip Tahil', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/dalip-tahil-1939.jpg' },
-        { name: 'Sunaina', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sunaina-365.jpg' },
-        { name: 'Hareesh Peradi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/hareesh-peradi-20190515145158-32690.jpg' },
-        { name: 'Saurav Khurana', photo: 'https://nettv4u.com/imagine/08-08-2020/saurav-khurana.jpg' },
-        { name: 'Col Ravi Sharma', photo: 'https://filmyfocus.com/wp-content/uploads/2024/11/Profile-Pic-34-1.png' },
-        { name: 'Sayaji Shinde', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/sayaji-shinde-20190718152238-609.jpg' },
-        { name: 'Divya Dekate', photo: 'https://img.wegreenkw.com/sites/3/2025/05/divya-dekate1.webp' },
-      ]
     };
 
     const MOVIE_20 =
@@ -4893,27 +4406,6 @@
       release_date: '2025',
       posterUrl: 'https://ia801004.us.archive.org/3/items/manjummel-boys-poster/Thalaivan-Thalaivii-Poster.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Thalaivan.Thalaivii.Trailer.mp4',
-      cast: [
-        { name: 'Vijay Sethupathi', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/vijay-sethupathi-20230420112846-28201.jpg' },
-        { name: 'Nithya Menen', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/nithya-menon-20191128130446-4015.jpg' },
-        { name: 'Yogi Babu', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/yogi-babu-20191205130221-35602.jpg' },
-        { name: 'Deepa Shankar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/deepa-shankar-20211009174139-49821.jpg' },
-        { name: 'Chemban Vinod Jose', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/chemban-vinod-20140827152344-32629.jpg' },
-        { name: 'Saravanan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/saravanan-20190624112918-10552.jpg' },
-        { name: 'R K Suresh', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/r-k-suresh-20180405105036-35799.jpg' },
-        { name: 'Kaali Venkat', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/kaali-venkat-20161205145129-32692.jpg' },
-        { name: 'Myna Nandhini', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/myna-nandhini-20220603221431-50885.jpg' },
-        { name: 'Aruldoss', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/aruldoss-20160805121611-32798.jpg' },
-        { name: 'Vinod Sagar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/vinod-sagar-20190730110712-27792.jpg' },
-        { name: 'Roshini Haripriyan', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/roshini-haripriyan-20230830161905-51580.jpg' },
-        { name: 'Muthukumar', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/muthukumar-20220710225303-13196.jpg' },
-        { name: 'Sendrayan', photo: 'https://in.bmscdn.com/iedb/artist/images/website/poster/large/sendrayan-1045237-1757677877.jpg' },
-        { name: 'Kalki Raja', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/kalkiraja-20240618092642-56343.jpg' },
-        { name: 'Janaki Suresh', photo: 'https://cinetown.s3.ap-south-1.amazonaws.com/people/profile_img/1698738489.jpeg' },
-        { name: 'Sendrayan', photo: 'https://in.bmscdn.com/iedb/artist/images/website/poster/large/sendrayan-1045237-1757677877.jpg' },
-        { name: 'Kalki Raja', photo: 'https://images.filmibeat.com/webp/img/popcorn/profile_photos/kalkiraja-20240618092642-56343.jpg' },
-        { name: 'Janaki Suresh', photo: 'https://cinetown.s3.ap-south-1.amazonaws.com/people/profile_img/1698738489.jpeg' },
-      ]
     };
 
     const MOVIE_21 =
@@ -4927,9 +4419,6 @@
       release_date: '1998',
       posterUrl: 'https://ia801004.us.archive.org/3/items/manjummel-boys-poster/Dil%20Se..%20Poster.jpg',
       trailerUrl: 'https://ia801700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Dil.Se..Trailer.mp4',
-      cast: [
-
-      ]
     };
 
     const MOVIE_22 =
@@ -4943,9 +4432,6 @@
       release_date: '2000',
       posterUrl: 'https://dn720705.ca.archive.org/0/items/manjummel-boys-poster/Mohabbatein.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Mohabbatein.Trailer.mp4',
-      cast: [
-
-      ]
     };
 
     const MOVIE_23 =
@@ -4959,9 +4445,6 @@
       release_date: '2007',
       posterUrl: 'https://dn720705.ca.archive.org/0/items/manjummel-boys-poster/Bhool_bhulaiyaa.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Bhool.Bhulaiyaa.Trailer.mp4',
-      cast: [
-
-      ]
     };
 
     const MOVIE_24 =
@@ -4975,9 +4458,6 @@
       release_date: '2025',
       posterUrl: 'https://ia803101.us.archive.org/35/items/dude.-2025.1080p-hindi/Dude-poster.png',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Dude.Hindi.Trailer.mp4',
-      cast: [
-
-      ]
     };
 
     /* const MOVIE_25 = 
@@ -4990,9 +4470,7 @@
          release_date: '2025',
          posterUrl: '',
          trailerUrl: '',
-         cast: [
-        
-       ] }; */
+        }; */
 
     const MOVIE_25 =
     {
@@ -5005,9 +4483,6 @@
       release_date: '2025',
       posterUrl: 'https://ia903104.us.archive.org/12/items/they-call-him-og-2025-hindi_202511/OG_Poster.png',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/They.Call.Him.OG.Hindi.Trailer.mp4',
-      cast: [
-
-      ]
     };
 
     const MOVIE_26 =
@@ -5021,9 +4496,6 @@
       release_date: '1995',
       posterUrl: 'https://ia601700.us.archive.org/11/items/bombay-1995_202511/Bombay-1995-Poster-V2.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Bombay.Trailer.mp4',
-      cast: [
-
-      ]
     };
 
     const MOVIE_27 =
@@ -5037,9 +4509,6 @@
       release_date: '1995',
       posterUrl: 'https://ia801701.us.archive.org/24/items/dilwale-dulhania-le-jayenge-1995_202511/DDLJ-Posterjpg.jpg',
       trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Dilwale.Dulhania.Le.Jayenge.Trailer.mp4',
-      cast: [
-
-      ]
     };
 
     const curatedMovies =
@@ -6215,7 +5684,6 @@
     // Open Modal (lazy-load trailer iframe on demand)
     function openMovieModal(movie) {
             console.log('Opening modal for movie:', movie.title);
-            console.log('Movie cast data:', movie.cast);
             // Set up Stream 2 button to open player-2.html with the same logic as Stream
             const streamBtn2 = document.getElementById('streamBtn2');
             if (streamBtn2) {
@@ -6396,39 +5864,6 @@
       if (genresEl) {
         const list = Array.isArray(movie.genres) ? movie.genres : [];
         genresEl.innerHTML = list.map(g => `<span class="genre-chip">${g}</span>`).join('');
-      }
-      // Cast cards (poster-like)
-      const castEl = document.getElementById('modalCast');
-      if (castEl) {
-        const raw = Array.isArray(movie.cast) ? movie.cast : [];
-        const cast = raw.map(c => (typeof c === 'string' ? { name: c } : c));
-        if (cast.length) {
-          console.log('Rendering cast for:', movie.title, 'Cast count:', cast.length);
-          const castHTML = cast.map(({ name, photo }) => {
-            const initials = String(name || '?').trim().split(/\s+/).map(p => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
-            // Ensure photo URL is valid and complete
-            const validPhoto = photo && (photo.startsWith('http://') || photo.startsWith('https://')) ? photo : null;
-            if (photo && !validPhoto) {
-              console.warn('Invalid photo URL for', name, ':', photo);
-            }
-            if (validPhoto) {
-              console.log('Cast member:', name, 'Photo URL:', validPhoto);
-            }
-            const imgHtml = validPhoto 
-              ? `<img src="${validPhoto}" alt="${name}" loading="lazy" onerror="console.error('Failed to load image for ${name}:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';" /><div class="placeholder" style="display:none;" aria-hidden="true">${initials}</div>` 
-              : `<div class="placeholder" aria-hidden="true">${initials}</div>`;
-            return `
-              <div class="cast-card">
-                <div class="cast-photo">${imgHtml}</div>
-                <div class="cast-name">${name || ''}</div>
-              </div>
-            `;
-          }).join('');
-          castEl.innerHTML = castHTML;
-          console.log('Cast HTML length:', castHTML.length);
-        } else {
-          castEl.innerHTML = `<div style="opacity:0.85; font-size:0.95rem;">Add cast in this movie entry</div>`;
-        }
       }
 
       const trailerHost = document.getElementById('trailerHost');

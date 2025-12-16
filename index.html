@@ -6214,6 +6214,8 @@
 
     // Open Modal (lazy-load trailer iframe on demand)
     function openMovieModal(movie) {
+            console.log('Opening modal for movie:', movie.title);
+            console.log('Movie cast data:', movie.cast);
             // Set up Stream 2 button to open player-2.html with the same logic as Stream
             const streamBtn2 = document.getElementById('streamBtn2');
             if (streamBtn2) {
@@ -6401,9 +6403,20 @@
         const raw = Array.isArray(movie.cast) ? movie.cast : [];
         const cast = raw.map(c => (typeof c === 'string' ? { name: c } : c));
         if (cast.length) {
-          castEl.innerHTML = cast.map(({ name, photo }) => {
+          console.log('Rendering cast for:', movie.title, 'Cast count:', cast.length);
+          const castHTML = cast.map(({ name, photo }) => {
             const initials = String(name || '?').trim().split(/\s+/).map(p => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
-            const imgHtml = photo ? `<img src="${photo}" alt="${name}" loading="lazy" />` : `<div class="placeholder" aria-hidden="true">${initials}</div>`;
+            // Ensure photo URL is valid and complete
+            const validPhoto = photo && (photo.startsWith('http://') || photo.startsWith('https://')) ? photo : null;
+            if (photo && !validPhoto) {
+              console.warn('Invalid photo URL for', name, ':', photo);
+            }
+            if (validPhoto) {
+              console.log('Cast member:', name, 'Photo URL:', validPhoto);
+            }
+            const imgHtml = validPhoto 
+              ? `<img src="${validPhoto}" alt="${name}" loading="lazy" onerror="console.error('Failed to load image for ${name}:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';" /><div class="placeholder" style="display:none;" aria-hidden="true">${initials}</div>` 
+              : `<div class="placeholder" aria-hidden="true">${initials}</div>`;
             return `
               <div class="cast-card">
                 <div class="cast-photo">${imgHtml}</div>
@@ -6411,6 +6424,8 @@
               </div>
             `;
           }).join('');
+          castEl.innerHTML = castHTML;
+          console.log('Cast HTML length:', castHTML.length);
         } else {
           castEl.innerHTML = `<div style="opacity:0.85; font-size:0.95rem;">Add cast in this movie entry</div>`;
         }
@@ -6933,7 +6948,20 @@
           if (img) img.remove();
           const btn = host.querySelector('.video-play-btn');
           if (btn) btn.remove();
-          video.play();
+          
+          // Handle play errors
+          const playPromise = video.play();
+          if (playPromise !== undefined) {
+            playPromise.catch((err) => {
+              console.error('Trailer playback error:', err);
+              // Show error message
+              const errorMsg = document.createElement('div');
+              errorMsg.style = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;background:rgba(0,0,0,0.8);padding:20px;border-radius:8px;text-align:center;max-width:80%;z-index:100;';
+              errorMsg.innerHTML = `<p>Unable to play trailer automatically.</p><p style="font-size:0.85em;opacity:0.7;margin-top:8px;">Click the video controls to play manually.</p>`;
+              host.appendChild(errorMsg);
+              setTimeout(() => errorMsg.remove(), 5000);
+            });
+          }
         } else {
           // fallback: create video if not preloaded
           host.innerHTML = `
@@ -6956,19 +6984,73 @@
           spinner.style = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1000;width:48px;height:48px;border:6px solid #fff;border-top:6px solid #888;border-radius:50%;animation:spin 1s linear infinite;display:none;';
           host.appendChild(spinner);
         }
-        function showSpinner() { spinner.style.display = 'block'; }
-        function hideSpinner() { spinner.style.display = 'none'; }
+        function showSpinner() { 
+          spinner.style.display = 'block'; 
+          console.log('Trailer loading...');
+        }
+        function hideSpinner() { 
+          spinner.style.display = 'none'; 
+          console.log('Trailer loaded');
+        }
+        
+        // Add timeout for stuck loading
+        let loadingTimeout;
+        
         // Attach spinner events
         setTimeout(() => {
           let v = host.querySelector('video');
           if (v) {
-            v.addEventListener('waiting', showSpinner);
+            v.addEventListener('waiting', () => {
+              showSpinner();
+              // Set timeout to show error if loading takes too long
+              clearTimeout(loadingTimeout);
+              loadingTimeout = setTimeout(() => {
+                if (spinner.style.display === 'block') {
+                  hideSpinner();
+                  const errorMsg = document.createElement('div');
+                  errorMsg.style = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;background:rgba(0,0,0,0.8);padding:20px;border-radius:8px;text-align:center;max-width:80%;z-index:100;';
+                  errorMsg.innerHTML = `<p>Trailer is taking too long to load.</p><p style="font-size:0.85em;opacity:0.7;margin-top:8px;">Please check your internet connection or try again later.</p>`;
+                  host.appendChild(errorMsg);
+                  setTimeout(() => errorMsg.remove(), 5000);
+                }
+              }, 30000); // 30 second timeout
+            });
             v.addEventListener('seeking', showSpinner);
             v.addEventListener('stalled', showSpinner);
-            v.addEventListener('playing', hideSpinner);
-            v.addEventListener('canplay', hideSpinner);
-            v.addEventListener('canplaythrough', hideSpinner);
+            v.addEventListener('playing', () => {
+              clearTimeout(loadingTimeout);
+              hideSpinner();
+            });
+            v.addEventListener('canplay', () => {
+              clearTimeout(loadingTimeout);
+              hideSpinner();
+            });
+            v.addEventListener('canplaythrough', () => {
+              clearTimeout(loadingTimeout);
+              hideSpinner();
+            });
             v.addEventListener('ended', hideSpinner);
+            
+            // Handle video errors
+            v.addEventListener('error', function(e) {
+              console.error('Trailer video error:', e, v.error);
+              clearTimeout(loadingTimeout);
+              hideSpinner();
+              const errorMsg = document.createElement('div');
+              errorMsg.style = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;background:rgba(0,0,0,0.8);padding:20px;border-radius:8px;text-align:center;max-width:80%;z-index:100;';
+              let errorDetails = 'The video file may not be available or there was a network error.';
+              if (v.error) {
+                switch(v.error.code) {
+                  case 1: errorDetails = 'Video loading was aborted.'; break;
+                  case 2: errorDetails = 'Network error occurred while loading the video.'; break;
+                  case 3: errorDetails = 'Video decoding failed.'; break;
+                  case 4: errorDetails = 'Video format is not supported.'; break;
+                }
+              }
+              errorMsg.innerHTML = `<p>Unable to load trailer video.</p><p style="font-size:0.85em;opacity:0.7;margin-top:8px;">${errorDetails}</p>`;
+              host.appendChild(errorMsg);
+            });
+            
             // On mobile/landscape, reload and play after seek
             v.addEventListener('seeked', function() {
               if ((window.innerWidth <= 900 && window.matchMedia('(orientation: landscape)').matches) || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {

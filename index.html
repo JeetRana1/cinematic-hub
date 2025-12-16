@@ -4451,12 +4451,12 @@
       id: 24,
       title: 'Bhool Bhulaiyaa',
       year: 2007,
-      genres: ['Phychological Horror', 'Comedy', 'Horror', 'Mystery', 'Thriller'],
+      genres: ['Psychological Horror', 'Comedy', 'Horror', 'Mystery', 'Thriller'],
       rating: 7.5,
       overview: 'An NRI and his wife decide to stay in his ancestral home, paying no heed to the warnings about ghosts. Soon, inexplicable occurrences cause him to call a psychiatrist to help solve the mystery.',
       release_date: '2007',
       posterUrl: 'https://dn720705.ca.archive.org/0/items/manjummel-boys-poster/Bhool_bhulaiyaa.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Bhool.Bhulaiyaa.Trailer.mp4',
+      trailerUrl: 'https://ia800504.us.archive.org/5/items/bhool-bhulaiyaa-trailer-2007/Bhool%20Bhulaiyaa%20Trailer%202007.mp4',
     };
 
     const MOVIE_25 =
@@ -4553,7 +4553,7 @@
         MOVIE_26,
         MOVIE_27,
         MOVIE_28,
-        MOVIE_29
+        MOVIE_29,
       ];
 
     // Support email config (edit this to your target email)
@@ -5487,7 +5487,7 @@
       "thalaivan thalaivii": "https://ia600201.us.archive.org/14/items/thalaivan-thalaivii-2025-hindi-1080p/Thalaivan-Thalaivii-%282025%29-Hindi-1080p.mp4",
       "dil se..": "https://ia801607.us.archive.org/32/items/dil-se..-1998/Dil%20Se..%20%281998%29.mp4",
       "mohabbatein": "https://ia801207.us.archive.org/5/items/mohabbatein-2000_202511/Mohabbatein-%282000%29.mp4",
-      "bhool bhool": "https://ia600500.us.archive.org/23/items/bhool-bhulaiyaa-2007/Bhool-Bhulaiyaa-%282007%29.mp4",
+      "bhool bhulaiyaa": "https://ia600500.us.archive.org/23/items/bhool-bhulaiyaa-2007/Bhool-Bhulaiyaa-%282007%29.mp4",
       "dude": "https://ia903101.us.archive.org/35/items/dude.-2025.1080p-hindi/Dude.2025.1080p-Hindi.mp4",
       "they call him og": "https://ia903104.us.archive.org/12/items/they-call-him-og-2025-hindi_202511/They%20Call%20Him%20OG%20%282025%29-%28Hindi%29.mp4",
       "bombay": "https://ia601700.us.archive.org/11/items/bombay-1995_202511/Bombay-1995.mp4",
@@ -5929,8 +5929,8 @@
       // Keep button clickable so we can show a system message when unavailable
       streamBtn.disabled = false;
 
-      // Stream 2 availability: Any video source available (Drive, MP4, YouTube, or streamUrl)
-      const hasStream2 = !!(driveMovieMappings[String(movie.id)] || mp4Overrides[normTitle] || movie.trailerUrl || movie.streamUrl);
+      // Stream 2 availability: Any video source available (Drive, MP4, or streamUrl)
+      const hasStream2 = !!(driveMovieMappings[String(movie.id)] || mp4Overrides[normTitle] || movie.streamUrl);
       const streamBtn2El = document.getElementById('streamBtn2');
       if (streamBtn2El) {
         streamBtn2El.dataset.movieId = movie.id;

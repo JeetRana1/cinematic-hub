@@ -50,7 +50,7 @@ video::cue {
 :-ms-fullscreen .video-subtitles,
 .fullscreen-subtitles {
   position: absolute !important;
-  bottom: 15% !important;
+  bottom: 5% !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
   width: auto !important;
@@ -82,7 +82,7 @@ video::cue {
   :-ms-fullscreen .video-subtitles,
   .fullscreen-subtitles {
     font-size: 22px !important;
-    bottom: 100px !important;
+    bottom: 30px !important;
     padding: 10px 15px !important;
     max-width: 95% !important;
     background-color: rgba(0, 0, 0, 0.8) !important;

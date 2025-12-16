@@ -797,7 +797,7 @@
         :fullscreen .subtitle-container,
         :-webkit-full-screen .subtitle-container {
             position: fixed !important;
-            bottom: 40px !important; /* fullscreen offset */
+            bottom: 15px !important; /* fullscreen offset */
             left: 50% !important;
             transform: translateX(-50%) !important;
             z-index: 2147483647 !important;
@@ -870,14 +870,14 @@
             
             :fullscreen .subtitle-container,
             :-webkit-full-screen .subtitle-container {
-                bottom: 40px !important; /* fullscreen mobile offset */
+                bottom: 15px !important; /* fullscreen mobile offset */
             }
         }
         
         /* Landscape mode adjustments */
         @media (orientation: landscape) {
             .subtitle-container {
-                bottom: 40px !important; /* landscape offset */
+                bottom: 15px !important; /* landscape offset */
             }
             
             .subtitle {
@@ -1036,27 +1036,27 @@
                 /* Only apply dynamic positioning in fullscreen */
                 video:fullscreen ~ .subtitle-container,
                 video:-webkit-full-screen ~ .subtitle-container {
-                    bottom: 40px !important; /* fullscreen offset */
+                    bottom: 10px !important; /* fullscreen offset */
                 }
                 video:fullscreen ~ .subtitle-container.mode-stretch,
                 video:-webkit-full-screen ~ .subtitle-container.mode-stretch {
-                    bottom: 40px !important; /* fullscreen stretch offset */
+                    bottom: 10px !important; /* fullscreen stretch offset */
                 }
                 video:fullscreen ~ .subtitle-container.mode-contain,
                 video:-webkit-full-screen ~ .subtitle-container.mode-contain {
-                    bottom: 40px !important; /* fullscreen contain offset */
+                    bottom: 10px !important; /* fullscreen contain offset */
                 }
                 @media (orientation: landscape) {
                     video:fullscreen ~ .subtitle-container,
                     video:-webkit-full-screen ~ .subtitle-container {
-                        bottom: 40px !important; /* fullscreen landscape offset */
+                        bottom: 10px !important; /* fullscreen landscape offset */
                     }
                 }
 
                 .video-subtitles {
                     position: fixed;
                     left: 50%;
-                    bottom: 200px;
+                    bottom: 50px;
                     transform: translateX(-50%);
                     max-width: 90%;
                     font-size: 22.5px;
@@ -1086,17 +1086,17 @@
                 }
 
                 .video-subtitles.mode-cover {
-                    bottom: 35%;
+                    bottom: 10%;
                 }
                 .video-subtitles.mode-stretch {
-                    bottom: 20%;
+                    bottom: 10%;
                 }
                 .video-subtitles.mode-contain {
-                    bottom: 150px;
+                    bottom: 30px;
                 }
                 @media (orientation: landscape) {
                     .video-subtitles {
-                        bottom: 18% !important;
+                        bottom: 10% !important;
                         font-size: 20px;
                     }
                 }
@@ -1896,6 +1896,11 @@
             const displayValue = subtitlesEnabled ? 'block' : 'none';
             const opacityValue = subtitlesEnabled ? '1' : '0';
 
+            // Determine if mobile or desktop - check both screen width and height
+            // Mobile devices typically have max-height around 900-1000px or touch support
+            const isMobileDevice = window.innerWidth <= 768 || window.innerHeight <= 1024;
+            const bottomPosition = isMobileDevice ? '20px' : '150px';
+
             subtitleContainer.style.setProperty('display', displayValue, 'important');
             subtitleContainer.style.setProperty('opacity', opacityValue, 'important');
             subtitleContainer.style.setProperty('visibility', subtitlesEnabled ? 'visible' : 'hidden', 'important');
@@ -1904,7 +1909,7 @@
             subtitleContainer.style.setProperty('position', 'fixed', 'important');
             subtitleContainer.style.setProperty('left', '50%', 'important');
             subtitleContainer.style.setProperty('transform', 'translateX(-50%)', 'important');
-            subtitleContainer.style.setProperty('bottom', '150px', 'important');
+            subtitleContainer.style.setProperty('bottom', bottomPosition, 'important');
             
             // Use requestAnimationFrame to ensure styles persist
             requestAnimationFrame(() => {

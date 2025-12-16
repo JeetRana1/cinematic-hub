@@ -4925,7 +4925,9 @@
               // Default to player1 if playerUsed field is missing
               const playerUsed = movie.playerUsed || 'player1';
               const playerBase = playerUsed === 'player2' ? 'player-2.html' : 'player.html';
-              console.log('🎬 Resuming', movie.title, 'in player:', playerBase, '(playerUsed:', playerUsed, ')');
+              console.log('🎬 Resuming', movie.title);
+              console.log('📊 Movie object:', JSON.stringify(movie, null, 2));
+              console.log('📹 Player to use:', playerBase, '(playerUsed field:', playerUsed, ')');
               // Navigate to the correct player with the resume time
               window.location.href = `${playerBase}?${params.toString()}&t=${Math.floor(resumeTime)}`;
             }

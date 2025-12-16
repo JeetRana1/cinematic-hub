@@ -776,35 +776,77 @@
         }
 
         /* Subtitle Container */
+        /* Subtitle vertical offsets: adjust bottoms to move captions */
         .subtitle-container {
-            position: fixed;
-            bottom: 150px;
-            left: 50%;
-            border-radius: 8px;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 800px;
-            text-align: center;
-            pointer-events: none;
-            z-index: 4000; /* Keep above video/controls in all modes */
+            position: fixed !important;
+            bottom: 60px !important; /* non-fullscreen offset */
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            width: auto !important;
+            max-width: 75% !important;
+            text-align: center !important;
+            pointer-events: none !important;
+            z-index: 2147483647 !important; /* Max z-index to ensure visibility */
             display: block !important;
             opacity: 1 !important;
+            visibility: visible !important;
+            filter: none;
+        }
+
+        /* Fullscreen subtitle positioning */
+        :fullscreen .subtitle-container,
+        :-webkit-full-screen .subtitle-container {
+            position: fixed !important;
+            bottom: 40px !important; /* fullscreen offset */
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            z-index: 2147483647 !important;
+            max-width: 85% !important;
         }
 
         .subtitle {
             display: inline-block;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 4px;
-            font-size: 16px;
-            font-weight: 500;
+            background: transparent;
+            color: #ffffff;
+            padding: 4px 8px;
+            border-radius: 0;
+            font-size: 22px;
+            font-weight: 700;
             line-height: 1.4;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9);
+            letter-spacing: 0.2px;
+            text-shadow: 
+                0 0 8px rgba(0, 0, 0, 1),
+                0 0 12px rgba(0, 0, 0, 1),
+                2px 2px 4px rgba(0, 0, 0, 0.9),
+                -2px -2px 4px rgba(0, 0, 0, 0.9),
+                2px -2px 4px rgba(0, 0, 0, 0.9),
+                -2px 2px 4px rgba(0, 0, 0, 0.9),
+                0 2px 8px rgba(0, 0, 0, 0.95);
             margin: 4px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
+            border: none;
+            box-shadow: none;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            animation: subtitleFadeIn 0.3s ease-out;
+            word-spacing: 0.05em;
+            max-width: 80%;
+        }
+        
+        @keyframes subtitleFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Subtitle hover effect for multiple lines */
+        .subtitle + .subtitle {
+            margin-top: 8px;
         }
 
         /* Ensure subtitle container is visible */
@@ -812,6 +854,35 @@
             content: "";
             display: block;
             height: 1px;
+        }
+
+        /* Mobile subtitle adjustments */
+        @media (max-width: 768px) {
+            .subtitle-container {
+                bottom: 50px !important; /* mobile offset */
+                max-width: 85% !important;
+            }
+            
+            .subtitle {
+                font-size: 18px;
+                padding: 3px 6px;
+            }
+            
+            :fullscreen .subtitle-container,
+            :-webkit-full-screen .subtitle-container {
+                bottom: 40px !important; /* fullscreen mobile offset */
+            }
+        }
+        
+        /* Landscape mode adjustments */
+        @media (orientation: landscape) {
+            .subtitle-container {
+                bottom: 40px !important; /* landscape offset */
+            }
+            
+            .subtitle {
+                font-size: 20px;
+            }
         }
 
         /* Responsive */
@@ -945,7 +1016,7 @@
         .right-feedback {
             background: rgba(76, 175, 80, 0.9);
         }
-                /* --- SUBTITLE STYLES MOVED FROM subtitles-v2.css --- */
+                /* Subtitle offsets (secondary block, tweak as needed) */
                 .subtitle-container {
                     position: fixed;
                     left: 50%;
@@ -954,37 +1025,38 @@
                     max-width: 800px;
                     text-align: center;
                     pointer-events: none;
-                    z-index: 4000;
+                    z-index: 5000; /* Always above overlays and controls */
                     display: block !important;
                     opacity: 1 !important;
+                    visibility: visible !important;
                     border-radius: 8px;
-                    /* Default position when NOT fullscreen */
-                    bottom: 150px;
+                    bottom: 60px; /* non-fullscreen offset */
                 }
 
                 /* Only apply dynamic positioning in fullscreen */
                 video:fullscreen ~ .subtitle-container,
                 video:-webkit-full-screen ~ .subtitle-container {
-                    bottom: 35%;
+                    bottom: 40px !important; /* fullscreen offset */
                 }
                 video:fullscreen ~ .subtitle-container.mode-stretch,
                 video:-webkit-full-screen ~ .subtitle-container.mode-stretch {
-                    bottom: 20%;
+                    bottom: 40px !important; /* fullscreen stretch offset */
                 }
                 video:fullscreen ~ .subtitle-container.mode-contain,
                 video:-webkit-full-screen ~ .subtitle-container.mode-contain {
-                    bottom: 40px;
+                    bottom: 40px !important; /* fullscreen contain offset */
                 }
                 @media (orientation: landscape) {
                     video:fullscreen ~ .subtitle-container,
                     video:-webkit-full-screen ~ .subtitle-container {
-                        bottom: 18% !important;
+                        bottom: 40px !important; /* fullscreen landscape offset */
                     }
                 }
 
                 .video-subtitles {
                     position: fixed;
                     left: 50%;
+                    bottom: 200px;
                     transform: translateX(-50%);
                     max-width: 90%;
                     font-size: 22.5px;
@@ -1036,6 +1108,39 @@
                 localStorage.setItem('lastPlayerUsed', 'player2');
             } catch (_) {}
         </script>
+        <style>
+            /* Keep subtitles visible whenever CC is on, regardless of control auto-hide */
+            body.subtitles-on #subtitleContainer,
+            body.subtitles-on #subtitleContainer * {
+                display: block !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                pointer-events: none !important;
+                z-index: 2147483647 !important;
+                position: fixed !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                bottom: 60px !important; /* adjust CC-on offset */
+                animation: none !important;
+                transition: none !important;
+            }
+            
+            body.subtitles-on #subtitleContainer * {
+                position: relative !important;
+            }
+            
+            /* Force subtitles to always be on top and never inherit parent opacity */
+            #subtitleContainer {
+                isolation: isolate !important;
+                will-change: auto !important;
+            }
+            
+            /* Prevent controls overlay from affecting subtitle container */
+            .controls-overlay ~ #subtitleContainer {
+                display: block !important;
+                opacity: 1 !important;
+            }
+        </style>
     <div class="video-container">
         <video id="videoPlayer" preload="metadata" autoplay></video>
         
@@ -1050,7 +1155,7 @@
             <!-- Top Controls -->
             <div class="top-controls">
                 <button class="back-btn" onclick="goBack()">
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="fa-solid fa-house"></i>
                 </button>
                 <div class="video-title" id="videoTitle">Loading...</div>
                 <div class="top-right-controls">
@@ -1085,13 +1190,13 @@
                 
                 <div class="main-controls">
                     <div class="left-controls">
-                        <button class="control-btn" onclick="togglePlayback()" title="Rewind 10s">
+                        <button class="control-btn" onclick="togglePlayback(-10)" title="Rewind 10s">
                             <i class="fas fa-rotate-left"></i>
                         </button>
                         <button class="play-pause-btn" id="playPauseBtn" onclick="togglePlayPause()" title="Play/Pause">
                             <i class="fas fa-play"></i>
                         </button>
-                        <button class="control-btn" onclick="togglePlayback()" title="Forward 10s">
+                        <button class="control-btn" onclick="togglePlayback(10)" title="Forward 10s">
                             <i class="fas fa-rotate-right"></i>
                         </button>
                     </div>
@@ -1124,9 +1229,6 @@
             <i class="fas fa-lock-open"></i>
         </button>
         
-        <!-- Subtitle Container -->
-        <div class="subtitle-container" id="subtitleContainer"></div>
-        
         <!-- Tap Overlay for Controls -->
         <div class="tap-overlay" id="tapOverlay">
             <div class="tap-zone left-zone" data-action="rewind">
@@ -1152,6 +1254,9 @@
             </div>
         </div>
     </div>
+    
+    <!-- Subtitle Container (Outside video-container to avoid inheritance) -->
+    <div class="subtitle-container" id="subtitleContainer"></div>
 
     <script>
         // Movie database (same as original)
@@ -1373,6 +1478,7 @@
         const playPauseBtn = document.getElementById('playPauseBtn');
         const progressBar = document.getElementById('progressBar');
         const progressFilled = document.getElementById('progressFilled');
+        const progressBuffered = document.getElementById('progressBuffered');
         const currentTimeEl = document.getElementById('currentTime');
         const durationEl = document.getElementById('duration');
         const volumeSlider = document.getElementById('volumeSlider');
@@ -1390,6 +1496,8 @@
         const thumbnailCanvas = document.getElementById('thumbnailCanvas');
         const thumbnailTime = document.getElementById('thumbnailTime');
         const thumbnailCtx = thumbnailCanvas.getContext('2d');
+        const centerPlayIcon = document.getElementById('centerPlayIcon');
+        const centerPlayText = document.getElementById('centerPlayText');
 
         // Set canvas size
         thumbnailCanvas.width = 160;
@@ -1407,6 +1515,7 @@
         let currentBrightness = 1;
         let initialBrightness = 1;
         let initialVolume = 1;
+        let isMuted = false;
         let tapOverlayVisible = false;
         let controlsTimeout;
         let longPressTimer;
@@ -1423,11 +1532,11 @@
         // Screen mode global variables
         let screenModeBtn, screenModeIcon;
         const modes = [
-            { fit: 'fill', icon: 'fa-expand-arrows-alt', label: 'Stretch' },
-            { fit: 'cover', icon: 'fa-arrows-alt-h', label: 'Wide' },
+            { fit: 'cover', icon: 'fa-expand-arrows-alt', label: 'Cover' },
+            { fit: 'fill', icon: 'fa-arrows-alt-h', label: 'Stretch' },
             { fit: 'contain', icon: 'fa-compress', label: 'Contain' }
         ];
-        let currentScreenMode = 2; // Start with "Wide" mode (index 1, which is 'cover')
+        let currentScreenMode = 2; // Start with "Contain" mode (index 2)
 
         // Set video title
         videoTitle.textContent = title;
@@ -1780,12 +1889,40 @@
             }
         }
 
+        function forceSubtitleVisibility() {
+            if (!subtitleContainer) return;
+            document.body.classList.toggle('subtitles-on', !!subtitlesEnabled);
+
+            const displayValue = subtitlesEnabled ? 'block' : 'none';
+            const opacityValue = subtitlesEnabled ? '1' : '0';
+
+            subtitleContainer.style.setProperty('display', displayValue, 'important');
+            subtitleContainer.style.setProperty('opacity', opacityValue, 'important');
+            subtitleContainer.style.setProperty('visibility', subtitlesEnabled ? 'visible' : 'hidden', 'important');
+            subtitleContainer.style.setProperty('pointer-events', 'none', 'important');
+            subtitleContainer.style.setProperty('z-index', '2147483647', 'important');
+            subtitleContainer.style.setProperty('position', 'fixed', 'important');
+            subtitleContainer.style.setProperty('left', '50%', 'important');
+            subtitleContainer.style.setProperty('transform', 'translateX(-50%)', 'important');
+            subtitleContainer.style.setProperty('bottom', '150px', 'important');
+            
+            // Use requestAnimationFrame to ensure styles persist
+            requestAnimationFrame(() => {
+                if (subtitlesEnabled && subtitleContainer) {
+                    subtitleContainer.style.setProperty('display', 'block', 'important');
+                    subtitleContainer.style.setProperty('opacity', '1', 'important');
+                    subtitleContainer.style.setProperty('visibility', 'visible', 'important');
+                }
+            });
+        }
+
         // Initialize subtitle container
         function initSubtitleContainer() {
             if (!subtitleContainer) {
                 subtitleContainer = document.getElementById('subtitleContainer');
             }
-            subtitleContainer.style.display = subtitlesEnabled ? 'block' : 'none';
+            // Subtitle container is now in body (not inside video-container) to avoid opacity inheritance
+            forceSubtitleVisibility();
             
             // Check if current movie has subtitles
             const currentMovie = movieDatabase[normalizedTitle];
@@ -1794,6 +1931,35 @@
             } else if (subtitlesEnabled) {
                 subtitleContainer.innerHTML = '<div class="subtitle">No subtitles available for this movie</div>';
             }
+            
+            // Set up MutationObserver to watch for ANY changes to subtitle container
+            const observer = new MutationObserver(() => {
+                if (subtitlesEnabled && subtitleContainer) {
+                    const computed = window.getComputedStyle(subtitleContainer);
+                    if (computed.display === 'none' || computed.opacity === '0' || computed.visibility === 'hidden') {
+                        console.log('Subtitle container was hidden, restoring visibility');
+                        forceSubtitleVisibility();
+                    }
+                }
+            });
+            
+            if (subtitleContainer) {
+                observer.observe(subtitleContainer, {
+                    attributes: true,
+                    attributeFilter: ['style', 'class'],
+                    attributeOldValue: true
+                });
+            }
+            
+            // Also set up continuous interval as backup
+            setInterval(() => {
+                if (subtitlesEnabled && subtitleContainer) {
+                    const computed = window.getComputedStyle(subtitleContainer);
+                    if (computed.display === 'none' || computed.opacity === '0' || computed.visibility === 'hidden') {
+                        forceSubtitleVisibility();
+                    }
+                }
+            }, 50);
         }
 
         // Setup subtitle tracks after video loads
@@ -1859,6 +2025,7 @@ Try hosting subtitles on same server as video`;
             const track = e.target;
             const cues = track.activeCues;
             subtitleContainer.innerHTML = '';
+            forceSubtitleVisibility();
             
             console.log('Cue change triggered, active cues:', cues ? cues.length : 0);
             
@@ -1908,7 +2075,7 @@ Try hosting subtitles on same server as video`;
                     }
                 }
             }
-            subtitleContainer.style.display = subtitlesEnabled ? 'block' : 'none';
+            forceSubtitleVisibility();
             showGestureIndicator(subtitlesEnabled ? 'CC ON' : 'CC OFF');
         }
 
@@ -2181,12 +2348,15 @@ Try hosting subtitles on same server as video`;
             clearTimeout(controlsTimeout);
             controlsTimeout = setTimeout(() => {
                 controlsOverlay.classList.remove('visible');
+                forceSubtitleVisibility();
             }, 3000);
+            forceSubtitleVisibility();
         }
 
         function hideControls(force = false) {
             if (isLocked && !force) return;
             controlsOverlay.classList.remove('visible');
+            forceSubtitleVisibility();
         }
 
         // Show tap overlay
@@ -2201,6 +2371,7 @@ Try hosting subtitles on same server as video`;
             controlsOverlay.classList.add('visible');
             tapOverlayVisible = true;
             updateCenterPlayButton();
+            forceSubtitleVisibility();
             
             // Clear existing timeout and set new one
             clearTimeout(controlsTimeout);
@@ -2214,6 +2385,7 @@ Try hosting subtitles on same server as video`;
             tapOverlay.classList.remove('visible');
             controlsOverlay.classList.remove('visible');
             tapOverlayVisible = false;
+            forceSubtitleVisibility();
         }
 
         // Toggle tap overlay
@@ -2510,12 +2682,18 @@ Try hosting subtitles on same server as video`;
             }
         }
 
-        function togglePlayback() {
-            if (event.target.closest('.fa-step-backward')) {
-                video.currentTime -= 10;
-            } else if (event.target.closest('.fa-step-forward')) {
-                video.currentTime += 10;
+        function togglePlayback(offsetSeconds) {
+            const offset = Number(offsetSeconds);
+            if (!Number.isFinite(offset) || !video.duration) {
+                return;
             }
+
+            const nextTime = Math.max(0, Math.min(video.duration, video.currentTime + offset));
+            video.currentTime = nextTime;
+
+            const directionLabel = offset >= 0 ? `⏩ +${Math.abs(offset)}s` : `⏪ -${Math.abs(offset)}s`;
+            showGestureIndicator(directionLabel);
+
             // Preserve screen mode after skipping
             setTimeout(preserveScreenMode, 50);
         }
@@ -2529,6 +2707,7 @@ Try hosting subtitles on same server as video`;
                             window.screen.orientation.lock('landscape').catch(() => {});
                         }
                     }
+                    // No DOM moves needed; subtitles stay fixed to viewport
                 });
             } else {
                 document.exitFullscreen();
@@ -2538,6 +2717,22 @@ Try hosting subtitles on same server as video`;
                 }
             }
         }
+
+        // Listen for fullscreen changes (no subtitle DOM shuffling needed now)
+        document.addEventListener('fullscreenchange', () => {
+            // subtitles remain in body with fixed positioning
+            forceSubtitleVisibility();
+        });
+
+        // Also listen for webkit fullscreen changes
+        document.addEventListener('webkitfullscreenchange', () => {
+            // subtitles remain in body with fixed positioning
+            forceSubtitleVisibility();
+        });
+
+        // Ensure subtitles stay visible after any resize/orientation change
+        window.addEventListener('resize', forceSubtitleVisibility);
+        window.addEventListener('orientationchange', forceSubtitleVisibility);
 
         function goBack() {
             window.location.href = 'index.html';

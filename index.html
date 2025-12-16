@@ -5929,6 +5929,19 @@
       // Keep button clickable so we can show a system message when unavailable
       streamBtn.disabled = false;
 
+      // Stream 2 availability: Any video source available (Drive, MP4, YouTube, or streamUrl)
+      const hasStream2 = !!(driveMovieMappings[String(movie.id)] || mp4Overrides[normTitle] || movie.trailerUrl || movie.streamUrl);
+      const streamBtn2El = document.getElementById('streamBtn2');
+      if (streamBtn2El) {
+        streamBtn2El.dataset.movieId = movie.id;
+        streamBtn2El.dataset.available = hasStream2 ? '1' : '0';
+        streamBtn2El.textContent = hasStream2 ? 'Stream 2' : 'Stream 2 unavailable';
+        streamBtn2El.classList.toggle('unavailable', !hasStream2);
+        streamBtn2El.disabled = !hasStream2;
+        // Keep button clickable so we can show a system message when unavailable
+        streamBtn2El.disabled = false;
+      }
+
     // Update bookmark button state - now async
       const bookmarkBtn = document.getElementById('bookmarkBtn');
       if (bookmarkBtn) {

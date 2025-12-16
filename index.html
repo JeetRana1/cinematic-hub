@@ -4909,7 +4909,7 @@
             </div>
           `;
 
-          // Click to resume - Navigate to player.html
+          // Click to resume - Navigate to the correct player
           card.addEventListener('click', (e) => {
             if (!e.target.closest('.remove-button')) {
               const duration = movie.duration || 0;
@@ -4921,8 +4921,10 @@
               params.append('title', movie.title);
               if (movie.posterUrl) params.append('poster', movie.posterUrl);
 
-              // Navigate to player.html with the resume time
-              window.location.href = `player.html?${params.toString()}&t=${Math.floor(resumeTime)}`;
+              // Use the player that was used when watching this movie
+              const playerBase = movie.playerUsed === 'player2' ? 'player-2.html' : 'player.html';
+              // Navigate to the correct player with the resume time
+              window.location.href = `${playerBase}?${params.toString()}&t=${Math.floor(resumeTime)}`;
             }
           });
 

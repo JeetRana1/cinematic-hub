@@ -325,8 +325,9 @@ class ContinueWatchingDisplay {
   resumeMovie(movie) {
     console.log('Resuming movie:', movie.title);
 
-    // Honor whichever player was last used
-    const playerBase = localStorage.getItem('lastPlayerUsed') === 'player2' ? 'player-2.html' : 'player.html';
+    // Use the player that was used when watching this specific movie
+    const playerBase = movie.playerUsed === 'player2' ? 'player-2.html' : 'player.html';
+    console.log('Resuming in player:', playerBase, '(stored:', movie.playerUsed, ')');
 
     // Build resume URL
     const params = new URLSearchParams();

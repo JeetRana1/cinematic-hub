@@ -184,7 +184,9 @@ class ContinueWatchingUI {
     // Add the resume time parameter - this is the KEY part that was missing!
     params.append('t', resumeTime);
 
-    const resumeUrl = `player.html?${params.toString()}`;
+    // Use the player that was used when watching this movie
+    const playerBase = movie.playerUsed === 'player2' ? 'player-2.html' : 'player.html';
+    const resumeUrl = `${playerBase}?${params.toString()}`;
 
     // If on mobile, request landscape orientation before opening player
     if (window.matchMedia && window.matchMedia('(max-width: 600px)').matches && screen.orientation && screen.orientation.lock) {

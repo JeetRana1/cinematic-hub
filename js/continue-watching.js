@@ -264,7 +264,9 @@ class ContinueWatchingManager {
     if (movieData.posterUrl) params.append('poster', movieData.posterUrl);
     params.append('t', Math.floor(movieData.currentTime));
 
-    return `player.html?${params.toString()}`;
+    // Use the player that was used when watching this movie
+    const playerBase = movieData.playerUsed === 'player2' ? 'player-2.html' : 'player.html';
+    return `${playerBase}?${params.toString()}`;
   }
 
   /**

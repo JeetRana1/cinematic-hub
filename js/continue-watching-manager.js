@@ -165,6 +165,8 @@ class ContinueWatchingManager {
         progress: Math.round((progressData.currentTime / progressData.duration) * 100),
         updatedAt: Date.now(),
         validUntil: Date.now() + (7 * 24 * 60 * 60 * 1000), // 7 days
+        // Track which player was used for proper resume
+        playerUsed: localStorage.getItem('lastPlayerUsed') || 'player1',
         // Additional metadata for better resume experience
         playbackRate: progressData.playbackRate || 1,
         volume: progressData.volume || 1,
@@ -398,7 +400,9 @@ class ContinueWatchingManager {
     if (movieData.posterUrl) params.append('poster', movieData.posterUrl);
     params.append('t', Math.floor(movieData.currentTime));
 
-    return `player.html?${params.toString()}`;
+    // Use the player that was used when watching this movie
+    const playerBase = movieData.playerUsed === 'player2' ? 'player-2.html' : 'player.html';
+    return `${playerBase}?${params.toString()}`;
   }
 
   /**

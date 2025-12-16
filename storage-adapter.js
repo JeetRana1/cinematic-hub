@@ -274,8 +274,10 @@
           const poster = movie.posterUrl || movie.poster || '';
           
           console.log('Resuming movie:', movieId, title);
-          // Navigate to player with all necessary parameters
-          const playerUrl = `player.html?id=${encodeURIComponent(movieId)}&title=${encodeURIComponent(title)}&poster=${encodeURIComponent(poster)}`;
+          // Use the player that was used when watching this movie
+          const playerBase = movie.playerUsed === 'player2' ? 'player-2.html' : 'player.html';
+          // Navigate to the correct player with all necessary parameters
+          const playerUrl = `${playerBase}?id=${encodeURIComponent(movieId)}&title=${encodeURIComponent(title)}&poster=${encodeURIComponent(poster)}`;
           window.location.href = playerUrl;
         });
         

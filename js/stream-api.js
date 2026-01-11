@@ -119,16 +119,16 @@
         return { success:false, message:'No IMDb ID', src:null, type:null };
       }
       
-      // Use VidSrc as primary streaming source (works reliably)
+      // Use VidSrc.pro (cleaner, fewer ads)
       const isTV = movie.mediaType === 'tv';
       let src;
       
       if (isTV) {
         // For TV shows, use season 1 episode 1 by default
-        src = `https://vidsrc.xyz/embed/tv/${movie.id}/1-1`;
+        src = `https://vidsrc.cc/v2/embed/tv/${movie.id}/1/1`;
       } else {
         // For movies, use IMDB ID
-        src = `https://vidsrc.xyz/embed/movie/${imdbId}`;
+        src = `https://vidsrc.cc/v2/embed/movie/${imdbId}`;
       }
       
       console.log('🎬 Resolved VidSrc stream:', { imdbId, src, type: 'iframe' });

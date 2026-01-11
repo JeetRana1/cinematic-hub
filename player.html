@@ -496,6 +496,8 @@
   <script src="auth-firebase.js?v=3"></script>
   <script src="firebase-sync.js"></script>
   <script src="storage-adapter.js"></script>
+  <!-- hls.js for HLS (.m3u8) playback -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <!-- Continue Watching Scripts -->
   <script src="js/continue-watching.js"></script>
   <script src="js/continue-watching-ui.js"></script>
@@ -2169,8 +2171,14 @@
               <i class="fas fa-expand-arrows-alt" id="screenModeIcon"></i>
             </button>
           </div>
+          <button class="control-btn" id="qualityBtn" data-tooltip="Quality" style="display:none;">
+            <i class="fas fa-cog"></i>
+          </button>
           <button class="control-btn" id="subtitleBtn" data-tooltip="Subtitles">
             <i class="fas fa-closed-captioning"></i>
+          </button>
+          <button class="control-btn" id="languageBtn" data-tooltip="Audio Language" style="display:none;">
+            <i class="fas fa-language"></i>
           </button>
           <button class="control-btn" id="settingsBtn" data-tooltip="Settings">
             <i class="fas fa-cog"></i>
@@ -2298,6 +2306,93 @@
         font-size: 12px;
       }
     }
+    
+    /* Language menu styles - matching settings menu */
+    #languageMenu {
+      position: fixed;
+      display: none;
+      flex-direction: column;
+      background: rgba(30, 32, 36, 0.7);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      opacity: 0;
+      transform: translateY(-10px) scale(0.98);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      backdrop-filter: blur(12px);
+      border: 1.5px solid rgba(255, 255, 255, 0.18);
+      min-width: 180px;
+      max-width: 220px;
+      padding: 18px 0 10px 0;
+      z-index: 2147483647;
+      font-family: 'Segoe UI', 'Netflix Sans', Arial, sans-serif;
+      font-size: 16px;
+      color: #fff;
+    }
+    
+    #languageMenu.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    
+    #languageMenu .settings-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      padding: 0 24px;
+      color: #fff;
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    #languageOptions .settings-option {
+      padding: 12px 24px;
+      border: none;
+      background: none;
+      color: #fff;
+      font-size: 16px;
+      border-radius: 8px;
+      margin: 2px 0;
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s, transform 0.18s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    #languageOptions .settings-option:hover {
+      background: rgba(255, 255, 255, 0.10);
+      color: #e0e0e0;
+      transform: scale(1.03);
+    }
+    
+    #languageOptions .settings-option.selected {
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffd700;
+      font-weight: 500;
+    }
+    
+    @media (max-width: 600px) {
+      #languageMenu {
+        min-width: 90vw;
+        max-width: 98vw;
+        padding: 12px 0 6px 0;
+        font-size: 15px;
+        border-radius: 12px;
+      }
+      
+      #languageMenu .settings-title {
+        font-size: 16px;
+        padding: 0 16px;
+      }
+      
+      #languageOptions .settings-option {
+        padding: 10px 16px;
+        font-size: 15px;
+        border-radius: 7px;
+      }
+    }
   </style>
   <div id="settingsMenu" class="settings-menu">
     <div class="settings-item" id="playbackSpeedMenu">
@@ -2306,6 +2401,28 @@
         <span class="current-value">Normal</span>
         <i class="fas fa-chevron-right"></i>
       </div>
+    </div>
+  </div>
+
+  <!-- Language Selection Menu -->
+  <div id="languageMenu" class="settings-menu" style="display: none;">
+    <div class="settings-title">
+      <i class="fas fa-language"></i>
+      <span>Audio Language</span>
+    </div>
+    <div id="languageOptions">
+      <!-- Language options will be populated dynamically -->
+    </div>
+  </div>
+
+  <!-- Quality Selection Menu -->
+  <div id="qualityMenu" class="settings-menu" style="display: none;">
+    <div class="settings-title">
+      <i class="fas fa-cog"></i>
+      <span>Quality</span>
+    </div>
+    <div id="qualityOptions">
+      <!-- Quality options will be populated dynamically -->
     </div>
   </div>
 
@@ -2976,6 +3093,90 @@
           console.log('✓ Subtitle container created and added to DOM');
         }
       }
+
+      // Quality Selector Setup
+      function setupQualitySelector(hls) {
+        if (!hls) return;
+        
+        const qualityBtn = document.getElementById('qualityBtn');
+        const qualityMenu = document.getElementById('qualityMenu');
+        const qualityOptions = document.getElementById('qualityOptions');
+        
+        if (!qualityBtn || !qualityMenu || !qualityOptions) return;
+        
+        // Show quality button
+        qualityBtn.style.display = 'block';
+        
+        // Get available levels
+        const levels = hls.levels || [];
+        if (levels.length <= 1) return; // No need for selector if only 1 quality
+        
+        // Populate quality options
+        qualityOptions.innerHTML = '';
+        
+        // Add Auto option
+        const autoOption = document.createElement('div');
+        autoOption.className = 'settings-option';
+        autoOption.textContent = 'Auto';
+        autoOption.style.padding = '12px 24px';
+        autoOption.style.cursor = 'pointer';
+        autoOption.addEventListener('click', () => {
+          hls.currentLevel = -1;
+          updateQualityOptions();
+          qualityMenu.style.display = 'none';
+        });
+        qualityOptions.appendChild(autoOption);
+        
+        // Add manual quality levels
+        levels.forEach((level, index) => {
+          const height = level.height || 'Unknown';
+          const option = document.createElement('div');
+          option.className = 'settings-option';
+          option.textContent = `${height}p`;
+          option.style.padding = '12px 24px';
+          option.style.cursor = 'pointer';
+          option.dataset.level = index;
+          option.addEventListener('click', () => {
+            hls.currentLevel = index;
+            updateQualityOptions();
+            qualityMenu.style.display = 'none';
+          });
+          qualityOptions.appendChild(option);
+        });
+        
+        function updateQualityOptions() {
+          const options = qualityOptions.querySelectorAll('.settings-option');
+          options.forEach((opt, i) => {
+            const isAuto = i === 0 && hls.currentLevel === -1;
+            const isSelected = i > 0 && hls.currentLevel === parseInt(opt.dataset.level);
+            opt.style.background = (isAuto || isSelected) ? 'rgba(255,255,255,0.18)' : 'transparent';
+            opt.style.color = (isAuto || isSelected) ? '#ffd700' : '#fff';
+          });
+        }
+        
+        // Set highest quality by default
+        hls.currentLevel = Math.max(0, levels.length - 1);
+        updateQualityOptions();
+        
+        // Toggle quality menu
+        qualityBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (qualityMenu.style.display === 'none' || !qualityMenu.style.display) {
+            qualityMenu.style.display = 'flex';
+            updateQualityOptions();
+          } else {
+            qualityMenu.style.display = 'none';
+          }
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+          if (!qualityBtn.contains(e.target) && !qualityMenu.contains(e.target)) {
+            qualityMenu.style.display = 'none';
+          }
+        });
+      }
+
       const skipBackwardBtn = document.getElementById('skipBackwardBtn');
       const skipForwardBtn = document.getElementById('skipForwardBtn');
       const playPauseOverlay = document.getElementById('playPauseOverlay');
@@ -3070,6 +3271,36 @@
         });
       } else {
         console.error('Settings button or menu not found!', { settingsBtn, settingsMenu });
+      }
+
+      // Language button handler
+      const languageBtn = document.getElementById('languageBtn');
+      const languageMenu = document.getElementById('languageMenu');
+      
+      if (languageBtn && languageMenu) {
+        languageBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          
+          const isMenuVisible = languageMenu.style.display === 'flex';
+          
+          if (!isMenuVisible) {
+            // Position above the language button
+            const rect = languageBtn.getBoundingClientRect();
+            
+            languageMenu.style.display = 'flex';
+            languageMenu.style.position = 'fixed';
+            languageMenu.style.left = `${rect.left - 200}px`;
+            languageMenu.style.setProperty('bottom', `${window.innerHeight - rect.top + 30}px`, 'important');
+            languageMenu.style.right = 'auto';
+            languageMenu.style.top = 'auto';
+            
+            // Hide settings menu when opening language menu
+            if (settingsMenu) settingsMenu.style.display = 'none';
+            if (playbackSpeedSubmenu) playbackSpeedSubmenu.style.display = 'none';
+          } else {
+            languageMenu.style.display = 'none';
+          }
+        });
       }
 
       // Open playback speed submenu - using dynamic positioning like settings menu
@@ -3530,13 +3761,120 @@
       const poster = urlParams.get('poster') || '';
       let sourceType = urlParams.get('type') || 'mp4';
       let src = urlParams.get('src') || urlParams.get('video') || '';
+      
+      console.log('🎬 Player.html initialization:');
+      console.log('   - src:', src);
+      console.log('   - sourceType:', sourceType);
+      console.log('   - title:', title);
+      
+      // Get language parameters from URL
+      const imdbId = urlParams.get('imdbId');
+      const streamKey = urlParams.get('streamKey');
+      const currentLang = urlParams.get('currentLang');
+      const availableLangsParam = urlParams.get('availableLangs');
+      let availableLanguages = [];
+      
+      if (availableLangsParam) {
+        try {
+          availableLanguages = JSON.parse(decodeURIComponent(availableLangsParam));
+          console.log('Available languages:', availableLanguages);
+        } catch (e) {
+          console.error('Error parsing available languages:', e);
+        }
+      }
+      
+      // Populate language menu if languages are available
+      if (availableLanguages.length > 0 && imdbId && streamKey) {
+        const languageBtn = document.getElementById('languageBtn');
+        const languageOptions = document.getElementById('languageOptions');
+        
+        if (languageBtn && languageOptions) {
+          // Show language button
+          languageBtn.style.display = 'block';
+          
+          // Populate language options
+          languageOptions.innerHTML = '';
+          availableLanguages.forEach(lang => {
+            const option = document.createElement('div');
+            option.className = 'settings-option';
+            if (lang === currentLang) {
+              option.classList.add('selected');
+            }
+            option.innerHTML = `<span>${lang}</span>`;
+            option.addEventListener('click', async () => {
+              if (lang === currentLang) return; // Already selected
+              
+              // Show loading state
+              option.innerHTML = '<span>Loading...</span>';
+              
+              try {
+                // Call the stream API to get the new language stream
+                if (typeof window.resolveStreamForLanguage === 'function') {
+                  const result = await window.resolveStreamForLanguage(imdbId, lang, streamKey);
+                  
+                  if (result.success && result.src) {
+                    // Update video source
+                    const video = document.getElementById('mainVideo');
+                    const currentTime = video.currentTime; // Save current position
+                    
+                    // Update HLS source
+                    if (window.hls) {
+                      window.hls.destroy();
+                    }
+                    
+                    if (Hls.isSupported()) {
+                      window.hls = new Hls();
+                      window.hls.loadSource(result.src);
+                      window.hls.attachMedia(video);
+                      window.hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                        video.currentTime = currentTime; // Restore position
+                        video.play().catch(e => console.log('Autoplay prevented:', e));
+                      });
+                    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                      video.src = result.src;
+                      video.addEventListener('loadedmetadata', () => {
+                        video.currentTime = currentTime;
+                        video.play().catch(e => console.log('Autoplay prevented:', e));
+                      });
+                    }
+                    
+                    // Update UI
+                    document.querySelectorAll('#languageOptions .settings-option').forEach(opt => {
+                      opt.classList.remove('selected');
+                    });
+                    option.classList.add('selected');
+                    option.innerHTML = `<span>${lang}</span>`;
+                    
+                    // Hide menu
+                    const languageMenu = document.getElementById('languageMenu');
+                    if (languageMenu) languageMenu.style.display = 'none';
+                    
+                    console.log('✓ Language switched to:', lang);
+                  } else {
+                    console.error('Failed to resolve stream for language:', lang);
+                    option.innerHTML = `<span>${lang}</span>`;
+                  }
+                } else {
+                  console.error('resolveStreamForLanguage function not found');
+                  option.innerHTML = `<span>${lang}</span>`;
+                }
+              } catch (error) {
+                console.error('Error switching language:', error);
+                option.innerHTML = `<span>${lang}</span>`;
+              }
+            });
+            
+            languageOptions.appendChild(option);
+          });
+        }
+      }
 
       // Check movie database for the video source and subtitles
       const normalizedTitle = title.toLowerCase().trim();
       console.log('Looking up movie:', normalizedTitle);
       console.log('Available movies in database:', Object.keys(movieDatabase));
 
-      if (movieDatabase[normalizedTitle]) {
+      if (!src && movieDatabase[normalizedTitle]) {
         const movieData = movieDatabase[normalizedTitle];
         src = movieData.src;
         sourceType = movieData.type;
@@ -3748,6 +4086,7 @@
 
       // Initialize video directly (like player.html)
       if (src) {
+        console.log('✓ Video source found:', src.substring(0, 100) + '...');
         console.log('Loading video:', src, 'Type:', sourceType);
 
         // Ensure window.currentMovie is properly set
@@ -3779,18 +4118,66 @@
         video.style.height = '100%';
         video.style.objectFit = 'contain';
 
-        // Create and add source
-        const source = document.createElement('source');
-        source.src = src;
-        source.type = 'video/mp4';
-        video.appendChild(source);
+        // Decide playback method based on sourceType or URL
+        const isHls = (String(sourceType).toLowerCase() === 'hls') || /\.m3u8(\?.*)?$/.test(src);
+        video.crossOrigin = 'anonymous';
+
+        if (isHls) {
+          console.log('📺 Initializing HLS playback...');
+          if (window.Hls && Hls.isSupported()) {
+            const hls = new Hls({
+              maxBufferLength: 30,
+              maxMaxBufferLength: 60,
+              lowLatencyMode: true
+            });
+            hls.loadSource(src);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, function () {
+              console.log('✓ HLS manifest parsed successfully');
+              
+              // Setup quality selector
+              setupQualitySelector(hls);
+              
+              const playPromise = video.play();
+              if (playPromise) playPromise.catch(err => console.warn('Autoplay blocked:', err));
+            });
+            hls.on(Hls.Events.ERROR, function (event, data) {
+              console.error('❌ HLS error:', data.type, data.details || data);
+            });
+            window.__hlsInstance = hls;
+          } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            // Safari native HLS
+            video.src = src;
+            video.addEventListener('loadedmetadata', () => {
+              const playPromise = video.play();
+              if (playPromise) playPromise.catch(err => console.warn('Autoplay blocked:', err));
+            });
+          } else {
+            console.warn('HLS not supported, falling back to direct src');
+            video.src = src;
+          }
+        } else {
+          // MP4 or other direct sources
+          const source = document.createElement('source');
+          source.src = src;
+          source.type = 'video/mp4';
+          video.appendChild(source);
+        }
 
         // DISABLED: Old resume code - now handled by player-continue-watching.js
         // These flags are set to true to prevent this old code from running
         let hasSetResumeTime = true; // Disabled - using player-continue-watching.js instead
         let resumePromptShown = true; // Disabled - using player-continue-watching.js instead
+      } else {
+        console.error('❌ No video source provided in URL parameters!');
+        console.error('   URL:', window.location.href);
+        const videoTitle = document.querySelector('h1');
+        if (videoTitle) {
+          videoTitle.textContent = 'Error: No video source available';
+        }
+      }
 
-        // Function to save current playback position
+      // Function to save current playback position
         const saveCurrentPosition = () => {
 
           // Only save if video has been playing for more than 5 seconds
@@ -4130,12 +4517,8 @@
 
         // Load the video
         video.load();
-      } else {
-        console.error('No video source found');
-        showSystemMessage('No video source provided', 'error');
-      }
 
-      // Function to fetch remote subtitle and convert to blob URL  
+      // Function to fetch remote subtitle and convert to blob URL
       async function fetchSubtitleAsBlob(url) {
         try {
           console.log('Fetching remote subtitle:', url);

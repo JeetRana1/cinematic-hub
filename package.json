@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Cinematic Hub static site with Firebase integration",
   "scripts": {
-    "prebuild": "node scripts/generateFirebaseConfig.js && node scripts/generateEmailConfig.js"
+    "prebuild": "node scripts/generateFirebaseConfig.js && node scripts/generateEmailConfig.js && node scripts/generateStreamApiConfig.js"
   },
   "dependencies": {
     "@sendgrid/mail": "^8.1.6",

@@ -16,6 +16,12 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="auth-firebase.js?v=3"></script>
     <script src="firebase-sync.js"></script>
+    <!-- hls.js for HLS (.m3u8) playback -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    
+    <!-- Stream API Configuration and Client -->
+    <script src="public/streamApiConfig.js"></script>
+    <script src="js/stream-api.js"></script>
     
     <!-- Continue Watching and Player Resume scripts -->
     <script src="js/continue-watching.js"></script>
@@ -1216,6 +1222,12 @@
                                 <div class="volume-thumb" id="volumeThumb"></div>
                             </div>
                         </div>
+                        <button class="control-btn" id="languageBtn" data-tooltip="Audio Language" style="display:none;" title="Audio Language">
+                            <i class="fas fa-language"></i>
+                        </button>
+                        <button class="control-btn" id="qualityBtn" data-tooltip="Quality" style="display:none;" title="Quality">
+                            <i class="fas fa-cog"></i>
+                        </button>
                         <button class="control-btn" onclick="toggleFullscreen()" title="Fullscreen">
                             <i class="fas fa-expand"></i>
                         </button>
@@ -1257,6 +1269,28 @@
     
     <!-- Subtitle Container (Outside video-container to avoid inheritance) -->
     <div class="subtitle-container" id="subtitleContainer"></div>
+
+    <!-- Language Selection Menu -->
+    <div id="languageMenu" style="display: none; position: fixed; background: rgba(30, 32, 36, 0.95); border-radius: 12px; padding: 15px; min-width: 150px; z-index: 999999; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+        <div style="color: #fff; font-size: 14px; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-language"></i>
+            <span>Audio Language</span>
+        </div>
+        <div id="languageOptions">
+            <!-- Language options will be populated dynamically -->
+        </div>
+    </div>
+
+    <!-- Quality Selection Menu -->
+    <div id="qualityMenu" style="display: none; position: fixed; background: rgba(30, 32, 36, 0.95); border-radius: 12px; padding: 15px; min-width: 150px; z-index: 999999; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+        <div style="color: #fff; font-size: 14px; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-cog"></i>
+            <span>Quality</span>
+        </div>
+        <div id="qualityOptions">
+            <!-- Quality options will be populated dynamically -->
+        </div>
+    </div>
 
     <script>
         // Movie database (same as original)
@@ -1635,14 +1669,14 @@
 
         // Get video source
         let videoSrc = urlParams.get('src') || urlParams.get('video') || '';
-        let sourceType = 'mp4';
+        let sourceType = urlParams.get('type') || 'mp4';
 
         // Check movie database for the video source
         const normalizedTitle = title.toLowerCase().trim();
         console.log('Looking for movie:', normalizedTitle);
         console.log('Available movies:', Object.keys(movieDatabase));
         
-        if (movieDatabase[normalizedTitle]) {
+        if (!videoSrc && movieDatabase[normalizedTitle]) {
             const movieData = movieDatabase[normalizedTitle];
             videoSrc = movieData.src;
             sourceType = movieData.type;
@@ -1798,9 +1832,72 @@
                 const oldTracks = video.querySelectorAll('track');
                 oldTracks.forEach(track => track.remove());
 
-                // Set video source
-                video.src = videoSrc;
-                video.type = `video/${sourceType}`;
+                // Decide playback method based on sourceType or URL
+                const isHls = (String(sourceType).toLowerCase() === 'hls') || /\.m3u8(\?.*)?$/.test(videoSrc);
+                video.crossOrigin = 'anonymous';
+
+                if (isHls) {
+                    console.log('📺 Initializing HLS playback (player-2)...');
+                    if (window.Hls && Hls.isSupported()) {
+                        const hls = new Hls({
+                            maxBufferLength: 30,
+                            maxMaxBufferLength: 60,
+                            lowLatencyMode: true
+                        });
+                        hls.loadSource(videoSrc);
+                        hls.attachMedia(video);
+                        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                            console.log('✓ HLS manifest parsed successfully (player-2)');
+                            
+                            // Set highest quality by default
+                            if (hls.levels.length > 0) {
+                                const highestLevel = hls.levels.length - 1;
+                                hls.currentLevel = highestLevel;
+                                console.log('✓ Set to highest quality:', hls.levels[highestLevel].height + 'p');
+                            }
+                            
+                            // Set English audio track by default if available
+                            if (hls.audioTracks && hls.audioTracks.length > 0) {
+                                console.log('📻 Available audio tracks:', hls.audioTracks.map(t => t.name || t.lang));
+                                // Try to find English track
+                                const englishTrack = hls.audioTracks.findIndex(track => {
+                                    const name = (track.name || track.lang || '').toLowerCase();
+                                    return name.includes('eng') || name.includes('english');
+                                });
+                                if (englishTrack !== -1) {
+                                    hls.audioTrack = englishTrack;
+                                    console.log('✓ Selected English audio track:', hls.audioTracks[englishTrack].name || hls.audioTracks[englishTrack].lang);
+                                } else {
+                                    console.log('⚠ English audio track not found, using default:', hls.audioTracks[hls.audioTrack]?.name || hls.audioTracks[hls.audioTrack]?.lang);
+                                }
+                            }
+                            
+                            const playPromise = video.play();
+                            if (playPromise) playPromise.catch(err => console.warn('Autoplay blocked:', err));
+                        });
+                        hls.on(Hls.Events.ERROR, function (event, data) {
+                            console.error('❌ HLS error (player-2):', data.type, data.details || data);
+                        });
+                        
+                        // Store globally
+                        window.__hlsInstance2 = hls;
+                        window.playerHls = hls;
+                    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                        // Safari native HLS
+                        video.src = videoSrc;
+                        video.addEventListener('loadedmetadata', () => {
+                            const playPromise = video.play();
+                            if (playPromise) playPromise.catch(err => console.warn('Autoplay blocked:', err));
+                        });
+                    } else {
+                        console.warn('HLS not supported (player-2), falling back to direct src');
+                        video.src = videoSrc;
+                    }
+                } else {
+                    // MP4 or other direct sources
+                    video.src = videoSrc;
+                    video.type = `video/${sourceType}`;
+                }
 
                 // Wait for video to load
                 video.addEventListener('loadedmetadata', () => {
@@ -2931,9 +3028,445 @@ Try hosting subtitles on same server as video`;
             }
         });
 
+        // Setup language selector
+        function setupLanguageSelector() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const imdbId = urlParams.get('imdbId');
+            const streamKey = urlParams.get('streamKey');
+            let currentLang = urlParams.get('currentLang');
+            const availableLangsParam = urlParams.get('availableLangs');
+            let availableLanguages = [];
+            
+            if (availableLangsParam) {
+                try {
+                    availableLanguages = JSON.parse(decodeURIComponent(availableLangsParam));
+                    console.log('[Language] Available languages:', availableLanguages);
+                } catch (e) {
+                    console.error('[Language] Error parsing available languages:', e);
+                }
+            }
+            
+            // Default to English if available languages exist but no current language is set
+            if (availableLanguages.length > 0 && !currentLang) {
+                // Check if English is available
+                if (availableLanguages.includes('English')) {
+                    console.log('[Language] No language specified, defaulting to English');
+                    currentLang = 'English';
+                    // Update URL to include English as currentLang
+                    const newUrl = new URL(window.location.href);
+                    newUrl.searchParams.set('currentLang', 'English');
+                    window.history.replaceState({}, '', newUrl.toString());
+                } else if (availableLanguages.length > 0) {
+                    // If English not available, use first available language
+                    currentLang = availableLanguages[0];
+                    console.log('[Language] English not available, defaulting to:', currentLang);
+                    const newUrl = new URL(window.location.href);
+                    newUrl.searchParams.set('currentLang', currentLang);
+                    window.history.replaceState({}, '', newUrl.toString());
+                }
+            }
+            
+            // Setup language menu
+            if (availableLanguages.length > 0 && imdbId && streamKey) {
+                const languageBtn = document.getElementById('languageBtn');
+                const languageMenu = document.getElementById('languageMenu');
+                const languageOptions = document.getElementById('languageOptions');
+                
+                if (!languageBtn || !languageMenu || !languageOptions) {
+                    console.error('[Language] Language UI elements not found');
+                    return;
+                }
+                
+                console.log('[Language] Setting up selector with', availableLanguages.length, 'languages');
+                
+                // Show language button
+                languageBtn.style.display = 'inline-block';
+                
+                // Check if original language is missing and show indicator
+                const languageInfoParam = new URLSearchParams(window.location.search).get('languageInfo');
+                if (languageInfoParam) {
+                    try {
+                        const langInfo = JSON.parse(decodeURIComponent(languageInfoParam));
+                        if (langInfo.missingOriginal && langInfo.original) {
+                            // Add tooltip or title to show original language missing
+                            languageBtn.title = `⚠ Original ${langInfo.original} not available`;
+                            languageBtn.setAttribute('data-tooltip-original-missing', `Original ${langInfo.original} not available`);
+                            console.log('[Language] ⚠ Original language', langInfo.original, 'not available. Available:', langInfo.available);
+                        }
+                    } catch (e) {
+                        console.log('[Language] Could not parse languageInfo');
+                    }
+                }
+                
+                // Toggle menu on button click
+                languageBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isVisible = languageMenu.style.display === 'block';
+                    
+                    console.log('[Language] Button clicked, menu visible:', isVisible);
+                    
+                    if (!isVisible) {
+                        const rect = languageBtn.getBoundingClientRect();
+                        languageMenu.style.display = 'block';
+                        languageMenu.style.left = `${rect.left - 150}px`;
+                        languageMenu.style.bottom = `${window.innerHeight - rect.top + 10}px`;
+                        console.log('[Language] Menu opened at', rect.left - 150, window.innerHeight - rect.top + 10);
+                    } else {
+                        languageMenu.style.display = 'none';
+                    }
+                });
+                
+                // Close menu on click outside
+                document.addEventListener('click', (e) => {
+                    if (!languageMenu.contains(e.target) && e.target !== languageBtn && !languageBtn.contains(e.target)) {
+                        languageMenu.style.display = 'none';
+                    }
+                });
+                
+                // Populate language options
+                languageOptions.innerHTML = ''; // Clear existing options
+                availableLanguages.forEach(lang => {
+                    const option = document.createElement('div');
+                    option.style.cssText = 'padding: 10px 15px; cursor: pointer; color: #fff; font-size: 14px; border-radius: 6px; transition: background 0.2s;';
+                    if (lang === currentLang) {
+                        option.style.background = 'rgba(255, 255, 255, 0.25)';
+                        option.style.fontWeight = '600';
+                        option.innerHTML = `${lang} <i class="fas fa-check" style="float: right;"></i>`;
+                    } else {
+                        option.textContent = lang;
+                    }
+                    
+                    option.addEventListener('mouseenter', () => {
+                        if (lang !== currentLang) {
+                            option.style.background = 'rgba(255, 255, 255, 0.1)';
+                        }
+                    });
+                    option.addEventListener('mouseleave', () => {
+                        if (lang !== currentLang) {
+                            option.style.background = 'transparent';
+                        }
+                    });
+                    
+                    option.addEventListener('click', async () => {
+                        if (lang === currentLang) {
+                            console.log('[Language] Already on', lang);
+                            return;
+                        }
+                        
+                        console.log('[Language] Switching to', lang);
+                        const originalText = option.textContent;
+                        option.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+                        
+                        try {
+                            if (typeof window.resolveStreamForLanguage !== 'function') {
+                                console.error('[Language] resolveStreamForLanguage function not found');
+                                option.textContent = originalText;
+                                return;
+                            }
+                            
+                            const result = await window.resolveStreamForLanguage(imdbId, lang, streamKey);
+                            console.log('[Language] Resolve result:', result);
+                            
+                            if (result.success && result.src) {
+                                const video = document.getElementById('videoPlayer');
+                                if (!video) {
+                                    console.error('[Language] Video element not found');
+                                    option.textContent = originalText;
+                                    return;
+                                }
+                                
+                                const currentTime = video.currentTime;
+                                const wasPlaying = !video.paused;
+                                
+                                console.log('[Language] Current time:', currentTime, 'Was playing:', wasPlaying);
+                                
+                                // Pause video first
+                                video.pause();
+                                
+                                // Destroy existing HLS instance completely
+                                if (window.playerHls) {
+                                    console.log('[Language] Destroying existing HLS instance');
+                                    try {
+                                        window.playerHls.detachMedia();
+                                        window.playerHls.destroy();
+                                    } catch (e) {
+                                        console.log('[Language] Error destroying HLS:', e);
+                                    }
+                                    window.playerHls = null;
+                                }
+                                
+                                // Aggressively clear all media state
+                                video.removeAttribute('src');
+                                video.src = '';
+                                video.load();
+                                
+                                // Wait longer for complete buffer flush
+                                await new Promise(resolve => setTimeout(resolve, 200));
+                                
+                                // Initialize new HLS source with error recovery
+                                if (Hls.isSupported()) {
+                                    console.log('[Language] Initializing HLS with new source');
+                                    window.playerHls = new Hls({
+                                        debug: false,
+                                        enableWorker: true,
+                                        lowLatencyMode: false,
+                                        backBufferLength: 90,
+                                        maxBufferLength: 30,
+                                        maxMaxBufferLength: 60,
+                                        maxBufferSize: 60 * 1000 * 1000,
+                                        maxBufferHole: 0.5,
+                                        // Auto-recover from buffer errors
+                                        autoStartLoad: true,
+                                        startPosition: -1,
+                                        capLevelToPlayerSize: false
+                                    });
+                                    
+                                    // Add error recovery handler
+                                    window.playerHls.on(Hls.Events.ERROR, function(event, data) {
+                                        if (data.fatal) {
+                                            switch (data.type) {
+                                                case Hls.ErrorTypes.MEDIA_ERROR:
+                                                    console.log('[Language] Recovering from media error');
+                                                    window.playerHls.recoverMediaError();
+                                                    break;
+                                                case Hls.ErrorTypes.NETWORK_ERROR:
+                                                    console.log('[Language] Network error, reloading');
+                                                    window.playerHls.startLoad();
+                                                    break;
+                                                default:
+                                                    console.error('[Language] Fatal error, cannot recover');
+                                                    break;
+                                            }
+                                        } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+                                            // Non-fatal media errors - try to recover
+                                            console.log('[Language] Non-fatal media error, recovering');
+                                            window.playerHls.recoverMediaError();
+                                        }
+                                    });
+                                    
+                                    window.playerHls.loadSource(result.src);
+                                    window.playerHls.attachMedia(video);
+                                    window.playerHls.on(Hls.Events.MANIFEST_PARSED, function() {
+                                        console.log('[Language] Manifest parsed, seeking to', currentTime);
+                                        
+                                        // Set highest quality by default
+                                        if (window.playerHls.levels.length > 0) {
+                                            const highestLevel = window.playerHls.levels.length - 1;
+                                            window.playerHls.currentLevel = highestLevel;
+                                            console.log('[Language] Set to highest quality:', window.playerHls.levels[highestLevel].height + 'p');
+                                        }
+                                        
+                                        video.currentTime = currentTime;
+                                        if (wasPlaying) {
+                                            video.play().catch(e => console.log('[Language] Autoplay prevented:', e));
+                                        }
+                                        
+                                        // Re-setup quality selector with new stream
+                                        setTimeout(() => setupQualitySelector(), 500);
+                                    });
+                                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                                    console.log('[Language] Using native HLS support');
+                                    video.src = result.src;
+                                    video.addEventListener('loadedmetadata', () => {
+                                        video.currentTime = currentTime;
+                                        if (wasPlaying) {
+                                            video.play().catch(e => console.log('[Language] Autoplay prevented:', e));
+                                        }
+                                    }, { once: true });
+                                }
+                                
+                                // Update UI
+                                languageOptions.querySelectorAll('div').forEach(opt => {
+                                    opt.style.background = 'transparent';
+                                    opt.style.fontWeight = 'normal';
+                                    const text = opt.textContent.replace(' ✓', '').trim();
+                                    opt.textContent = text;
+                                });
+                                option.style.background = 'rgba(255, 255, 255, 0.25)';
+                                option.style.fontWeight = '600';
+                                option.innerHTML = `${lang} <i class="fas fa-check" style="float: right;"></i>`;
+                                
+                                languageMenu.style.display = 'none';
+                                console.log('[Language] ✓ Switched to:', lang);
+                            } else {
+                                console.error('[Language] Failed to resolve stream for:', lang, result);
+                                option.textContent = originalText;
+                                alert('Failed to switch language. Please try again.');
+                            }
+                        } catch (error) {
+                            console.error('[Language] Error switching language:', error);
+                            option.textContent = originalText;
+                            alert('Error switching language: ' + error.message);
+                        }
+                    });
+                    
+                    languageOptions.appendChild(option);
+                });
+                
+                // Close menu when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!languageMenu.contains(e.target) && !languageBtn.contains(e.target)) {
+                        languageMenu.style.display = 'none';
+                    }
+                });
+                
+                console.log('[Language] Setup complete, button visible');
+            }
+        }
+        
+        // Setup quality selector (independent function)
+        function setupQualitySelector() {
+            const qualityBtn = document.getElementById('qualityBtn');
+            const qualityMenu = document.getElementById('qualityMenu');
+            const qualityOptions = document.getElementById('qualityOptions');
+            
+            if (!qualityBtn || !qualityMenu || !qualityOptions) {
+                console.log('[Quality] Quality UI elements not found');
+                return;
+            }
+            
+            const hls = window.playerHls || window.__hlsInstance2;
+                
+                if (!hls || !hls.levels || hls.levels.length === 0) {
+                    console.log('[Quality] No quality levels available');
+                    return;
+                }
+                
+                console.log('[Quality] Setting up selector with', hls.levels.length, 'quality levels');
+                
+                // Show quality button
+                qualityBtn.style.display = 'inline-block';
+                
+                // Toggle menu on button click
+                qualityBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isVisible = qualityMenu.style.display === 'block';
+                    
+                    console.log('[Quality] Button clicked, menu visible:', isVisible);
+                    
+                    if (isVisible) {
+                        qualityMenu.style.display = 'none';
+                    } else {
+                        // Hide language menu if open
+                        const languageMenu = document.getElementById('languageMenu');
+                        if (languageMenu) languageMenu.style.display = 'none';
+                        
+                        // Position menu near button
+                        const rect = qualityBtn.getBoundingClientRect();
+                        qualityMenu.style.bottom = (window.innerHeight - rect.top + 10) + 'px';
+                        qualityMenu.style.right = (window.innerWidth - rect.right) + 'px';
+                        qualityMenu.style.display = 'block';
+                        
+                        console.log('[Quality] Menu opened at', rect.left, rect.bottom);
+                    }
+                });
+                
+                // Populate quality options
+                qualityOptions.innerHTML = '';
+                
+                // Add Auto option
+                const autoOption = document.createElement('div');
+                autoOption.style.cssText = 'padding: 10px 15px; cursor: pointer; color: #fff; font-size: 14px; border-radius: 8px; transition: all 0.2s;';
+                autoOption.textContent = 'Auto';
+                autoOption.addEventListener('mouseenter', () => autoOption.style.background = 'rgba(255, 255, 255, 0.15)');
+                autoOption.addEventListener('mouseleave', () => {
+                    if (hls.currentLevel === -1) {
+                        autoOption.style.background = 'rgba(255, 255, 255, 0.25)';
+                    } else {
+                        autoOption.style.background = 'transparent';
+                    }
+                });
+                autoOption.addEventListener('click', () => {
+                    console.log('[Quality] Switching to Auto');
+                    hls.currentLevel = -1;
+                    
+                    // Update UI
+                    qualityOptions.querySelectorAll('div').forEach(opt => {
+                        opt.style.background = 'transparent';
+                        opt.style.fontWeight = 'normal';
+                        const text = opt.textContent.replace(' ✓', '').trim();
+                        opt.textContent = text;
+                    });
+                    autoOption.style.background = 'rgba(255, 255, 255, 0.25)';
+                    autoOption.style.fontWeight = '600';
+                    autoOption.innerHTML = `Auto <i class="fas fa-check" style="float: right;"></i>`;
+                    
+                    qualityMenu.style.display = 'none';
+                    console.log('[Quality] ✓ Switched to Auto');
+                });
+                
+                if (hls.currentLevel === -1) {
+                    autoOption.style.background = 'rgba(255, 255, 255, 0.25)';
+                    autoOption.style.fontWeight = '600';
+                    autoOption.innerHTML = `Auto <i class="fas fa-check" style="float: right;"></i>`;
+                }
+                
+                qualityOptions.appendChild(autoOption);
+                
+                // Add quality level options (sorted highest to lowest)
+                const sortedLevels = hls.levels
+                    .map((level, index) => ({ level, index }))
+                    .sort((a, b) => b.level.height - a.level.height);
+                
+                sortedLevels.forEach(({ level, index }) => {
+                    const option = document.createElement('div');
+                    const qualityLabel = level.height ? `${level.height}p` : `${Math.round(level.bitrate / 1000)}kbps`;
+                    
+                    option.style.cssText = 'padding: 10px 15px; cursor: pointer; color: #fff; font-size: 14px; border-radius: 8px; transition: all 0.2s;';
+                    option.textContent = qualityLabel;
+                    option.addEventListener('mouseenter', () => option.style.background = 'rgba(255, 255, 255, 0.15)');
+                    option.addEventListener('mouseleave', () => {
+                        if (hls.currentLevel === index) {
+                            option.style.background = 'rgba(255, 255, 255, 0.25)';
+                        } else {
+                            option.style.background = 'transparent';
+                        }
+                    });
+                    option.addEventListener('click', () => {
+                        console.log('[Quality] Switching to', qualityLabel);
+                        hls.currentLevel = index;
+                        
+                        // Update UI
+                        qualityOptions.querySelectorAll('div').forEach(opt => {
+                            opt.style.background = 'transparent';
+                            opt.style.fontWeight = 'normal';
+                            const text = opt.textContent.replace(' ✓', '').trim();
+                            opt.textContent = text;
+                        });
+                        option.style.background = 'rgba(255, 255, 255, 0.25)';
+                        option.style.fontWeight = '600';
+                        option.innerHTML = `${qualityLabel} <i class="fas fa-check" style="float: right;"></i>`;
+                        
+                        qualityMenu.style.display = 'none';
+                        console.log('[Quality] ✓ Switched to', qualityLabel);
+                    });
+                    
+                    // Mark current quality
+                    if (hls.currentLevel === index) {
+                        option.style.background = 'rgba(255, 255, 255, 0.25)';
+                        option.style.fontWeight = '600';
+                        option.innerHTML = `${qualityLabel} <i class="fas fa-check" style="float: right;"></i>`;
+                    }
+                    
+                    qualityOptions.appendChild(option);
+                });
+                
+                // Close menu when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!qualityMenu.contains(e.target) && !qualityBtn.contains(e.target)) {
+                        qualityMenu.style.display = 'none';
+                    }
+                });
+                
+                console.log('[Quality] Setup complete, button visible');
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM loaded, initializing...');
+            
+            // Setup language selector
+            setupLanguageSelector();
             
             // Test if screen mode button exists
             const testBtn = document.getElementById('screenModeToggle');
@@ -2947,6 +3480,20 @@ Try hosting subtitles on same server as video`;
             }
             
             initVideo();
+            
+            // Setup quality selector when HLS is ready (independent initialization)
+            setTimeout(() => {
+                if (window.playerHls || window.__hlsInstance2) {
+                    setupQualitySelector();
+                } else {
+                    // Try again after another delay
+                    setTimeout(() => {
+                        if (window.playerHls || window.__hlsInstance2) {
+                            setupQualitySelector();
+                        }
+                    }, 1500);
+                }
+            }, 500);
             
             // Show controls immediately so screen mode button is clickable
             showControls();

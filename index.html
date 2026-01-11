@@ -6704,7 +6704,39 @@
                 e.preventDefault();
                 const isAvailable = streamBtn2.dataset.available === '1';
                 if (!isAvailable) {
-                  showToast('error', 'Stream Unavailable', 'This stream is not available currently!');
+                  // Fallback: resolve via 8Stream API for player-2
+                  streamBtn2.textContent = 'Resolving…';
+                  streamBtn2.disabled = true;
+                  (async () => {
+                    try {
+                      const result = await window.resolveStreamUrlForMovie(movie, ['English','Hindi','Tamil','Telugu','Bengali']);
+                      if (result && result.success && result.src) {
+                        const params = new URLSearchParams();
+                        params.append('id', movie.id);
+                        params.append('movieId', movie.id);
+                        params.append('title', movie.title);
+                        if (movie.posterUrl) params.append('poster', movie.posterUrl);
+                        const isHls2 = /\.m3u8(\?.*)?$/.test(result.src) || result.type === 'hls';
+                        params.append('type', isHls2 ? 'hls' : (result.type || 'mp4'));
+                        params.append('src', result.src);
+                        if (result.imdbId) params.append('imdbId', result.imdbId);
+                        if (result.key) params.append('streamKey', result.key);
+                        if (result.language) params.append('currentLang', result.language);
+                        if (result.availableLanguages) params.append('availableLangs', JSON.stringify(result.availableLanguages));
+                        const finalUrl = `player-2.html?${params.toString()}`;
+                        localStorage.setItem('lastPlayerUsed', 'player2');
+                        window.location.href = finalUrl;
+                      } else {
+                        showToast('error', 'Stream Unavailable', 'Could not resolve a stream for this title.');
+                      }
+                    } catch (e) {
+                      console.error('Stream resolve failed:', e);
+                      showToast('error', 'Stream Error', 'Failed to resolve stream.');
+                    } finally {
+                      streamBtn2.textContent = 'Stream 2';
+                      streamBtn2.disabled = false;
+                    }
+                  })();
                   return;
                 }
                 // Build the player-2.html URL with the current movie's details
@@ -6717,24 +6749,48 @@
                 let player2Url = null;
                 const mp4Url = mp4Overrides[normTitle];
                 if (mp4Url) {
-                  params.append('type', 'mp4');
+                  const isHls = /\.m3u8(\?.*)?$/.test(mp4Url);
+                  params.append('type', isHls ? 'hls' : 'mp4');
                   params.append('src', mp4Url);
                   player2Url = `player-2.html?${params.toString()}`;
                 } else if (driveMovieMappings[String(movie.id)]) {
                   params.append('type', 'drive');
                   params.append('id', driveMovieMappings[String(movie.id)]);
                   player2Url = `player-2.html?${params.toString()}`;
-                } else if (movie.trailerUrl) {
-                  const ytKey = extractYouTubeId(movie.trailerUrl);
-                  if (ytKey) {
-                    params.append('type', 'youtube');
-                    params.append('id', ytKey);
-                    player2Url = `player-2.html?${params.toString()}`;
-                  }
                 } else if (movie.streamUrl) {
-                  params.append('type', 'mp4');
+                  const isHls = /\.m3u8(\?.*)?$/.test(movie.streamUrl);
+                  params.append('type', isHls ? 'hls' : 'mp4');
                   params.append('src', movie.streamUrl);
                   player2Url = `player-2.html?${params.toString()}`;
+                } else {
+                  // Resolve via 8Stream API for player-2
+                  streamBtn2.textContent = 'Resolving…';
+                  streamBtn2.disabled = true;
+                  (async () => {
+                    try {
+                      const result = await window.resolveStreamUrlForMovie(movie, ['English','Hindi','Tamil','Telugu','Bengali']);
+                      if (result && result.success && result.src) {
+                        const isHls2 = /\.m3u8(\?.*)?$/.test(result.src) || result.type === 'hls';
+                        params.append('type', isHls2 ? 'hls' : (result.type || 'mp4'));
+                        params.append('src', result.src);
+                        if (result.imdbId) params.append('imdbId', result.imdbId);
+                        if (result.key) params.append('streamKey', result.key);
+                        if (result.language) params.append('currentLang', result.language);
+                        if (result.availableLanguages) params.append('availableLangs', JSON.stringify(result.availableLanguages));
+                        player2Url = `player-2.html?${params.toString()}`;
+                        localStorage.setItem('lastPlayerUsed', 'player2');
+                        window.location.href = player2Url;
+                      } else {
+                        showToast('error', 'Stream Unavailable', 'Could not resolve a stream for this title.');
+                      }
+                    } catch (e) {
+                      console.error('Stream resolve failed:', e);
+                      showToast('error', 'Stream Error', 'Failed to resolve stream.');
+                    } finally {
+                      streamBtn2.textContent = 'Stream 2';
+                      streamBtn2.disabled = false;
+                    }
+                  })();
                 }
                 if (player2Url) {
                   // Check if we have saved progress and ask whether to resume
@@ -6744,16 +6800,17 @@
                     const percentBased = duration > 0 && watchData2.progress ? (duration * watchData2.progress) / 100 : 0;
                     const resumeTime = savedCurrent > 0 ? savedCurrent : percentBased;
                     const wantsResume = window.confirm(`You have progress at ${Math.round(watchData2.progress)}%.\n\nOK: Resume from there\nCancel: Start from beginning`);
-                    
                     localStorage.setItem('lastPlayerUsed', 'player2');
                     const finalUrl = wantsResume ? `${player2Url}&t=${Math.floor(resumeTime)}` : player2Url;
                     window.location.href = finalUrl;
-                  } else {
+                  } else if (player2Url) {
                     localStorage.setItem('lastPlayerUsed', 'player2');
                     window.location.href = player2Url;
+                  } else {
+                    showToast('error', 'Stream Unavailable', 'Stream is not available for this movie yet.');
                   }
                 } else {
-                  showToast('error', 'Stream Unavailable', 'Stream is not available for this movie yet.');
+                  // If resolution flow navigates, we don't reach here; else show error
                 }
               };
             }
@@ -6918,7 +6975,38 @@
           e.preventDefault();
           const isAvailable = streamBtn.dataset.available === '1';
           if (!isAvailable) {
-            showToast('error', 'Stream Unavailable', 'This stream is not available currently!');
+            // Fallback: resolve via 8Stream API even when no direct source
+            streamBtn.textContent = 'Resolving stream…';
+            streamBtn.disabled = true;
+            (async () => {
+              try {
+                const result = await window.resolveStreamUrlForMovie(movie, ['English','Hindi','Tamil','Telugu','Bengali']);
+                if (result && result.success && result.src) {
+                  const params = new URLSearchParams();
+                  params.append('id', movie.id);
+                  params.append('movieId', movie.id);
+                  params.append('title', movie.title);
+                  if (movie.posterUrl) params.append('poster', movie.posterUrl);
+                  const isHls = /\.m3u8(\?.*)?$/.test(result.src) || result.type === 'hls';
+                  params.append('type', isHls ? 'hls' : (result.type || 'mp4'));
+                  params.append('src', result.src);
+                  if (result.imdbId) params.append('imdbId', result.imdbId);
+                  if (result.key) params.append('streamKey', result.key);
+                  if (result.language) params.append('currentLang', result.language);
+                  if (result.availableLanguages) params.append('availableLangs', JSON.stringify(result.availableLanguages));
+                  const finalUrl = `player.html?${params.toString()}`;
+                  window.location.href = finalUrl;
+                } else {
+                  showToast('error', 'Stream Unavailable', 'Could not resolve a stream for this title.');
+                }
+              } catch (e) {
+                console.error('Stream resolve failed:', e);
+                showToast('error', 'Stream Error', 'Failed to resolve stream.');
+              } finally {
+                streamBtn.textContent = (watchData && watchData.progress > 0 && watchData.progress < 95) ? `Resume (${Math.round(watchData.progress)}%)` : 'Watch Now';
+                streamBtn.disabled = false;
+              }
+            })();
             return;
           }
 
@@ -6936,7 +7024,8 @@
           // 1) Check for direct MP4 override
           const mp4Url = getMp4Override(movie.title);
           if (mp4Url) {
-            params.append('type', 'mp4');
+            const isHls = /\.m3u8(\?.*)?$/.test(mp4Url);
+            params.append('type', isHls ? 'hls' : 'mp4');
             params.append('src', mp4Url);
             playerUrl = `player.html?${params.toString()}`;
           }
@@ -6946,20 +7035,44 @@
             params.append('id', driveMovieMappings[String(movie.id)]);
             playerUrl = `player.html?${params.toString()}`;
           }
-          // 3) Check for YouTube trailer
-          else if (movie.trailerUrl) {
-            const ytKey = extractYouTubeId(movie.trailerUrl);
-            if (ytKey) {
-              params.append('type', 'youtube');
-              params.append('id', ytKey);
-              playerUrl = `player.html?${params.toString()}`;
-            }
-          }
-          // 4) Check for direct stream URL
+          // 3) Check for direct stream URL
           else if (movie.streamUrl) {
-            params.append('type', 'mp4');
+            const isHls = /\.m3u8(\?.*)?$/.test(movie.streamUrl);
+            params.append('type', isHls ? 'hls' : 'mp4');
             params.append('src', movie.streamUrl);
             playerUrl = `player.html?${params.toString()}`;
+          } else {
+            // 5) Resolve via 8Stream API on-demand
+            streamBtn.textContent = 'Resolving stream…';
+            streamBtn.disabled = true;
+            (async () => {
+              try {
+                const result = await window.resolveStreamUrlForMovie(movie, ['English','Hindi','Tamil','Telugu','Bengali']);
+                if (result && result.success && result.src) {
+                  const isHls2 = /\.m3u8(\?.*)?$/.test(result.src) || result.type === 'hls';
+                  params.append('type', isHls2 ? 'hls' : (result.type || 'mp4'));
+                  params.append('src', result.src);
+                  if (result.imdbId) params.append('imdbId', result.imdbId);
+                  if (result.key) params.append('streamKey', result.key);
+                  if (result.language) params.append('currentLang', result.language);
+                  if (result.availableLanguages) params.append('availableLangs', JSON.stringify(result.availableLanguages));
+                  if (result.languageInfo) params.append('languageInfo', JSON.stringify(result.languageInfo));
+                  const finalUrl = `player.html?${params.toString()}`;
+                  window.location.href = finalUrl;
+                } else {
+                  const errorMsg = result?.message || 'Could not resolve a stream for this title.';
+                  console.warn('Stream resolution failed:', errorMsg);
+                  showToast('error', 'Stream Unavailable', errorMsg);
+                }
+              } catch (e) {
+                console.error('Stream resolve failed:', e);
+                showToast('error', 'Stream Error', 'Failed to resolve stream.');
+              } finally {
+                streamBtn.textContent = (watchData && watchData.progress > 0 && watchData.progress < 95) ? `Resume (${Math.round(watchData.progress)}%)` : 'Watch Now';
+                streamBtn.disabled = false;
+              }
+            })();
+            return;
           }
 
           if (playerUrl) {
@@ -7005,13 +7118,14 @@
         setTrailerHostContent(movie, trailerHost, placeholderImg);
       });
 
-      // Stream availability: Drive mapping OR direct MP4 override for this title
+      // Stream availability: drive mapping OR MP4 OR streamUrl OR API resolver
       if (!isSeries && streamBtn) {
         const normTitle = String(title).trim().toLowerCase();
-        const hasStream = !!(driveMovieMappings[String(movie.id)] || getMp4Override(title) || movie.streamUrl);
+        const canResolve = typeof window.resolveStreamUrlForMovie === 'function';
+        const hasStream = !!(driveMovieMappings[String(movie.id)] || getMp4Override(title) || movie.streamUrl || canResolve);
         streamBtn.dataset.movieId = movie.id;
         streamBtn.dataset.available = hasStream ? '1' : '0';
-        streamBtn.textContent = hasStream ? 'Stream' : 'Stream unavailable';
+        streamBtn.textContent = hasStream ? 'Stream' : 'Stream';
         streamBtn.classList.toggle('unavailable', !hasStream);
         streamBtn.disabled = !hasStream;
         // Keep button clickable so we can show a system message when unavailable
@@ -7022,11 +7136,12 @@
         // Stream 2 availability: Any video source available (Drive, MP4, or streamUrl)
         const normTitle = String(title).trim().toLowerCase();
         const streamBtn2El = document.getElementById('streamBtn2');
-        const hasStream2 = !!(driveMovieMappings[String(movie.id)] || getMp4Override(title) || movie.streamUrl);
+        const canResolve2 = typeof window.resolveStreamUrlForMovie === 'function';
+        const hasStream2 = !!(driveMovieMappings[String(movie.id)] || getMp4Override(title) || movie.streamUrl || canResolve2);
         if (streamBtn2El) {
           streamBtn2El.dataset.movieId = movie.id;
           streamBtn2El.dataset.available = hasStream2 ? '1' : '0';
-          streamBtn2El.textContent = hasStream2 ? 'Stream 2' : 'Stream 2 unavailable';
+          streamBtn2El.textContent = hasStream2 ? 'Stream 2' : 'Stream 2';
           streamBtn2El.classList.toggle('unavailable', !hasStream2);
           streamBtn2El.disabled = !hasStream2;
           // Keep button clickable so we can show a system message when unavailable
@@ -7343,7 +7458,8 @@
       // 1) Check for direct MP4 override
       const mp4Url = getMp4Override(currentMovie.title);
       if (mp4Url) {
-        params.append('type', 'mp4');
+        const isHls = /\.m3u8(\?.*)?$/.test(mp4Url);
+        params.append('type', isHls ? 'hls' : 'mp4');
         params.append('src', mp4Url);
         playerUrl = `player.html?${params.toString()}`;
       }
@@ -7353,20 +7469,45 @@
         params.append('id', driveMovieMappings[movieId]);
         playerUrl = `player.html?${params.toString()}`;
       }
-      // 3) Check for YouTube trailer
-      else if (currentMovie.trailerUrl) {
-        const ytKey = extractYouTubeId(currentMovie.trailerUrl);
-        if (ytKey) {
-          params.append('type', 'youtube');
-          params.append('id', ytKey);
-          playerUrl = `player.html?${params.toString()}`;
-        }
-      }
-      // 4) Check for direct stream URL
+      // 3) Check for direct stream URL
       else if (currentMovie.streamUrl) {
-        params.append('type', 'mp4');
+        const isHls = /\.m3u8(\?.*)?$/.test(currentMovie.streamUrl);
+        params.append('type', isHls ? 'hls' : 'mp4');
         params.append('src', currentMovie.streamUrl);
         playerUrl = `player.html?${params.toString()}`;
+      } else {
+        // Resolve on-demand from hero section
+        heroStreamBtn.textContent = 'Resolving…';
+        heroStreamBtn.disabled = true;
+        (async () => {
+          try {
+            const result = await window.resolveStreamUrlForMovie(currentMovie, ['English','Hindi','Tamil','Telugu','Bengali']);
+            if (result && result.success && result.src) {
+              const isHls2 = /\.m3u8(\?.*)?$/.test(result.src) || result.type === 'hls';
+              params.append('type', isHls2 ? 'hls' : (result.type || 'mp4'));
+              params.append('src', result.src);
+              if (result.imdbId) params.append('imdbId', result.imdbId);
+              if (result.key) params.append('streamKey', result.key);
+              if (result.language) params.append('currentLang', result.language);
+              if (result.availableLanguages) params.append('availableLangs', JSON.stringify(result.availableLanguages));
+              if (result.languageInfo) params.append('languageInfo', JSON.stringify(result.languageInfo));
+              playerUrl = `player.html?${params.toString()}`;
+              const finalUrl = resumeSeconds > 0 ? `${playerUrl}&t=${Math.floor(resumeSeconds)}` : playerUrl;
+              window.location.href = finalUrl;
+            } else {
+              const errorMsg = result?.message || 'Could not resolve a stream for this title.';
+              console.warn('Hero stream resolution failed:', errorMsg);
+              showSystemMessage(errorMsg, 'error');
+            }
+          } catch (e) {
+            console.error('Hero stream resolve failed:', e);
+            showSystemMessage('Failed to resolve stream: ' + (e?.message || 'Unknown error'), 'error');
+          } finally {
+            heroStreamBtn.textContent = 'Stream';
+            heroStreamBtn.disabled = false;
+          }
+        })();
+        return; // Don't fall through to the playerUrl check below
       }
 
       if (playerUrl) {
@@ -7374,7 +7515,6 @@
         const finalUrl = resumeSeconds > 0 ? `${playerUrl}&t=${Math.floor(resumeSeconds)}` : playerUrl;
         window.location.href = finalUrl;
       } else {
-        // This should not happen as we already check availability, but just in case
         showSystemMessage('Stream is not available for this movie yet.', 'error');
       }
     });
@@ -8395,6 +8535,8 @@
   <!-- Movie Database Integration -->
   <script src="js/movie-db.js"></script>
   <script src="js/tmdb-integration.js"></script>
+  <script src="public/streamApiConfig.js"></script>
+  <script src="js/stream-api.js"></script>
   <script>
     // TMDB API Configuration - Add your free API key from https://www.themoviedb.org/settings/api
     const TMDB_API_KEY = 'f66d9d54a03e21f8ef99dd0c4258aa8a'; // Replace with your actual API key
@@ -8409,6 +8551,8 @@
         return;
       }
       movieDb = new MovieDatabase(TMDB_API_KEY);
+      // Expose to window for stream-api.js
+      window.movieDb = movieDb;
       loadTrendingMovies(); // Load trending on page load
       if (typeof initializeTMDBIntegration === 'function') {
         initializeTMDBIntegration();

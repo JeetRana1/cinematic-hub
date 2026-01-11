@@ -3758,9 +3758,6 @@
         year: year,
         rating: rating,
         description: description,
-        imdbId: urlParams.get('imdbId') || '',
-        tmdbId: urlParams.get('tmdbId') || '',
-        posterUrl: urlParams.get('poster') || '',
         // Add a timestamp to ensure uniqueness and track last access
         timestamp: Date.now()
       };
@@ -3968,10 +3965,6 @@
       // Initialize continue watching UI
       let continueWatchingUI;
 
-      // Global variables for resume functionality
-      let hasSetResumeTime = true; // Disabled - using player-continue-watching.js instead
-      let resumePromptShown = true; // Disabled - using player-continue-watching.js instead
-
       // Show resume prompt modal when there's saved progress
       function showResumePromptModal(movie) {
         // Create modal if it doesn't exist
@@ -4176,6 +4169,8 @@
 
         // DISABLED: Old resume code - now handled by player-continue-watching.js
         // These flags are set to true to prevent this old code from running
+        let hasSetResumeTime = true; // Disabled - using player-continue-watching.js instead
+        let resumePromptShown = true; // Disabled - using player-continue-watching.js instead
         
         // Setup automatic progress tracking for continue watching
         if (window.ContinueWatchingManager && window.currentMovie) {
@@ -4184,10 +4179,7 @@
             window.ContinueWatchingManager.setupProgressTracking(video, {
               movieId: window.currentMovie.id,
               title: window.currentMovie.title,
-              posterUrl: window.currentMovie.posterUrl || window.currentMovie.poster || urlParams.get('poster') || '',
-              imdbId: window.currentMovie.imdbId,
-              tmdbId: window.currentMovie.tmdbId,
-              year: window.currentMovie.year
+              posterUrl: window.currentMovie.posterUrl || window.currentMovie.poster || urlParams.get('poster') || ''
             });
           }, { once: true });
         } else {

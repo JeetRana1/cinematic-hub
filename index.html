@@ -5683,10 +5683,8 @@
               // Build the player URL with the movie's details
               const params = new URLSearchParams();
               params.append('id', movie.id);
-              params.append('movieId', movie.id);
               params.append('title', movie.title);
               if (movie.posterUrl) params.append('poster', movie.posterUrl);
-              params.append('t', Math.floor(resumeTime));
 
               // Use the player that was used when watching this movie
               // Default to player1 if playerUsed field is missing
@@ -5695,38 +5693,8 @@
               console.log('🎬 Resuming', movie.title);
               console.log('📊 Movie object:', JSON.stringify(movie, null, 2));
               console.log('📹 Player to use:', playerBase, '(playerUsed field:', playerUsed, ')');
-              
-              // Show loading toast
-              showToast('info', 'Loading...', 'Resolving video stream for this movie...');
-              
-              // Resolve stream via API before redirecting
-              if (typeof window.resolveStreamUrlForMovie === 'function') {
-                window.resolveStreamUrlForMovie(movie)
-                  .then(result => {
-                    if (result && result.src) {
-                      // Add stream parameters to URL
-                      params.append('type', result.type || 'hls');
-                      params.append('src', result.src);
-                      if (result.key) params.append('key', result.key);
-                      if (result.language) params.append('language', result.language);
-                      if (result.availableLanguages) params.append('availableLanguages', JSON.stringify(result.availableLanguages));
-                      if (result.languageInfo) params.append('languageInfo', JSON.stringify(result.languageInfo));
-                      
-                      // Navigate to player with resolved stream
-                      window.location.href = `${playerBase}?${params.toString()}`;
-                    } else {
-                      showToast('error', 'Stream Not Found', 'Unable to resolve video stream for this movie.');
-                    }
-                  })
-                  .catch(error => {
-                    console.error('❌ Error resolving stream for resume:', error);
-                    showToast('error', 'Stream Error', 'Failed to load the video stream.');
-                  });
-              } else {
-                console.warn('⚠️ Stream resolver not available, using basic redirect');
-                // Fallback: redirect without stream (player will attempt to load)
-                window.location.href = `${playerBase}?${params.toString()}`;
-              }
+              // Navigate to the correct player with the resume time
+              window.location.href = `${playerBase}?${params.toString()}&t=${Math.floor(resumeTime)}`;
             }
           });
 
@@ -7428,7 +7396,7 @@
     // Stream behavior - open player in the same tab
     streamBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      if (!currentMovie) return showToast('error', 'No Movie', 'No movie selected.');
+      if (!currentMovie) return showSystemMessage('No movie selected.', 'error');
 
       const isAvailable = streamBtn.dataset.available === '1';
       if (!isAvailable) {
@@ -7532,11 +7500,11 @@
             } else {
               const errorMsg = result?.message || 'Could not resolve a stream for this title.';
               console.warn('Hero stream resolution failed:', errorMsg);
-              showToast('error', 'Stream Resolution Failed', errorMsg);
+              showSystemMessage(errorMsg, 'error');
             }
           } catch (e) {
             console.error('Hero stream resolve failed:', e);
-            showToast('error', 'Stream Error', 'Failed to resolve stream: ' + (e?.message || 'Unknown error'));
+            showSystemMessage('Failed to resolve stream: ' + (e?.message || 'Unknown error'), 'error');
           } finally {
             const heroStreamBtn = document.getElementById('heroStreamBtn') || document.querySelector('[data-hero-stream-btn]');
             if (heroStreamBtn) {
@@ -7553,7 +7521,7 @@
         const finalUrl = resumeSeconds > 0 ? `${playerUrl}&t=${Math.floor(resumeSeconds)}` : playerUrl;
         window.location.href = finalUrl;
       } else {
-        showToast('error', 'No Stream', 'Stream is not available for this movie yet.');
+        showSystemMessage('Stream is not available for this movie yet.', 'error');
       }
     });
 

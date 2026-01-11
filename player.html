@@ -4168,6 +4168,20 @@
         // These flags are set to true to prevent this old code from running
         let hasSetResumeTime = true; // Disabled - using player-continue-watching.js instead
         let resumePromptShown = true; // Disabled - using player-continue-watching.js instead
+        
+        // Setup automatic progress tracking for continue watching
+        if (window.ContinueWatchingManager && window.currentMovie) {
+          video.addEventListener('loadedmetadata', () => {
+            console.log('✓ Setting up progress tracking for:', window.currentMovie.title);
+            window.ContinueWatchingManager.setupProgressTracking(video, {
+              movieId: window.currentMovie.id,
+              title: window.currentMovie.title,
+              posterUrl: window.currentMovie.posterUrl || window.currentMovie.poster || urlParams.get('poster') || ''
+            });
+          }, { once: true });
+        } else {
+          console.warn('⚠️ Progress tracking not available - ContinueWatchingManager or currentMovie not ready');
+        }
       } else {
         console.error('❌ No video source provided in URL parameters!');
         console.error('   URL:', window.location.href);

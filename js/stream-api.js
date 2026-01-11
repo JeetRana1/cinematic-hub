@@ -14,36 +14,21 @@
   function getStreamApiBase(){
     // Try to get from environment first (Vercel), then fallback to default
     if (typeof window !== 'undefined' && window.STREAM_API) {
-      console.log('📡 Using configured STREAM_API:', window.STREAM_API);
       return window.STREAM_API;
     }
-    // Default to your new Vercel API
-    console.log('📡 Using default Vercel API: https://tesignt.vercel.app/api/v1');
-    return 'https://tesignt.vercel.app/api/v1';
+    // Default to Replit 8Stream API
+    return 'https://5d528c0d-bcad-4415-816c-eaccfdad56e0-00-2sav6y42resw5.riker.replit.dev/api/v1';
   }
 
   async function fetchImdbIdForTmdbMovie(movie){
     try{
-      console.log('🔍 fetchImdbIdForTmdbMovie called with:', movie);
-      if(!window.movieDb){
-        console.error('❌ window.movieDb not available');
+      if(!window.movieDb || !movie || !movie.id){
+        console.warn('fetchImdbIdForTmdbMovie: missing movieDb or movie');
         return null;
       }
-      if(!movie){
-        console.error('❌ movie object is missing');
-        return null;
-      }
-      // Try different ID properties
-      const tmdbId = movie.id || movie.tmdbId || movie.movieId;
-      if(!tmdbId){
-        console.error('❌ No ID found in movie object. Keys:', Object.keys(movie));
-        return null;
-      }
-      console.log('📍 Using TMDB ID:', tmdbId);
       const isTV = (movie.mediaType === 'tv');
-      const details = isTV ? await window.movieDb.getTVDetails(tmdbId) : await window.movieDb.getMovieDetails(tmdbId);
+      const details = isTV ? await movieDb.getTVDetails(movie.id) : await movieDb.getMovieDetails(movie.id);
       const imdbId = details?.imdbId || null;
-      console.log('✓ Got IMDB ID from TMDB:', imdbId);
       if(!imdbId){
         console.warn('IMDb ID not found for TMDB item:', movie);
       }
@@ -57,31 +42,19 @@
   async function fetchMediaInfoByImdb(imdbId){
     const base = getStreamApiBase();
     const url = `${base}/mediaInfo?id=${encodeURIComponent(imdbId)}`;
-    console.log('📡 Fetching mediaInfo from:', url);
-    console.log('📡 IMDB ID being sent:', imdbId);
-    try {
-      const res = await fetch(url, { cache: 'no-cache' });
-      console.log('📡 mediaInfo response status:', res.status);
-      if(!res.ok){
-        console.error(`mediaInfo request failed: ${res.status}`);
-        throw new Error(`API Error ${res.status} - Movie may not be in the database`);
-      }
-      const json = await res.json();
-      console.log('📦 mediaInfo response:', json);
-      if(!json.success){
-        const errorMsg = json.message || 'Movie not found in API database';
-        console.warn('API returned success:false -', errorMsg);
-        throw new Error(errorMsg);
-      }
-      return json.data; // { playlist, key }
-    } catch (error) {
-      console.error('fetchMediaInfoByImdb failed:', error.message);
-      // If it's a JSON parse error or network error, provide more context
-      if (error instanceof SyntaxError) {
-        throw new Error('Invalid API response format');
-      }
-      throw error;
+    console.log('📡 Fetching mediaInfo:', url);
+    const res = await fetch(url, { cache: 'no-cache' });
+    if(!res.ok){
+      console.error(`mediaInfo request failed: ${res.status}`);
+      throw new Error(`API Error ${res.status} - Movie may not be in the database`);
     }
+    const json = await res.json();
+    console.log('📦 mediaInfo response:', json);
+    if(!json.success){
+      console.warn('API returned success:false -', json.message);
+      throw new Error(json.message || 'Movie not found in API database');
+    }
+    return json.data; // { playlist, key }
   }
 
   function pickLanguagePlaylist(playlist, preferredLangs = DEFAULT_LANGS){
@@ -124,66 +97,12 @@
     return json.data?.link || null; // should be .m3u8
   }
 
-  // Fallback: search API directly by title
-  async function searchAndResolveByTitle(title) {
-    try {
-      const base = getStreamApiBase();
-      const searchUrl = `${base}/search?query=${encodeURIComponent(title)}`;
-      console.log('🔍 Searching API by title:', searchUrl);
-      const res = await fetch(searchUrl, { cache: 'no-cache' });
-      if (!res.ok) {
-        console.error('Title search failed:', res.status);
-        return null;
-      }
-      const json = await res.json();
-      console.log('📦 Search response:', json);
-      
-      // If API returns results, try the first match
-      if (json.results && json.results.length > 0) {
-        const firstMatch = json.results[0];
-        console.log('✅ Found match via title search:', firstMatch);
-        // Try to get media info for this result
-        if (firstMatch.id) {
-          return await fetchMediaInfoByImdb(firstMatch.id);
-        }
-      }
-      return null;
-    } catch (err) {
-      console.error('searchAndResolveByTitle error:', err);
-      return null;
-    }
-  }
-
   async function resolveStreamUrlForMovie(movie, preferredLangs = DEFAULT_LANGS){
     try{
       console.log('🔍 Resolving stream for movie:', movie?.title || movie?.name || movie);
-      console.log('📋 Full movie object:', JSON.stringify(movie, null, 2));
-      let imdbId = movie.imdbId;
-      
-      // If no IMDB ID, try to fetch it from TMDB
-      if (!imdbId) {
-        console.log('⏳ No IMDB ID in movie object, fetching from TMDB...');
-        imdbId = await fetchImdbIdForTmdbMovie(movie);
-      }
-      
-      console.log('🎬 Using IMDB ID:', imdbId);
-      
+      const imdbId = movie.imdbId || await fetchImdbIdForTmdbMovie(movie);
       if(!imdbId){
-        console.error('❌ No IMDB ID found for movie:', movie?.title);
-        console.log('⚠️ Will try searching by title instead...');
-        // Fallback: try to search and resolve by title
-        if (movie.title) {
-          try {
-            const searchResult = await searchAndResolveByTitle(movie.title);
-            if (searchResult) {
-              console.log('✅ Found stream via title search');
-              return searchResult;
-            }
-          } catch (searchErr) {
-            console.error('Title search also failed:', searchErr);
-          }
-        }
-        return { success:false, message:'No IMDb ID found and title search failed', src:null, type:null };
+        return { success:false, message:'No IMDb ID', src:null, type:null };
       }
       
       // Check for movie overrides (original language, preferred langs)

@@ -16,8 +16,8 @@
     if (typeof window !== 'undefined' && window.STREAM_API) {
       return window.STREAM_API;
     }
-    // Default public API
-    return 'https://8-stream-api.vercel.app/api/v1';
+    // Default to local proxy API
+    return '/api';
   }
 
   async function fetchImdbIdForTmdbMovie(movie){

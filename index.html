@@ -7477,8 +7477,11 @@
         playerUrl = `player.html?${params.toString()}`;
       } else {
         // Resolve on-demand from hero section
-        heroStreamBtn.textContent = 'Resolving…';
-        heroStreamBtn.disabled = true;
+        const heroStreamBtn = document.getElementById('heroStreamBtn') || document.querySelector('[data-hero-stream-btn]');
+        if (heroStreamBtn) {
+          heroStreamBtn.textContent = 'Resolving…';
+          heroStreamBtn.disabled = true;
+        }
         (async () => {
           try {
             const result = await window.resolveStreamUrlForMovie(currentMovie, ['English','Hindi','Tamil','Telugu','Bengali']);
@@ -7503,8 +7506,11 @@
             console.error('Hero stream resolve failed:', e);
             showSystemMessage('Failed to resolve stream: ' + (e?.message || 'Unknown error'), 'error');
           } finally {
-            heroStreamBtn.textContent = 'Stream';
-            heroStreamBtn.disabled = false;
+            const heroStreamBtn = document.getElementById('heroStreamBtn') || document.querySelector('[data-hero-stream-btn]');
+            if (heroStreamBtn) {
+              heroStreamBtn.textContent = 'Stream';
+              heroStreamBtn.disabled = false;
+            }
           }
         })();
         return; // Don't fall through to the playerUrl check below

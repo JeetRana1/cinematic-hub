@@ -340,14 +340,11 @@ class ContinueWatchingDisplay {
     if (movie.posterUrl) params.append('poster', movie.posterUrl);
     params.append('t', Math.floor(movie.currentTime));
     
-    // Determine video source type and add appropriate parameters
-    const resumeUrl = this.buildResumeUrl(movie, params, playerBase);
+    // Show loading toast while resolving stream
+    this.showToast('info', 'Loading...', 'Resolving video stream for this movie...');
     
-    if (resumeUrl) {
-      window.location.href = resumeUrl;
-    } else {
-      this.showToast('error', 'Resume Failed', 'Unable to resume this movie. The video source may no longer be available.');
-    }
+    // Determine video source type and add appropriate parameters
+    this.buildResumeUrl(movie, params, playerBase);
   }
 
   /**
@@ -372,8 +369,42 @@ class ContinueWatchingDisplay {
       return `${playerBase}?${params.toString()}`;
     }
     
-    // Fallback to basic player URL
-    return `${playerBase}?${params.toString()}`;
+    // For 8Stream API movies, trigger async resolution like the Stream button does
+    // Add a flag to indicate this needs API resolution
+    params.append('needsApiResolution', 'true');
+    const baseUrl = `${playerBase}?${params.toString()}`;
+    
+    // Resolve stream asynchronously and redirect
+    if (window.resolveStreamUrlForMovie) {
+      window.resolveStreamUrlForMovie(movie.movieId, movie.title)
+        .then(result => {
+          if (result && result.src) {
+            // Build new params with resolved stream
+            const newParams = new URLSearchParams();
+            newParams.append('movieId', movie.movieId);
+            newParams.append('id', movie.movieId);
+            newParams.append('title', movie.title);
+            if (movie.posterUrl) newParams.append('poster', movie.posterUrl);
+            newParams.append('t', Math.floor(movie.currentTime));
+            newParams.append('type', result.type || 'hls');
+            newParams.append('src', result.src);
+            if (result.key) newParams.append('key', result.key);
+            if (result.language) newParams.append('language', result.language);
+            if (result.availableLanguages) newParams.append('availableLanguages', JSON.stringify(result.availableLanguages));
+            if (result.languageInfo) newParams.append('languageInfo', JSON.stringify(result.languageInfo));
+            
+            window.location.href = `${playerBase}?${newParams.toString()}`;
+          } else {
+            this.showToast('error', 'Stream Not Found', 'Unable to resolve video stream for this movie.');
+          }
+        })
+        .catch(error => {
+          console.error('❌ Error resolving stream for resume:', error);
+          this.showToast('error', 'Stream Error', 'Failed to load the video stream.');
+        });
+    }
+    
+    return null; // Async redirect handled above
   }
 
   /**

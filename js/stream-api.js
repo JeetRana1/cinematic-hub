@@ -14,9 +14,11 @@
   function getStreamApiBase(){
     // Try to get from environment first (Vercel), then fallback to default
     if (typeof window !== 'undefined' && window.STREAM_API) {
+      console.log('📡 Using configured STREAM_API:', window.STREAM_API);
       return window.STREAM_API;
     }
     // Default to local proxy API
+    console.log('📡 Using default local API: /api');
     return '/api';
   }
 

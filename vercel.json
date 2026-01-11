@@ -1,0 +1,7 @@
+{
+  "buildCommand": "npm run prebuild",
+  "outputDirectory": ".",
+  "rewrites": [
+    { "source": "/", "destination": "/login.html" }
+  ]
+}

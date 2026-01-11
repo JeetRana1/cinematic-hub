@@ -17,20 +17,33 @@
       console.log('📡 Using configured STREAM_API:', window.STREAM_API);
       return window.STREAM_API;
     }
-    // Default to local proxy API
-    console.log('📡 Using default local API: /api');
-    return '/api';
+    // Default to your new Vercel API
+    console.log('📡 Using default Vercel API: https://tesignt.vercel.app/api/v1');
+    return 'https://tesignt.vercel.app/api/v1';
   }
 
   async function fetchImdbIdForTmdbMovie(movie){
     try{
-      if(!window.movieDb || !movie || !movie.id){
-        console.warn('fetchImdbIdForTmdbMovie: missing movieDb or movie');
+      console.log('🔍 fetchImdbIdForTmdbMovie called with:', movie);
+      if(!window.movieDb){
+        console.error('❌ window.movieDb not available');
         return null;
       }
+      if(!movie){
+        console.error('❌ movie object is missing');
+        return null;
+      }
+      // Try different ID properties
+      const tmdbId = movie.id || movie.tmdbId || movie.movieId;
+      if(!tmdbId){
+        console.error('❌ No ID found in movie object. Keys:', Object.keys(movie));
+        return null;
+      }
+      console.log('📍 Using TMDB ID:', tmdbId);
       const isTV = (movie.mediaType === 'tv');
-      const details = isTV ? await movieDb.getTVDetails(movie.id) : await movieDb.getMovieDetails(movie.id);
+      const details = isTV ? await window.movieDb.getTVDetails(tmdbId) : await window.movieDb.getMovieDetails(tmdbId);
       const imdbId = details?.imdbId || null;
+      console.log('✓ Got IMDB ID from TMDB:', imdbId);
       if(!imdbId){
         console.warn('IMDb ID not found for TMDB item:', movie);
       }

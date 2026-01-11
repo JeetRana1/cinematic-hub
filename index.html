@@ -7396,7 +7396,7 @@
     // Stream behavior - open player in the same tab
     streamBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      if (!currentMovie) return showSystemMessage('No movie selected.', 'error');
+      if (!currentMovie) return showToast('error', 'No Movie', 'No movie selected.');
 
       const isAvailable = streamBtn.dataset.available === '1';
       if (!isAvailable) {
@@ -7500,11 +7500,11 @@
             } else {
               const errorMsg = result?.message || 'Could not resolve a stream for this title.';
               console.warn('Hero stream resolution failed:', errorMsg);
-              showSystemMessage(errorMsg, 'error');
+              showToast('error', 'Stream Resolution Failed', errorMsg);
             }
           } catch (e) {
             console.error('Hero stream resolve failed:', e);
-            showSystemMessage('Failed to resolve stream: ' + (e?.message || 'Unknown error'), 'error');
+            showToast('error', 'Stream Error', 'Failed to resolve stream: ' + (e?.message || 'Unknown error'));
           } finally {
             const heroStreamBtn = document.getElementById('heroStreamBtn') || document.querySelector('[data-hero-stream-btn]');
             if (heroStreamBtn) {
@@ -7521,7 +7521,7 @@
         const finalUrl = resumeSeconds > 0 ? `${playerUrl}&t=${Math.floor(resumeSeconds)}` : playerUrl;
         window.location.href = finalUrl;
       } else {
-        showSystemMessage('Stream is not available for this movie yet.', 'error');
+        showToast('error', 'No Stream', 'Stream is not available for this movie yet.');
       }
     });
 

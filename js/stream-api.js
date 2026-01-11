@@ -16,8 +16,8 @@
     if (typeof window !== 'undefined' && window.STREAM_API) {
       return window.STREAM_API;
     }
-    // Default to Replit 8Stream API
-    return 'https://5d528c0d-bcad-4415-816c-eaccfdad56e0-00-2sav6y42resw5.riker.replit.dev/api/v1';
+    // Default to stable 8Stream API
+    return 'https://8streamapi.vercel.app/api/v1';
   }
 
   async function fetchImdbIdForTmdbMovie(movie){

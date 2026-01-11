@@ -3965,6 +3965,10 @@
       // Initialize continue watching UI
       let continueWatchingUI;
 
+      // Global variables for resume functionality
+      let hasSetResumeTime = true; // Disabled - using player-continue-watching.js instead
+      let resumePromptShown = true; // Disabled - using player-continue-watching.js instead
+
       // Show resume prompt modal when there's saved progress
       function showResumePromptModal(movie) {
         // Create modal if it doesn't exist
@@ -4169,8 +4173,6 @@
 
         // DISABLED: Old resume code - now handled by player-continue-watching.js
         // These flags are set to true to prevent this old code from running
-        let hasSetResumeTime = true; // Disabled - using player-continue-watching.js instead
-        let resumePromptShown = true; // Disabled - using player-continue-watching.js instead
         
         // Setup automatic progress tracking for continue watching
         if (window.ContinueWatchingManager && window.currentMovie) {

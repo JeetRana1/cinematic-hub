@@ -370,15 +370,14 @@ class ContinueWatchingDisplay {
     }
     
     // For 8Stream API movies, trigger async resolution like the Stream button does
-    // Add a flag to indicate this needs API resolution
-    params.append('needsApiResolution', 'true');
-    const baseUrl = `${playerBase}?${params.toString()}`;
+    console.log('🎬 Resolving stream for resume via 8Stream API...');
     
-    // Resolve stream asynchronously and redirect
-    if (window.resolveStreamUrlForMovie) {
+    // Ensure resolveStreamUrlForMovie is available
+    if (typeof window.resolveStreamUrlForMovie === 'function') {
       window.resolveStreamUrlForMovie(movie.movieId, movie.title)
         .then(result => {
           if (result && result.src) {
+            console.log('✅ Stream resolved for resume:', result.src.substring(0, 100) + '...');
             // Build new params with resolved stream
             const newParams = new URLSearchParams();
             newParams.append('movieId', movie.movieId);
@@ -393,18 +392,26 @@ class ContinueWatchingDisplay {
             if (result.availableLanguages) newParams.append('availableLanguages', JSON.stringify(result.availableLanguages));
             if (result.languageInfo) newParams.append('languageInfo', JSON.stringify(result.languageInfo));
             
+            console.log('🔗 Redirecting to player with stream parameters');
             window.location.href = `${playerBase}?${newParams.toString()}`;
           } else {
+            console.error('❌ No stream found in resolution result');
             this.showToast('error', 'Stream Not Found', 'Unable to resolve video stream for this movie.');
           }
         })
         .catch(error => {
           console.error('❌ Error resolving stream for resume:', error);
-          this.showToast('error', 'Stream Error', 'Failed to load the video stream.');
+          this.showToast('error', 'Stream Error', 'Failed to load the video stream. Error: ' + error.message);
         });
+      
+      return null; // Async redirect handled above
+    } else {
+      // Fallback: Function not available, redirect with IMDB ID and let player handle it
+      console.warn('⚠️ resolveStreamUrlForMovie not available, using fallback');
+      params.append('type', 'hls');
+      params.append('imdbId', movie.imdbId || '');
+      return `${playerBase}?${params.toString()}`;
     }
-    
-    return null; // Async redirect handled above
   }
 
   /**

@@ -111,15 +111,66 @@
     return json.data?.link || null; // should be .m3u8
   }
 
+  // Fallback: search API directly by title
+  async function searchAndResolveByTitle(title) {
+    try {
+      const base = getStreamApiBase();
+      const searchUrl = `${base}/search?query=${encodeURIComponent(title)}`;
+      console.log('🔍 Searching API by title:', searchUrl);
+      const res = await fetch(searchUrl, { cache: 'no-cache' });
+      if (!res.ok) {
+        console.error('Title search failed:', res.status);
+        return null;
+      }
+      const json = await res.json();
+      console.log('📦 Search response:', json);
+      
+      // If API returns results, try the first match
+      if (json.results && json.results.length > 0) {
+        const firstMatch = json.results[0];
+        console.log('✅ Found match via title search:', firstMatch);
+        // Try to get media info for this result
+        if (firstMatch.id) {
+          return await fetchMediaInfoByImdb(firstMatch.id);
+        }
+      }
+      return null;
+    } catch (err) {
+      console.error('searchAndResolveByTitle error:', err);
+      return null;
+    }
+  }
+
   async function resolveStreamUrlForMovie(movie, preferredLangs = DEFAULT_LANGS){
     try{
       console.log('🔍 Resolving stream for movie:', movie?.title || movie?.name || movie);
       console.log('📋 Full movie object:', JSON.stringify(movie, null, 2));
-      const imdbId = movie.imdbId || await fetchImdbIdForTmdbMovie(movie);
+      let imdbId = movie.imdbId;
+      
+      // If no IMDB ID, try to fetch it from TMDB
+      if (!imdbId) {
+        console.log('⏳ No IMDB ID in movie object, fetching from TMDB...');
+        imdbId = await fetchImdbIdForTmdbMovie(movie);
+      }
+      
       console.log('🎬 Using IMDB ID:', imdbId);
+      
       if(!imdbId){
         console.error('❌ No IMDB ID found for movie:', movie?.title);
-        return { success:false, message:'No IMDb ID', src:null, type:null };
+        console.log('⚠️ Will try searching by title instead...');
+        // Fallback: try to search and resolve by title
+        if (movie.title) {
+          try {
+            const searchResult = await searchAndResolveByTitle(movie.title);
+            if (searchResult) {
+              console.log('✅ Found stream via title search');
+              return searchResult;
+            }
+          } catch (searchErr) {
+            console.error('Title search also failed:', searchErr);
+          }
+        }
+        return { success:false, message:'No IMDb ID found and title search failed', src:null, type:null };
       }
       
       // Check for movie overrides (original language, preferred langs)

@@ -119,27 +119,33 @@
         return { success:false, message:'No IMDb ID', src:null, type:null };
       }
       
-      // Use VidSrc.pro (cleaner, fewer ads)
+      // Use multiple VidSrc providers for language support
       const isTV = movie.mediaType === 'tv';
-      let src;
+      const tmdbId = movie.id;
       
-      if (isTV) {
-        // For TV shows, use season 1 episode 1 by default
-        src = `https://vidsrc.cc/v2/embed/tv/${movie.id}/1/1`;
-      } else {
-        // For movies, use IMDB ID
-        src = `https://vidsrc.cc/v2/embed/movie/${imdbId}`;
-      }
+      // Primary source with multi-language support
+      let src = isTV 
+        ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1`
+        : `https://vidsrc.to/embed/movie/${imdbId}`;
       
-      console.log('🎬 Resolved VidSrc stream:', { imdbId, src, type: 'iframe' });
+      // Create language alternatives using different providers
+      const languageStreams = {
+        'English': isTV ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1` : `https://vidsrc.to/embed/movie/${imdbId}`,
+        'Hindi': isTV ? `https://vidsrc.cc/v2/embed/tv/${tmdbId}/1/1` : `https://vidsrc.cc/v2/embed/movie/${imdbId}`,
+        'Multi-Audio': isTV ? `https://vidsrc.in/embed/tv/${tmdbId}/1-1` : `https://vidsrc.in/embed/movie/${imdbId}`,
+      };
+      
+      console.log('🎬 Resolved multi-source stream:', { imdbId, src, type: 'iframe' });
       return { 
         success: true, 
         imdbId, 
         src, 
         type: 'iframe',
         language: 'Multi-Audio',
-        availableLanguages: ['Multi-Audio'],
-        provider: 'VidSrc'
+        availableLanguages: ['Multi-Audio', 'English', 'Hindi'],
+        languageStreams: languageStreams,
+        tmdbId: tmdbId,
+        provider: 'VidSrc Multi'
       };
     }catch(e){
       console.error('resolveStreamUrlForMovie error:', e);

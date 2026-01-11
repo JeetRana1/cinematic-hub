@@ -7054,6 +7054,8 @@
                     params.append('type', 'iframe');
                     params.append('src', result.src);
                     if (result.provider) params.append('provider', result.provider);
+                    if (result.languageStreams) params.append('languageStreams', JSON.stringify(result.languageStreams));
+                    if (result.tmdbId) params.append('tmdbId', result.tmdbId);
                   } else {
                     const isHls2 = /\.m3u8(\?.*)?$/.test(result.src) || result.type === 'hls';
                     params.append('type', isHls2 ? 'hls' : (result.type || 'mp4'));

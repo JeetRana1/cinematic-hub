@@ -2100,6 +2100,10 @@
     <button id="backButton" class="back-button" aria-label="Back">
       <i class="fa-solid fa-house"></i>
     </button>
+    
+    <!-- Iframe for embed players (VidSrc, etc.) -->
+    <iframe id="streamIframe" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; border:none;" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"></iframe>
+    
     <video id="video" playsinline>
       <source src="" type="video/mp4">
       <!-- If you have a subtitle file, set the src below. Otherwise, remove the <track> to avoid errors. -->
@@ -4142,6 +4146,42 @@
           iframe.allowFullscreen = true;
           video.parentElement.appendChild(iframe);
           console.log('✓ Iframe embed loaded:', src);
+          
+          // Add language switcher for iframe embeds
+          const languageStreamsParam = urlParams.get('languageStreams');
+          if (languageStreamsParam) {
+            try {
+              const languageStreams = JSON.parse(languageStreamsParam);
+              const currentLang = urlParams.get('currentLang') || 'Multi-Audio';
+              
+              // Create language switcher UI
+              const langSwitcher = document.createElement('div');
+              langSwitcher.style.cssText = 'position:absolute; top:20px; right:20px; z-index:10000; background:rgba(0,0,0,0.8); padding:10px; border-radius:8px;';
+              langSwitcher.innerHTML = '<div style="color:white; font-size:14px; margin-bottom:5px;">Audio:</div>';
+              
+              Object.keys(languageStreams).forEach(lang => {
+                const btn = document.createElement('button');
+                btn.textContent = lang;
+                btn.style.cssText = `margin:2px; padding:8px 12px; cursor:pointer; border:none; border-radius:4px; font-size:12px; ${lang === currentLang ? 'background:#e50914; color:white;' : 'background:white; color:black;'}`;
+                btn.onclick = () => {
+                  iframe.src = languageStreams[lang];
+                  console.log('✓ Switched to:', lang, languageStreams[lang]);
+                  // Update button styles
+                  langSwitcher.querySelectorAll('button').forEach(b => {
+                    b.style.background = 'white';
+                    b.style.color = 'black';
+                  });
+                  btn.style.background = '#e50914';
+                  btn.style.color = 'white';
+                };
+                langSwitcher.appendChild(btn);
+              });
+              
+              video.parentElement.appendChild(langSwitcher);
+            } catch (e) {
+              console.error('Failed to parse language streams:', e);
+            }
+          }
           
           // Hide custom controls for iframe embeds (they have their own controls)
           const controlsContainer = document.getElementById('controlsContainer');

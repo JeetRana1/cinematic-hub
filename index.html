@@ -67,6 +67,26 @@
       padding: 0;
     }
 
+    *::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    *::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+    }
+
+    *::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, rgba(167, 139, 250, 0.6), rgba(251, 113, 133, 0.6));
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, rgba(167, 139, 250, 0.8), rgba(251, 113, 133, 0.8));
+    }
+
     /* Animated Background */
     .bg-particles {
       position: fixed;
@@ -112,20 +132,20 @@
 
     :root {
       --scrollbar-thumb: #ffffff;
-      --scrollbar-thumb-hover: #121418;
-      --scrollbar-track: #23232b;
-      --modal-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45), 0 1.5px 8px rgba(0, 0, 0, 0.18);
+      --scrollbar-thumb-hover: #0a0a0f;
+      --scrollbar-track: #0f0f15;
+      --modal-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.65), 0 1.5px 8px rgba(0, 0, 0, 0.35);
       --primary-gradient: linear-gradient(90deg, #a78bfa, #fb7185);
-      --bg-color: #000000;
-      --bg-gradient: linear-gradient(180deg, #0a0a0f 0%, #12121f 100%);
-      --glass-bg: rgba(255, 255, 255, 0.08);
-      --glass-border: rgba(255, 255, 255, 0.12);
-      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      --hover-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      --bg-color: #030305;
+      --bg-gradient: linear-gradient(180deg, #030305 0%, #0a0a0f 50%, #05050a 100%);
+      --glass-bg: rgba(15, 15, 25, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      --hover-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
       --text-color: #ffffff;
-      --text-secondary: rgba(255, 255, 255, 0.7);
-      --modal-bg: rgba(0, 0, 0, 0.95);
-      --modal-content-bg: rgba(30, 30, 40, 0.9);
+      --text-secondary: rgba(255, 255, 255, 0.65);
+      --modal-bg: rgba(0, 0, 0, 0.98);
+      --modal-content-bg: rgba(15, 15, 25, 0.95);
     }
 
     @media (max-width: 768px) {
@@ -142,12 +162,12 @@
 
     body {
       font-family: 'Poppins', sans-serif;
-      background-color: var(--bg-color);
-      background-image: var(--bg-gradient);
+      background-color: #030305;
+      background-image: linear-gradient(180deg, #030305 0%, #0a0a0f 45%, #05050a 100%);
       color: var(--text-color);
       min-height: 100vh;
       padding: 2rem;
-      background-attachment: scroll;
+      background-attachment: fixed;
       background-repeat: no-repeat;
       position: relative;
       overflow-x: hidden;
@@ -162,7 +182,7 @@
       bottom: 0;
       background:
         url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-      opacity: 0.02;
+      opacity: 0.03;
       pointer-events: none;
       z-index: 1;
     }
@@ -174,9 +194,40 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.04), transparent 100%);
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(167, 139, 250, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(251, 113, 133, 0.04) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.02) 0%, transparent 70%);
       pointer-events: none;
       z-index: 1;
+      animation: gradientShift 20s ease-in-out infinite;
+    }
+
+    @keyframes gradientShift {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.1); }
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .container {
@@ -184,6 +235,7 @@
       margin: 0 auto;
       position: relative;
       z-index: 2;
+      animation: slideInUp 0.6s ease-out;
     }
 
     /* Mini user menu (profiles/settings/logout) */
@@ -594,11 +646,15 @@
     .brand-title {
       font-size: 8.5rem;
       font-weight: 1000px;
-      background: linear-gradient(90deg, #a78bfa, #fb7185);
+      background: linear-gradient(135deg, #a78bfa 0%, #fb7185 50%, #fbbf24 100%);
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
       margin: 0;
+      letter-spacing: -1px;
+      display: flex;
+      align-items: center;
+      gap: 0.3em;
     }
 
     .brand-sub {
@@ -625,30 +681,46 @@
     .search-top {
       display: flex;
       align-items: center;
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 20px;
-      padding: 0.4rem 1rem;
-      transition: all 0.3s ease;
-      backdrop-filter: blur(8px);
+      background: linear-gradient(135deg, rgba(20, 20, 30, 0.8) 0%, rgba(15, 15, 25, 0.9) 100%);
+      border: 1.5px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 0.6rem 1.25rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
       width: 100%;
       max-width: 600px;
       margin: 0 auto;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+    }
+
+    .search-top:hover {
+      border-color: rgba(167, 139, 250, 0.3);
+      box-shadow: 0 6px 20px rgba(167, 139, 250, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
     }
 
     .search-top:focus-within {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
-      border-color: rgba(99, 102, 241, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(167, 139, 250, 0.25), 0 0 0 2px rgba(167, 139, 250, 0.3);
+      border-color: rgba(167, 139, 250, 0.5);
+      background: linear-gradient(135deg, rgba(25, 25, 40, 0.9) 0%, rgba(20, 20, 30, 0.95) 100%);
     }
 
     .search-top input {
       background: transparent;
       border: none;
       color: white;
-      padding: 0.5rem;
+      padding: 0.6rem 0.75rem;
       width: 100%;
       outline: none;
+      font-size: 1rem;
+      font-weight: 400;
+      letter-spacing: 0.3px;
+    }
+
+    .search-top input::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 300;
     }
 
     /* Adjust topbar to account for fixed user menu */
@@ -1610,9 +1682,10 @@
 
     /* Action buttons in search area (home and search) share styles */
     .home-btn {
-      background: linear-gradient(90deg, #6366f1, #8b5cf6);
-      border: 2px solid white;
-      border-radius: 50%;
+      position: relative;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
       width: 40px;
       height: 40px;
       display: flex;
@@ -1620,18 +1693,40 @@
       justify-content: center;
       cursor: pointer;
       color: white;
-      box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
-      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       margin: 0 6px;
       padding: 0;
       box-sizing: border-box;
       outline: none;
+      flex-shrink: 0;
+      backdrop-filter: blur(10px);
     }
 
-    .home-btn svg {
-      width: 16px;
-      height: 16px;
-      fill: white;
+    .home-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      opacity: 0;
+      transition: 0.6s;
+    }
+
+    .home-btn:hover::before {
+      opacity: 1;
+    }
+
+    .home-btn:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+      box-shadow: 0 6px 20px rgba(255, 255, 255, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .home-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
 
     .home-btn:hover {
@@ -1662,8 +1757,41 @@
     }
 
     .movies-grid {
-      animation: fadeInUp 0.5s ease-out forwards;
+      animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
       margin-top: 8rem;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .movie-card {
+      animation: cardFadeIn 0.5s ease-out backwards;
+    }
+
+    .movie-card:nth-child(1) { animation-delay: 0.05s; }
+    .movie-card:nth-child(2) { animation-delay: 0.1s; }
+    .movie-card:nth-child(3) { animation-delay: 0.15s; }
+    .movie-card:nth-child(4) { animation-delay: 0.2s; }
+    .movie-card:nth-child(5) { animation-delay: 0.25s; }
+    .movie-card:nth-child(6) { animation-delay: 0.3s; }
+
+    @keyframes cardFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
 
     .movies {
@@ -1679,42 +1807,73 @@
     }
 
     .cat-btn {
-      padding: 0.5rem 0.9rem;
-      border-radius: 999px;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-bg);
-      color: var(--text-color);
+      padding: 0.65rem 1.25rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: linear-gradient(135deg, rgba(35, 35, 50, 0.5) 0%, rgba(25, 25, 35, 0.6) 100%);
+      color: rgba(255, 255, 255, 0.9);
       cursor: pointer;
       font-family: 'Poppins', sans-serif;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      backdrop-filter: blur(8px) saturate(120%);
-      -webkit-backdrop-filter: blur(8px) saturate(120%);
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      backdrop-filter: blur(16px) saturate(150%);
+      -webkit-backdrop-filter: blur(16px) saturate(150%);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+      position: relative;
+      overflow: hidden;
+      letter-spacing: 0.3px;
+    }
+
+    .cat-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(167, 139, 250, 0.4), rgba(251, 113, 133, 0.3));
+      transform: translate(-50%, -50%);
+      transition: width 0.5s ease, height 0.5s ease;
     }
 
     .cat-btn:hover {
-      transform: translateY(-1px);
-      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-3px);
+      border-color: rgba(167, 139, 250, 0.4);
+      box-shadow: 0 8px 20px rgba(167, 139, 250, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+      background: linear-gradient(135deg, rgba(45, 45, 65, 0.6) 0%, rgba(35, 35, 50, 0.7) 100%);
+    }
+
+    .cat-btn:hover::before {
+      width: 250px;
+      height: 250px;
     }
 
     .cat-btn:active {
-      transform: translateY(0);
-      border-color: rgba(166, 108, 255, 0.6);
-      /* visible border while pressing */
+      transform: translateY(-1px) scale(0.98);
+      box-shadow: 0 4px 12px rgba(167, 139, 250, 0.2);
     }
 
     .cat-btn:focus-visible {
       outline: none;
-      border-color: rgba(166, 108, 255, 0.7);
-      box-shadow: 0 0 0 2px rgba(166, 108, 255, 0.25);
+      border-color: rgba(167, 139, 250, 0.6);
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.3), 0 8px 20px rgba(167, 139, 250, 0.25);
     }
 
     .cat-btn.active {
-      background: linear-gradient(135deg, var(--accent), #ff6b6b);
+      background: linear-gradient(135deg, #a78bfa 0%, #fb7185 100%);
       color: white;
-      border-color: rgba(255, 255, 255, 0.45);
-      /* show border when selected */
-      box-shadow: 0 6px 20px rgba(166, 108, 255, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+      border-color: rgba(255, 255, 255, 0.4);
+      box-shadow: 0 8px 24px rgba(167, 139, 250, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+      transform: translateY(-3px);
+      font-weight: 700;
+    }
+
+    .cat-btn.active::before {
+      width: 250px;
+      height: 250px;
+      background: rgba(255, 255, 255, 0.2);
     }
 
     /* Report Problem Modal Styles */
@@ -1975,16 +2134,22 @@
     }
 
     header {
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      background: var(--glass-bg);
-      border-radius: 10px;
-      padding: 2rem;
-      margin-bottom: 2.5rem;
-      border: 1px solid var(--glass-border);
-      box-shadow: var(--card-shadow);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: linear-gradient(135deg, rgba(15, 15, 25, 0.8) 0%, rgba(10, 10, 15, 0.9) 100%);
+      border-radius: 20px;
+      padding: 3rem 2rem;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
       position: relative;
       overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    header:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
     }
 
     header::before {
@@ -1994,29 +2159,43 @@
       left: -50%;
       width: 200%;
       height: 200%;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
-      opacity: 0.5;
+      background: radial-gradient(circle at 30% 50%, rgba(167, 139, 250, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 70% 50%, rgba(251, 113, 133, 0.08) 0%, transparent 50%);
+      opacity: 0.6;
       pointer-events: none;
+      animation: headerGlow 15s ease-in-out infinite;
+    }
+
+    @keyframes headerGlow {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      50% { transform: translate(10px, 10px) rotate(5deg); }
     }
 
     h1 {
-      font-weight: 600;
-      font-size: 2.8rem;
-      letter-spacing: 1px;
+      font-weight: 700;
+      font-size: 3.2rem;
+      letter-spacing: -0.5px;
       text-align: center;
-      margin-bottom: 0.5rem;
-      background: var(--primary-gradient);
+      margin-bottom: 0.75rem;
+      background: linear-gradient(135deg, #a78bfa 0%, #fb7185 50%, #fbbf24 100%);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
+      text-shadow: 0 0 40px rgba(167, 139, 250, 0.3);
+      position: relative;
+      z-index: 1;
     }
 
     .subtitle {
       text-align: center;
-      opacity: 0.8;
-      font-weight: 300;
+      opacity: 0.85;
+      font-weight: 400;
       margin-bottom: 1.5rem;
-      font-size: 1.1rem;
+      font-size: 1.15rem;
+      color: rgba(255, 255, 255, 0.8);
+      letter-spacing: 0.3px;
+      position: relative;
+      z-index: 1;
     }
 
     /* legacy .search removed in favor of topbar search */
@@ -2117,19 +2296,18 @@
       width: 100%;
       display: flex;
       flex-direction: column;
-      background: var(--glass-bg);
-      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(20, 20, 30, 0.7) 0%, rgba(15, 15, 25, 0.8) 100%);
+      border-radius: 16px;
       overflow: hidden;
-      transition: all 0.3s ease;
-      border: 1px solid var(--glass-border);
-      box-shadow: var(--card-shadow);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
       cursor: pointer;
       position: relative;
-      will-change: transform;
+      will-change: transform, box-shadow, border-color;
       transform: translateZ(0);
       transform-style: preserve-3d;
       aspect-ratio: 2/3;
-      /* Ensure consistent card aspect ratio */
     }
 
     .movie-card::before {
@@ -2139,14 +2317,36 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: linear-gradient(to bottom, transparent 70%, rgba(0, 0, 0, 0.8) 100%);
+      background: linear-gradient(to bottom, transparent 55%, rgba(0, 0, 0, 0.95) 100%);
       z-index: 1;
       opacity: 0;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .movie-card::after {
+      content: '';
+      position: absolute;
+      inset: -1.5px;
+      background: linear-gradient(135deg, rgba(167, 139, 250, 0.4), rgba(251, 113, 133, 0.3));
+      border-radius: 16px;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      z-index: -1;
+      filter: blur(10px);
+    }
+
+    .movie-card:hover {
+      transform: translateY(-12px) scale(1.025);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(167, 139, 250, 0.25) inset;
+      border-color: rgba(167, 139, 250, 0.5);
     }
 
     .movie-card:hover::before {
       opacity: 1;
+    }
+
+    .movie-card:hover::after {
+      opacity: 0.8;
     }
 
     .poster {
@@ -2431,37 +2631,49 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.93);
-      box-shadow: 0 0 0 1.5px #23232b, 0 8px 32px 0 rgba(0, 0, 0, 0.45);
-      padding: 0.5rem;
+      background: rgba(0, 0, 0, 0.85);
+      padding: 1rem;
       z-index: 6000;
-      /* above user menu */
       justify-content: center;
       align-items: center;
       flex-direction: column;
-      backdrop-filter: blur(10px);
-      border-radius: 2px;
+      backdrop-filter: blur(20px);
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     .modal-content {
-      width: 92%;
-      max-width: 900px;
-      background: var(--modal-content-bg);
-      padding: 2.2rem 2.2rem 2rem 2.2rem;
-      border-radius: 5px;
+      width: 95%;
+      max-width: 1000px;
+      background: linear-gradient(135deg, rgba(20, 20, 28, 0.95) 0%, rgba(30, 30, 40, 0.98) 100%);
+      padding: 0;
+      border-radius: 24px;
       position: relative;
-      border: 1.5px solid var(--glass-border);
-      box-shadow: var(--modal-shadow);
-      backdrop-filter: blur(16px);
-      max-height: 76vh;
-      box-sizing: border-box;
-      padding-right: 1.1rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(30px);
+      max-height: 90vh;
       overflow-y: auto;
-      scrollbar-gutter: stable both-edges;
-      transition: box-shadow 0.18s, border 0.18s, background 0.18s;
-      /* Custom scrollbar for modal */
+      scrollbar-gutter: stable;
+      transition: all 0.3s ease;
+      animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       scrollbar-width: thin;
-      scrollbar-color: transparent var(--scrollbar-track);
+      scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
 
     .modal-content::-webkit-scrollbar {
@@ -2540,61 +2752,64 @@
 
     .close-btn {
       position: absolute;
-      top: 15px;
-      right: 20px;
-      font-size: 2rem;
+      top: 1.25rem;
+      right: 1.5rem;
+      font-size: 1.75rem;
       cursor: pointer;
       z-index: 10;
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: 50%;
       color: #ffffff;
-      background: rgba(255, 255, 255, 0.1);
-      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
       will-change: transform, background-color;
       transform-origin: center;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(10px);
     }
 
     .close-btn:hover {
-      background: rgba(255, 255, 255, 0.15);
-      transform: rotate(180deg) scale(1.08);
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+      background: rgba(229, 9, 20, 0.9);
+      border-color: rgba(229, 9, 20, 1);
+      transform: rotate(90deg) scale(1.1);
+      box-shadow: 0 4px 15px rgba(229, 9, 20, 0.4);
     }
 
     .close-btn:active {
-      transform: rotate(180deg) scale(0.96);
-      transition-duration: 0.2s;
-      background: rgba(255, 255, 255, 0.2);
+      transform: rotate(90deg) scale(0.95);
+      transition-duration: 0.15s;
     }
 
     /* Bookmark/Star Button - Inline version */
     .bookmark-btn-inline {
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 1rem;
-      font-size: 0.9rem;
+      gap: 0.6rem;
+      padding: 0.85rem 1.5rem;
+      font-size: 0.95rem;
       cursor: pointer;
-      border-radius: 8px;
-      color: #ffd700;
-      background: rgba(255, 215, 0, 0.1);
-      border: 1px solid rgba(255, 215, 0, 0.3);
-      transition: all 0.3s ease;
+      border-radius: 12px;
+      color: #ffc107;
+      background: rgba(255, 193, 7, 0.12);
+      border: 1px solid rgba(255, 193, 7, 0.3);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       font-family: 'Poppins', sans-serif;
-      font-weight: 500;
+      font-weight: 600;
       white-space: nowrap;
+      letter-spacing: 0.3px;
     }
 
     .bookmark-btn-inline:hover {
-      background: rgba(255, 215, 0, 0.2);
+      background: rgba(255, 193, 7, 0.2);
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+      box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+      border-color: rgba(255, 193, 7, 0.4);
     }
 
     .bookmark-btn-inline:active {
@@ -2602,21 +2817,80 @@
     }
 
     .bookmark-btn-inline.bookmarked {
-      background: rgba(255, 215, 0, 0.25);
-      border-color: rgba(255, 215, 0, 0.5);
-    }
-
-    .bookmark-btn-inline.bookmarked .bookmark-text::before {
-      content: '✓ ';
+      background: rgba(255, 193, 7, 0.25);
+      border-color: rgba(255, 193, 7, 0.5);
     }
 
     .bookmark-btn-inline i {
       transition: all 0.2s ease;
-      font-size: 1rem;
+      font-size: 1.1rem;
     }
 
     .bookmark-btn-inline.bookmarked i {
       font-weight: 900;
+    }
+
+    @media (max-width: 768px) {
+      .bookmark-btn-inline {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .modal-content {
+        width: 96%;
+        max-height: 92vh;
+        border-radius: 20px;
+      }
+
+      .modal-header {
+        padding: 1.5rem 1.5rem 0.75rem;
+      }
+
+      #modalTitle {
+        font-size: 1.6rem;
+      }
+
+      .modal-meta {
+        font-size: 0.85rem;
+      }
+
+      .genres,
+      .modal-info,
+      .modal-actions {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+      }
+
+      .overview {
+        padding: 0.75rem 1.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .modal-content {
+        width: 98%;
+        border-radius: 16px;
+      }
+
+      .modal-header {
+        padding: 1.25rem 1.25rem 0.5rem;
+      }
+
+      #modalTitle {
+        font-size: 1.4rem;
+      }
+
+      .overview {
+        font-size: 0.92rem;
+        padding: 0.75rem 1.25rem;
+      }
+
+      .genres,
+      .modal-info,
+      .modal-actions {
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+      }
     }
 
     .bookmark-text {
@@ -2660,24 +2934,61 @@
       background: rgba(0, 0, 0, 0.18);
     }
 
+    .modal-header {
+      padding: 2rem 2.5rem 1rem;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, transparent 100%);
+    }
+
     #modalTitle {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-      background: var(--primary-gradient);
+      font-size: 2.2rem;
+      margin: 0 0 0.75rem 0;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      display: inline-block;
+      line-height: 1.2;
+      letter-spacing: -0.5px;
+    }
+
+    .modal-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 500;
+    }
+
+    .meta-divider {
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    .rating-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.75rem;
+      background: rgba(255, 193, 7, 0.15);
+      border: 1px solid rgba(255, 193, 7, 0.3);
+      border-radius: 20px;
+      color: #ffc107;
+      font-weight: 600;
+    }
+
+    .rating-badge i {
+      font-size: 0.85rem;
     }
 
     .trailer-container {
-      margin: 1.5rem 0;
+      margin: 0;
       width: 100%;
       aspect-ratio: 16/9;
-      border-radius: 12px;
+      border-radius: 0;
       overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
       position: relative;
+      background: #000;
     }
 
     #trailerFrame {
@@ -2686,88 +2997,146 @@
       border: none;
     }
 
+    .trailer-youtube-btn {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(255, 0, 0, 0.95);
+      border: none;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      box-shadow: 0 4px 12px rgba(255, 0, 0, 0.4);
+      transition: all 0.3s ease;
+      z-index: 10;
+    }
+
+    .trailer-youtube-btn:hover {
+      background: rgba(255, 0, 0, 1);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(255, 0, 0, 0.6);
+    }
+
     .overview {
-      margin: 1.5rem 0;
-      line-height: 1.7;
-      font-size: 1.05rem;
-      color: var(--text-color);
+      margin: 0;
+      padding: 1rem 2.5rem;
+      line-height: 1.8;
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.8);
+      font-weight: 400;
     }
 
     .genres {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 0.25rem;
-      margin-bottom: 0.75rem;
+      gap: 0.5rem;
+      padding: 1.25rem 2.5rem 0.75rem;
     }
 
     .genre-chip {
-      padding: 6px 12px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid var(--glass-border);
-      color: var(--text-color);
-      font-size: 0.9rem;
-      letter-spacing: 0.2px;
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      transition: all 0.2s ease;
+    }
+
+    .genre-chip:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
     }
 
     .modal-info {
+      padding: 0.75rem 2.5rem;
       display: flex;
       flex-wrap: wrap;
-      gap: 0.75rem 1rem;
-      margin-top: 1rem;
+      gap: 1rem;
     }
 
-    .modal-info p {
+    .info-item {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
       border-radius: 12px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 0.9rem;
     }
 
-    .modal-info strong {
-      opacity: 0.8;
+    .info-item i {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.95rem;
+    }
+
+    .info-item strong {
+      opacity: 0.7;
       font-weight: 600;
+      margin-right: 0.25rem;
+    }
+
+    .modal-actions {
+      padding: 1.5rem 2.5rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      background: linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, transparent 100%);
     }
 
     .stream-buttons {
       display: flex;
-      gap: 1rem;
-      margin-top: 1.5rem;
-    }
-
-    @media (max-width: 480px) {
-      .stream-buttons {
-        flex-direction: column;
-      }
-
-      .stream-btn {
-        width: 100%;
-      }
+      gap: 0.75rem;
+      flex: 1;
     }
 
     .stream-btn {
       position: relative;
-      padding: 8px 20px 8px 40px;
+      padding: 0.85rem 1.75rem;
       border: none;
-      border-radius: 6px;
-      background: linear-gradient(45deg, #ff4d4d, #f9cb28);
+      border-radius: 12px;
       color: white;
       font-family: 'Poppins', sans-serif;
       font-weight: 600;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       cursor: pointer;
       overflow: hidden;
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: 0 2px 10px rgba(249, 203, 40, 0.3);
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      height: 38px;
+      letter-spacing: 0.3px;
       display: inline-flex;
       align-items: center;
+      gap: 0.6rem;
+      min-width: 140px;
+      justify-content: center;
+    }
+
+    .primary-stream {
+      background: linear-gradient(135deg, #e50914 0%, #b20710 100%);
+      box-shadow: 0 4px 15px rgba(229, 9, 20, 0.4);
+      flex: 1;
+    }
+
+    .secondary-stream {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .stream-btn i {
+      font-size: 1rem;
     }
 
     .stream-btn::before {
@@ -2785,42 +3154,44 @@
       left: 100%;
     }
 
-    .stream-btn::after {
-      content: '▶';
-      position: absolute;
-      left: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 1em;
-      transition: all 0.3s ease;
-      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+    .stream-btn:hover {
+      transform: translateY(-2px);
     }
 
-    .stream-btn:hover::after {
-      transform: translateY(-50%) scale(1.1);
+    .primary-stream:hover {
+      box-shadow: 0 6px 20px rgba(229, 9, 20, 0.5);
+    }
+
+    .secondary-stream:hover {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+      box-shadow: 0 6px 20px rgba(255, 255, 255, 0.15);
     }
 
     .stream-btn:active {
-      transform: translateY(1px);
-      box-shadow: 0 1px 5px rgba(249, 203, 40, 0.4);
+      transform: translateY(0);
     }
 
-    .stream-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 5px 15px rgba(249, 203, 40, 0.4);
-    }
-
-    /* Visual cue when stream is not available */
     .stream-btn.unavailable {
-      background: linear-gradient(45deg, #6c757d, #495057);
-      opacity: 0.7;
+      background: linear-gradient(135deg, rgba(100, 100, 100, 0.3) 0%, rgba(80, 80, 80, 0.3) 100%);
+      opacity: 0.5;
       cursor: not-allowed;
       box-shadow: none;
       pointer-events: none;
     }
 
-    .stream-btn.unavailable::after {
-      content: '⏸';
+    @media (max-width: 768px) {
+      .modal-actions {
+        flex-direction: column;
+      }
+
+      .stream-buttons {
+        width: 100%;
+        flex-direction: column;
+      }
+
+      .stream-btn {
+        width: 100%;
+      }
     }
 
     /* Toast notifications */
@@ -3139,38 +3510,71 @@
 
     /* Continue Watching Section */
     .continue-watching-section {
-
-      /* Disable all tooltips in continue watching section */
-      [title] {
-        position: relative;
-      }
-
-      [title]:hover::after,
-      [title]:focus::after {
-        content: none !important;
-        display: none !important;
-      }
-
-      margin: 2rem 0;
-      padding: 1rem 0;
+      margin: 6rem 0 2rem 0;
+      padding: 1.5rem;
       position: relative;
       min-height: 100px;
-      /* Ensure minimum height for empty state */
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(20, 20, 30, 0.5) 0%, rgba(15, 15, 25, 0.6) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(12px);
       overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .continue-watching-section:hover {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+      border-color: rgba(167, 139, 250, 0.15);
+    }
+
+    .continue-watching-section [title] {
+      position: relative;
+    }
+
+    .continue-watching-section [title]:hover::after,
+    .continue-watching-section [title]:focus::after {
+      content: none !important;
+      display: none !important;
     }
 
     .section-header {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.3px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 0 1rem 1rem;
+      gap: 0.75rem;
+    }
+
+    .section-header i {
+      color: rgba(167, 139, 250, 0.8);
+      font-size: 1.6rem;
+      background: linear-gradient(135deg, rgba(167, 139, 250, 0.6), rgba(251, 113, 133, 0.6));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .section-header i {
+      color: rgba(167, 139, 250, 0.8);
+      font-size: 1.6rem;
+      background: linear-gradient(135deg, rgba(167, 139, 250, 0.6), rgba(251, 113, 133, 0.6));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
 
     /* Clear All button styles removed */
 
     .continue-watching-section h2.section-title {
       font-size: 1.5rem;
-      margin: 6rem 0 3rem 0;
+      margin: 4rem 0 3rem 0;
       color: #fff;
       font-weight: 600;
       display: flex;
@@ -4059,34 +4463,86 @@
       <div class="continue-watching-container" id="continueWatchingContainer"></div>
     </section>
 
+    <!-- Category Buttons Mount -->
+    <div id="categoryBarMount" style="margin: 1rem 20px 0;"></div>
+
+    <section class="movies-section" id="popularMoviesSection">
+      <div class="section-header">
+        <h2 class="section-title">
+          <i class="fas fa-fire"></i> Popular Movies
+        </h2>
+      </div>
+      <div class="trending-movies-container" id="trendingMoviesContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; padding: 0 20px;"></div>
+    </section>
+
     <div class="movies" id="moviesContainer"></div>
   </div>
 
   <div class="modal" id="movieModal">
     <div class="modal-content">
       <span class="close-btn" id="closeModal">&times;</span>
-      <h2 id="modalTitle"></h2>
+      
+      <div class="modal-header">
+        <h2 id="modalTitle"></h2>
+        <div class="modal-meta">
+          <span class="meta-item" id="modalYear"></span>
+          <span class="meta-divider">•</span>
+          <span class="meta-item rating-badge">
+            <i class="fas fa-star"></i>
+            <span id="modalRating"></span>
+          </span>
+        </div>
+      </div>
+
       <div class="trailer-container">
         <div id="trailerHost" class="video-placeholder" aria-label="Click to play trailer">
           <img id="trailerPlaceholderImg" src="" alt="Trailer preview" />
           <div class="video-play-btn" title="Play trailer"></div>
         </div>
       </div>
-      <p class="overview" id="modalOverview"></p>
+
       <div class="genres" id="modalGenres"></div>
+      
+      <p class="overview" id="modalOverview"></p>
+      
       <div class="modal-info">
-        <p><strong>Rating:</strong> <span id="modalRating" class="movie-rating"></span></p>
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
-          <p style="margin: 0;"><strong>Release Date:</strong> <span id="modalReleaseDate"></span></p>
-          <button class="bookmark-btn-inline" id="bookmarkBtn" title="Add to My List" aria-label="Add to My List">
-            <i class="far fa-bookmark"></i>
-            <span class="bookmark-text">Add to My List</span>
-          </button>
+        <div class="info-item">
+          <i class="fas fa-calendar-alt"></i>
+          <span><strong>Release:</strong> <span id="modalReleaseDate"></span></span>
         </div>
       </div>
-      <div class="stream-buttons">
-        <button class="stream-btn" id="streamBtn" aria-disabled="false">Stream</button>
-        <button class="stream-btn" id="streamBtn2" aria-disabled="false" style="margin-left: 0.5rem;">Stream 2</button>
+
+      <div class="modal-actions">
+        <div class="stream-buttons">
+          <button class="stream-btn primary-stream" id="streamBtn" aria-disabled="false">
+            <i class="fas fa-play"></i>
+            <span>Watch Now</span>
+          </button>
+          <button class="stream-btn secondary-stream" id="streamBtn2" aria-disabled="false">
+            <i class="fas fa-play-circle"></i>
+            <span>Stream 2</span>
+          </button>
+        </div>
+        <div class="series-picker" id="seriesPicker" style="display:none; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <div class="series-meta" id="seriesMeta" style="color:#ccc; font-size: 0.95rem;"></div>
+          <label for="seasonSelect" style="color:#fff; font-size:0.9rem;">Season</label>
+          <select id="seasonSelect" style="background:#111; color:#fff; border:1px solid #333; padding:8px 10px; border-radius:6px; min-width:160px;"></select>
+          <label for="episodeSelect" style="color:#fff; font-size:0.9rem;">Episode</label>
+          <select id="episodeSelect" style="background:#111; color:#fff; border:1px solid #333; padding:8px 10px; border-radius:6px; min-width:200px;"></select>
+          <button id="seriesPlayBtn" class="stream-btn" style="background:#e50914; border:none; color:#fff; padding:10px 14px; border-radius:8px; cursor:pointer;">
+            <span>Play Episode</span>
+          </button>
+          <button id="openOnYouTubeBtn" class="stream-btn" style="display:none; background:#FF0000; border:none; color:#fff; padding:10px 14px; border-radius:8px; cursor:pointer; align-items:center; gap:6px;">
+            <span>Open on YouTube</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+            </svg>
+          </button>
+        </div>
+        <button class="bookmark-btn-inline" id="bookmarkBtn" title="Add to My List" aria-label="Add to My List">
+          <i class="far fa-bookmark"></i>
+          <span class="bookmark-text">My List</span>
+        </button>
       </div>
     </div>
   </div>
@@ -4158,9 +4614,77 @@
     let ytPlayer = null;
     let ytPlayerId = null;
     let pendingPlayer = null; // {host, key}
+    let ytReady = false;
+    const ytQueue = [];
+    let currentTrailerKey = null; // Store current trailer key for fallback
+
+    window.onYouTubeIframeAPIReady = function() {
+      ytReady = true;
+      while (ytQueue.length) {
+        const req = ytQueue.shift();
+        if (req && req.host && req.key) {
+          createYTPlayerFor(req.host, req.key);
+        }
+      }
+    };
 
     function createYTPlayerFor(host, key) {
-      // host: element to receive iframe
+      if (!host || !key) return;
+
+      // Queue if API not ready
+      if (!ytReady || !window.YT || !YT.Player) {
+        ytQueue.push({ host, key });
+        pendingPlayer = { host, key };
+        return;
+      }
+
+      // Store current key for fallback
+      currentTrailerKey = key;
+
+      // Clear existing content
+      host.innerHTML = '';
+
+      const id = `yt-player-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      const wrapper = document.createElement('div');
+      wrapper.id = id;
+      wrapper.style.width = '100%';
+      wrapper.style.height = '100%';
+      host.appendChild(wrapper);
+
+      ytPlayerId = id;
+      ytPlayer = new YT.Player(id, {
+        videoId: key,
+        playerVars: {
+          autoplay: 1,
+          rel: 0,
+          modestbranding: 1,
+          playsinline: 1
+        },
+        events: {
+          onReady: (event) => {
+            try { event.target.playVideo(); } catch (_) {}
+          },
+          onError: (err) => {
+            console.warn('YouTube embed error', err);
+            // Show error message in player area
+            const container = document.getElementById(id);
+            if (container && container.parentElement) {
+              container.parentElement.innerHTML = `
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#1a1a1a;color:#fff;flex-direction:column;gap:15px;padding:20px;text-align:center;">
+                  <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                  <div style="font-size:1.1rem;font-weight:500;">This video cannot be embedded</div>
+                  <div style="font-size:0.9rem;color:#999;max-width:400px;">The video owner has restricted playback on other websites.</div>
+                  <a href="https://www.youtube.com/watch?v=${key}" target="_blank" style="margin-top:10px;padding:10px 20px;background:#e50914;color:#fff;text-decoration:none;border-radius:6px;font-weight:500;">Watch on YouTube</a>
+                </div>
+              `;
+            }
+          }
+        }
+      });
     }
 
         const MOVIE_1 =
@@ -4168,6 +4692,7 @@
       id: 1,
       title: 'Manjummel Boys',
       year: 2024,
+      original_language: 'ml',
       genres: ['Survival', 'Thriller', 'Drama', 'Adventure'],
       rating: 8.6,
       overview: 'Manjummel Boys, based on a real story, is about a bunch of friends who set out on a trip to Kodaikanal and the events that occur there.',
@@ -4180,7 +4705,9 @@
     {
       id: 2,
       title: 'Tourist Family',
-      year: 2024, genres: ['Comedy', 'Drama'],
+      year: 2024,
+      original_language: 'ta',
+      genres: ['Comedy', 'Drama'],
       rating: 8.5,
       overview: 'A quirky Sri Lankan family seeking a fresh start in India transforms a disconnected neighborhood into a vibrant community with their infectious love and kindness.',
       release_date: '2024',
@@ -4192,7 +4719,9 @@
     {
       id: 3,
       title: 'Kaithi',
-      year: 2023, genres: ['Comedy', 'Drama'],
+      year: 2023,
+      original_language: 'ta',
+      genres: ['Comedy', 'Drama'],
       rating: 8.5,
       overview: 'The story revolves around a man named Karthi who is trying to find his missing wife. He meets a girl named Dheena who helps him in finding her.',
       release_date: '2023',
@@ -4205,6 +4734,7 @@
       id: 4,
       title: 'Vikram',
       year: 2022,
+      original_language: 'ta',
       genres: ['Action', 'Thriller', 'Gun-Fu', 'One-Person Army Action', 'Crime'],
       rating: 8.3,
       overview: 'A special investigator discovers a case of serial killings is not what it seems to be, and leading down this path is only going to end in a war between everyone involved.',
@@ -4218,6 +4748,7 @@
       id: 5,
       title: 'Leo',
       year: 2023,
+      original_language: 'ta',
       genres: ['Action', 'Crime', 'Thriller', 'One-Person Army Action', 'Action Epic', 'Gangster', 'Drama'],
       rating: 7.2,
       overview: 'Parthiban is a mild-mannered cafe owner who fends off a gang of murderous thugs and gains attention from a drug cartel claiming he was once a part of them.',
@@ -4231,6 +4762,7 @@
       id: 6,
       title: 'Coolie',
       year: 2025,
+      original_language: 'ta',
       genres: ['Action', 'Thriller', 'Crime'],
       rating: 6.1,
       overview: 'Delves into a mans relentless quest for vengeance since youth, driven by righting past wrongs, shaping his very existence. Viewers experience the complexities of his tumultuous vendetta journey.',
@@ -4244,6 +4776,7 @@
       id: 7,
       title: 'Maharaja',
       year: 2024,
+      original_language: 'ta',
       genres: ['Action', 'Drama', 'Thriller', 'Crime', 'Drama', 'One-Person Army Action'],
       rating: 8.4,
       overview: 'A barber seeks vengeance after his home is burglarized, cryptically telling police his "Lakshmi" has been taken, leaving them uncertain if its a person or object, jeer at his request until they learn what they are really looking for.',
@@ -4256,7 +4789,9 @@
     {
       id: 8,
       title: 'Hi Papa',
-      year: 2023, genres: ['Romance', 'Drama', 'Family'],
+      year: 2023,
+      original_language: 'ta',
+      genres: ['Romance', 'Drama', 'Family'],
       rating: 8.3,
       overview: 'A single father begins to narrate the story of the missing mother to his child and nothing remains the same.',
       release_date: '2023',
@@ -4268,7 +4803,9 @@
     {
       id: 9,
       title: 'Kantara',
-      year: 2022, genres: ['Action', 'Thriller', 'Action Epic', 'Drama', 'One-Person Army Action', 'Epic', 'Adventure'],
+      year: 2022,
+      original_language: 'ta',
+      genres: ['Action', 'Thriller', 'Action Epic', 'Drama', 'One-Person Army Action', 'Epic', 'Adventure'],
       rating: 8.2,
       overview: 'When greed paves the way for betrayal, scheming and murder, a young tribal reluctantly dons the traditions of his ancestors to seek justice.',
       release_date: '2022',
@@ -4280,7 +4817,9 @@
     {
       id: 10,
       title: 'Hridayam',
-      year: 2022, genres: ['Musical', 'Drama', 'Romance'],
+      year: 2022,
+      original_language: 'ta',
+      genres: ['Musical', 'Drama', 'Romance'],
       rating: 8.1,
       overview: 'The emotional journey of Arun, his carefree bachelor days in engineering college, and how he matures through various phases of life.',
       release_date: '2022',
@@ -4292,7 +4831,9 @@
     {
       id: 11,
       title: 'Lokah Chapter 1',
-      year: 2025, genres: ['Action', 'Superhero', 'Fantasy'],
+      year: 2025,
+      original_language: 'ta',
+      genres: ['Action', 'Superhero', 'Fantasy'],
       rating: 8.1,
       overview: 'Chandra, a young woman, arrives in Bengaluru with a mission. Her neighbor, Sunny, sets out to unravel the mystery about her and they are on an unexpected adventure ride together.',
       release_date: '2025',
@@ -4304,7 +4845,9 @@
     {
       id: 12,
       title: 'Kantara Chapter 1',
-      year: 2025, genres: ['Action Epic', 'Epic', 'Fantasy Epic', 'Period Drama', 'Supernatural Fantasy', 'Action', 'Fantasy', 'Thriller'],
+      year: 2025,
+      original_language: 'ta',
+      genres: ['Action Epic', 'Epic', 'Fantasy Epic', 'Period Drama', 'Supernatural Fantasy', 'Action', 'Fantasy', 'Thriller'],
       rating: 8.2,
       overview: 'Exploring the origins of Kaadubettu Shiva during the Kadamba dynasty era, it delves into the untamed wilderness and forgotten lore surrounding his past.',
       release_date: '2025',
@@ -4316,7 +4859,9 @@
     {
       id: 13,
       title: 'Lucky Bhaskar',
-      year: 2024, genres: ['Crime', 'Drama', 'Caper', 'Thriller'],
+      year: 2024,
+      original_language: 'ta',
+      genres: ['Crime', 'Drama', 'Caper', 'Thriller'],
       rating: 8.0,
       overview: 'A cash-strapped cashier working at a bank embarks on a risky investment scheme and soon gets drawn into the murky world of money laundering.',
       release_date: '2024',
@@ -4328,7 +4873,9 @@
     {
       id: 14,
       title: 'Court - State Vs. A Nobody',
-      year: 2025, genres: ['Legal Drama', 'Drama'],
+      year: 2025,
+      original_language: 'ta',
+      genres: ['Legal Drama', 'Drama'],
       rating: 7.9,
       overview: 'A passionate defense attorney fights against prejudice and corruption in the justice system while representing a teenage client wrongly presumed guilty of a serious crime.',
       release_date: '2025',
@@ -4340,7 +4887,9 @@
     {
       id: 15,
       title: 'Master',
-      year: 2021, genres: ['Action', 'Thriller', 'Drama', 'One-Person Army Action', 'Crime', 'Prison Drama'],
+      year: 2021,
+      original_language: 'ta',
+      genres: ['Action', 'Thriller', 'Drama', 'One-Person Army Action', 'Crime', 'Prison Drama'],
       rating: 7.4,
       overview: 'An alcoholic professor is sent to a juvenile school, where he clashes with a gangster who uses the school children for criminal activities.',
       release_date: '2021',
@@ -4352,7 +4901,9 @@
     {
       id: 16,
       title: 'HIT: The First Case',
-      year: 2020, genres: ['Crime', 'Thriller', 'Cop Drama', 'Police Procedural', 'Suspense Mystery', 'Whodunnit', 'Drama', 'Mystery'],
+      year: 2020,
+      original_language: 'ta',
+      genres: ['Crime', 'Thriller', 'Cop Drama', 'Police Procedural', 'Suspense Mystery', 'Whodunnit', 'Drama', 'Mystery'],
       rating: 7.6,
       overview: 'An officer of the "Homicide Intervention Team" who frequently suffers from having his panic attacks does everything in his power to rescue a woman who went missing.',
       release_date: '2020',
@@ -4364,7 +4915,9 @@
     {
       id: 17,
       title: 'HIT: The Second Case',
-      year: 2022, genres: ['Crime', 'Thriller', 'Drama', 'Mystery'],
+      year: 2022,
+      original_language: 'ta',
+      genres: ['Crime', 'Thriller', 'Drama', 'Mystery'],
       rating: 7.3,
       overview: 'Krishna Dev aka KD, a laid back cop, works in AP HIT, has to take up a gruesome murder case. As KD unravels the layers of the crime, the stakes rise unbelievably high and the threat comes unusually close.',
       release_date: '2022',
@@ -4376,7 +4929,9 @@
     {
       id: 18,
       title: 'HIT: The Third Case',
-      year: 2025, genres: ['Crime', 'Thriller', 'Action', 'Serial Killer', 'One-Person Army Action'],
+      year: 2025,
+      original_language: 'ta',
+      genres: ['Crime', 'Thriller', 'Action', 'Serial Killer', 'One-Person Army Action'],
       rating: 6.9,
       overview: 'Arjun Sarkaar, a top HIT officer from Visakhapatnam, is sent to Jammu and Kashmir to investigate a series of brutal murders. As he pursues a group of elusive killers, the case tests his skills and his bravery.',
       release_date: '2025',
@@ -4388,7 +4943,9 @@
     {
       id: 19,
       title: 'Retro',
-      year: 2025, genres: ['Action', 'Drama', 'Romance', 'Crime', 'Thriller'],
+      year: 2025,
+      original_language: 'ta',
+      genres: ['Action', 'Drama', 'Romance', 'Crime', 'Thriller'],
       rating: 6.6,
       overview: 'Raised by a criminal father, Paari leaves behind his adoptive family to build a quiet life with his love, Rukmini. But his violent past wont let him go.',
       release_date: '2025',
@@ -4400,7 +4957,9 @@
     {
       id: 20,
       title: 'Kuberaa',
-      year: 2025, genres: ['Crime', 'Drama', 'Political Thriller', 'Thriller', 'Action'],
+      year: 2025,
+      original_language: 'ta',
+      genres: ['Crime', 'Drama', 'Political Thriller', 'Thriller', 'Action'],
       rating: 6.4,
       overview: 'A beggar undergoes a dramatic transformation, exploring themes of greed, ambition, and moral dilemmas faced by the characters leading to a quest for redemption.',
       release_date: '2025',
@@ -4412,7 +4971,9 @@
     {
       id: 21,
       title: 'Thalaivan Thalaivii',
-      year: 2025, genres: ['Feel-Good Romance', 'Romantic Comedy', 'Steamy Romance', 'Action', 'Comedy', 'Drama', 'Romance'],
+      year: 2025,
+      original_language: 'ta',
+      genres: ['Feel-Good Romance', 'Romantic Comedy', 'Steamy Romance', 'Action', 'Comedy', 'Drama', 'Romance'],
       rating: 5.7,
       overview: 'Two headstrong lovers navigate a turbulent relationship where passion and conflict intertwine, creating an intense emotional bond through their shared journey.',
       release_date: '2025',
@@ -4425,6 +4986,7 @@
       id: 22,
       title: 'Dil Se..',
       year: 1998,
+      original_language: 'hi',
       genres: ['Poltical Drama', 'Tragic Romance', 'Drama', 'Romance'],
       rating: 7.5,
       overview: 'A radio broadcaster\'s intense attraction to a mysterious woman opens the door to a tidal wave of powerful emotions and desires.',
@@ -4438,6 +5000,7 @@
       id: 23,
       title: 'Mohabbatein',
       year: 2000,
+      original_language: 'hi',
       genres: ['Drama', 'Musical', 'Romance'],
       rating: 7.1,
       overview: 'A film about the battle between love and fear, between two stubborn men and their opposing beliefs and the outcome of the love stories of 3 couples.',
@@ -4451,6 +5014,7 @@
       id: 24,
       title: 'Bhool Bhulaiyaa',
       year: 2007,
+      original_language: 'hi',
       genres: ['Psychological Horror', 'Comedy', 'Horror', 'Mystery', 'Thriller'],
       rating: 7.5,
       overview: 'An NRI and his wife decide to stay in his ancestral home, paying no heed to the warnings about ghosts. Soon, inexplicable occurrences cause him to call a psychiatrist to help solve the mystery.',
@@ -4464,6 +5028,7 @@
       id: 25,
       title: 'Dude',
       year: 2025,
+      original_language: 'ta',
       genres: ['Action', 'Comedy', 'Drama', 'Romance'],
       rating: 6.4,
       overview: 'Childhood friends Agan and Kural are inseparable. When Kural encounters romantic troubles, Agan must balance his hidden feelings for her with his desire to ensure her happiness.',
@@ -4477,6 +5042,7 @@
       id: 26,
       title: 'They Call Him OG',
       year: 2025,
+      original_language: 'ta',
       genres: ['Gangster', 'Martial Arts', 'One-Person Army Action', 'Action', 'Crime', 'Drama'],
       rating: 6.1,
       overview: 'After vanishing from Mumbai\'s underworld for a decade, mob boss Ojas Gambheera resurfaces seeking vengeance against rival crime lords.',
@@ -4490,6 +5056,7 @@
       id: 27,
       title: 'Bombay',
       year: 1995,
+      original_language: 'hi',
       genres: ['Political Drama', 'Drama', 'Musical', 'Romance'],
       rating: 8.1,
       overview: 'A Hindu man and a Muslim woman fall in love in a small village and move to Mumbai, where they have two children. However, growing religious tensions and erupting riots threaten to tear the family apart.',
@@ -4503,6 +5070,7 @@
       id: 28,
       title: 'Dilwale Dulhania Le Jayenge',
       year: 1995,
+      original_language: 'hi',
       genres: ['Drama', 'Romance'],
       rating: 8.0,
       overview: 'When Raj meets Simran in Europe, it isn\'t love at first sight but when Simran moves to India for an arranged marriage, love makes its presence felt.',
@@ -4515,7 +5083,9 @@
     {
       id: 29,
       title: 'My Name is Khan',
-      year: 2010, genres: ['Psychological Drama', 'Road Trip', 'Tragedy', 'Drama', 'Romance'],
+      year: 2010,
+      original_language: 'hi',
+      genres: ['Psychological Drama', 'Road Trip', 'Tragedy', 'Drama', 'Romance'],
       rating: 7.9,
       overview: 'Rizwan Khan is a Muslim immigrant to the US with Asperger\'s syndrome. After his family falls apart in the aftermath of 9/11, he begins an epic quest across the country to speak to the President of the United States and clear his name.',
       release_date: '2010',
@@ -4527,7 +5097,9 @@
     {
       id: 30,
       title: 'Munjya',
-      year: 2024, genres: ['Folk Horror', 'Supernatural Horror', 'Comedy', 'Horror'],
+      year: 2024,
+      original_language: 'hi',
+      genres: ['Folk Horror', 'Supernatural Horror', 'Comedy', 'Horror'],
       rating: 6.3,
       overview: 'A young man\'s visit to his native village unveils a family secret and a vengeful spirit, the Munjya, who wants to get married. Now the young man must fight to protect himself and his love from Munjya\'s clutches.',
       release_date: '2024',
@@ -4539,7 +5111,9 @@
     {
       id: 31,
       title: 'Stree',
-      year: 2018, genres: ['Comedy', 'Horror'],
+      year: 2018,
+      original_language: 'hi',
+      genres: ['Comedy', 'Horror'],
       rating: 7.5,
       overview: 'In the small town of Chanderi, the menfolk live in fear of an evil spirit named "Stree" who abducts men in the night. Based on the urban legend of "Nale Ba" that went viral in Karnataka in the 1990s.',
       release_date: '2018',
@@ -4551,7 +5125,9 @@
     {
       id: 31,
       title: 'Stree 2',
-      year: 2024, genres: ['Monster Horror', 'Supernatural Horror', 'Comedy', 'Horror'],
+      year: 2024,
+      original_language: 'hi',
+      genres: ['Monster Horror', 'Supernatural Horror', 'Comedy', 'Horror'],
       rating: 6.9,
       overview: 'After the events of Stree, the town of Chanderi is being haunted again. This time, women are mysteriously abducted by a terrifying headless entity. Once again, it\'s up to Vicky and his friends to save their town and loved ones.',
       release_date: '2024',
@@ -4563,7 +5139,9 @@
     {
       id: 33,
       title: '3 idiots',
-      year: 2009, genres: ['Buddy Comedy', 'Coming-of-Age', 'Quirky Comedy', 'Satire', 'Comedy', 'Drama'],
+      year: 2009,
+      original_language: 'hi',
+      genres: ['Buddy Comedy', 'Coming-of-Age', 'Quirky Comedy', 'Satire', 'Comedy', 'Drama'],
       rating: 6.9,
       overview: 'Two friends are searching for their long lost companion. They revisit their college days and recall the memories of their friend who inspired them to think differently, even as the rest of the world called them "idiots".',
       release_date: '2009',
@@ -4575,7 +5153,9 @@
     {
       id: 34,
       title: 'Kesari',
-      year: 2019, genres: ['Action Epic', 'Epic', 'Historical Epic', 'Period Drama', 'Tragedy', 'War Epic', 'Action', 'Drama', 'History'],
+      year: 2019,
+      original_language: 'hi',
+      genres: ['Action Epic', 'Epic', 'Historical Epic', 'Period Drama', 'Tragedy', 'War Epic', 'Action', 'Drama', 'History'],
       rating: 7.4,
       overview: 'Based on an incredible true story of the Battle of Saragarhi in which an army of 21 Sikhs fought against 10,000 Afghans in 1897.',
       release_date: '2019',
@@ -4587,7 +5167,9 @@
     {
       id: 35,
       title: 'Kesari Chapter 2',
-      year: 2025, genres: ['Docudrama', 'Legal Drama', 'Period Drama', 'Tragedy', 'Drama', 'History'],
+      year: 2025,
+      original_language: 'hi',
+      genres: ['Docudrama', 'Legal Drama', 'Period Drama', 'Tragedy', 'Drama', 'History'],
       rating: 8.0,
       overview: 'After learning the truth behind the brutal massacre at the Jallianwala Bagh, C Sankaran Nair, a member of the Viceroy\'s Council, sets out to challenge the Crown and the military general responsible.',
       release_date: '2025',
@@ -4599,7 +5181,9 @@
     {
       id: 36,
       title: 'Thamma',
-      year: 2025, genres: ['Supernatural Horror', 'Comedy', 'Horror', 'Thriller'],
+      year: 2025,
+      original_language: 'hi',
+      genres: ['Supernatural Horror', 'Comedy', 'Horror', 'Thriller'],
       rating: 6.1,
       overview: 'Two destined lovers battle supernatural forces, family ties, and nature itself to defend their forbidden romance in a mystical world where ancient powers and prophecies threaten to keep them apart.',
       release_date: '2025',
@@ -4611,7 +5195,9 @@
     {
       id: 37,
       title: 'Bhediya',
-      year: 2022, genres: ['Buddy Comedy', 'Supernatural Horror', 'Werewolf Horror', 'Comedy', 'Horror', 'Thriller'],
+      year: 2022,
+      original_language: 'hi',
+      genres: ['Buddy Comedy', 'Supernatural Horror', 'Werewolf Horror', 'Comedy', 'Horror', 'Thriller'],
       rating: 6.7,
       overview: 'Two destined lovers battle supernatural forces, family ties, and nature itself to defend their forbidden romance in a mystical world where ancient powers and prophecies threaten to keep them apart.',
       release_date: '2022',
@@ -4623,7 +5209,9 @@
     {
       id: 38,
       title: 'Param Sundari',
-      year: 2025, genres: ['Romance'],
+      year: 2025,
+      original_language: 'hi',
+      genres: ['Romance'],
       rating: 5.2,
       overview: 'In Kerala\'s picturesque backwaters, a North Indian and South Indian find unexpected love. Their cultural differences spark a hilarious and chaotic romance, full of twists and turns. Two diverse worlds collide in a heartwarming story.',
       release_date: '2025',
@@ -4635,7 +5223,9 @@
     {
       id: 39,
       title: 'Dhadak',
-      year: 2018, genres: ['Drama', 'Romance'],
+      year: 2018,
+      original_language: 'hi',
+      genres: ['Drama', 'Romance'],
       rating: 4.7,
       overview: 'Set in Rajasthan, this love story explores how the protagonists deal with issues like differences between castes and honor killings.',
       release_date: '2018',
@@ -4647,7 +5237,9 @@
     {
       id: 40,
       title: 'Dhadak 2',
-      year: 2025, genres: ['Drama', 'Mystery', 'Romance', 'Thriller'],
+      year: 2025,
+      original_language: 'hi',
+      genres: ['Drama', 'Mystery', 'Romance', 'Thriller'],
       rating: 6.8,
       overview: 'Targeted for his caste, a first-year student at an elite college fights off vicious bullies and lethal threats to protect his dignity and forbidden love.',
       release_date: '2025',
@@ -4659,7 +5251,9 @@
     {
       id: 41,
       title: 'Chennai Express',
-      year: 2013, genres: ['Road Trip', 'Action', 'Comedy', 'Romance'],
+      year: 2013,
+      original_language: 'hi',
+      genres: ['Road Trip', 'Action', 'Comedy', 'Romance'],
       rating: 6.2,
       overview: 'A man travelling to Rameswaram via Chennai express for his late grandfather\'s ashes immersion finds himself in trouble after helping a don\'s daughter and her cousins board the train.',
       release_date: '2013',
@@ -4671,7 +5265,9 @@
     {
       id: 42,
       title: 'Dil Chahta Hai',
-      year: 2001, genres: ['Coming-Of-Age', 'Comedy', 'Drama', 'Romance'],
+      year: 2001,
+      original_language: 'hi',
+      genres: ['Coming-Of-Age', 'Comedy', 'Drama', 'Romance'],
       rating: 8.1,
       overview: 'Three inseparable childhood friends are just out of college. Nothing comes between them - until they each fall in love, and their wildly different approaches to relationships creates tension.',
       release_date: '2001',
@@ -5685,6 +6281,31 @@
 
     };
 
+    // Normalize titles and resolve MP4 override by title robustly
+    function normalizeTitleForKey(t) {
+      return String(t || '')
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ');
+    }
+
+    function getMp4Override(title) {
+      const base = normalizeTitleForKey(title);
+      if (mp4Overrides[base]) return mp4Overrides[base];
+      // try without common suffixes
+      const simplified = base
+        .replace(/\bchapter\s*\d+\b/g, '')
+        .replace(/\bpart\s*\d+\b/g, '')
+        .replace(/\bthe\s+/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      return mp4Overrides[simplified] || null;
+    }
+
+    // Flag to toggle TMDB-driven catalog rendering
+    let useTMDBCatalog = false;
+
     // Elements
     const moviesContainer = document.getElementById('moviesContainer');
     const modal = document.getElementById('movieModal');
@@ -5728,6 +6349,91 @@
       }
     }
 
+    // Update trailer host markup based on available poster/trailer sources
+    function setTrailerHostContent(movie, trailerHost, placeholderImg) {
+      if (!movie || !trailerHost || !placeholderImg) return;
+
+      const posterSafe = movie.posterUrl && !movie.posterUrl.includes('archive.org') ? movie.posterUrl : null;
+      const key = movie.trailerUrl ? extractYouTubeId(movie.trailerUrl) : localTrailers[movie.id];
+      const placeholder = posterSafe || (key ? `https://i.ytimg.com/vi/${key}/hqdefault.jpg` : ('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221280%22 height=%22720%22%3E%3Crect fill=%22%23333%22 width=%221280%22 height=%22720%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2250%22 fill=%22%23999%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3EPlay Trailer%3C/text%3E%3C/svg%3E'));
+
+      placeholderImg.src = placeholder;
+
+      const isMP4 = movie.trailerUrl && (movie.trailerUrl.endsWith('.mp4') || movie.trailerUrl.includes('.mp4'));
+      if (isMP4) {
+        trailerHost.dataset.mp4Url = movie.trailerUrl;
+        trailerHost.dataset.youtubeKey = '';
+        trailerHost.innerHTML = `
+          <img id="trailerPlaceholderImg" src="${placeholder}" alt="Trailer preview" style="max-width:100%;height:auto;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221280%22 height=%22720%22%3E%3Crect fill=%22%23333%22 width=%221280%22 height=%22720%22/%3E%3C/svg%3E'" />
+          <div class="video-play-btn" title="Play trailer"></div>
+        `;
+      } else {
+        trailerHost.dataset.youtubeKey = key || '';
+        trailerHost.dataset.mp4Url = '';
+        trailerHost.innerHTML = `<img id="trailerPlaceholderImg" src="${placeholder}" alt="Trailer preview" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221280%22 height=%22720%22%3E%3Crect fill=%22%23333%22 width=%221280%22 height=%22720%22/%3E%3C/svg%3E'" /><div class="video-play-btn" title="Play trailer"></div>`;
+      }
+    }
+
+    // Lazy-fetch TMDB trailers for movies without trailerUrl
+    async function ensureMovieTrailer(movie) {
+      if (!movie || movie.trailerUrl) return movie.trailerUrl;
+      if (!movieDb) return null;
+
+      try {
+        let videos = [];
+        if (movie.mediaType === 'tv' && typeof movieDb.getTVVideos === 'function') {
+          videos = await movieDb.getTVVideos(movie.id);
+        } else if (typeof movieDb.getMovieVideos === 'function') {
+          videos = await movieDb.getMovieVideos(movie.id);
+        } else {
+          videos = [];
+        }
+        const best = videos.find(v => v.site === 'YouTube' && v.type === 'Trailer' && v.official) ||
+          videos.find(v => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')) ||
+          videos.find(v => v.site === 'YouTube');
+
+        if (best && best.key) {
+          movie.trailerUrl = `https://www.youtube.com/watch?v=${best.key}`;
+          localTrailers[movie.id] = best.key;
+          return movie.trailerUrl;
+        }
+      } catch (error) {
+        console.warn('Unable to fetch TMDB trailer', movie.id, error);
+      }
+
+      // Fallback to YouTube search if API key is provided
+      if (YT_API_KEY) {
+        try {
+          const ytKey = await fetchYouTubeTrailer(movie.title, movie.year || movie.release_date);
+          if (ytKey) {
+            movie.trailerUrl = `https://www.youtube.com/watch?v=${ytKey}`;
+            localTrailers[movie.id] = ytKey;
+            return movie.trailerUrl;
+          }
+        } catch (error) {
+          console.warn('YouTube trailer lookup failed', movie.title, error);
+        }
+      }
+
+      return null;
+    }
+
+    // YouTube Data API fallback search
+    async function fetchYouTubeTrailer(title, year) {
+      if (!YT_API_KEY || !title) return null;
+      const query = `${title} official trailer ${year || ''}`.trim();
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=${encodeURIComponent(query)}&key=${YT_API_KEY}`;
+      const resp = await fetch(url);
+      if (!resp.ok) {
+        console.warn('YouTube API error', resp.status);
+        return null;
+      }
+      const data = await resp.json();
+      const items = data.items || [];
+      const pick = items.find(i => (i.snippet?.title || '').toLowerCase().includes('trailer')) || items[0];
+      return pick && pick.id && pick.id.videoId ? pick.id.videoId : null;
+    }
+
 
     // Display Movies
     let currentCategory = 'all'; // category filter state
@@ -5738,16 +6444,85 @@
       tollywood: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 25, 26], // South Indian set (Tamil/Telugu/etc.)
     };
 
+    /**
+     * Filter TMDB movies by category based on original language
+     * Bollywood: Hindi language (hi)
+     * Tollywood: South Indian languages (Tamil, Telugu, Kannada, Malayalam)
+     */
+    function filterTMDBByCategory(movies, category) {
+      if (!movies || !Array.isArray(movies)) return [];
+      
+      if (category === 'bollywood') {
+        // Filter for Hindi language movies
+        return movies.filter(movie => movie.original_language === 'hi');
+      } else if (category === 'tollywood') {
+        // Filter for South Indian languages: Tamil, Telugu, Kannada, Malayalam
+        const southIndianLanguages = ['ta', 'te', 'kn', 'ml'];
+        return movies.filter(movie => southIndianLanguages.includes(movie.original_language));
+      }
+      
+      return movies;
+    }
+
     function applyCategory(cat) {
       currentCategory = cat;
-      const ids = categoryMap[cat] || [];
-      const filtered = cat === 'all' ? curatedMovies : curatedMovies.filter(m => ids.includes(m.id));
-      const label = cat === 'all' ? 'All Movies' : (cat.charAt(0).toUpperCase() + cat.slice(1));
-      // Show/hide continue watching section
+
+      // Hide/show popular movies section based on category
+      const popularSection = document.getElementById('popularMoviesSection');
+      if (popularSection) {
+        popularSection.style.display = (cat === 'all') ? '' : 'none';
+      }
+
+      // TMDB-driven catalog handling
+      if (useTMDBCatalog) {
+        // Show/hide continue watching section (only show for 'all' movies)
+        const cwSection = document.getElementById('continueWatchingSection');
+        if (cwSection) {
+          cwSection.style.display = (cat === 'all') ? '' : 'none';
+        }
+
+        // Update category bar active state
+        mountCategoryBar();
+
+        // Series → switch to TV mode
+        if (cat === 'series' && typeof setTMDBMode === 'function' && typeof loadAllTMDBTV === 'function') {
+          setTMDBMode('tv');
+          loadAllTMDBTV().then(shows => {
+            displayMovies(shows, false, 'Series');
+          });
+          return;
+        }
+
+        // Movies: all/bollywood/tollywood
+        if (typeof setTMDBMode === 'function') setTMDBMode('movie');
+        const label = cat === 'all' ? 'All Movies' : (cat.charAt(0).toUpperCase() + cat.slice(1));
+        if (cat === 'all' && typeof loadAllTMDBMovies === 'function') {
+          loadAllTMDBMovies().then(movies => displayMovies(movies, false, label));
+        } else if (typeof loadTMDBByLanguage === 'function') {
+          loadTMDBByLanguage(cat, 10).then(movies => displayMovies(movies, false, label));
+        } else if (typeof loadAllTMDBMovies === 'function') {
+          loadAllTMDBMovies().then(movies => {
+            const filtered = typeof filterTMDBByCategory === 'function' ? filterTMDBByCategory(movies, cat) : movies;
+            displayMovies(filtered, false, label);
+          });
+        }
+        return;
+      }
+
+      // Local curated catalog fallback
+      if (cat === 'all') {
+        displayMovies(curatedMovies, false, 'All Movies');
+      } else {
+        // Use language-based filtering for bollywood/tollywood
+        const filtered = filterTMDBByCategory(curatedMovies, cat);
+        const label = cat.charAt(0).toUpperCase() + cat.slice(1);
+        displayMovies(filtered, false, label);
+      }
       const cwSection = document.getElementById('continueWatchingSection');
       if (cwSection) {
         cwSection.style.display = (cat === 'all') ? '' : 'none';
       }
+      mountCategoryBar();
       displayMovies(filtered, false, label);
     }
 
@@ -5758,6 +6533,7 @@
         <button class="cat-btn" data-cat="all">All</button>
         <button class="cat-btn" data-cat="bollywood">Bollywood</button>
         <button class="cat-btn" data-cat="tollywood">Tollywood</button>
+        <button class="cat-btn" data-cat="series">Series</button>
       `;
       const setActive = (cat) => {
         bar.querySelectorAll('.cat-btn').forEach(btn => {
@@ -5773,13 +6549,24 @@
       return bar;
     }
 
+    // Mount the category bar into the persistent mount point
+    function mountCategoryBar() {
+      const mount = document.getElementById('categoryBarMount');
+      if (!mount) return;
+      mount.innerHTML = '';
+      mount.appendChild(buildCategoryBar(currentCategory));
+    }
+
     function displayMovies(movies, isSearchResults = false, titleOverride = null) {
       // Clear the movies container completely
       moviesContainer.innerHTML = '';
 
-      // Add category filter bar (always visible on main list and filters)
-      const catBar = buildCategoryBar(currentCategory);
-      moviesContainer.appendChild(catBar);
+      // The persistent mount renders the category bar; avoid duplicating it here
+      // Keep legacy fallback only if mount is missing and using curated catalog
+      if (!useTMDBCatalog && !document.getElementById('categoryBarMount')) {
+        const catBar = buildCategoryBar(currentCategory);
+        moviesContainer.appendChild(catBar);
+      }
 
       // Add section title for all movies
       const sectionTitle = document.createElement('h2');
@@ -5898,9 +6685,10 @@
     // Open Modal (lazy-load trailer iframe on demand)
     function openMovieModal(movie) {
             console.log('Opening modal for movie:', movie.title);
-            // Set up Stream 2 button to open player-2.html with the same logic as Stream
+            const isSeries = (movie && (movie.mediaType === 'tv' || movie.type === 'series' || movie.isSeries));
+            // Set up Stream 2 button to open player-2.html with the same logic as Stream (movies only)
             const streamBtn2 = document.getElementById('streamBtn2');
-            if (streamBtn2) {
+            if (!isSeries && streamBtn2) {
               // Get watch data for Stream 2 button too
               let watchData2 = null;
               if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.getMovieProgress === 'function') {
@@ -5971,9 +6759,136 @@
             }
       currentMovie = movie;
 
+      // Series handling: hide stream buttons, show season/episode selectors
+      // isSeries already computed above
+      const seriesPicker = document.getElementById('seriesPicker');
+      const seasonSelect = document.getElementById('seasonSelect');
+      const episodeSelect = document.getElementById('episodeSelect');
+      const seriesMeta = document.getElementById('seriesMeta');
+
+      const streamButtonsWrapper = document.querySelector('.stream-buttons');
+      if (streamButtonsWrapper) {
+        streamButtonsWrapper.style.display = isSeries ? 'none' : 'flex';
+      }
+      if (seriesPicker) {
+        seriesPicker.style.display = isSeries ? 'flex' : 'none';
+      }
+
+      // If series, load seasons/episodes and skip stream button wiring
+      if (isSeries && seriesPicker && seasonSelect && episodeSelect) {
+        // reset selects
+        seasonSelect.innerHTML = '<option>Loading seasons...</option>';
+        episodeSelect.innerHTML = '<option>Select a season first</option>';
+        if (seriesMeta) seriesMeta.textContent = 'Loading series info...';
+
+        const loadEpisodesForSeason = async (seasonNumber) => {
+          if (!movieDb || typeof movieDb.getTVSeason !== 'function') return;
+          episodeSelect.innerHTML = '<option>Loading episodes...</option>';
+          try {
+            const seasonData = await movieDb.getTVSeason(movie.id, seasonNumber);
+            const episodes = (seasonData && seasonData.episodes) ? seasonData.episodes : [];
+            if (!episodes.length) {
+              episodeSelect.innerHTML = '<option>No episodes found</option>';
+              return;
+            }
+            episodeSelect.innerHTML = '';
+            episodes.forEach(ep => {
+              const opt = document.createElement('option');
+              const epNum = ep.episode_number;
+              opt.value = String(epNum);
+              opt.textContent = `S${seasonNumber} · E${epNum} — ${ep.name || 'Episode'}`;
+              episodeSelect.appendChild(opt);
+            });
+          } catch (err) {
+            console.error('Failed to load episodes', err);
+            episodeSelect.innerHTML = '<option>Error loading episodes</option>';
+          }
+        };
+
+        (async () => {
+          if (!movieDb || typeof movieDb.getTVDetails !== 'function') return;
+          try {
+            const details = await movieDb.getTVDetails(movie.id);
+            const seasons = (details && details.seasons) ? details.seasons.filter(s => s.season_number > 0) : [];
+            const seasonCount = seasons.length;
+            const episodeCount = seasons.reduce((sum, s) => sum + (s.episode_count || 0), 0);
+            if (seriesMeta) {
+              seriesMeta.textContent = `Seasons: ${seasonCount}${episodeCount ? ` • Episodes: ${episodeCount}` : ''}`;
+            }
+            seasonSelect.innerHTML = '';
+            if (!seasons.length) {
+              seasonSelect.innerHTML = '<option>No seasons found</option>';
+              return;
+            }
+            seasons.forEach(s => {
+              const opt = document.createElement('option');
+              opt.value = String(s.season_number);
+              opt.textContent = s.name || `Season ${s.season_number}`;
+              seasonSelect.appendChild(opt);
+            });
+
+            // Load first season by default
+            const firstSeason = seasons[0];
+            if (firstSeason) {
+              loadEpisodesForSeason(firstSeason.season_number);
+            }
+
+            seasonSelect.onchange = (e) => {
+              const seasonNumber = Number(e.target.value);
+              if (!seasonNumber) return;
+              loadEpisodesForSeason(seasonNumber);
+            };
+
+            // Handle episode selection to show YouTube fallback button
+            let currentYouTubeKey = null;
+            const openOnYouTubeBtn = document.getElementById('openOnYouTubeBtn');
+
+            episodeSelect.onchange = async (e) => {
+              const episodeNumber = Number(e.target.value);
+              const seasonNumber = Number(seasonSelect.value);
+              if (!episodeNumber || !seasonNumber) {
+                if (openOnYouTubeBtn) openOnYouTubeBtn.style.display = 'none';
+                return;
+              }
+
+              // Fetch episode videos to get YouTube key
+              try {
+                let videos = [];
+                if (movieDb && typeof movieDb.getTVEpisodeVideos === 'function') {
+                  videos = await movieDb.getTVEpisodeVideos(movie.id, seasonNumber, episodeNumber);
+                }
+                const best = videos.find(v => v.site === 'YouTube' && v.type === 'Trailer' && v.official) ||
+                  videos.find(v => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser' || v.type === 'Clip')) ||
+                  videos.find(v => v.site === 'YouTube');
+
+                if (best && best.key) {
+                  currentYouTubeKey = best.key;
+                  if (openOnYouTubeBtn) {
+                    openOnYouTubeBtn.style.display = 'inline-flex';
+                    openOnYouTubeBtn.onclick = (e) => {
+                      e.preventDefault();
+                      window.open(`https://www.youtube.com/watch?v=${currentYouTubeKey}`, '_blank');
+                    };
+                  }
+                } else {
+                  if (openOnYouTubeBtn) openOnYouTubeBtn.style.display = 'none';
+                }
+              } catch (err) {
+                console.error('Failed to fetch episode videos', err);
+                if (openOnYouTubeBtn) openOnYouTubeBtn.style.display = 'none';
+              }
+            };
+          } catch (err) {
+            console.error('Failed to load TV details', err);
+            seasonSelect.innerHTML = '<option>Error loading seasons</option>';
+            if (seriesMeta) seriesMeta.textContent = 'Unable to load series info';
+          }
+        })();
+      }
+
       // Update or add resume button in modal
       const streamBtn = document.getElementById('streamBtn');
-      if (streamBtn) {
+      if (!isSeries && streamBtn) {
         // Prefer the unified ContinueWatchingManager; fall back to legacy storage
         let watchData = null;
         if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.getMovieProgress === 'function') {
@@ -6019,7 +6934,7 @@
           let playerUrl = null;
 
           // 1) Check for direct MP4 override
-          const mp4Url = mp4Overrides[normTitle];
+          const mp4Url = getMp4Override(movie.title);
           if (mp4Url) {
             params.append('type', 'mp4');
             params.append('src', mp4Url);
@@ -6070,7 +6985,9 @@
 
       // ... existing code for setting up modal content ...
       const title = movie.title || 'Untitled';
-      document.getElementById('modalTitle').innerText = `${title} (${movie.year || ''})`;
+      const year = movie.year || (movie.release_date ? movie.release_date.split('-')[0] : '');
+      document.getElementById('modalTitle').innerText = title;
+      document.getElementById('modalYear').innerText = year;
       document.getElementById('modalOverview').innerText = movie.overview || '';
       document.getElementById('modalRating').innerText = movie.rating ? movie.rating.toFixed(1) : 'N/A';
       document.getElementById('modalReleaseDate').innerText = movie.release_date || 'Unknown';
@@ -6083,53 +7000,38 @@
       const trailerHost = document.getElementById('trailerHost');
       const placeholderImg = document.getElementById('trailerPlaceholderImg');
       
-      // Only set poster image if it's from a fast CDN, skip archive.org images to avoid timeouts
-      if (movie.posterUrl && !movie.posterUrl.includes('archive.org')) {
-        placeholderImg.src = movie.posterUrl;
-      } else {
-        const key = movie.trailerUrl ? extractYouTubeId(movie.trailerUrl) : localTrailers[movie.id];
-        placeholderImg.src = key ? `https://i.ytimg.com/vi/${key}/hqdefault.jpg` : ('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221280%22 height=%22720%22%3E%3Crect fill=%22%23333%22 width=%221280%22 height=%22720%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2250%22 fill=%22%23999%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3EPlay Trailer%3C/text%3E%3C/svg%3E');
-      }
-
-      // Check if trailerUrl is a direct MP4 or YouTube URL
-      const isMP4 = movie.trailerUrl && (movie.trailerUrl.endsWith('.mp4') || movie.trailerUrl.includes('.mp4'));
-      if (isMP4) {
-        trailerHost.dataset.mp4Url = movie.trailerUrl;
-        trailerHost.dataset.youtubeKey = '';
-        // Don't preload the video - let it load on demand instead
-        trailerHost.innerHTML = `
-          <img id="trailerPlaceholderImg" src="${placeholderImg.src}" alt="Trailer preview" style="max-width:100%;height:auto;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221280%22 height=%22720%22%3E%3Crect fill=%22%23333%22 width=%221280%22 height=%22720%22/%3E%3C/svg%3E'" />
-          <div class="video-play-btn" title="Play trailer"></div>
-        `;
-      } else {
-        const key = movie.trailerUrl ? extractYouTubeId(movie.trailerUrl) : localTrailers[movie.id];
-        trailerHost.dataset.youtubeKey = key || '';
-        trailerHost.dataset.mp4Url = '';
-        trailerHost.innerHTML = `<img id="trailerPlaceholderImg" src="${placeholderImg.src}" alt="Trailer preview" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221280%22 height=%22720%22%3E%3Crect fill=%22%23333%22 width=%221280%22 height=%22720%22/%3E%3C/svg%3E'" /><div class="video-play-btn" title="Play trailer"></div>`;
-      }
+      setTrailerHostContent(movie, trailerHost, placeholderImg);
+      ensureMovieTrailer(movie).then(() => {
+        setTrailerHostContent(movie, trailerHost, placeholderImg);
+      });
 
       // Stream availability: Drive mapping OR direct MP4 override for this title
-      const normTitle = String(title).trim().toLowerCase();
-      const hasStream = !!(driveMovieMappings[String(movie.id)] || mp4Overrides[normTitle]);
-      streamBtn.dataset.movieId = movie.id;
-      streamBtn.dataset.available = hasStream ? '1' : '0';
-      streamBtn.textContent = hasStream ? 'Stream' : 'Stream unavailable';
-      streamBtn.classList.toggle('unavailable', !hasStream);
-      streamBtn.disabled = !hasStream;
-      // Keep button clickable so we can show a system message when unavailable
-      streamBtn.disabled = false;
-
-      // Stream 2 availability: Any video source available (Drive, MP4, or streamUrl)
-      const hasStream2 = !!(driveMovieMappings[String(movie.id)] || mp4Overrides[normTitle] || movie.streamUrl);
-      const streamBtn2El = document.getElementById('streamBtn2');
-      if (streamBtn2El) {
-        streamBtn2El.dataset.movieId = movie.id;
-        streamBtn2El.dataset.available = hasStream2 ? '1' : '0';
-        streamBtn2El.textContent = hasStream2 ? 'Stream 2' : 'Stream 2 unavailable';
-        streamBtn2El.classList.toggle('unavailable', !hasStream2);
-        streamBtn2El.disabled = !hasStream2;
+      if (!isSeries && streamBtn) {
+        const normTitle = String(title).trim().toLowerCase();
+        const hasStream = !!(driveMovieMappings[String(movie.id)] || getMp4Override(title) || movie.streamUrl);
+        streamBtn.dataset.movieId = movie.id;
+        streamBtn.dataset.available = hasStream ? '1' : '0';
+        streamBtn.textContent = hasStream ? 'Stream' : 'Stream unavailable';
+        streamBtn.classList.toggle('unavailable', !hasStream);
+        streamBtn.disabled = !hasStream;
         // Keep button clickable so we can show a system message when unavailable
-        streamBtn2El.disabled = false;
+        streamBtn.disabled = false;
+      }
+
+      if (!isSeries) {
+        // Stream 2 availability: Any video source available (Drive, MP4, or streamUrl)
+        const normTitle = String(title).trim().toLowerCase();
+        const streamBtn2El = document.getElementById('streamBtn2');
+        const hasStream2 = !!(driveMovieMappings[String(movie.id)] || getMp4Override(title) || movie.streamUrl);
+        if (streamBtn2El) {
+          streamBtn2El.dataset.movieId = movie.id;
+          streamBtn2El.dataset.available = hasStream2 ? '1' : '0';
+          streamBtn2El.textContent = hasStream2 ? 'Stream 2' : 'Stream 2 unavailable';
+          streamBtn2El.classList.toggle('unavailable', !hasStream2);
+          streamBtn2El.disabled = !hasStream2;
+          // Keep button clickable so we can show a system message when unavailable
+          streamBtn2El.disabled = false;
+        }
       }
 
     // Update bookmark button state - now async
@@ -6439,7 +7341,7 @@
       let playerUrl = null;
 
       // 1) Check for direct MP4 override
-      const mp4Url = mp4Overrides[normTitle];
+      const mp4Url = getMp4Override(currentMovie.title);
       if (mp4Url) {
         params.append('type', 'mp4');
         params.append('src', mp4Url);
@@ -6772,17 +7674,39 @@
 
     function performSearch() {
       const query = searchInput.value.trim();
+      const popularSection = document.getElementById('popularMoviesSection');
 
       // Add searching class to body
       document.body.classList.add('searching');
+
+      // Delegate search to TMDB when enabled
+      if (useTMDBCatalog && typeof searchTMDB === 'function') {
+        if (!query) {
+          document.body.classList.remove('searching');
+          isSearching = false;
+          if (popularSection) popularSection.style.display = '';
+          loadAllTMDBMovies().then(movies => displayMovies(movies, false, 'All Movies'));
+          return;
+        }
+
+        // Hide popular movies section during search
+        if (popularSection) popularSection.style.display = 'none';
+        isSearching = true;
+        searchTMDB(query);
+        return;
+      }
 
       if (!query) {
         // If search is empty, show all movies with continue watching
         document.body.classList.remove('searching');
         isSearching = false;
+        if (popularSection) popularSection.style.display = '';
         displayMovies(curatedMovies, false);
         return;
       }
+
+      // Hide popular movies section during search
+      if (popularSection) popularSection.style.display = 'none';
 
       // Set searching state
       isSearching = true;
@@ -6920,7 +7844,9 @@
     // Initial load
     window.onload = function () {
       applyPerMovieUrls();
-      displayMovies(curatedMovies);
+      // Ensure the category bar is visible immediately
+      mountCategoryBar();
+      displayMovies(curatedMovies, false);
       // loadContinueWatching is now called after auth/profile is confirmed to avoid flicker
 
       // Check if there's a movie ID in the URL to open modal
@@ -6955,8 +7881,13 @@
           searchTop.classList.remove('active');
         }
 
+        // Show popular movies section
+        const popularSection = document.getElementById('popularMoviesSection');
+        if (popularSection) popularSection.style.display = '';
+
         // Reset category filter and show all movies with continue watching
         try { currentCategory = 'all'; } catch (_) { }
+        mountCategoryBar();
         displayMovies(curatedMovies, false);
 
         // Ensure continue watching is shown
@@ -6976,8 +7907,13 @@
           searchInput.value = '';
           searchInput.dispatchEvent(new Event('input'));
         }
+        // Show popular movies section
+        const popularSection = document.getElementById('popularMoviesSection');
+        if (popularSection) popularSection.style.display = '';
+        
         // reset movies and category filter
         try { currentCategory = 'all'; } catch (_) { }
+        mountCategoryBar();
         displayMovies(curatedMovies);
         // smooth scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -7454,6 +8390,160 @@
         console.warn('Sign out link not found');
       }
     });
+  </script>
+
+  <!-- Movie Database Integration -->
+  <script src="js/movie-db.js"></script>
+  <script src="js/tmdb-integration.js"></script>
+  <script>
+    // TMDB API Configuration - Add your free API key from https://www.themoviedb.org/settings/api
+    const TMDB_API_KEY = 'f66d9d54a03e21f8ef99dd0c4258aa8a'; // Replace with your actual API key
+    // YouTube Data API key for trailer fallback (optional but required for auto lookup)
+    const YT_API_KEY = 'AIzaSyAZQSlyEUO5yMN0AGp94RVarUFxOlceuDM';
+    let movieDb = null;
+
+    // Initialize movie database
+    function initMovieDb() {
+      if (!TMDB_API_KEY || TMDB_API_KEY === 'YOUR_API_KEY_HERE') {
+        console.warn('TMDB API key not configured. Movie database features will be limited.');
+        return;
+      }
+      movieDb = new MovieDatabase(TMDB_API_KEY);
+      loadTrendingMovies(); // Load trending on page load
+      if (typeof initializeTMDBIntegration === 'function') {
+        initializeTMDBIntegration();
+      }
+    }
+
+    // Load and display trending movies (now using popular movies from TMDB)
+    async function loadTrendingMovies() {
+      if (!movieDb) return;
+      try {
+        const result = await movieDb.getPopularMovies(1);
+        const container = document.getElementById('trendingMoviesContainer');
+        
+        if (container && result && result.movies && result.movies.length > 0) {
+          container.innerHTML = ''; // Clear loading state
+          
+          result.movies.slice(0, 20).forEach(movie => {
+            const movieEl = document.createElement('div');
+            movieEl.className = 'trending-movie-card';
+            movieEl.style.cssText = `
+              cursor: pointer;
+              border-radius: 8px;
+              overflow: hidden;
+              transition: transform 0.3s, box-shadow 0.3s;
+              background: #1a1a1a;
+              border: 1px solid #333;
+            `;
+            
+            const posterUrl = movie.poster;
+            const year = movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : 'N/A';
+            
+            movieEl.innerHTML = `
+              <div style="position: relative; overflow: hidden; height: 220px; background: #0a0a0a;">
+                ${posterUrl ? `<img src="${posterUrl}" alt="${movie.title}" style="width: 100%; height: 100%; object-fit: cover;">` : '<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #666;">No Image</div>'}
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(180deg, transparent, rgba(0,0,0,0.8)); padding: 10px; color: white; font-size: 12px;">
+                  ⭐ ${movie.rating ? movie.rating.toFixed(1) : 'N/A'}
+                </div>
+              </div>
+              <div style="padding: 10px;">
+                <div style="font-size: 13px; font-weight: 600; margin-bottom: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${movie.title}</div>
+                <div style="font-size: 11px; color: #888;">${year}</div>
+              </div>
+            `;
+            
+            movieEl.addEventListener('mouseenter', () => {
+              movieEl.style.transform = 'translateY(-8px)';
+              movieEl.style.boxShadow = '0 8px 20px rgba(229, 9, 20, 0.3)';
+            });
+            
+            movieEl.addEventListener('mouseleave', () => {
+              movieEl.style.transform = 'none';
+              movieEl.style.boxShadow = 'none';
+            });
+            
+            movieEl.addEventListener('click', async () => {
+              const details = await getMovieDetailsDb(movie.id);
+              if (details) {
+                // Map TMDB details to expected format
+                const mappedMovie = {
+                  id: details.id,
+                  title: details.title,
+                  year: details.releaseDate ? details.releaseDate.split('-')[0] : '',
+                  genres: details.genres || [],
+                  rating: details.rating || 0,
+                  overview: details.overview || '',
+                  release_date: details.releaseDate || '',
+                  posterUrl: details.poster || null,
+                  backdropUrl: details.backdrop || null,
+                  trailerUrl: '',
+                  streamUrl: ''
+                };
+                if (typeof openMovieModal === 'function') {
+                  openMovieModal(mappedMovie);
+                }
+              }
+            });
+            
+            container.appendChild(movieEl);
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load trending movies:', error);
+      }
+    }
+
+    // Show movie details in modal
+    function showMovieModal(movie) {
+      const modal = document.getElementById('movieModal');
+      const title = document.getElementById('modalTitle');
+      const overview = document.getElementById('modalOverview');
+      const genres = document.getElementById('modalGenres');
+      const rating = document.getElementById('modalRating');
+      const releaseDate = document.getElementById('modalReleaseDate');
+      const trailerImg = document.getElementById('trailerPlaceholderImg');
+      
+      if (title) title.textContent = movie.title;
+      if (overview) overview.textContent = movie.overview;
+      if (genres) genres.textContent = movie.genres ? movie.genres.join(', ') : 'N/A';
+      if (rating) rating.textContent = `${movie.rating.toFixed(1)}/10`;
+      if (releaseDate) releaseDate.textContent = movie.releaseDate || 'N/A';
+      if (trailerImg) trailerImg.src = movie.backdrop || movie.poster || '';
+      
+      if (modal) {
+        modal.style.display = 'flex';
+      }
+    }
+
+    // Search movies
+    async function searchMoviesDb(query) {
+      if (!movieDb || !query) return [];
+      try {
+        const results = await movieDb.searchMovies(query);
+        return results.movies;
+      } catch (error) {
+        console.error('Search failed:', error);
+        return [];
+      }
+    }
+
+    // Get movie details
+    async function getMovieDetailsDb(movieId) {
+      if (!movieDb) return null;
+      try {
+        return await movieDb.getMovieDetails(movieId);
+      } catch (error) {
+        console.error('Failed to get movie details:', error);
+        return null;
+      }
+    }
+
+    // Initialize when page loads
+    window.addEventListener('load', () => {
+      initMovieDb();
+    });
+  </script>
   </script>
 
   <!-- Migration Helper - Disabled for now -->

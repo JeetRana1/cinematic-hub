@@ -7049,9 +7049,16 @@
               try {
                 const result = await window.resolveStreamUrlForMovie(movie, ['English','Hindi','Tamil','Telugu','Bengali']);
                 if (result && result.success && result.src) {
-                  const isHls2 = /\.m3u8(\?.*)?$/.test(result.src) || result.type === 'hls';
-                  params.append('type', isHls2 ? 'hls' : (result.type || 'mp4'));
-                  params.append('src', result.src);
+                  // Handle iframe embeds (VidSrc) differently
+                  if (result.type === 'iframe') {
+                    params.append('type', 'iframe');
+                    params.append('src', result.src);
+                    if (result.provider) params.append('provider', result.provider);
+                  } else {
+                    const isHls2 = /\.m3u8(\?.*)?$/.test(result.src) || result.type === 'hls';
+                    params.append('type', isHls2 ? 'hls' : (result.type || 'mp4'));
+                    params.append('src', result.src);
+                  }
                   if (result.imdbId) params.append('imdbId', result.imdbId);
                   if (result.key) params.append('streamKey', result.key);
                   if (result.language) params.append('currentLang', result.language);

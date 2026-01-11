@@ -119,77 +119,28 @@
         return { success:false, message:'No IMDb ID', src:null, type:null };
       }
       
-      // Check for movie overrides (original language, preferred langs)
-      const override = MOVIE_OVERRIDES[imdbId];
-      const finalPreferredLangs = override?.preferredLangs || preferredLangs;
-      const originalLanguage = override?.originalLanguage;
-      
-      const info = await fetchMediaInfoByImdb(imdbId);
-      const key = info?.key;
-      const playlist = info?.playlist || [];
-      
-      // Extract available languages and sort them with English first
-      const availableLanguages = playlist.map(p => p.title).filter(Boolean);
-      // Sort to put English first, then others
-      availableLanguages.sort((a, b) => {
-        if (a.toLowerCase().includes('english')) return -1;
-        if (b.toLowerCase().includes('english')) return 1;
-        return 0;
-      });
-      
-      // If original language is missing, add it to metadata
-      const languageInfo = {
-        available: availableLanguages,
-        original: originalLanguage,
-        missingOriginal: originalLanguage && !availableLanguages.some(l => l.toLowerCase().includes(originalLanguage.toLowerCase()))
-      };
-      
-      const langItem = pickLanguagePlaylist(playlist, finalPreferredLangs);
-      if(!langItem){
-        console.warn('⚠ No language found in playlist, available:', availableLanguages);
-        return { success:false, message:'No language playlist', src:null, type:null, availableLanguages, languageInfo };
-      }
-      const file = langItem.file || langItem.id || null;
-      if(!file){
-        console.warn('⚠ No file/id in language item:', langItem);
-        return { success:false, message:'No file in playlist', src:null, type:null, availableLanguages, languageInfo };
-      }
-      // If `file` is already a full http URL, use directly, else fetch stream link
+      // Use VidSrc as primary streaming source (works reliably)
+      const isTV = movie.mediaType === 'tv';
       let src;
-      if(/^https?:\/\//.test(file)){
-        src = file;
+      
+      if (isTV) {
+        // For TV shows, use season 1 episode 1 by default
+        src = `https://vidsrc.xyz/embed/tv/${movie.id}/1-1`;
       } else {
-        try {
-          src = await fetchStreamUrlFromFileAndKey(file, key);
-        } catch (linkError) {
-          console.error('Failed to fetch stream link from file:', file, linkError);
-          // Try alternate method if available
-          if (!src && playlist.length > 0) {
-            console.log('Trying alternate language/file');
-            for (let alt of playlist) {
-              try {
-                const altFile = alt.file || alt.id;
-                if (altFile && altFile !== file) {
-                  src = await fetchStreamUrlFromFileAndKey(altFile, key);
-                  if (src) {
-                    console.log('✓ Found alternate stream:', alt.title);
-                    break;
-                  }
-                }
-              } catch (e) {
-                continue;
-              }
-            }
-          }
-          if (!src) throw linkError;
-        }
+        // For movies, use IMDB ID
+        src = `https://vidsrc.xyz/embed/movie/${imdbId}`;
       }
-      if (!src) {
-        return { success:false, message:'Failed to get stream link', src:null, type:null, availableLanguages, languageInfo };
-      }
-      const type = /\.m3u8(\?.*)?$/.test(String(src)) ? 'hls' : 'mp4';
-      console.log('🎬 Resolved stream:', { imdbId, src, type, language: langItem.title, availableLanguages, languageInfo });
-      return { success:true, imdbId, src, type, language: langItem.title, availableLanguages, languageInfo, key };
+      
+      console.log('🎬 Resolved VidSrc stream:', { imdbId, src, type: 'iframe' });
+      return { 
+        success: true, 
+        imdbId, 
+        src, 
+        type: 'iframe',
+        language: 'Multi-Audio',
+        availableLanguages: ['Multi-Audio'],
+        provider: 'VidSrc'
+      };
     }catch(e){
       console.error('resolveStreamUrlForMovie error:', e);
       return { success:false, message:String(e?.message||e), src:null, type:null };

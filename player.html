@@ -4122,49 +4122,74 @@
         video.style.objectFit = 'contain';
 
         // Decide playback method based on sourceType or URL
+        const isIframe = (String(sourceType).toLowerCase() === 'iframe');
         const isHls = (String(sourceType).toLowerCase() === 'hls') || /\.m3u8(\?.*)?$/.test(src);
-        video.crossOrigin = 'anonymous';
-
-        if (isHls) {
-          console.log('📺 Initializing HLS playback...');
-          if (window.Hls && Hls.isSupported()) {
-            const hls = new Hls({
-              maxBufferLength: 30,
-              maxMaxBufferLength: 60,
-              lowLatencyMode: true
-            });
-            hls.loadSource(src);
-            hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, function () {
-              console.log('✓ HLS manifest parsed successfully');
-              
-              // Setup quality selector
-              setupQualitySelector(hls);
-              
-              const playPromise = video.play();
-              if (playPromise) playPromise.catch(err => console.warn('Autoplay blocked:', err));
-            });
-            hls.on(Hls.Events.ERROR, function (event, data) {
-              console.error('❌ HLS error:', data.type, data.details || data);
-            });
-            window.__hlsInstance = hls;
-          } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            // Safari native HLS
-            video.src = src;
-            video.addEventListener('loadedmetadata', () => {
-              const playPromise = video.play();
-              if (playPromise) playPromise.catch(err => console.warn('Autoplay blocked:', err));
-            });
-          } else {
-            console.warn('HLS not supported, falling back to direct src');
-            video.src = src;
-          }
+        
+        if (isIframe) {
+          console.log('📺 Initializing iframe embed (VidSrc)...');
+          // Hide video element and create iframe
+          video.style.display = 'none';
+          const iframe = document.createElement('iframe');
+          iframe.id = 'stream-iframe';
+          iframe.src = src;
+          iframe.style.width = '100%';
+          iframe.style.height = '100%';
+          iframe.style.border = 'none';
+          iframe.style.position = 'absolute';
+          iframe.style.top = '0';
+          iframe.style.left = '0';
+          iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+          iframe.allowFullscreen = true;
+          video.parentElement.appendChild(iframe);
+          console.log('✓ Iframe embed loaded:', src);
+          
+          // Hide custom controls for iframe embeds (they have their own controls)
+          const controlsContainer = document.getElementById('controlsContainer');
+          if (controlsContainer) controlsContainer.style.display = 'none';
         } else {
-          // MP4 or other direct sources
-          const source = document.createElement('source');
-          source.src = src;
-          source.type = 'video/mp4';
-          video.appendChild(source);
+          video.crossOrigin = 'anonymous';
+          
+          if (isHls) {
+            console.log('📺 Initializing HLS playback...');
+            if (window.Hls && Hls.isSupported()) {
+              const hls = new Hls({
+                maxBufferLength: 30,
+                maxMaxBufferLength: 60,
+                lowLatencyMode: true
+              });
+              hls.loadSource(src);
+              hls.attachMedia(video);
+              hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                console.log('✓ HLS manifest parsed successfully');
+                
+                // Setup quality selector
+                setupQualitySelector(hls);
+                
+                const playPromise = video.play();
+                if (playPromise) playPromise.catch(err => console.warn('Autoplay blocked:', err));
+              });
+              hls.on(Hls.Events.ERROR, function (event, data) {
+                console.error('❌ HLS error:', data.type, data.details || data);
+              });
+              window.__hlsInstance = hls;
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+              // Safari native HLS
+              video.src = src;
+              video.addEventListener('loadedmetadata', () => {
+                const playPromise = video.play();
+                if (playPromise) playPromise.catch(err => console.warn('Autoplay blocked:', err));
+              });
+            } else {
+              console.warn('HLS not supported, falling back to direct src');
+              video.src = src;
+            }
+          } else {
+            // MP4 or other direct sources
+            const source = document.createElement('source');
+            source.src = src;
+            source.type = 'video/mp4';
+            video.appendChild(source);
+          }
         }
 
         // DISABLED: Old resume code - now handled by player-continue-watching.js

@@ -374,7 +374,7 @@ class ContinueWatchingDisplay {
     
     // Ensure resolveStreamUrlForMovie is available
     if (typeof window.resolveStreamUrlForMovie === 'function') {
-      window.resolveStreamUrlForMovie(movie.movieId, movie.title)
+      window.resolveStreamUrlForMovie(movie)
         .then(result => {
           if (result && result.src) {
             console.log('✅ Stream resolved for resume:', result.src.substring(0, 100) + '...');

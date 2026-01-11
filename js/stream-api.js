@@ -45,18 +45,28 @@
     const base = getStreamApiBase();
     const url = `${base}/mediaInfo?id=${encodeURIComponent(imdbId)}`;
     console.log('📡 Fetching mediaInfo:', url);
-    const res = await fetch(url, { cache: 'no-cache' });
-    if(!res.ok){
-      console.error(`mediaInfo request failed: ${res.status}`);
-      throw new Error(`API Error ${res.status} - Movie may not be in the database`);
+    try {
+      const res = await fetch(url, { cache: 'no-cache' });
+      if(!res.ok){
+        console.error(`mediaInfo request failed: ${res.status}`);
+        throw new Error(`API Error ${res.status} - Movie may not be in the database`);
+      }
+      const json = await res.json();
+      console.log('📦 mediaInfo response:', json);
+      if(!json.success){
+        const errorMsg = json.message || 'Movie not found in API database';
+        console.warn('API returned success:false -', errorMsg);
+        throw new Error(errorMsg);
+      }
+      return json.data; // { playlist, key }
+    } catch (error) {
+      console.error('fetchMediaInfoByImdb failed:', error.message);
+      // If it's a JSON parse error or network error, provide more context
+      if (error instanceof SyntaxError) {
+        throw new Error('Invalid API response format');
+      }
+      throw error;
     }
-    const json = await res.json();
-    console.log('📦 mediaInfo response:', json);
-    if(!json.success){
-      console.warn('API returned success:false -', json.message);
-      throw new Error(json.message || 'Movie not found in API database');
-    }
-    return json.data; // { playlist, key }
   }
 
   function pickLanguagePlaylist(playlist, preferredLangs = DEFAULT_LANGS){

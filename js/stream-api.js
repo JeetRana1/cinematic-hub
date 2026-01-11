@@ -119,33 +119,33 @@
         return { success:false, message:'No IMDb ID', src:null, type:null };
       }
       
-      // Use SuperEmbed - cleaner, fewer ads
+      // Use reliable embed providers
       const isTV = movie.mediaType === 'tv';
       const tmdbId = movie.id;
       
-      // SuperEmbed.cc has minimal ads and good quality
+      // vidsrc.me is clean and reliable
       let src = isTV 
-        ? `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=1&e=1`
-        : `https://multiembed.mov/?video_id=${imdbId}&tmdb=1`;
+        ? `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=1&episode=1`
+        : `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`;
       
-      // Create language alternatives
+      // Create server alternatives
       const languageStreams = {
-        'Auto': isTV ? `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=1&e=1` : `https://multiembed.mov/?video_id=${imdbId}&tmdb=1`,
-        'Server 2': isTV ? `https://embed.su/embed/tv/${tmdbId}/1/1` : `https://embed.su/embed/movie/${imdbId}`,
-        'Server 3': isTV ? `https://www.2embed.cc/embedtv/${tmdbId}&s=1&e=1` : `https://www.2embed.cc/embed/${imdbId}`,
+        'Server 1': isTV ? `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=1&episode=1` : `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`,
+        'Server 2': isTV ? `https://vidsrc.net/embed/tv/${tmdbId}/1/1` : `https://vidsrc.net/embed/movie/${tmdbId}`,
+        'Server 3': isTV ? `https://autoembed.cc/tv/tmdb/${tmdbId}-1-1` : `https://autoembed.cc/movie/tmdb/${tmdbId}`,
       };
       
-      console.log('🎬 Resolved multi-server stream:', { imdbId, src, type: 'iframe' });
+      console.log('🎬 Resolved stream:', { imdbId, tmdbId, src, type: 'iframe' });
       return { 
         success: true, 
         imdbId, 
         src, 
         type: 'iframe',
-        language: 'Auto',
-        availableLanguages: ['Auto', 'Server 2', 'Server 3'],
+        language: 'Server 1',
+        availableLanguages: ['Server 1', 'Server 2', 'Server 3'],
         languageStreams: languageStreams,
         tmdbId: tmdbId,
-        provider: 'MultiEmbed'
+        provider: 'VidSrc.me'
       };
     }catch(e){
       console.error('resolveStreamUrlForMovie error:', e);

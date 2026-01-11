@@ -3758,6 +3758,9 @@
         year: year,
         rating: rating,
         description: description,
+        imdbId: urlParams.get('imdbId') || '',
+        tmdbId: urlParams.get('tmdbId') || '',
+        posterUrl: urlParams.get('poster') || '',
         // Add a timestamp to ensure uniqueness and track last access
         timestamp: Date.now()
       };
@@ -4181,7 +4184,10 @@
             window.ContinueWatchingManager.setupProgressTracking(video, {
               movieId: window.currentMovie.id,
               title: window.currentMovie.title,
-              posterUrl: window.currentMovie.posterUrl || window.currentMovie.poster || urlParams.get('poster') || ''
+              posterUrl: window.currentMovie.posterUrl || window.currentMovie.poster || urlParams.get('poster') || '',
+              imdbId: window.currentMovie.imdbId,
+              tmdbId: window.currentMovie.tmdbId,
+              year: window.currentMovie.year
             });
           }, { once: true });
         } else {

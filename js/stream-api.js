@@ -44,9 +44,11 @@
   async function fetchMediaInfoByImdb(imdbId){
     const base = getStreamApiBase();
     const url = `${base}/mediaInfo?id=${encodeURIComponent(imdbId)}`;
-    console.log('📡 Fetching mediaInfo:', url);
+    console.log('📡 Fetching mediaInfo from:', url);
+    console.log('📡 IMDB ID being sent:', imdbId);
     try {
       const res = await fetch(url, { cache: 'no-cache' });
+      console.log('📡 mediaInfo response status:', res.status);
       if(!res.ok){
         console.error(`mediaInfo request failed: ${res.status}`);
         throw new Error(`API Error ${res.status} - Movie may not be in the database`);
@@ -112,8 +114,11 @@
   async function resolveStreamUrlForMovie(movie, preferredLangs = DEFAULT_LANGS){
     try{
       console.log('🔍 Resolving stream for movie:', movie?.title || movie?.name || movie);
+      console.log('📋 Full movie object:', JSON.stringify(movie, null, 2));
       const imdbId = movie.imdbId || await fetchImdbIdForTmdbMovie(movie);
+      console.log('🎬 Using IMDB ID:', imdbId);
       if(!imdbId){
+        console.error('❌ No IMDB ID found for movie:', movie?.title);
         return { success:false, message:'No IMDb ID', src:null, type:null };
       }
       

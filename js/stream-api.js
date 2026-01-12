@@ -119,25 +119,33 @@
         return { success:false, message:'No IMDb ID', src:null, type:null };
       }
       
-      // Use vidsrc.dev - extensive content library
+      // Multi-provider with server selection
       const isTV = movie.mediaType === 'tv';
       const tmdbId = movie.id;
       
-      // vidsrc.dev has broad content coverage
-      let src = isTV 
-        ? `https://vidsrc.dev/embed/tv/${tmdbId}/1/1`
-        : `https://vidsrc.dev/embed/movie/${tmdbId}`;
+      // Create multiple server options
+      const servers = {
+        'Server 1 (VidSrc)': isTV ? `https://vidsrc.xyz/embed/tv/${tmdbId}/1-1` : `https://vidsrc.xyz/embed/movie/${tmdbId}`,
+        'Server 2 (VidLink)': isTV ? `https://vidlink.pro/tv/${tmdbId}/1/1` : `https://vidlink.pro/movie/${tmdbId}`,
+        'Server 3 (2Embed)': isTV ? `https://www.2embed.cc/embedtv/${tmdbId}&s=1&e=1` : `https://www.2embed.cc/embed/${tmdbId}`,
+        'Server 4 (NontonGo)': isTV ? `https://NontonGo.win/embed/tv/${tmdbId}/1/1` : `https://NontonGo.win/embed/movie/${tmdbId}`,
+        'Server 5 (Smash)': isTV ? `https://player.smashy.stream/tv/${tmdbId}?s=1&e=1` : `https://player.smashy.stream/movie/${tmdbId}`,
+      };
       
-      console.log('🎬 Resolved stream:', { imdbId, tmdbId, src, type: 'iframe' });
+      // Use first server as default
+      const src = servers['Server 1 (VidSrc)'];
+      
+      console.log('🎬 Resolved multi-server stream:', { imdbId, tmdbId, src, servers });
       return { 
         success: true, 
         imdbId, 
         src, 
         type: 'iframe',
-        language: 'Multi-Audio',
-        availableLanguages: ['Multi-Audio'],
+        language: 'Server 1 (VidSrc)',
+        availableLanguages: Object.keys(servers),
+        languageStreams: servers,
         tmdbId: tmdbId,
-        provider: 'VidSrc.dev'
+        provider: 'Multi-Server'
       };
     }catch(e){
       console.error('resolveStreamUrlForMovie error:', e);

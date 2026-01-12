@@ -4157,27 +4157,52 @@
           if (languageStreamsParam) {
             try {
               const languageStreams = JSON.parse(languageStreamsParam);
-              const currentLang = urlParams.get('currentLang') || 'Multi-Audio';
+              const currentLang = urlParams.get('currentLang') || 'English';
               
-              // Create language switcher UI
+              // Create prominent language switcher UI
               const langSwitcher = document.createElement('div');
-              langSwitcher.style.cssText = 'position:absolute; top:20px; right:20px; z-index:10000; background:rgba(0,0,0,0.8); padding:10px; border-radius:8px;';
-              langSwitcher.innerHTML = '<div style="color:white; font-size:14px; margin-bottom:5px;">Audio:</div>';
+              langSwitcher.style.cssText = 'position:fixed; top:80px; right:20px; z-index:99999; background:rgba(20,20,20,0.95); padding:15px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.5); min-width:180px;';
+              langSwitcher.innerHTML = '<div style="color:#fff; font-size:16px; font-weight:bold; margin-bottom:10px; text-align:center; border-bottom:2px solid #e50914; padding-bottom:8px;">🎧 Audio Language</div>';
               
               Object.keys(languageStreams).forEach(lang => {
                 const btn = document.createElement('button');
                 btn.textContent = lang;
-                btn.style.cssText = `margin:2px; padding:8px 12px; cursor:pointer; border:none; border-radius:4px; font-size:12px; ${lang === currentLang ? 'background:#e50914; color:white;' : 'background:white; color:black;'}`;
+                btn.style.cssText = `
+                  width:100%; 
+                  margin:6px 0; 
+                  padding:12px; 
+                  cursor:pointer; 
+                  border:2px solid ${lang === currentLang ? '#e50914' : '#333'}; 
+                  border-radius:8px; 
+                  font-size:14px; 
+                  font-weight:600;
+                  transition:all 0.3s;
+                  ${lang === currentLang ? 'background:#e50914; color:white;' : 'background:#1a1a1a; color:#fff;'}
+                `;
+                btn.onmouseover = () => {
+                  if (lang !== currentLang) {
+                    btn.style.background = '#333';
+                    btn.style.borderColor = '#e50914';
+                  }
+                };
+                btn.onmouseout = () => {
+                  if (lang !== currentLang) {
+                    btn.style.background = '#1a1a1a';
+                    btn.style.borderColor = '#333';
+                  }
+                };
                 btn.onclick = () => {
                   iframe.src = languageStreams[lang];
                   console.log('✓ Switched to:', lang, languageStreams[lang]);
                   // Update button styles
                   langSwitcher.querySelectorAll('button').forEach(b => {
-                    b.style.background = 'white';
-                    b.style.color = 'black';
+                    b.style.background = '#1a1a1a';
+                    b.style.color = '#fff';
+                    b.style.borderColor = '#333';
                   });
                   btn.style.background = '#e50914';
                   btn.style.color = 'white';
+                  btn.style.borderColor = '#e50914';
                 };
                 langSwitcher.appendChild(btn);
               });

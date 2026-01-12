@@ -2103,6 +2103,73 @@
       z-index: 9999 !important;
     }
 
+    /* Provider Selector Sidebar */
+    .provider-sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100px;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 60px;
+      gap: 15px;
+      z-index: 100;
+      border-right: 2px solid #ff6b00;
+    }
+
+    .provider-btn {
+      width: 80px;
+      padding: 12px 8px;
+      background: rgba(255, 107, 0, 0.2);
+      color: #fff;
+      border: 2px solid #ff6b00;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .provider-btn:hover {
+      background: rgba(255, 107, 0, 0.4);
+      transform: scale(1.05);
+    }
+
+    .provider-btn.active {
+      background: #ff6b00;
+      color: #000;
+      box-shadow: 0 0 10px rgba(255, 107, 0, 0.8);
+    }
+
+    .video-container {
+      margin-left: 100px;
+    }
+
+    @media (max-width: 768px) {
+      .provider-sidebar {
+        width: 80px;
+        padding-top: 50px;
+        gap: 10px;
+      }
+
+      .provider-btn {
+        width: 60px;
+        padding: 8px 4px;
+        font-size: 10px;
+      }
+
+      .video-container {
+        margin-left: 80px;
+      }
+    }
+
     /* Close button removed */
     @keyframes fadeIn {
       from {
@@ -2118,6 +2185,12 @@
   </style>
 
 <body>
+  <!-- Provider Selector Sidebar -->
+  <div class="provider-sidebar" id="providerSidebar">
+    <div class="provider-btn active" data-provider="vidplay">VidPlay</div>
+    <div class="provider-btn" data-provider="upcloud">UpCloud</div>
+    <div class="provider-btn" data-provider="vidcloud">VidCloud</div>
+  </div>
   <!-- Add allowfullscreen attribute to the video container -->
   <div class="video-container" id="videoContainer" allowfullscreen>
     <button id="backButton" class="back-button" aria-label="Back">
@@ -6369,6 +6442,74 @@
           updateScreenMode();
         });
         updateScreenMode();
+      }
+
+      // ========== PROVIDER SELECTOR LOGIC ==========
+      const providerButtons = document.querySelectorAll('.provider-btn');
+      const providerData = {
+        vidplay: { module: window.vidplay, name: 'VidPlay' },
+        upcloud: { module: window.upcloud, name: 'UpCloud' },
+        vidcloud: { module: window.vidcloud, name: 'VidCloud' }
+      };
+
+      function loadProviderStream(providerKey) {
+        const provider = providerData[providerKey];
+        if (!provider || !provider.module || !movieId) {
+          console.log('⚠️ Provider not available:', providerKey);
+          return;
+        }
+
+        try {
+          console.log(`📺 Loading ${provider.name}...`);
+          const embedUrl = provider.module.getUrl(movieId, isSeries ? 'TV' : 'MOVIE', season, episode);
+          
+          if (!embedUrl) {
+            console.error(`❌ ${provider.name} URL generation failed`);
+            return;
+          }
+
+          // Load the iframe
+          const iframe = document.getElementById('streamIframe');
+          iframe.src = embedUrl;
+          iframe.style.display = 'block';
+          
+          // Hide video element if showing
+          const video = document.getElementById('video');
+          if (video) video.style.display = 'none';
+
+          // Hide controls for iframe
+          const controlsContainer = document.getElementById('controlsContainer');
+          if (controlsContainer) controlsContainer.style.display = 'none';
+
+          console.log(`✅ ${provider.name} stream loaded!`);
+
+          // Update active button
+          providerButtons.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.provider === providerKey) {
+              btn.classList.add('active');
+            }
+          });
+
+          // Save preference
+          localStorage.setItem('preferredProvider', providerKey);
+        } catch (error) {
+          console.error(`❌ ${provider.name} error:`, error);
+        }
+      }
+
+      // Add click handlers to provider buttons
+      providerButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const providerKey = btn.dataset.provider;
+          loadProviderStream(providerKey);
+        });
+      });
+
+      // Load saved preference or use default
+      const savedProvider = localStorage.getItem('preferredProvider') || 'vidplay';
+      if (document.querySelector(`.provider-btn[data-provider="${savedProvider}"]`)) {
+        loadProviderStream(savedProvider);
       }
     });
   </script>

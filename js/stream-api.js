@@ -119,14 +119,14 @@
         return { success:false, message:'No IMDb ID', src:null, type:null };
       }
       
-      // Use vidsrc.rip - cleanest with multi-language support
+      // Use vidsrc.pm - most reliable and stable
       const isTV = movie.mediaType === 'tv';
       const tmdbId = movie.id;
       
-      // vidsrc.rip has minimal ads and multi-audio
+      // vidsrc.pm is the most stable provider
       let src = isTV 
-        ? `https://vidsrc.rip/embed/tv/${tmdbId}/1/1`
-        : `https://vidsrc.rip/embed/movie/${tmdbId}`;
+        ? `https://vidsrc.pm/embed/tv/${tmdbId}/1-1`
+        : `https://vidsrc.pm/embed/movie/${tmdbId}`;
       
       console.log('🎬 Resolved stream:', { imdbId, tmdbId, src, type: 'iframe' });
       return { 
@@ -137,7 +137,7 @@
         language: 'Multi-Audio',
         availableLanguages: ['Multi-Audio'],
         tmdbId: tmdbId,
-        provider: 'VidSrc.rip'
+        provider: 'VidSrc.pm'
       };
     }catch(e){
       console.error('resolveStreamUrlForMovie error:', e);

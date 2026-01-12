@@ -6,7 +6,11 @@
 (function() {
   'use strict';
 
-  const UPCLOUD_BASE = 'https://upcloud.pro';
+  const UPCLOUD_BASES = [
+    'https://upcloud.pro',
+    'https://upcloud.co',
+    'https://upcloud.tv'
+  ];
 
   /**
    * Get UpCloud embed URL for a movie or TV show
@@ -17,13 +21,14 @@
         throw new Error('TMDB ID is required');
       }
 
+      const base = UPCLOUD_BASES[0];
       let url;
       if (mediaType === 'TV' && season && episode) {
         // TV Series: /embed/tv/TMDB_ID?s=SEASON&e=EPISODE
-        url = `${UPCLOUD_BASE}/embed/tv/${tmdbId}?s=${season}&e=${episode}`;
+        url = `${base}/embed/tv/${tmdbId}?s=${season}&e=${episode}`;
       } else {
         // Movie: /embed/movie/TMDB_ID
-        url = `${UPCLOUD_BASE}/embed/movie/${tmdbId}`;
+        url = `${base}/embed/movie/${tmdbId}`;
       }
 
       console.log('✓ UpCloud URL generated:', url);
@@ -55,7 +60,8 @@
   window.upcloud = {
     getUrl: getUpCloudUrl,
     testConnection: testUpCloudConnection,
-    base: UPCLOUD_BASE
+    base: UPCLOUD_BASES[0],
+    bases: UPCLOUD_BASES
   };
 
   console.log('✓ UpCloud module loaded');

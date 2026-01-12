@@ -6,7 +6,11 @@
 (function() {
   'use strict';
 
-  const VIDCLOUD_BASE = 'https://vidcloud.co';
+  const VIDCLOUD_BASES = [
+    'https://vidcloud.co',
+    'https://vidcloud.io',
+    'https://vidcloud.tv'
+  ];
 
   /**
    * Get VidCloud embed URL for a movie or TV show
@@ -17,13 +21,14 @@
         throw new Error('TMDB ID is required');
       }
 
+      const base = VIDCLOUD_BASES[0];
       let url;
       if (mediaType === 'TV' && season && episode) {
         // TV Series: /embed/tv/TMDB_ID?s=SEASON&e=EPISODE
-        url = `${VIDCLOUD_BASE}/embed/tv/${tmdbId}?s=${season}&e=${episode}`;
+        url = `${base}/embed/tv/${tmdbId}?s=${season}&e=${episode}`;
       } else {
         // Movie: /embed/movie/TMDB_ID
-        url = `${VIDCLOUD_BASE}/embed/movie/${tmdbId}`;
+        url = `${base}/embed/movie/${tmdbId}`;
       }
 
       console.log('✓ VidCloud URL generated:', url);
@@ -55,7 +60,8 @@
   window.vidcloud = {
     getUrl: getVidCloudUrl,
     testConnection: testVidCloudConnection,
-    base: VIDCLOUD_BASE
+    base: VIDCLOUD_BASES[0],
+    bases: VIDCLOUD_BASES
   };
 
   console.log('✓ VidCloud module loaded');

@@ -3693,7 +3693,7 @@
           try {
             const embedUrl = provider.getUrl(movieId, isSeries ? 'TV' : 'MOVIE', season, episode);
             if (embedUrl) {
-              console.log(`✅ ${provider.name} stream found!`);
+              console.log(`✅ ${provider.name} URL generated:`, embedUrl);
               src = embedUrl;
               sourceType = 'iframe';
               console.log(`✓ Using ${provider.name} stream:`, src);

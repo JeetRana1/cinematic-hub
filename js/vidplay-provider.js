@@ -7,7 +7,11 @@
 (function() {
   'use strict';
 
-  const VIDPLAY_BASE = 'https://vidplay.site';
+  const VIDPLAY_BASES = [
+    'https://vidplay.site',
+    'https://vidplay.online',
+    'https://vidplay.pro'
+  ];
 
   /**
    * Get VidPlay embed URL for a movie or TV show
@@ -18,13 +22,14 @@
         throw new Error('TMDB ID is required');
       }
 
+      const base = VIDPLAY_BASES[0];
       let url;
       if (mediaType === 'TV' && season && episode) {
         // TV Series: /embed/tv/TMDB_ID?s=SEASON&e=EPISODE
-        url = `${VIDPLAY_BASE}/embed/tv/${tmdbId}?s=${season}&e=${episode}`;
+        url = `${base}/embed/tv/${tmdbId}?s=${season}&e=${episode}`;
       } else {
         // Movie: /embed/movie/TMDB_ID
-        url = `${VIDPLAY_BASE}/embed/movie/${tmdbId}`;
+        url = `${base}/embed/movie/${tmdbId}`;
       }
 
       console.log('✓ VidPlay URL generated:', url);
@@ -56,7 +61,8 @@
   window.vidplay = {
     getUrl: getVidPlayUrl,
     testConnection: testVidPlayConnection,
-    base: VIDPLAY_BASE
+    base: VIDPLAY_BASES[0],
+    bases: VIDPLAY_BASES
   };
 
   console.log('✓ VidPlay module loaded');

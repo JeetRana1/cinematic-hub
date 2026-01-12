@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consumet API Test</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #fff;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    h1 {
+      margin-bottom: 30px;
+      text-align: center;
+      font-size: 2rem;
+    }
+
+    .test-section {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .test-section h2 {
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+      color: #ffd700;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      font-size: 1rem;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .result {
+      margin-top: 15px;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .success {
+      color: #4ade80;
+    }
+
+    .error {
+      color: #f87171;
+    }
+
+    .info {
+      color: #60a5fa;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .status.online {
+      background: #4ade80;
+      color: #000;
+    }
+
+    .status.offline {
+      background: #f87171;
+      color: #000;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎬 Consumet API Test Suite</h1>
+
+    <!-- API Status -->
+    <div class="test-section">
+      <h2>🔌 API Status</h2>
+      <div id="apiStatus">Checking...</div>
+    </div>
+
+    <!-- Test 1: Search -->
+    <div class="test-section">
+      <h2>🔍 Test Search</h2>
+      <div class="input-group">
+        <label for="searchQuery">Search Query:</label>
+        <input type="text" id="searchQuery" placeholder="e.g., Inception" value="Inception">
+      </div>
+      <button onclick="testSearch()">Search</button>
+      <div id="searchResult" class="result" style="display: none;"></div>
+    </div>
+
+    <!-- Test 2: Get Stream (FlixHQ) -->
+    <div class="test-section">
+      <h2>🎥 Test FlixHQ Stream</h2>
+      <div class="input-group">
+        <label for="tmdbId">TMDB ID:</label>
+        <input type="text" id="tmdbId" placeholder="e.g., 27205" value="27205">
+      </div>
+      <div class="input-group">
+        <label for="mediaType">Media Type:</label>
+        <select id="mediaType">
+          <option value="movie">Movie</option>
+          <option value="tv">TV Show</option>
+        </select>
+      </div>
+      <button onclick="testStream()">Get Stream</button>
+      <div id="streamResult" class="result" style="display: none;"></div>
+    </div>
+
+    <!-- Test 3: Integration Test -->
+    <div class="test-section">
+      <h2>🧪 Integration Test</h2>
+      <p style="margin-bottom: 15px; opacity: 0.8;">Tests the complete flow with a sample movie</p>
+      <button onclick="testIntegration()">Run Integration Test</button>
+      <div id="integrationResult" class="result" style="display: none;"></div>
+    </div>
+  </div>
+
+  <!-- Load scripts -->
+  <script src="public/streamApiConfig.js"></script>
+  <script src="js/consumet-api.js"></script>
+
+  <script>
+    // Check API status
+    async function checkApiStatus() {
+      const statusDiv = document.getElementById('apiStatus');
+      const apiUrl = window.CONSUMET_API || 'http://localhost:3000';
+      
+      try {
+        const response = await fetch(apiUrl, { method: 'GET' });
+        if (response.ok) {
+          statusDiv.innerHTML = `
+            <span class="status online">ONLINE</span>
+            <div class="info">API URL: ${apiUrl}</div>
+          `;
+        } else {
+          throw new Error('API returned error');
+        }
+      } catch (error) {
+        statusDiv.innerHTML = `
+          <span class="status offline">OFFLINE</span>
+          <div class="error">Cannot connect to ${apiUrl}</div>
+          <div class="error">Make sure your Consumet API is running!</div>
+        `;
+      }
+    }
+
+    // Test search
+    async function testSearch() {
+      const query = document.getElementById('searchQuery').value;
+      const resultDiv = document.getElementById('searchResult');
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = '<div class="info">Searching...</div>';
+
+      try {
+        const result = await window.ConsumetAPI.search(query);
+        
+        if (result.success && result.results.length > 0) {
+          const formatted = result.results.slice(0, 5).map((item, idx) => 
+            `${idx + 1}. ${item.title} (${item.type || 'Unknown'})\n   ID: ${item.id}`
+          ).join('\n\n');
+          
+          resultDiv.innerHTML = `
+            <div class="success">✅ Found ${result.results.length} results</div>
+            <pre>${formatted}</pre>
+          `;
+        } else {
+          resultDiv.innerHTML = '<div class="error">❌ No results found</div>';
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+      }
+    }
+
+    // Test stream
+    async function testStream() {
+      const tmdbId = document.getElementById('tmdbId').value;
+      const mediaType = document.getElementById('mediaType').value;
+      const resultDiv = document.getElementById('streamResult');
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = '<div class="info">Fetching stream...</div>';
+
+      try {
+        const movie = { id: tmdbId, mediaType: mediaType };
+        const result = await window.ConsumetAPI.resolveStream(movie);
+        
+        if (result.success && result.url) {
+          resultDiv.innerHTML = `
+            <div class="success">✅ Stream found!</div>
+            <div class="info">Provider: ${result.provider}</div>
+            <div class="info">Type: ${result.type}</div>
+            <div class="info">Quality: ${result.quality || 'N/A'}</div>
+            <div class="info">URL: ${result.url.substring(0, 100)}...</div>
+            ${result.sources ? `<div class="info">Available qualities: ${result.sources.length}</div>` : ''}
+          `;
+        } else {
+          resultDiv.innerHTML = `<div class="error">❌ ${result.message || 'No stream found'}</div>`;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+      }
+    }
+
+    // Integration test
+    async function testIntegration() {
+      const resultDiv = document.getElementById('integrationResult');
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = '<div class="info">Running integration test...</div>';
+
+      const testMovie = {
+        id: '27205', // Inception
+        title: 'Inception',
+        mediaType: 'movie'
+      };
+
+      let log = '';
+      
+      try {
+        // Step 1: Check API
+        log += '1️⃣ Checking API connection...\n';
+        const apiUrl = window.CONSUMET_API || 'http://localhost:3000';
+        const apiCheck = await fetch(apiUrl);
+        log += apiCheck.ok ? '   ✅ API is online\n\n' : '   ❌ API is offline\n\n';
+
+        // Step 2: Search
+        log += '2️⃣ Searching for movie...\n';
+        const searchResult = await window.ConsumetAPI.search(testMovie.title);
+        log += searchResult.success ? `   ✅ Found ${searchResult.results.length} results\n\n` : '   ❌ Search failed\n\n';
+
+        // Step 3: Get stream
+        log += '3️⃣ Fetching stream...\n';
+        const streamResult = await window.ConsumetAPI.resolveStream(testMovie);
+        
+        if (streamResult.success) {
+          log += `   ✅ Stream resolved!\n`;
+          log += `   Provider: ${streamResult.provider}\n`;
+          log += `   Type: ${streamResult.type}\n`;
+          log += `   Quality: ${streamResult.quality || 'auto'}\n`;
+          log += `   URL: ${streamResult.url.substring(0, 80)}...\n\n`;
+          
+          resultDiv.innerHTML = `
+            <div class="success">🎉 Integration test PASSED!</div>
+            <pre>${log}</pre>
+          `;
+        } else {
+          log += `   ❌ Stream failed: ${streamResult.message}\n`;
+          resultDiv.innerHTML = `
+            <div class="error">❌ Integration test FAILED</div>
+            <pre>${log}</pre>
+          `;
+        }
+      } catch (error) {
+        log += `\n❌ Error: ${error.message}`;
+        resultDiv.innerHTML = `
+          <div class="error">❌ Integration test ERROR</div>
+          <pre>${log}</pre>
+        `;
+      }
+    }
+
+    // Check status on load
+    checkApiStatus();
+  </script>
+</body>
+</html>

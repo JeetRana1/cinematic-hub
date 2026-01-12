@@ -129,6 +129,23 @@
     .video-container {
       position: relative !important;
     }
+    
+    .player-error-msg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 68, 68, 0.9);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      z-index: 100;
+      max-width: 80%;
+      display: none;
+      font-size: 14px;
+      line-height: 1.6;
+    }
 
     .controls {
       display: flex !important;
@@ -498,6 +515,12 @@
   <script src="storage-adapter.js"></script>
   <!-- hls.js for HLS (.m3u8) playback -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <!-- CORS Proxy Helper -->
+  <script src="api/cors-proxy.js"></script>
+  <!-- Consumet Provider (Primary) -->
+  <script src="js/consumet-provider.js"></script>
+  <!-- Consumet Diagnostics (for troubleshooting) -->
+  <script src="consumet-diagnostics.js"></script>
   <!-- Stream API Configuration -->
   <script src="public/streamApiConfig.js"></script>
   <script src="js/stream-api.js"></script>
@@ -2101,6 +2124,9 @@
       <i class="fa-solid fa-house"></i>
     </button>
     
+    <!-- Error message display -->
+    <div class="player-error-msg" id="playerError"></div>
+    
     <!-- Iframe for embed players (VidSrc, etc.) - NO SANDBOX -->
     <iframe id="streamIframe" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; border:none;" allowfullscreen webkitallowfullscreen mozallowfullscreen scrolling="no" frameborder="0" allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>
     
@@ -2967,7 +2993,7 @@
 
     };
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       // Diagnostic check for fullscreen compatibility
       console.log('=== Fullscreen Diagnostic ===');
       console.log('DOMContentLoaded fired!');
@@ -3769,9 +3795,15 @@
       let sourceType = urlParams.get('type') || 'mp4';
       let src = urlParams.get('src') || urlParams.get('video') || '';
       
+      // Get episode/season parameters for TV series
+      const season = urlParams.get('season');
+      const episode = urlParams.get('episode');
+      const isSeries = season && episode;
+      
       console.log('🎬 Player.html initialization:');
       console.log('   - src:', src);
       console.log('   - sourceType:', sourceType);
+      console.log('   - isSeries:', isSeries, `S${season}E${episode}`);
       console.log('   - title:', title);
       
       // Get language parameters from URL
@@ -3879,15 +3911,63 @@
       // Check movie database for the video source and subtitles
       const normalizedTitle = title.toLowerCase().trim();
       console.log('Looking up movie:', normalizedTitle);
-      console.log('Available movies in database:', Object.keys(movieDatabase));
 
-      if (!src && movieDatabase[normalizedTitle]) {
-        const movieData = movieDatabase[normalizedTitle];
-        src = movieData.src;
-        sourceType = movieData.type;
-        console.log('✓ Found movie in database:', normalizedTitle, movieData);
-      } else {
-        console.log('✗ Movie not found in database:', normalizedTitle);
+      // 🎬 USE CONSUMET API ONLY
+      if (!src && window.consumetProvider && typeof window.consumetProvider.getStreamFromConsumet === 'function') {
+        console.log('🎬 Attempting Consumet API search for:', title);
+        try {
+          let consumetResult;
+          
+          // Handle TV Series episodes
+          if (isSeries && window.consumetProvider.getSeriesEpisode) {
+            console.log(`📺 Searching for series episode: S${season}E${episode}`);
+            consumetResult = await window.consumetProvider.getSeriesEpisode(title, parseInt(season), parseInt(episode));
+          } else {
+            // Handle movies
+            consumetResult = await window.consumetProvider.getStreamFromConsumet(title, 'MOVIE');
+          }
+          
+          if (consumetResult && consumetResult.url) {
+            console.log('✅ Consumet stream found!', consumetResult);
+            src = consumetResult.url;
+            sourceType = consumetResult.type || 'hls';
+            
+            // Load Consumet subtitles if available
+            if (consumetResult.subtitles && consumetResult.subtitles.length > 0) {
+              loadSubtitles(consumetResult.subtitles);
+            }
+            
+            console.log('✓ Using Consumet stream:', src);
+          } else {
+            console.log('⚠️ Consumet search returned no results');
+            console.log('❌ No stream found from Consumet API');
+          }
+        } catch (error) {
+          console.error('❌ Consumet API error:', error);
+        }
+      } else if (!src) {
+        console.log('⚠️ Consumet provider not loaded or function not available');
+      }
+
+      // If still no source, show error
+      if (!src) {
+        console.error('❌ FATAL: No video source found!');
+        console.error('   Consumet API was unable to find the content');
+        if (isSeries) {
+          console.error(`   Series S${season}E${episode} not available on Consumet API`);
+        } else {
+          console.error('   Make sure the movie exists on the Consumet API');
+        }
+        
+        // Show user-friendly error
+        const errorDiv = document.getElementById('errorMessage');
+        if (errorDiv) {
+          const msg = isSeries 
+            ? `❌ Episode not found on Consumet API. S${season}E${episode} may not be available.`
+            : '❌ Video not found on Consumet API. The movie may not be available.';
+          errorDiv.innerHTML = msg;
+          errorDiv.style.display = 'block';
+        }
       }
 
       // Check for subtitle data in URL parameters
@@ -3902,15 +3982,12 @@
         }
       }
 
-      // Load subtitles if available (either from movie data or URL)
+      // Load subtitles only from Consumet
       if (subtitleData && subtitleData.length > 0) {
-        console.log('Loading subtitles from URL data:', subtitleData.length, 'tracks');
+        console.log('Loading subtitles from Consumet:', subtitleData.length, 'tracks');
         loadSubtitles(subtitleData);
-      } else if (movieDatabase[normalizedTitle] && movieDatabase[normalizedTitle].subtitles && movieDatabase[normalizedTitle].subtitles.length > 0) {
-        console.log('Loading subtitles from movie database:', movieDatabase[normalizedTitle].subtitles.length, 'tracks');
-        loadSubtitles(movieDatabase[normalizedTitle].subtitles);
       } else {
-        console.log('No subtitle data found');
+        console.log('No subtitles found from Consumet');
       }
 
       // Debug: Log the source URL and parameters
@@ -4222,11 +4299,29 @@
           if (isHls) {
             console.log('📺 Initializing HLS playback...');
             if (window.Hls && Hls.isSupported()) {
-              const hls = new Hls({
+              // CORS Proxy configuration for streaming URLs
+              const corsProxies = [
+                'https://cors-anywhere.herokuapp.com/',
+                'https://api.allorigins.win/raw?url='
+              ];
+              
+              let proxyUrl = src;
+              // Try using CORS proxy if the URL has CORS issues
+              const useProxy = src.includes('rainbloom44.xyz') || src.includes('vidsrc') || src.includes('2embed');
+              
+              const hlsConfig = {
                 maxBufferLength: 30,
                 maxMaxBufferLength: 60,
-                lowLatencyMode: true
-              });
+                lowLatencyMode: true,
+                // Enable headers for CORS requests
+                xhrSetup: function(xhr, url) {
+                  xhr.withCredentials = false;
+                  // Note: User-Agent cannot be set in browsers due to security restrictions
+                  // The browser will automatically send appropriate headers
+                }
+              };
+              
+              const hls = new Hls(hlsConfig);
               hls.loadSource(src);
               hls.attachMedia(video);
               hls.on(Hls.Events.MANIFEST_PARSED, function () {
@@ -4240,6 +4335,16 @@
               });
               hls.on(Hls.Events.ERROR, function (event, data) {
                 console.error('❌ HLS error:', data.type, data.details || data);
+                
+                // Handle CORS errors
+                if (data.details === 'manifestLoadError' || data.details === 'networkError') {
+                  console.warn('⚠️ CORS or Network error detected. The streaming provider may have CORS restrictions.');
+                  const errorMsg = document.querySelector('.player-error-msg');
+                  if (errorMsg) {
+                    errorMsg.style.display = 'block';
+                    errorMsg.innerHTML = '⚠️ Streaming URL blocked by CORS policy. Try a different source or use a CORS proxy.';
+                  }
+                }
               });
               window.__hlsInstance = hls;
             } else if (video.canPlayType('application/vnd.apple.mpegurl')) {

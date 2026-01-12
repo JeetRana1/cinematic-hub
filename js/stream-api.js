@@ -114,12 +114,36 @@
   async function resolveStreamUrlForMovie(movie, preferredLangs = DEFAULT_LANGS){
     try{
       console.log('🔍 Resolving stream for movie:', movie?.title || movie?.name || movie);
+      
+      // Try Consumet API first (best quality, ad-free)
+      if (window.ConsumetAPI && window.ConsumetAPI.resolveStream) {
+        console.log('🎬 Trying Consumet API first...');
+        const consumetResult = await window.ConsumetAPI.resolveStream(movie);
+        
+        if (consumetResult.success && consumetResult.url) {
+          console.log('✅ Stream resolved via Consumet:', consumetResult.provider);
+          return {
+            success: true,
+            src: consumetResult.url,
+            type: consumetResult.type || 'hls',
+            provider: consumetResult.provider,
+            quality: consumetResult.quality,
+            sources: consumetResult.sources,
+            subtitles: consumetResult.subtitles
+          };
+        } else {
+          console.warn('⚠️ Consumet failed:', consumetResult.message);
+        }
+      }
+      
+      // Fallback to legacy 8Stream or iframe providers
+      console.log('🔄 Falling back to legacy providers...');
       const imdbId = movie.imdbId || await fetchImdbIdForTmdbMovie(movie);
       if(!imdbId){
         return { success:false, message:'No IMDb ID', src:null, type:null };
       }
       
-      // Language-specific providers
+      // Language-specific providers (legacy)
       const isTV = movie.mediaType === 'tv';
       const tmdbId = movie.id;
       
@@ -145,7 +169,7 @@
         availableLanguages: ['English', 'Hindi', 'Tamil', 'Telugu', 'Multi-Audio'],
         languageStreams: servers,
         tmdbId: tmdbId,
-        provider: 'Language-Specific'
+        provider: 'Legacy Iframe Providers'
       };
     }catch(e){
       console.error('resolveStreamUrlForMovie error:', e);

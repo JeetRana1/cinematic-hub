@@ -6935,6 +6935,39 @@
                 if (openOnYouTubeBtn) openOnYouTubeBtn.style.display = 'none';
               }
             };
+
+            // Handle Play Episode button click
+            const seriesPlayBtn = document.getElementById('seriesPlayBtn');
+            if (seriesPlayBtn) {
+              seriesPlayBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                const seasonNumber = Number(seasonSelect.value);
+                const episodeNumber = Number(episodeSelect.value);
+                
+                if (!seasonNumber || !episodeNumber) {
+                  console.warn('Please select both season and episode');
+                  UIToast.warning('Select Episode', 'Please select both a season and episode');
+                  return;
+                }
+                
+                // Build player URL with season and episode parameters
+                const posterUrl = movie.poster_path 
+                  ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                  : '';
+                  
+                const playerUrl = new URL('player.html', window.location.origin);
+                playerUrl.searchParams.set('title', movie.title || movie.name);
+                playerUrl.searchParams.set('movieId', movie.id);
+                playerUrl.searchParams.set('season', seasonNumber);
+                playerUrl.searchParams.set('episode', episodeNumber);
+                playerUrl.searchParams.set('poster', posterUrl);
+                playerUrl.searchParams.set('type', 'hls');
+                
+                console.log('Opening episode:', playerUrl.toString());
+                window.location.href = playerUrl.toString();
+              });
+            }
           } catch (err) {
             console.error('Failed to load TV details', err);
             seasonSelect.innerHTML = '<option>Error loading seasons</option>';
@@ -8550,7 +8583,8 @@
   <!-- Movie Database Integration -->
   <script src="js/movie-db.js"></script>
   <script src="js/tmdb-integration.js"></script>
-  <script src="public/streamApiConfig.js?v=20260111"></script>
+  <script src="public/streamApiConfig.js?v=20260112"></script>
+  <script src="js/consumet-api.js"></script>
   <script src="js/stream-api.js"></script>
   <script>
     // TMDB API Configuration - Add your free API key from https://www.themoviedb.org/settings/api

@@ -520,8 +520,6 @@
   <script src="js/upcloud-provider.js"></script>
   <script src="js/vidcloud-provider.js"></script>
   <script src="js/googledrive-provider.js"></script>
-  <!-- 8StreamAPI Integration (Fallback HLS) -->
-  <script src="js/stream-8api.js"></script>
   <!-- Stream Diagnostics -->
   <script src="stream-diagnostics.js"></script>
   <!-- Continue Watching Scripts -->
@@ -2152,24 +2150,6 @@
       margin-left: 100px;
     }
 
-    @media (max-width: 768px) {
-      .provider-sidebar {
-        width: 80px;
-        padding-top: 50px;
-        gap: 10px;
-      }
-
-      .provider-btn {
-        width: 60px;
-        padding: 8px 4px;
-        font-size: 10px;
-      }
-
-      .video-container {
-        margin-left: 80px;
-      }
-    }
-
     /* Close button removed */
     @keyframes fadeIn {
       from {
@@ -3753,7 +3733,7 @@
       const normalizedTitle = title.toLowerCase().trim();
       console.log('Looking up movie:', normalizedTitle);
 
-      // 🎬 TRY IFRAME PROVIDERS FIRST (VidPlay, UpCloud, VidCloud)
+      // 🎬 ALL PROVIDERS MUST PROVIDE IFRAME EMBEDS
       const iframeProviders = [
         { name: 'VidPlay', module: window.vidplay, getUrl: (id, type, s, e) => window.vidplay?.getUrl?.(id, type, s, e) },
         { name: 'UpCloud', module: window.upcloud, getUrl: (id, type, s, e) => window.upcloud?.getUrl?.(id, type, s, e) },
@@ -3762,7 +3742,7 @@
 
       for (const provider of iframeProviders) {
         if (!src && movieId && provider.module && provider.getUrl) {
-          console.log(`📺 Attempting ${provider.name} fallback for TMDB ID: ${movieId}`);
+          console.log(`📺 Attempting ${provider.name} for TMDB ID: ${movieId}`);
           try {
             const embedUrl = provider.getUrl(movieId, isSeries ? 'TV' : 'MOVIE', season, episode);
             if (embedUrl) {
@@ -3777,35 +3757,6 @@
           } catch (error) {
             console.error(`❌ ${provider.name} error:`, error);
           }
-        }
-      }
-
-      // 🎬 FALLBACK TO 8StreamAPI IF NO IFRAME PROVIDER WORKS (HLS streams)
-      if (!src && window.streamApi && typeof window.streamApi.getStream === 'function') {
-        console.log('🎬 Attempting 8StreamAPI (HLS fallback) for:', title, '(ID:', movieId, ')');
-        try {
-          let apiResult;
-          
-          // Handle TV Series episodes
-          if (isSeries) {
-            console.log(`📺 Searching for series episode: S${season}E${episode}`);
-            apiResult = await window.streamApi.getStream(movieId, 'TV', parseInt(season), parseInt(episode));
-          } else {
-            // Handle movies
-            apiResult = await window.streamApi.getStream(movieId, 'MOVIE');
-          }
-          
-          if (apiResult && apiResult.url) {
-            console.log('✅ 8StreamAPI stream found!', apiResult);
-            src = apiResult.url;
-            sourceType = apiResult.type || 'hls';
-            
-            console.log('✓ Using 8StreamAPI stream:', src);
-          } else {
-            console.log('⚠️ 8StreamAPI search returned no results');
-          }
-        } catch (error) {
-          console.error('❌ 8StreamAPI error:', error);
         }
       }
 
@@ -6502,14 +6453,28 @@
       providerButtons.forEach(btn => {
         btn.addEventListener('click', () => {
           const providerKey = btn.dataset.provider;
+          console.log(`User clicked provider: ${providerKey}`);
           loadProviderStream(providerKey);
         });
       });
 
-      // Load saved preference or use default
-      const savedProvider = localStorage.getItem('preferredProvider') || 'vidplay';
-      if (document.querySelector(`.provider-btn[data-provider="${savedProvider}"]`)) {
-        loadProviderStream(savedProvider);
+      // Only auto-load provider if no direct src was found
+      if (!src) {
+        // Wait for provider modules to load
+        setTimeout(() => {
+          console.log('Checking available providers...');
+          console.log('window.vidplay:', window.vidplay ? '✅ loaded' : '❌ not loaded');
+          console.log('window.upcloud:', window.upcloud ? '✅ loaded' : '❌ not loaded');
+          console.log('window.vidcloud:', window.vidcloud ? '✅ loaded' : '❌ not loaded');
+
+          const savedProvider = localStorage.getItem('preferredProvider') || 'vidplay';
+          if (document.querySelector(`.provider-btn[data-provider="${savedProvider}"]`)) {
+            console.log(`Auto-loading saved provider: ${savedProvider}`);
+            loadProviderStream(savedProvider);
+          }
+        }, 500);
+      } else {
+        console.log('✅ Stream source already provided via URL, skipping provider auto-load');
       }
     });
   </script>

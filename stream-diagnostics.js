@@ -1,98 +1,17 @@
 /**
- * Stream API Diagnostics
- * Tests both 8StreamAPI and VidPlay connectivity
+ * Stream Providers Diagnostics
+ * Tests all iframe embed providers
  */
 
 (function() {
   'use strict';
 
-  const API_BASE = 'https://8streamapi-ju5obhkzf-jeetrana1s-projects.vercel.app/api/v1';
-  const CORS_PROXIES = [
-    'https://api.allorigins.win/raw?url=',
-    'https://corsproxy.io/?',
-    'https://cors-anywhere.herokuapp.com/'
-  ];
-
-  function isLocalhost() {
-    return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  }
-
-  async function fetchWithCorsProxy(url) {
-    console.log('   Fetching:', url);
-    
-    // Try direct fetch first on localhost
-    try {
-      const response = await fetch(url, { cache: 'no-cache' });
-      if (response.ok) {
-        return response;
-      }
-    } catch (e) {
-      console.warn('   Direct fetch failed, trying CORS proxy...', e.message);
-    }
-
-    // Try CORS proxies
-    for (const proxy of CORS_PROXIES) {
-      try {
-        const proxyUrl = proxy.includes('?url=') 
-          ? `${proxy}${encodeURIComponent(url)}`
-          : `${proxy}${url}`;
-        console.log('   Trying proxy:', proxy);
-        const response = await fetch(proxyUrl, { cache: 'no-cache' });
-        if (response.ok) {
-          return response;
-        }
-      } catch (e) {
-        console.warn(`   Proxy ${proxy} failed:`, e.message);
-      }
-    }
-
-    throw new Error('All fetch attempts failed');
-  }
-
   window.streamDiagnostics = {
     async testApis() {
-      console.log('🧪 Testing Streaming APIs...\n');
-
-      // Test 8StreamAPI
-      console.log('1️⃣ Testing 8StreamAPI...');
-      try {
-        const testId = '550'; // Fight Club
-        let endpoint;
-        
-        if (isLocalhost()) {
-          // On localhost, use direct API with CORS proxy
-          endpoint = `${API_BASE}/mediaInfo?id=${testId}`;
-          console.log('   (Localhost - using CORS proxy)');
-        } else {
-          // On production, use proxy endpoint
-          const url = new URL(window.location.origin);
-          url.pathname = '/api/stream-proxy';
-          url.searchParams.set('action', 'mediaInfo');
-          url.searchParams.set('id', testId);
-          endpoint = url.toString();
-          console.log('   (Production - using /api/stream-proxy)');
-        }
-        
-        console.log('   Request:', endpoint);
-        const response = isLocalhost() 
-          ? await fetchWithCorsProxy(endpoint)
-          : await fetch(endpoint);
-        
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-          console.log('   ✅ 8StreamAPI: WORKING');
-          console.log('   Response:', data);
-        } else {
-          console.warn('   ⚠️ 8StreamAPI: NO DATA');
-          console.log('   Response:', data);
-        }
-      } catch (e) {
-        console.error('   ❌ 8StreamAPI: FAILED', e.message);
-      }
+      console.log('🧪 Testing Streaming Providers...\n');
 
       // Test VidPlay
-      console.log('\n2️⃣ Testing VidPlay...');
+      console.log('1️⃣ Testing VidPlay...');
       try {
         if (window.vidplay && window.vidplay.getUrl) {
           const testUrl = window.vidplay.getUrl(550, 'MOVIE'); // Fight Club
@@ -105,12 +24,55 @@
         console.error('   ❌ VidPlay: FAILED', e.message);
       }
 
+      // Test UpCloud
+      console.log('\n2️⃣ Testing UpCloud...');
+      try {
+        if (window.upcloud && window.upcloud.getUrl) {
+          const testUrl = window.upcloud.getUrl(550, 'MOVIE'); // Fight Club
+          console.log('   ✅ UpCloud: WORKING');
+          console.log('   Example URL:', testUrl);
+        } else {
+          console.warn('   ⚠️ UpCloud module not loaded');
+        }
+      } catch (e) {
+        console.error('   ❌ UpCloud: FAILED', e.message);
+      }
+
+      // Test VidCloud
+      console.log('\n3️⃣ Testing VidCloud...');
+      try {
+        if (window.vidcloud && window.vidcloud.getUrl) {
+          const testUrl = window.vidcloud.getUrl(550, 'MOVIE'); // Fight Club
+          console.log('   ✅ VidCloud: WORKING');
+          console.log('   Example URL:', testUrl);
+        } else {
+          console.warn('   ⚠️ VidCloud module not loaded');
+        }
+      } catch (e) {
+        console.error('   ❌ VidCloud: FAILED', e.message);
+      }
+
+      // Test Google Drive
+      console.log('\n4️⃣ Testing Google Drive...');
+      try {
+        if (window.googledrive && window.googledrive.extractId) {
+          const testId = window.googledrive.extractId('https://drive.google.com/file/d/1dL3qNJ9QEg9FBLXrPd1Z_TqD_-yRwqz0/view');
+          console.log('   ✅ Google Drive: WORKING');
+          console.log('   Extracted ID:', testId);
+        } else {
+          console.warn('   ⚠️ Google Drive module not loaded');
+        }
+      } catch (e) {
+        console.error('   ❌ Google Drive: FAILED', e.message);
+      }
+
       // Summary
       console.log('\n📊 Summary:');
-      console.log('   - Environment:', isLocalhost() ? 'LOCALHOST (using CORS proxies)' : 'PRODUCTION (using /api/stream-proxy)');
-      console.log('   - 8StreamAPI: Primary provider (HLS streams)');
-      console.log('   - VidPlay: Fallback provider (iframe embeds)');
-      console.log('\n💡 To test: Click "Stream" button on any movie');
+      console.log('   - VidPlay: Primary provider (iframe embed)');
+      console.log('   - UpCloud: Fallback provider (iframe embed)');
+      console.log('   - VidCloud: Fallback provider (iframe embed)');
+      console.log('   - Google Drive: For direct Google Drive links');
+      console.log('\n💡 To test: Click "Stream" button on any movie/series');
     }
   };
 

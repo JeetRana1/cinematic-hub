@@ -515,10 +515,14 @@
   <script src="storage-adapter.js"></script>
   <!-- hls.js for HLS (.m3u8) playback -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <!-- CORS Proxy Helper -->
-  <script src="api/cors-proxy.js"></script>
+  <!-- Consumet API Config (Your deployed instance) -->
+  <script src="js/consumet-config.js"></script>
   <!-- Consumet Provider (Primary) -->
   <script src="js/consumet-provider.js"></script>
+  <!-- Multi-Embed Provider (Better Fallback) -->
+  <script src="js/multi-embed-provider.js"></script>
+  <!-- VidSrc Provider (Last Resort) -->
+  <script src="js/vidsrc-provider.js"></script>
   <!-- Consumet Diagnostics (for troubleshooting) -->
   <script src="consumet-diagnostics.js"></script>
   <!-- Stream API Configuration -->
@@ -3912,7 +3916,7 @@
       const normalizedTitle = title.toLowerCase().trim();
       console.log('Looking up movie:', normalizedTitle);
 
-      // 🎬 USE CONSUMET API ONLY
+      // 🎬 TRY CONSUMET API FIRST
       if (!src && window.consumetProvider && typeof window.consumetProvider.getStreamFromConsumet === 'function') {
         console.log('🎬 Attempting Consumet API search for:', title);
         try {
@@ -3940,31 +3944,92 @@
             console.log('✓ Using Consumet stream:', src);
           } else {
             console.log('⚠️ Consumet search returned no results');
-            console.log('❌ No stream found from Consumet API');
           }
         } catch (error) {
           console.error('❌ Consumet API error:', error);
         }
-      } else if (!src) {
-        console.log('⚠️ Consumet provider not loaded or function not available');
+      }
+
+      // 📺 FALLBACK TO MULTI-EMBED FOR SERIES (BETTER THAN VIDSRC)
+      if (!src && isSeries && movieId && window.multiEmbedProvider) {
+        console.log(`📺 Fallback: Trying Multi-Embed providers for S${season}E${episode}`);
+        try {
+          const multiEmbedResult = await window.multiEmbedProvider.getStream(movieId, 'tv', parseInt(season), parseInt(episode));
+          if (multiEmbedResult && multiEmbedResult.url) {
+            console.log('✅ Multi-Embed stream found!', multiEmbedResult);
+            src = multiEmbedResult.url;
+            sourceType = multiEmbedResult.type || 'iframe';
+            console.log(`✓ Using ${multiEmbedResult.provider} stream:`, src);
+          }
+        } catch (error) {
+          console.error('❌ Multi-Embed fallback error:', error);
+        }
+      }
+
+      // 🎬 FALLBACK TO MULTI-EMBED FOR MOVIES
+      if (!src && !isSeries && movieId && window.multiEmbedProvider) {
+        console.log(`🎬 Fallback: Trying Multi-Embed providers for movie`);
+        try {
+          const multiEmbedResult = await window.multiEmbedProvider.getStream(movieId, 'movie');
+          if (multiEmbedResult && multiEmbedResult.url) {
+            console.log('✅ Multi-Embed movie stream found!', multiEmbedResult);
+            src = multiEmbedResult.url;
+            sourceType = multiEmbedResult.type || 'iframe';
+            console.log(`✓ Using ${multiEmbedResult.provider} movie stream:`, src);
+          }
+        } catch (error) {
+          console.error('❌ Multi-Embed movie fallback error:', error);
+        }
+      }
+
+      // 📺 LAST RESORT: VIDSRC FOR SERIES
+      if (!src && isSeries && movieId && window.vidsrcProvider) {
+        console.log(`📺 Last resort: Trying VidSrc for series S${season}E${episode}`);
+        try {
+          const vidsrcResult = await window.vidsrcProvider.getStream(movieId, 'tv', parseInt(season), parseInt(episode));
+          if (vidsrcResult && vidsrcResult.url) {
+            console.log('✅ VidSrc stream found!', vidsrcResult);
+            src = vidsrcResult.url;
+            sourceType = vidsrcResult.type || 'iframe';
+            console.log('✓ Using VidSrc stream:', src);
+          }
+        } catch (error) {
+          console.error('❌ VidSrc fallback error:', error);
+        }
+      }
+
+      // 🎬 LAST RESORT: VIDSRC FOR MOVIES
+      if (!src && !isSeries && movieId && window.vidsrcProvider) {
+        console.log(`🎬 Last resort: Trying VidSrc for movie`);
+        try {
+          const vidsrcResult = await window.vidsrcProvider.getStream(movieId, 'movie');
+          if (vidsrcResult && vidsrcResult.url) {
+            console.log('✅ VidSrc movie stream found!', vidsrcResult);
+            src = vidsrcResult.url;
+            sourceType = vidsrcResult.type || 'iframe';
+            console.log('✓ Using VidSrc movie stream:', src);
+          }
+        } catch (error) {
+          console.error('❌ VidSrc movie fallback error:', error);
+        }
       }
 
       // If still no source, show error
       if (!src) {
         console.error('❌ FATAL: No video source found!');
-        console.error('   Consumet API was unable to find the content');
+        console.error('   Both Consumet and VidSrc APIs were unable to find the content');
         if (isSeries) {
-          console.error(`   Series S${season}E${episode} not available on Consumet API`);
+          console.error(`   Series S${season}E${episode} may not be available`);
         } else {
-          console.error('   Make sure the movie exists on the Consumet API');
+          console.error('   Make sure the movie exists in the database');
         }
         
         // Show user-friendly error
         const errorDiv = document.getElementById('errorMessage');
         if (errorDiv) {
           const msg = isSeries 
-            ? `❌ Episode not found on Consumet API. S${season}E${episode} may not be available.`
-            : '❌ Video not found on Consumet API. The movie may not be available.';
+            ? `❌ Episode not found. S${season}E${episode} may not be available on any provider.`
+            : '❌ Video not found. The movie may not be available on any provider.';
           errorDiv.innerHTML = msg;
           errorDiv.style.display = 'block';
         }

@@ -3,16 +3,17 @@
  * Primary streaming source with CORS support
  * 
  * Features:
- * - Uses public Consumet API (Vercel)
+ * - Uses your own Consumet API (Vercel)
  * - TMDB integration for metadata
  * - Multiple source fallback
  * - No CORS issues
  */
 
-// Consumet API v3+ uses direct paths without /api prefix
-const CONSUMET_BASE = 'https://apiconsumet-hdnywn99o-jeetrana1s-projects.vercel.app';
+// Official Consumet API (has CORS enabled)
+// If you want to use your own, add vercel.json with CORS headers to your deployment
+const CONSUMET_BASE = 'https://api.consumet.org';
 
-// CORS Proxy options
+// CORS Proxy options (fallback if direct access fails)
 const CORS_PROXIES = [
   'https://api.allorigins.win/raw?url=',
   'https://cors-anywhere.herokuapp.com/',
@@ -20,6 +21,7 @@ const CORS_PROXIES = [
 ];
 
 let currentCorsProxyIndex = 0;
+let USE_CORS_PROXY = false; // Start with direct access
 
 /**
  * Fetch with CORS proxy fallback
@@ -27,7 +29,22 @@ let currentCorsProxyIndex = 0;
 async function fetchWithCorsProxy(url) {
   console.log(`📡 Fetching: ${url}`);
   
-  // Try direct fetch first
+  // Try direct fetch first (should work on production Vercel -> Vercel)
+  if (!USE_CORS_PROXY) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) {
+        console.log(`✓ Direct fetch successful`);
+        return response;
+      } else {
+        console.log(`⚠️ Direct fetch failed with status ${response.status}, enabling CORS proxy...`);
+        USE_CORS_PROXY = true;
+      }
+    } catch (e) {
+      console.log(`⚠️ Direct fetch error: ${e.message}, trying CORS proxy...`);
+      USE_CORS_PROXY = true;
+    }
+  }
   try {
     const response = await fetch(url);
     if (response.ok) {
@@ -280,18 +297,46 @@ async function getSeriesEpisode(seriesTitle, season, episode) {
     const episodeList = seriesInfo.episodes.filter(ep => {
       // Try to parse season/episode from title or other fields
       const epTitle = ep.title || '';
-      const epNumber = ep.number || '';
+      const epNumber = ep.number || ep.ep || '';
       
-      // Format: S01E01, Season 1 Episode 1, etc.
-      const seasonMatch = epTitle.match(/[Ss]eason?\s*(\d+)|[Ss](\d+)/);
-      const episodeMatch = epTitle.match(/[Ee]pisode?\s*(\d+)|[Ee](\d+)/);
+      // Log full episode object for debugging
+      console.log(`Episode object:`, JSON.stringify(ep).substring(0, 200));
       
-      const epSeason = seasonMatch ? parseInt(seasonMatch[1] || seasonMatch[2]) : null;
-      const epNumber_ = episodeMatch ? parseInt(episodeMatch[1] || episodeMatch[2]) : null;
+      // Try different regex patterns for episode parsing
+      // Format 1: S01E01 or S1E1
+      const seMatch = epTitle.match(/[Ss](\d+)[Ee](\d+)/);
+      if (seMatch) {
+        const epSeason = parseInt(seMatch[1]);
+        const epNum = parseInt(seMatch[2]);
+        console.log(`✓ Parsed S${epSeason}E${epNum} from title: ${epTitle}`);
+        return epSeason === season && epNum === episode;
+      }
       
-      console.log(`Checking: ${epTitle} - Season: ${epSeason}, Episode: ${epNumber_}`);
+      // Format 2: Season X Episode Y
+      const seasonMatch = epTitle.match(/[Ss]eason\s*(\d+)/);
+      const episodeMatch = epTitle.match(/[Ee]pisode\s*(\d+)/);
+      if (seasonMatch || episodeMatch) {
+        const epSeason = seasonMatch ? parseInt(seasonMatch[1]) : season;
+        const epNum = episodeMatch ? parseInt(episodeMatch[1]) : null;
+        console.log(`✓ Parsed Season ${epSeason} Episode ${epNum} from: ${epTitle}`);
+        return epSeason === season && epNum === episode;
+      }
       
-      return epSeason === season && epNumber_ === episode;
+      // Format 3: Just a number field (ep field contains episode number in sequence)
+      // This is a fallback - just match by episode position if season is 1 and we have ep numbers
+      if (epNumber && !isNaN(epNumber)) {
+        // If this is episode 1 and we're looking for S1E1, match first episode
+        if (season === 1 && episode === 1 && epNumber === '1') {
+          console.log(`✓ Matched first episode by number field`);
+          return true;
+        }
+        if (parseInt(epNumber) === episode && season === 1) {
+          console.log(`✓ Matched episode by number field`);
+          return true;
+        }
+      }
+      
+      return false;
     });
     
     if (episodeList.length === 0) {
@@ -496,9 +541,7 @@ window.consumetProvider = {
   testConsumetConnection,
   getTrendingMovies,
   searchWithProvider,
-  detectConsumetVersion,
-  CONSUMET_API_VERSIONS,
-  CONSUMET_PROVIDERS
+  detectConsumetVersion
 };
 
 // Auto-detect API version IMMEDIATELY

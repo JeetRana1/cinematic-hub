@@ -119,16 +119,16 @@
         return { success:false, message:'No IMDb ID', src:null, type:null };
       }
       
-      // Use direct embed with minimal ads
+      // Use Smashystream - reliable and works well
       const isTV = movie.mediaType === 'tv';
       const tmdbId = movie.id;
       
-      // Primary: embed.su (cleanest, works well)
+      // Smashystream using TMDB ID
       let src = isTV 
-        ? `https://embed.su/embed/tv/${tmdbId}/1/1`
-        : `https://embed.su/embed/movie/${imdbId}`;
+        ? `https://player.smashy.stream/tv/${tmdbId}?s=1&e=1`
+        : `https://player.smashy.stream/movie/${tmdbId}`;
       
-      console.log('🎬 Resolved stream:', { imdbId, src, type: 'iframe' });
+      console.log('🎬 Resolved stream:', { imdbId, tmdbId, src, type: 'iframe' });
       return { 
         success: true, 
         imdbId, 
@@ -136,7 +136,8 @@
         type: 'iframe',
         language: 'Multi-Audio',
         availableLanguages: ['Multi-Audio'],
-        provider: 'EmbedSu'
+        tmdbId: tmdbId,
+        provider: 'Smashy'
       };
     }catch(e){
       console.error('resolveStreamUrlForMovie error:', e);

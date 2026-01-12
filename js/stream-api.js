@@ -119,48 +119,24 @@
         return { success:false, message:'No IMDb ID', src:null, type:null };
       }
       
-      // Back to 8Stream API approach
-      const override = MOVIE_OVERRIDES[imdbId];
-      const finalPreferredLangs = override?.preferredLangs || preferredLangs;
+      // Use direct embed with minimal ads
+      const isTV = movie.mediaType === 'tv';
+      const tmdbId = movie.id;
       
-      const info = await fetchMediaInfoByImdb(imdbId);
-      const key = info?.key;
-      const playlist = info?.playlist || [];
+      // Primary: embed.su (cleanest, works well)
+      let src = isTV 
+        ? `https://embed.su/embed/tv/${tmdbId}/1/1`
+        : `https://embed.su/embed/movie/${imdbId}`;
       
-      const availableLanguages = playlist.map(p => p.title).filter(Boolean);
-      
-      const langItem = pickLanguagePlaylist(playlist, finalPreferredLangs);
-      if(!langItem){
-        console.warn('⚠ No language found in playlist');
-        return { success:false, message:'No language playlist', src:null, type:null };
-      }
-      const file = langItem.file || langItem.id || null;
-      if(!file){
-        console.warn('⚠ No file/id in language item');
-        return { success:false, message:'No file in playlist', src:null, type:null };
-      }
-      
-      let src;
-      if(/^https?:\/\//.test(file)){
-        src = file;
-      } else {
-        src = await fetchStreamUrlFromFileAndKey(file, key);
-      }
-      
-      if (!src) {
-        return { success:false, message:'Failed to get stream link', src:null, type:null };
-      }
-      
-      const type = /\.m3u8(\?.*)?$/.test(String(src)) ? 'hls' : 'mp4';
-      console.log('🎬 Resolved 8Stream:', { imdbId, src, type, language: langItem.title });
+      console.log('🎬 Resolved stream:', { imdbId, src, type: 'iframe' });
       return { 
-        success:true, 
+        success: true, 
         imdbId, 
         src, 
-        type, 
-        language: langItem.title, 
-        availableLanguages, 
-        key 
+        type: 'iframe',
+        language: 'Multi-Audio',
+        availableLanguages: ['Multi-Audio'],
+        provider: 'EmbedSu'
       };
     }catch(e){
       console.error('resolveStreamUrlForMovie error:', e);

@@ -3679,17 +3679,17 @@
 
       // 🎬 TRY 8StreamAPI FIRST
       if (!src && window.streamApi && typeof window.streamApi.getStream === 'function') {
-        console.log('🎬 Attempting 8StreamAPI search for:', title);
+        console.log('🎬 Attempting 8StreamAPI search for:', title, '(ID:', movieId, ')');
         try {
           let apiResult;
           
           // Handle TV Series episodes
           if (isSeries) {
             console.log(`📺 Searching for series episode: S${season}E${episode}`);
-            apiResult = await window.streamApi.getStream(title, 'TV', parseInt(season), parseInt(episode));
+            apiResult = await window.streamApi.getStream(movieId, 'TV', parseInt(season), parseInt(episode));
           } else {
             // Handle movies
-            apiResult = await window.streamApi.getStream(title, 'MOVIE');
+            apiResult = await window.streamApi.getStream(movieId, 'MOVIE');
           }
           
           if (apiResult && apiResult.url) {

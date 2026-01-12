@@ -9,8 +9,9 @@
 
   const API_BASE = 'https://8streamapi-ju5obhkzf-jeetrana1s-projects.vercel.app/api/v1';
   const CORS_PROXIES = [
-    'https://cors-anywhere.herokuapp.com/',
-    'https://api.allorigins.win/raw?url='
+    'https://api.allorigins.win/raw?url=',
+    'https://corsproxy.io/?',
+    'https://cors-anywhere.herokuapp.com/'
   ];
 
   /**
@@ -105,23 +106,24 @@
   /**
    * Get stream from 8StreamAPI for a movie or TV show
    */
-  async function getStreamFromApi(title, mediaType = 'MOVIE', season = null, episode = null) {
+  async function getStreamFromApi(tmdbId, mediaType = 'MOVIE', season = null, episode = null) {
     try {
-      console.log(`🎬 Searching 8StreamAPI for: ${title}`);
+      console.log(`🎬 Searching 8StreamAPI for TMDB ID: ${tmdbId} (${mediaType})`);
       
       let endpoint;
       const isLocalDev = isLocalhost();
+      const id = String(tmdbId).trim();
 
       if (isLocalDev) {
         // On localhost, build direct API URL
-        endpoint = `${API_BASE}/mediaInfo?id=${encodeURIComponent(title)}`;
+        endpoint = `${API_BASE}/mediaInfo?id=${encodeURIComponent(id)}`;
         if (season && episode) {
           endpoint += `&season=${season}&episode=${episode}`;
         }
       } else {
         // On production, use proxy endpoint
         const proxyUrl = getProxyUrl('mediaInfo', {
-          id: title,
+          id: id,
           season: season || undefined,
           episode: episode || undefined
         });
@@ -141,7 +143,7 @@
       console.log('📦 API Response:', data);
 
       if (!data.success || !data.data) {
-        console.warn('⚠️ 8StreamAPI returned no results for:', title);
+        console.warn('⚠️ 8StreamAPI returned no results for TMDB ID:', tmdbId);
         return null; // Return null to trigger fallback
       }
 

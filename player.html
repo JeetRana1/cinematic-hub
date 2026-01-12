@@ -515,10 +515,13 @@
   <script src="storage-adapter.js"></script>
   <!-- hls.js for HLS (.m3u8) playback -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <!-- 8StreamAPI Integration -->
-  <script src="js/stream-8api.js"></script>
-  <!-- VidPlay Fallback Provider -->
+  <!-- Iframe Embed Providers (Primary) -->
   <script src="js/vidplay-provider.js"></script>
+  <script src="js/upcloud-provider.js"></script>
+  <script src="js/vidcloud-provider.js"></script>
+  <script src="js/googledrive-provider.js"></script>
+  <!-- 8StreamAPI Integration (Fallback HLS) -->
+  <script src="js/stream-8api.js"></script>
   <!-- Stream Diagnostics -->
   <script src="stream-diagnostics.js"></script>
   <!-- Continue Watching Scripts -->
@@ -3677,9 +3680,36 @@
       const normalizedTitle = title.toLowerCase().trim();
       console.log('Looking up movie:', normalizedTitle);
 
-      // 🎬 TRY 8StreamAPI FIRST
+      // 🎬 TRY IFRAME PROVIDERS FIRST (VidPlay, UpCloud, VidCloud)
+      const iframeProviders = [
+        { name: 'VidPlay', module: window.vidplay, getUrl: (id, type, s, e) => window.vidplay?.getUrl?.(id, type, s, e) },
+        { name: 'UpCloud', module: window.upcloud, getUrl: (id, type, s, e) => window.upcloud?.getUrl?.(id, type, s, e) },
+        { name: 'VidCloud', module: window.vidcloud, getUrl: (id, type, s, e) => window.vidcloud?.getUrl?.(id, type, s, e) }
+      ];
+
+      for (const provider of iframeProviders) {
+        if (!src && movieId && provider.module && provider.getUrl) {
+          console.log(`📺 Attempting ${provider.name} fallback for TMDB ID: ${movieId}`);
+          try {
+            const embedUrl = provider.getUrl(movieId, isSeries ? 'TV' : 'MOVIE', season, episode);
+            if (embedUrl) {
+              console.log(`✅ ${provider.name} stream found!`);
+              src = embedUrl;
+              sourceType = 'iframe';
+              console.log(`✓ Using ${provider.name} stream:`, src);
+              break; // Stop trying other providers
+            } else {
+              console.log(`⚠️ ${provider.name} URL generation failed`);
+            }
+          } catch (error) {
+            console.error(`❌ ${provider.name} error:`, error);
+          }
+        }
+      }
+
+      // 🎬 FALLBACK TO 8StreamAPI IF NO IFRAME PROVIDER WORKS (HLS streams)
       if (!src && window.streamApi && typeof window.streamApi.getStream === 'function') {
-        console.log('🎬 Attempting 8StreamAPI search for:', title, '(ID:', movieId, ')');
+        console.log('🎬 Attempting 8StreamAPI (HLS fallback) for:', title, '(ID:', movieId, ')');
         try {
           let apiResult;
           
@@ -3703,25 +3733,6 @@
           }
         } catch (error) {
           console.error('❌ 8StreamAPI error:', error);
-        }
-      }
-
-      // 📺 FALLBACK TO VIDPLAY IF 8StreamAPI FAILS
-      if (!src && movieId && window.vidplay && typeof window.vidplay.getUrl === 'function') {
-        console.log('📺 Attempting VidPlay fallback for TMDB ID:', movieId);
-        try {
-          const vidplayUrl = window.vidplay.getUrl(movieId, isSeries ? 'TV' : 'MOVIE', season, episode);
-          if (vidplayUrl) {
-            console.log('✅ VidPlay stream found!');
-            src = vidplayUrl;
-            sourceType = 'iframe';
-            
-            console.log('✓ Using VidPlay stream:', src);
-          } else {
-            console.log('⚠️ VidPlay URL generation failed');
-          }
-        } catch (error) {
-          console.error('❌ VidPlay error:', error);
         }
       }
 

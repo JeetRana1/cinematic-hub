@@ -16,8 +16,8 @@
     if (typeof window !== 'undefined' && window.STREAM_API) {
       return window.STREAM_API;
     }
-    // Default to stable 8Stream API
-    return 'https://8streamapi.vercel.app/api/v1';
+    // Default to your deployed 8Stream backend
+    return 'https://8stream-backend.vercel.app/api/v1';
   }
 
   async function fetchImdbIdForTmdbMovie(movie){
@@ -119,33 +119,48 @@
         return { success:false, message:'No IMDb ID', src:null, type:null };
       }
       
-      // Use reliable embed providers
-      const isTV = movie.mediaType === 'tv';
-      const tmdbId = movie.id;
+      // Back to 8Stream API approach
+      const override = MOVIE_OVERRIDES[imdbId];
+      const finalPreferredLangs = override?.preferredLangs || preferredLangs;
       
-      // vidsrc.me is clean and reliable
-      let src = isTV 
-        ? `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=1&episode=1`
-        : `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`;
+      const info = await fetchMediaInfoByImdb(imdbId);
+      const key = info?.key;
+      const playlist = info?.playlist || [];
       
-      // Create server alternatives
-      const languageStreams = {
-        'Server 1': isTV ? `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=1&episode=1` : `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`,
-        'Server 2': isTV ? `https://vidsrc.net/embed/tv/${tmdbId}/1/1` : `https://vidsrc.net/embed/movie/${tmdbId}`,
-        'Server 3': isTV ? `https://autoembed.cc/tv/tmdb/${tmdbId}-1-1` : `https://autoembed.cc/movie/tmdb/${tmdbId}`,
-      };
+      const availableLanguages = playlist.map(p => p.title).filter(Boolean);
       
-      console.log('🎬 Resolved stream:', { imdbId, tmdbId, src, type: 'iframe' });
+      const langItem = pickLanguagePlaylist(playlist, finalPreferredLangs);
+      if(!langItem){
+        console.warn('⚠ No language found in playlist');
+        return { success:false, message:'No language playlist', src:null, type:null };
+      }
+      const file = langItem.file || langItem.id || null;
+      if(!file){
+        console.warn('⚠ No file/id in language item');
+        return { success:false, message:'No file in playlist', src:null, type:null };
+      }
+      
+      let src;
+      if(/^https?:\/\//.test(file)){
+        src = file;
+      } else {
+        src = await fetchStreamUrlFromFileAndKey(file, key);
+      }
+      
+      if (!src) {
+        return { success:false, message:'Failed to get stream link', src:null, type:null };
+      }
+      
+      const type = /\.m3u8(\?.*)?$/.test(String(src)) ? 'hls' : 'mp4';
+      console.log('🎬 Resolved 8Stream:', { imdbId, src, type, language: langItem.title });
       return { 
-        success: true, 
+        success:true, 
         imdbId, 
         src, 
-        type: 'iframe',
-        language: 'Server 1',
-        availableLanguages: ['Server 1', 'Server 2', 'Server 3'],
-        languageStreams: languageStreams,
-        tmdbId: tmdbId,
-        provider: 'VidSrc.me'
+        type, 
+        language: langItem.title, 
+        availableLanguages, 
+        key 
       };
     }catch(e){
       console.error('resolveStreamUrlForMovie error:', e);

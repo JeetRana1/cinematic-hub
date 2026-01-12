@@ -6986,28 +6986,31 @@
         // Always check for saved progress and show appropriate button label
         if (watchData && watchData.progress > 0 && watchData.progress < 95) {
           streamBtn.innerHTML = `
+            <i class="fas fa-play"></i>
             <span>Resume (${Math.round(watchData.progress)}%)</span>
-            <span class="stream-icon">▶️</span>
           `;
         } else {
           streamBtn.innerHTML = `
+            <i class="fas fa-play"></i>
             <span>Watch Now</span>
-            <span class="stream-icon">▶️</span>
           `;
         }
 
         // Remove any existing onclick handlers
         streamBtn.onclick = null;
-        streamBtn.onclick = (e) => {
+        streamBtn.addEventListener('click', function(e) {
           e.preventDefault();
+          e.stopPropagation();
+          
+          console.log('Stream button clicked for movie:', movie.id, movie.title);
           
           // Build the player URL with the movie's details
           const params = new URLSearchParams();
           params.append('id', movie.id);
           params.append('movieId', movie.id);
           params.append('title', movie.title);
+          params.append('mediaType', 'movie');
           if (movie.posterUrl) params.append('poster', movie.posterUrl);
-          params.append('type', 'hls');
 
           // Check for available sources in order of preference
           let playerUrl = null;
@@ -7023,7 +7026,7 @@
           // 2) Check for Google Drive mapping
           else if (driveMovieMappings[String(movie.id)]) {
             params.set('type', 'drive');
-            params.append('id', driveMovieMappings[String(movie.id)]);
+            params.append('driveId', driveMovieMappings[String(movie.id)]);
             playerUrl = `player.html?${params.toString()}`;
           }
           // 3) Check for direct stream URL
@@ -7033,14 +7036,15 @@
             params.append('src', movie.streamUrl);
             playerUrl = `player.html?${params.toString()}`;
           } else {
-            // No direct source - let player handle via 8StreamAPI + VidPlay fallback
+            // No direct source - let player handle via providers (FileMoon, Doodstream, StreamTape)
             playerUrl = `player.html?${params.toString()}`;
           }
 
+          console.log('Navigating to:', playerUrl);
           if (playerUrl) {
             window.location.href = playerUrl;
           }
-        };
+        }, false);
       }
 
       // ... existing code for setting up modal content ...

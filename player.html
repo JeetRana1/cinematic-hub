@@ -6462,15 +6462,26 @@
       if (!src) {
         // Wait for provider modules to load
         setTimeout(() => {
-          console.log('Checking available providers...');
-          console.log('window.vidplay:', window.vidplay ? '✅ loaded' : '❌ not loaded');
-          console.log('window.upcloud:', window.upcloud ? '✅ loaded' : '❌ not loaded');
-          console.log('window.vidcloud:', window.vidcloud ? '✅ loaded' : '❌ not loaded');
+          console.log('🔍 Checking available providers...');
+          console.log('window.filemoon:', window.filemoon ? '✅ loaded' : '❌ not loaded');
+          console.log('window.doodstream:', window.doodstream ? '✅ loaded' : '❌ not loaded');
+          console.log('window.streamtape:', window.streamtape ? '✅ loaded' : '❌ not loaded');
 
-          const savedProvider = localStorage.getItem('preferredProvider') || 'vidplay';
-          if (document.querySelector(`.provider-btn[data-provider="${savedProvider}"]`)) {
-            console.log(`Auto-loading saved provider: ${savedProvider}`);
+          const savedProvider = localStorage.getItem('preferredProvider') || 'filemoon';
+          
+          // Check if saved provider exists and is available
+          if (providerData[savedProvider] && providerData[savedProvider].module) {
+            console.log(`⚡ Auto-loading saved provider: ${savedProvider}`);
             loadProviderStream(savedProvider);
+          } else {
+            // Try first available provider
+            const availableProviders = Object.keys(providerData).filter(key => providerData[key].module);
+            if (availableProviders.length > 0) {
+              console.log(`⚡ Auto-loading first available provider: ${availableProviders[0]}`);
+              loadProviderStream(availableProviders[0]);
+            } else {
+              console.error('❌ No providers available!');
+            }
           }
         }, 500);
       } else {

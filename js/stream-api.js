@@ -119,33 +119,33 @@
         return { success:false, message:'No IMDb ID', src:null, type:null };
       }
       
-      // Multi-provider with server selection
+      // Providers with built-in multi-audio support
       const isTV = movie.mediaType === 'tv';
       const tmdbId = movie.id;
       
-      // Create multiple server options
+      // Create server options with known multi-audio support
       const servers = {
-        'Server 1 (VidSrc)': isTV ? `https://vidsrc.xyz/embed/tv/${tmdbId}/1-1` : `https://vidsrc.xyz/embed/movie/${tmdbId}`,
-        'Server 2 (VidLink)': isTV ? `https://vidlink.pro/tv/${tmdbId}/1/1` : `https://vidlink.pro/movie/${tmdbId}`,
-        'Server 3 (2Embed)': isTV ? `https://www.2embed.cc/embedtv/${tmdbId}&s=1&e=1` : `https://www.2embed.cc/embed/${tmdbId}`,
-        'Server 4 (NontonGo)': isTV ? `https://NontonGo.win/embed/tv/${tmdbId}/1/1` : `https://NontonGo.win/embed/movie/${tmdbId}`,
-        'Server 5 (Smash)': isTV ? `https://player.smashy.stream/tv/${tmdbId}?s=1&e=1` : `https://player.smashy.stream/movie/${tmdbId}`,
+        'Multi-Audio 1': isTV ? `https://vidsrc.in/embed/tv/${tmdbId}/1-1` : `https://vidsrc.in/embed/movie/${imdbId}`,
+        'Multi-Audio 2': isTV ? `https://vidsrc.cc/v2/embed/tv/${tmdbId}/1/1` : `https://vidsrc.cc/v2/embed/movie/${imdbId}`,
+        'Multi-Audio 3': isTV ? `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=1&episode=1` : `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`,
+        'Hindi/English': isTV ? `https://moviesapi.club/tv/${tmdbId}-1-1` : `https://moviesapi.club/movie/${imdbId}`,
+        'All Languages': isTV ? `https://www.2embed.cc/embedtv/${tmdbId}&s=1&e=1` : `https://www.2embed.cc/embed/${tmdbId}`,
       };
       
       // Use first server as default
-      const src = servers['Server 1 (VidSrc)'];
+      const src = servers['Multi-Audio 1'];
       
-      console.log('🎬 Resolved multi-server stream:', { imdbId, tmdbId, src, servers });
+      console.log('🎬 Resolved multi-audio stream:', { imdbId, tmdbId, src, servers });
       return { 
         success: true, 
         imdbId, 
         src, 
         type: 'iframe',
-        language: 'Server 1 (VidSrc)',
+        language: 'Multi-Audio 1',
         availableLanguages: Object.keys(servers),
         languageStreams: servers,
         tmdbId: tmdbId,
-        provider: 'Multi-Server'
+        provider: 'Multi-Audio Servers'
       };
     }catch(e){
       console.error('resolveStreamUrlForMovie error:', e);

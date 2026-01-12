@@ -516,9 +516,9 @@
   <!-- hls.js for HLS (.m3u8) playback -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <!-- Iframe Embed Providers (Primary) -->
-  <script src="js/vidplay-provider.js"></script>
-  <script src="js/upcloud-provider.js"></script>
-  <script src="js/vidcloud-provider.js"></script>
+  <script src="js/filemoon-provider.js"></script>
+  <script src="js/doodstream-provider.js"></script>
+  <script src="js/streamtape-provider.js"></script>
   <script src="js/googledrive-provider.js"></script>
   <!-- Stream Diagnostics -->
   <script src="stream-diagnostics.js"></script>
@@ -2167,9 +2167,9 @@
 <body>
   <!-- Provider Selector Sidebar -->
   <div class="provider-sidebar" id="providerSidebar">
-    <div class="provider-btn active" data-provider="vidplay">VidPlay</div>
-    <div class="provider-btn" data-provider="upcloud">UpCloud</div>
-    <div class="provider-btn" data-provider="vidcloud">VidCloud</div>
+    <div class="provider-btn active" data-provider="filemoon">FileMoon</div>
+    <div class="provider-btn" data-provider="doodstream">Doodstream</div>
+    <div class="provider-btn" data-provider="streamtape">StreamTape</div>
   </div>
   <!-- Add allowfullscreen attribute to the video container -->
   <div class="video-container" id="videoContainer" allowfullscreen>
@@ -3735,9 +3735,9 @@
 
       // 🎬 ALL PROVIDERS MUST PROVIDE IFRAME EMBEDS
       const iframeProviders = [
-        { name: 'VidPlay', module: window.vidplay, getUrl: (id, type, s, e) => window.vidplay?.getUrl?.(id, type, s, e) },
-        { name: 'UpCloud', module: window.upcloud, getUrl: (id, type, s, e) => window.upcloud?.getUrl?.(id, type, s, e) },
-        { name: 'VidCloud', module: window.vidcloud, getUrl: (id, type, s, e) => window.vidcloud?.getUrl?.(id, type, s, e) }
+        { name: 'FileMoon', module: window.filemoon, getUrl: (id, type, s, e) => window.filemoon?.getUrl?.(id, type, s, e) },
+        { name: 'Doodstream', module: window.doodstream, getUrl: (id, type, s, e) => window.doodstream?.getUrl?.(id, type, s, e) },
+        { name: 'StreamTape', module: window.streamtape, getUrl: (id, type, s, e) => window.streamtape?.getUrl?.(id, type, s, e) }
       ];
 
       for (const provider of iframeProviders) {
@@ -6398,9 +6398,9 @@
       // ========== PROVIDER SELECTOR LOGIC ==========
       const providerButtons = document.querySelectorAll('.provider-btn');
       const providerData = {
-        vidplay: { module: window.vidplay, name: 'VidPlay' },
-        upcloud: { module: window.upcloud, name: 'UpCloud' },
-        vidcloud: { module: window.vidcloud, name: 'VidCloud' }
+        filemoon: { module: window.filemoon, name: 'FileMoon' },
+        doodstream: { module: window.doodstream, name: 'Doodstream' },
+        streamtape: { module: window.streamtape, name: 'StreamTape' }
       };
 
       function loadProviderStream(providerKey) {

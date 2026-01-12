@@ -16,8 +16,8 @@
     if (typeof window !== 'undefined' && window.STREAM_API) {
       return window.STREAM_API;
     }
-    // Default to your deployed 8Stream backend
-    return 'https://8stream-backend.vercel.app/api/v1';
+    // Default to your new Replit 8Stream backend
+    return 'https://8-stream-api--JeetRana2.replit.app/api/v1';
   }
 
   async function fetchImdbIdForTmdbMovie(movie){

@@ -9,9 +9,8 @@
  * - No CORS issues
  */
 
-// Official Consumet API (has CORS enabled)
-// If you want to use your own, add vercel.json with CORS headers to your deployment
-const CONSUMET_BASE = 'https://api.consumet.org';
+// Your Consumet API with CORS headers enabled via vercel.json
+const CONSUMET_BASE = 'https://apiconsumet-hdnywn99o-jeetrana1s-projects.vercel.app';
 
 // CORS Proxy options (fallback if direct access fails)
 const CORS_PROXIES = [

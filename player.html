@@ -515,19 +515,12 @@
   <script src="storage-adapter.js"></script>
   <!-- hls.js for HLS (.m3u8) playback -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <!-- Consumet API Config (Your deployed instance) -->
-  <script src="js/consumet-config.js"></script>
-  <!-- Consumet Provider (Primary) -->
-  <script src="js/consumet-provider.js"></script>
-  <!-- Multi-Embed Provider (Better Fallback) -->
-  <script src="js/multi-embed-provider.js"></script>
-  <!-- VidSrc Provider (Last Resort) -->
-  <script src="js/vidsrc-provider.js"></script>
-  <!-- Consumet Diagnostics (for troubleshooting) -->
-  <script src="consumet-diagnostics.js"></script>
-  <!-- Stream API Configuration -->
-  <script src="public/streamApiConfig.js"></script>
-  <script src="js/stream-api.js"></script>
+  <!-- 8StreamAPI Integration -->
+  <script src="js/stream-8api.js"></script>
+  <!-- VidPlay Fallback Provider -->
+  <script src="js/vidplay-provider.js"></script>
+  <!-- Stream Diagnostics -->
+  <script src="stream-diagnostics.js"></script>
   <!-- Continue Watching Scripts -->
   <script src="js/continue-watching.js"></script>
   <script src="js/continue-watching-ui.js"></script>
@@ -2131,7 +2124,7 @@
     <!-- Error message display -->
     <div class="player-error-msg" id="playerError"></div>
     
-    <!-- Iframe for embed players (VidSrc, etc.) - NO SANDBOX -->
+    <!-- Iframe for embed players - NO SANDBOX -->
     <iframe id="streamIframe" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; border:none;" allowfullscreen webkitallowfullscreen mozallowfullscreen scrolling="no" frameborder="0" allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>
     
     <video id="video" playsinline>
@@ -2213,9 +2206,6 @@
           </button>
           <button class="control-btn" id="subtitleBtn" data-tooltip="Subtitles">
             <i class="fas fa-closed-captioning"></i>
-          </button>
-          <button class="control-btn" id="languageBtn" data-tooltip="Audio Language" style="display:none;">
-            <i class="fas fa-language"></i>
           </button>
           <button class="control-btn" id="settingsBtn" data-tooltip="Settings">
             <i class="fas fa-cog"></i>
@@ -2344,92 +2334,6 @@
       }
     }
     
-    /* Language menu styles - matching settings menu */
-    #languageMenu {
-      position: fixed;
-      display: none;
-      flex-direction: column;
-      background: rgba(30, 32, 36, 0.7);
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-      opacity: 0;
-      transform: translateY(-10px) scale(0.98);
-      transition: opacity 0.2s ease, transform 0.2s ease;
-      backdrop-filter: blur(12px);
-      border: 1.5px solid rgba(255, 255, 255, 0.18);
-      min-width: 180px;
-      max-width: 220px;
-      padding: 18px 0 10px 0;
-      z-index: 2147483647;
-      font-family: 'Segoe UI', 'Netflix Sans', Arial, sans-serif;
-      font-size: 16px;
-      color: #fff;
-    }
-    
-    #languageMenu.show {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-    
-    #languageMenu .settings-title {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 10px;
-      padding: 0 24px;
-      color: #fff;
-      letter-spacing: 0.02em;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    #languageOptions .settings-option {
-      padding: 12px 24px;
-      border: none;
-      background: none;
-      color: #fff;
-      font-size: 16px;
-      border-radius: 8px;
-      margin: 2px 0;
-      cursor: pointer;
-      transition: background 0.18s, color 0.18s, transform 0.18s;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    #languageOptions .settings-option:hover {
-      background: rgba(255, 255, 255, 0.10);
-      color: #e0e0e0;
-      transform: scale(1.03);
-    }
-    
-    #languageOptions .settings-option.selected {
-      background: rgba(255, 255, 255, 0.18);
-      color: #ffd700;
-      font-weight: 500;
-    }
-    
-    @media (max-width: 600px) {
-      #languageMenu {
-        min-width: 90vw;
-        max-width: 98vw;
-        padding: 12px 0 6px 0;
-        font-size: 15px;
-        border-radius: 12px;
-      }
-      
-      #languageMenu .settings-title {
-        font-size: 16px;
-        padding: 0 16px;
-      }
-      
-      #languageOptions .settings-option {
-        padding: 10px 16px;
-        font-size: 15px;
-        border-radius: 7px;
-      }
-    }
   </style>
   <div id="settingsMenu" class="settings-menu">
     <div class="settings-item" id="playbackSpeedMenu">
@@ -2438,17 +2342,6 @@
         <span class="current-value">Normal</span>
         <i class="fas fa-chevron-right"></i>
       </div>
-    </div>
-  </div>
-
-  <!-- Language Selection Menu -->
-  <div id="languageMenu" class="settings-menu" style="display: none;">
-    <div class="settings-title">
-      <i class="fas fa-language"></i>
-      <span>Audio Language</span>
-    </div>
-    <div id="languageOptions">
-      <!-- Language options will be populated dynamically -->
     </div>
   </div>
 
@@ -3310,36 +3203,6 @@
         console.error('Settings button or menu not found!', { settingsBtn, settingsMenu });
       }
 
-      // Language button handler
-      const languageBtn = document.getElementById('languageBtn');
-      const languageMenu = document.getElementById('languageMenu');
-      
-      if (languageBtn && languageMenu) {
-        languageBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          
-          const isMenuVisible = languageMenu.style.display === 'flex';
-          
-          if (!isMenuVisible) {
-            // Position above the language button
-            const rect = languageBtn.getBoundingClientRect();
-            
-            languageMenu.style.display = 'flex';
-            languageMenu.style.position = 'fixed';
-            languageMenu.style.left = `${rect.left - 200}px`;
-            languageMenu.style.setProperty('bottom', `${window.innerHeight - rect.top + 30}px`, 'important');
-            languageMenu.style.right = 'auto';
-            languageMenu.style.top = 'auto';
-            
-            // Hide settings menu when opening language menu
-            if (settingsMenu) settingsMenu.style.display = 'none';
-            if (playbackSpeedSubmenu) playbackSpeedSubmenu.style.display = 'none';
-          } else {
-            languageMenu.style.display = 'none';
-          }
-        });
-      }
-
       // Open playback speed submenu - using dynamic positioning like settings menu
       if (playbackSpeedMenu && playbackSpeedSubmenu) {
         playbackSpeedMenu.addEventListener('click', (e) => {
@@ -3810,214 +3673,61 @@
       console.log('   - isSeries:', isSeries, `S${season}E${episode}`);
       console.log('   - title:', title);
       
-      // Get language parameters from URL
-      const imdbId = urlParams.get('imdbId');
-      const streamKey = urlParams.get('streamKey');
-      const currentLang = urlParams.get('currentLang');
-      const availableLangsParam = urlParams.get('availableLangs');
-      let availableLanguages = [];
-      
-      if (availableLangsParam) {
-        try {
-          availableLanguages = JSON.parse(decodeURIComponent(availableLangsParam));
-          console.log('Available languages:', availableLanguages);
-        } catch (e) {
-          console.error('Error parsing available languages:', e);
-        }
-      }
-      
-      // Populate language menu if languages are available
-      if (availableLanguages.length > 0 && imdbId && streamKey) {
-        const languageBtn = document.getElementById('languageBtn');
-        const languageOptions = document.getElementById('languageOptions');
-        
-        if (languageBtn && languageOptions) {
-          // Show language button
-          languageBtn.style.display = 'block';
-          
-          // Populate language options
-          languageOptions.innerHTML = '';
-          availableLanguages.forEach(lang => {
-            const option = document.createElement('div');
-            option.className = 'settings-option';
-            if (lang === currentLang) {
-              option.classList.add('selected');
-            }
-            option.innerHTML = `<span>${lang}</span>`;
-            option.addEventListener('click', async () => {
-              if (lang === currentLang) return; // Already selected
-              
-              // Show loading state
-              option.innerHTML = '<span>Loading...</span>';
-              
-              try {
-                // Call the stream API to get the new language stream
-                if (typeof window.resolveStreamForLanguage === 'function') {
-                  const result = await window.resolveStreamForLanguage(imdbId, lang, streamKey);
-                  
-                  if (result.success && result.src) {
-                    // Update video source
-                    const video = document.getElementById('mainVideo');
-                    const currentTime = video.currentTime; // Save current position
-                    
-                    // Update HLS source
-                    if (window.hls) {
-                      window.hls.destroy();
-                    }
-                    
-                    if (Hls.isSupported()) {
-                      window.hls = new Hls();
-                      window.hls.loadSource(result.src);
-                      window.hls.attachMedia(video);
-                      window.hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                        video.currentTime = currentTime; // Restore position
-                        video.play().catch(e => console.log('Autoplay prevented:', e));
-                      });
-                    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                      video.src = result.src;
-                      video.addEventListener('loadedmetadata', () => {
-                        video.currentTime = currentTime;
-                        video.play().catch(e => console.log('Autoplay prevented:', e));
-                      });
-                    }
-                    
-                    // Update UI
-                    document.querySelectorAll('#languageOptions .settings-option').forEach(opt => {
-                      opt.classList.remove('selected');
-                    });
-                    option.classList.add('selected');
-                    option.innerHTML = `<span>${lang}</span>`;
-                    
-                    // Hide menu
-                    const languageMenu = document.getElementById('languageMenu');
-                    if (languageMenu) languageMenu.style.display = 'none';
-                    
-                    console.log('✓ Language switched to:', lang);
-                  } else {
-                    console.error('Failed to resolve stream for language:', lang);
-                    option.innerHTML = `<span>${lang}</span>`;
-                  }
-                } else {
-                  console.error('resolveStreamForLanguage function not found');
-                  option.innerHTML = `<span>${lang}</span>`;
-                }
-              } catch (error) {
-                console.error('Error switching language:', error);
-                option.innerHTML = `<span>${lang}</span>`;
-              }
-            });
-            
-            languageOptions.appendChild(option);
-          });
-        }
-      }
-
       // Check movie database for the video source and subtitles
       const normalizedTitle = title.toLowerCase().trim();
       console.log('Looking up movie:', normalizedTitle);
 
-      // 🎬 TRY CONSUMET API FIRST
-      if (!src && window.consumetProvider && typeof window.consumetProvider.getStreamFromConsumet === 'function') {
-        console.log('🎬 Attempting Consumet API search for:', title);
+      // 🎬 TRY 8StreamAPI FIRST
+      if (!src && window.streamApi && typeof window.streamApi.getStream === 'function') {
+        console.log('🎬 Attempting 8StreamAPI search for:', title);
         try {
-          let consumetResult;
+          let apiResult;
           
           // Handle TV Series episodes
-          if (isSeries && window.consumetProvider.getSeriesEpisode) {
+          if (isSeries) {
             console.log(`📺 Searching for series episode: S${season}E${episode}`);
-            consumetResult = await window.consumetProvider.getSeriesEpisode(title, parseInt(season), parseInt(episode));
+            apiResult = await window.streamApi.getStream(title, 'TV', parseInt(season), parseInt(episode));
           } else {
             // Handle movies
-            consumetResult = await window.consumetProvider.getStreamFromConsumet(title, 'MOVIE');
+            apiResult = await window.streamApi.getStream(title, 'MOVIE');
           }
           
-          if (consumetResult && consumetResult.url) {
-            console.log('✅ Consumet stream found!', consumetResult);
-            src = consumetResult.url;
-            sourceType = consumetResult.type || 'hls';
+          if (apiResult && apiResult.url) {
+            console.log('✅ 8StreamAPI stream found!', apiResult);
+            src = apiResult.url;
+            sourceType = apiResult.type || 'hls';
             
-            // Load Consumet subtitles if available
-            if (consumetResult.subtitles && consumetResult.subtitles.length > 0) {
-              loadSubtitles(consumetResult.subtitles);
-            }
-            
-            console.log('✓ Using Consumet stream:', src);
+            console.log('✓ Using 8StreamAPI stream:', src);
           } else {
-            console.log('⚠️ Consumet search returned no results');
+            console.log('⚠️ 8StreamAPI search returned no results');
           }
         } catch (error) {
-          console.error('❌ Consumet API error:', error);
+          console.error('❌ 8StreamAPI error:', error);
         }
       }
 
-      // 📺 FALLBACK TO MULTI-EMBED FOR SERIES (BETTER THAN VIDSRC)
-      if (!src && isSeries && movieId && window.multiEmbedProvider) {
-        console.log(`📺 Fallback: Trying Multi-Embed providers for S${season}E${episode}`);
+      // 📺 FALLBACK TO VIDPLAY IF 8StreamAPI FAILS
+      if (!src && movieId && window.vidplay && typeof window.vidplay.getUrl === 'function') {
+        console.log('📺 Attempting VidPlay fallback for TMDB ID:', movieId);
         try {
-          const multiEmbedResult = await window.multiEmbedProvider.getStream(movieId, 'tv', parseInt(season), parseInt(episode));
-          if (multiEmbedResult && multiEmbedResult.url) {
-            console.log('✅ Multi-Embed stream found!', multiEmbedResult);
-            src = multiEmbedResult.url;
-            sourceType = multiEmbedResult.type || 'iframe';
-            console.log(`✓ Using ${multiEmbedResult.provider} stream:`, src);
+          const vidplayUrl = window.vidplay.getUrl(movieId, isSeries ? 'TV' : 'MOVIE', season, episode);
+          if (vidplayUrl) {
+            console.log('✅ VidPlay stream found!');
+            src = vidplayUrl;
+            sourceType = 'iframe';
+            
+            console.log('✓ Using VidPlay stream:', src);
+          } else {
+            console.log('⚠️ VidPlay URL generation failed');
           }
         } catch (error) {
-          console.error('❌ Multi-Embed fallback error:', error);
-        }
-      }
-
-      // 🎬 FALLBACK TO MULTI-EMBED FOR MOVIES
-      if (!src && !isSeries && movieId && window.multiEmbedProvider) {
-        console.log(`🎬 Fallback: Trying Multi-Embed providers for movie`);
-        try {
-          const multiEmbedResult = await window.multiEmbedProvider.getStream(movieId, 'movie');
-          if (multiEmbedResult && multiEmbedResult.url) {
-            console.log('✅ Multi-Embed movie stream found!', multiEmbedResult);
-            src = multiEmbedResult.url;
-            sourceType = multiEmbedResult.type || 'iframe';
-            console.log(`✓ Using ${multiEmbedResult.provider} movie stream:`, src);
-          }
-        } catch (error) {
-          console.error('❌ Multi-Embed movie fallback error:', error);
-        }
-      }
-
-      // 📺 LAST RESORT: VIDSRC FOR SERIES
-      if (!src && isSeries && movieId && window.vidsrcProvider) {
-        console.log(`📺 Last resort: Trying VidSrc for series S${season}E${episode}`);
-        try {
-          const vidsrcResult = await window.vidsrcProvider.getStream(movieId, 'tv', parseInt(season), parseInt(episode));
-          if (vidsrcResult && vidsrcResult.url) {
-            console.log('✅ VidSrc stream found!', vidsrcResult);
-            src = vidsrcResult.url;
-            sourceType = vidsrcResult.type || 'iframe';
-            console.log('✓ Using VidSrc stream:', src);
-          }
-        } catch (error) {
-          console.error('❌ VidSrc fallback error:', error);
-        }
-      }
-
-      // 🎬 LAST RESORT: VIDSRC FOR MOVIES
-      if (!src && !isSeries && movieId && window.vidsrcProvider) {
-        console.log(`🎬 Last resort: Trying VidSrc for movie`);
-        try {
-          const vidsrcResult = await window.vidsrcProvider.getStream(movieId, 'movie');
-          if (vidsrcResult && vidsrcResult.url) {
-            console.log('✅ VidSrc movie stream found!', vidsrcResult);
-            src = vidsrcResult.url;
-            sourceType = vidsrcResult.type || 'iframe';
-            console.log('✓ Using VidSrc movie stream:', src);
-          }
-        } catch (error) {
-          console.error('❌ VidSrc movie fallback error:', error);
+          console.error('❌ VidPlay error:', error);
         }
       }
 
       // If still no source, show error
       if (!src) {
         console.error('❌ FATAL: No video source found!');
-        console.error('   Both Consumet and VidSrc APIs were unable to find the content');
         if (isSeries) {
           console.error(`   Series S${season}E${episode} may not be available`);
         } else {
@@ -4028,8 +3738,8 @@
         const errorDiv = document.getElementById('errorMessage');
         if (errorDiv) {
           const msg = isSeries 
-            ? `❌ Episode not found. S${season}E${episode} may not be available on any provider.`
-            : '❌ Video not found. The movie may not be available on any provider.';
+            ? `❌ Episode not found. S${season}E${episode} may not be available.`
+            : '❌ Video not found. The movie may not be available.';
           errorDiv.innerHTML = msg;
           errorDiv.style.display = 'block';
         }
@@ -4272,7 +3982,7 @@
         const isHls = (String(sourceType).toLowerCase() === 'hls') || /\.m3u8(\?.*)?$/.test(src);
         
         if (isIframe) {
-          console.log('📺 Initializing iframe embed (VidSrc)...');
+          console.log('📺 Initializing iframe embed...');
           // Hide video element and create iframe
           video.style.display = 'none';
           const iframe = document.createElement('iframe');
@@ -4294,67 +4004,6 @@
           video.parentElement.appendChild(iframe);
           console.log('✓ Iframe embed loaded:', src);
           
-          // Add language switcher for iframe embeds
-          const languageStreamsParam = urlParams.get('languageStreams');
-          if (languageStreamsParam) {
-            try {
-              const languageStreams = JSON.parse(languageStreamsParam);
-              const currentLang = urlParams.get('currentLang') || 'English';
-              
-              // Create prominent language switcher UI
-              const langSwitcher = document.createElement('div');
-              langSwitcher.style.cssText = 'position:fixed; top:80px; right:20px; z-index:99999; background:rgba(20,20,20,0.95); padding:15px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.5); min-width:180px;';
-              langSwitcher.innerHTML = '<div style="color:#fff; font-size:16px; font-weight:bold; margin-bottom:10px; text-align:center; border-bottom:2px solid #e50914; padding-bottom:8px;">🎧 Audio Language</div>';
-              
-              Object.keys(languageStreams).forEach(lang => {
-                const btn = document.createElement('button');
-                btn.textContent = lang;
-                btn.style.cssText = `
-                  width:100%; 
-                  margin:6px 0; 
-                  padding:12px; 
-                  cursor:pointer; 
-                  border:2px solid ${lang === currentLang ? '#e50914' : '#333'}; 
-                  border-radius:8px; 
-                  font-size:14px; 
-                  font-weight:600;
-                  transition:all 0.3s;
-                  ${lang === currentLang ? 'background:#e50914; color:white;' : 'background:#1a1a1a; color:#fff;'}
-                `;
-                btn.onmouseover = () => {
-                  if (lang !== currentLang) {
-                    btn.style.background = '#333';
-                    btn.style.borderColor = '#e50914';
-                  }
-                };
-                btn.onmouseout = () => {
-                  if (lang !== currentLang) {
-                    btn.style.background = '#1a1a1a';
-                    btn.style.borderColor = '#333';
-                  }
-                };
-                btn.onclick = () => {
-                  iframe.src = languageStreams[lang];
-                  console.log('✓ Switched to:', lang, languageStreams[lang]);
-                  // Update button styles
-                  langSwitcher.querySelectorAll('button').forEach(b => {
-                    b.style.background = '#1a1a1a';
-                    b.style.color = '#fff';
-                    b.style.borderColor = '#333';
-                  });
-                  btn.style.background = '#e50914';
-                  btn.style.color = 'white';
-                  btn.style.borderColor = '#e50914';
-                };
-                langSwitcher.appendChild(btn);
-              });
-              
-              video.parentElement.appendChild(langSwitcher);
-            } catch (e) {
-              console.error('Failed to parse language streams:', e);
-            }
-          }
-          
           // Hide custom controls for iframe embeds (they have their own controls)
           const controlsContainer = document.getElementById('controlsContainer');
           if (controlsContainer) controlsContainer.style.display = 'none';
@@ -4372,7 +4021,7 @@
               
               let proxyUrl = src;
               // Try using CORS proxy if the URL has CORS issues
-              const useProxy = src.includes('rainbloom44.xyz') || src.includes('vidsrc') || src.includes('2embed');
+              const useProxy = src.includes('rainbloom44.xyz') || src.includes('2embed');
               
               const hlsConfig = {
                 maxBufferLength: 30,

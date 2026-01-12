@@ -6702,52 +6702,46 @@
               streamBtn2.onclick = null;
               streamBtn2.onclick = (e) => {
                 e.preventDefault();
-                const isAvailable = streamBtn2.dataset.available === '1';
-                if (!isAvailable) {
-                  // Fallback: resolve via 8Stream API for player-2
-                  streamBtn2.textContent = 'Resolving…';
-                  streamBtn2.disabled = true;
-                  (async () => {
-                    try {
-                      const result = await window.resolveStreamUrlForMovie(movie, ['English','Hindi','Tamil','Telugu','Bengali']);
-                      if (result && result.success && result.src) {
-                        const params = new URLSearchParams();
-                        params.append('id', movie.id);
-                        params.append('movieId', movie.id);
-                        params.append('title', movie.title);
-                        if (movie.posterUrl) params.append('poster', movie.posterUrl);
-                        const isHls2 = /\.m3u8(\?.*)?$/.test(result.src) || result.type === 'hls';
-                        params.append('type', isHls2 ? 'hls' : (result.type || 'mp4'));
-                        params.append('src', result.src);
-                        if (result.imdbId) params.append('imdbId', result.imdbId);
-                        if (result.key) params.append('streamKey', result.key);
-                        if (result.language) params.append('currentLang', result.language);
-                        if (result.availableLanguages) params.append('availableLangs', JSON.stringify(result.availableLanguages));
-                        const finalUrl = `player-2.html?${params.toString()}`;
-                        localStorage.setItem('lastPlayerUsed', 'player2');
-                        window.location.href = finalUrl;
-                      } else {
-                        showToast('error', 'Stream Unavailable', 'Could not resolve a stream for this title.');
-                      }
-                    } catch (e) {
-                      console.error('Stream resolve failed:', e);
-                      showToast('error', 'Stream Error', 'Failed to resolve stream.');
-                    } finally {
-                      streamBtn2.textContent = 'Stream 2';
-                      streamBtn2.disabled = false;
-                    }
-                  })();
-                  return;
-                }
+                
                 // Build the player-2.html URL with the current movie's details
                 const params = new URLSearchParams();
                 params.append('id', movie.id);
                 params.append('movieId', movie.id);
                 params.append('title', movie.title);
                 if (movie.posterUrl) params.append('poster', movie.posterUrl);
-                const normTitle = String(movie.title || '').trim().toLowerCase();
+                params.append('type', 'hls');
+
                 let player2Url = null;
-                const mp4Url = mp4Overrides[normTitle];
+                
+                // 1) Check for direct MP4 override
+                const mp4Url = getMp4Override(movie.title);
+                if (mp4Url) {
+                  const isHls = /\.m3u8(\?.*)?$/.test(mp4Url);
+                  params.set('type', isHls ? 'hls' : 'mp4');
+                  params.append('src', mp4Url);
+                  player2Url = `player-2.html?${params.toString()}`;
+                }
+                // 2) Check for Google Drive mapping
+                else if (driveMovieMappings[String(movie.id)]) {
+                  params.set('type', 'drive');
+                  params.append('id', driveMovieMappings[String(movie.id)]);
+                  player2Url = `player-2.html?${params.toString()}`;
+                }
+                // 3) Check for direct stream URL
+                else if (movie.streamUrl) {
+                  const isHls = /\.m3u8(\?.*)?$/.test(movie.streamUrl);
+                  params.set('type', isHls ? 'hls' : 'mp4');
+                  params.append('src', movie.streamUrl);
+                  player2Url = `player-2.html?${params.toString()}`;
+                } else {
+                  // No direct source - let player handle via 8StreamAPI + VidPlay fallback
+                  player2Url = `player-2.html?${params.toString()}`;
+                }
+
+                if (player2Url) {
+                  localStorage.setItem('lastPlayerUsed', 'player2');
+                  window.location.href = player2Url;
+                }
                 if (mp4Url) {
                   const isHls = /\.m3u8(\?.*)?$/.test(mp4Url);
                   params.append('type', isHls ? 'hls' : 'mp4');
@@ -7006,134 +7000,45 @@
         streamBtn.onclick = null;
         streamBtn.onclick = (e) => {
           e.preventDefault();
-          const isAvailable = streamBtn.dataset.available === '1';
-          if (!isAvailable) {
-            // Fallback: resolve via 8Stream API even when no direct source
-            streamBtn.textContent = 'Resolving stream…';
-            streamBtn.disabled = true;
-            (async () => {
-              try {
-                const result = await window.resolveStreamUrlForMovie(movie, ['English','Hindi','Tamil','Telugu','Bengali']);
-                if (result && result.success && result.src) {
-                  const params = new URLSearchParams();
-                  params.append('id', movie.id);
-                  params.append('movieId', movie.id);
-                  params.append('title', movie.title);
-                  if (movie.posterUrl) params.append('poster', movie.posterUrl);
-                  const isHls = /\.m3u8(\?.*)?$/.test(result.src) || result.type === 'hls';
-                  params.append('type', isHls ? 'hls' : (result.type || 'mp4'));
-                  params.append('src', result.src);
-                  if (result.imdbId) params.append('imdbId', result.imdbId);
-                  if (result.key) params.append('streamKey', result.key);
-                  if (result.language) params.append('currentLang', result.language);
-                  if (result.availableLanguages) params.append('availableLangs', JSON.stringify(result.availableLanguages));
-                  const finalUrl = `player.html?${params.toString()}`;
-                  window.location.href = finalUrl;
-                } else {
-                  showToast('error', 'Stream Unavailable', 'Could not resolve a stream for this title.');
-                }
-              } catch (e) {
-                console.error('Stream resolve failed:', e);
-                showToast('error', 'Stream Error', 'Failed to resolve stream.');
-              } finally {
-                streamBtn.textContent = (watchData && watchData.progress > 0 && watchData.progress < 95) ? `Resume (${Math.round(watchData.progress)}%)` : 'Watch Now';
-                streamBtn.disabled = false;
-              }
-            })();
-            return;
-          }
-
+          
           // Build the player URL with the movie's details
           const params = new URLSearchParams();
           params.append('id', movie.id);
           params.append('movieId', movie.id);
           params.append('title', movie.title);
           if (movie.posterUrl) params.append('poster', movie.posterUrl);
+          params.append('type', 'hls');
 
           // Check for available sources in order of preference
-          const normTitle = String(movie.title || '').trim().toLowerCase();
           let playerUrl = null;
 
           // 1) Check for direct MP4 override
           const mp4Url = getMp4Override(movie.title);
           if (mp4Url) {
             const isHls = /\.m3u8(\?.*)?$/.test(mp4Url);
-            params.append('type', isHls ? 'hls' : 'mp4');
+            params.set('type', isHls ? 'hls' : 'mp4');
             params.append('src', mp4Url);
             playerUrl = `player.html?${params.toString()}`;
           }
           // 2) Check for Google Drive mapping
           else if (driveMovieMappings[String(movie.id)]) {
-            params.append('type', 'drive');
+            params.set('type', 'drive');
             params.append('id', driveMovieMappings[String(movie.id)]);
             playerUrl = `player.html?${params.toString()}`;
           }
           // 3) Check for direct stream URL
           else if (movie.streamUrl) {
             const isHls = /\.m3u8(\?.*)?$/.test(movie.streamUrl);
-            params.append('type', isHls ? 'hls' : 'mp4');
+            params.set('type', isHls ? 'hls' : 'mp4');
             params.append('src', movie.streamUrl);
             playerUrl = `player.html?${params.toString()}`;
           } else {
-            // 5) Resolve via 8Stream API on-demand
-            streamBtn.textContent = 'Resolving stream…';
-            streamBtn.disabled = true;
-            (async () => {
-              try {
-                const result = await window.resolveStreamUrlForMovie(movie, ['English','Hindi','Tamil','Telugu','Bengali']);
-                if (result && result.success && result.src) {
-                  // Handle iframe embeds (VidSrc) differently
-                  if (result.type === 'iframe') {
-                    params.append('type', 'iframe');
-                    params.append('src', result.src);
-                    if (result.provider) params.append('provider', result.provider);
-                    if (result.languageStreams) params.append('languageStreams', JSON.stringify(result.languageStreams));
-                    if (result.tmdbId) params.append('tmdbId', result.tmdbId);
-                  } else {
-                    const isHls2 = /\.m3u8(\?.*)?$/.test(result.src) || result.type === 'hls';
-                    params.append('type', isHls2 ? 'hls' : (result.type || 'mp4'));
-                    params.append('src', result.src);
-                  }
-                  if (result.imdbId) params.append('imdbId', result.imdbId);
-                  if (result.key) params.append('streamKey', result.key);
-                  if (result.language) params.append('currentLang', result.language);
-                  if (result.availableLanguages) params.append('availableLangs', JSON.stringify(result.availableLanguages));
-                  if (result.languageInfo) params.append('languageInfo', JSON.stringify(result.languageInfo));
-                  const finalUrl = `player.html?${params.toString()}`;
-                  window.location.href = finalUrl;
-                } else {
-                  const errorMsg = result?.message || 'Could not resolve a stream for this title.';
-                  console.warn('Stream resolution failed:', errorMsg);
-                  showToast('error', 'Stream Unavailable', errorMsg);
-                }
-              } catch (e) {
-                console.error('Stream resolve failed:', e);
-                showToast('error', 'Stream Error', 'Failed to resolve stream.');
-              } finally {
-                streamBtn.textContent = (watchData && watchData.progress > 0 && watchData.progress < 95) ? `Resume (${Math.round(watchData.progress)}%)` : 'Watch Now';
-                streamBtn.disabled = false;
-              }
-            })();
-            return;
+            // No direct source - let player handle via 8StreamAPI + VidPlay fallback
+            playerUrl = `player.html?${params.toString()}`;
           }
 
           if (playerUrl) {
-            // Check if we have saved progress and ask whether to resume
-            if (watchData && watchData.progress > 0 && watchData.progress < 95) {
-              const duration = Number(watchData.duration) || 0;
-              const savedCurrent = Number(watchData.currentTime) || 0;
-              const percentBased = duration > 0 && watchData.progress ? (duration * watchData.progress) / 100 : 0;
-              const resumeTime = savedCurrent > 0 ? savedCurrent : percentBased;
-              const wantsResume = window.confirm(`You have progress at ${Math.round(watchData.progress)}%.\n\nOK: Resume from there\nCancel: Start from beginning`);
-              
-              const finalUrl = wantsResume ? `${playerUrl}&t=${Math.floor(resumeTime)}` : playerUrl;
-              window.location.href = finalUrl;
-            } else {
-              // No saved progress, navigate in the same tab
-              window.location.href = playerUrl;
-            }
-          } else {
-            showToast('error', 'Stream Unavailable', 'Stream is not available for this movie yet.');
+            window.location.href = playerUrl;
           }
         };
       }
@@ -7192,7 +7097,7 @@
       }
 
     // Update bookmark button state - now async
-      const bookmarkBtn = document.getElementById('bookmarkBtn');
+      let bookmarkBtn = document.getElementById('bookmarkBtn');
       if (bookmarkBtn) {
         // Update button state immediately when modal opens
         isBookmarked(movie.id).then(bookmarked => {
@@ -8583,10 +8488,10 @@
   <!-- Movie Database Integration -->
   <script src="js/movie-db.js"></script>
   <script src="js/tmdb-integration.js"></script>
+  <script src="js/stream-8api.js"></script>
+  <script src="js/vidplay-provider.js"></script>
+  <script src="stream-diagnostics.js"></script>
   <script src="public/streamApiConfig.js?v=20260112"></script>
-  <script src="js/consumet-config.js"></script>
-  <script src="js/consumet-provider.js"></script>
-  <script src="js/stream-api.js"></script>
   <script>
     // TMDB API Configuration - Add your free API key from https://www.themoviedb.org/settings/api
     const TMDB_API_KEY = 'f66d9d54a03e21f8ef99dd0c4258aa8a'; // Replace with your actual API key

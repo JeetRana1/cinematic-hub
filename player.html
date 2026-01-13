@@ -5,7 +5,111 @@
   [class*="banner"], [id*="banner"],
   [class*="popup"], [id*="popup"],
   [class*="modal"], [id*="modal"],
-  #video {
+  .advertisement, #advertisement,
+  .ad-container, #ad-container,
+  .ad-space, .ad_space,
+  [style*="position: fixed"][style*="z-index"],
+  .google-auto-placed,
+  ins.adsbygoogle {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+  
+  @media (orientation: portrait) and (max-width: 600px) {
+        .time-display {
+          font-size: 0.55em !important;
+          min-width: 28px !important;
+          margin-left: -32px !important;
+          margin-right: 2px !important;
+          flex-shrink: 0 !important;
+          text-align: right !important;
+        }
+    /* Desktop-like controls for portrait mobile: inline, square, centered, evenly spaced */
+    .controls {
+      display: flex !important;
+      flex-direction: row !important;
+      justify-content: center !important;
+      align-items: center !important;
+      flex-wrap: nowrap !important;
+      gap: 2px !important;
+      overflow-x: visible !important;
+      box-sizing: border-box;
+      padding: 0 0.5vw !important;
+      min-width: 0 !important;
+    }
+    .control-btn,
+    .skip-btn,
+    .play-pause-btn,
+    #captionsBtn,
+    #settingsBtn,
+    #screenModeToggle {
+      min-width: 14px !important;
+      min-height: 14px !important;
+      max-width: 14px !important;
+      max-height: 14px !important;
+      width: 14px !important;
+      height: 14px !important;
+      font-size: 0.45em !important;
+      border-radius: 3px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      box-sizing: border-box !important;
+      background: rgba(0,0,0,0.5) !important;
+      flex-shrink: 1 !important;
+      min-inline-size: 0 !important;
+    }
+    #screenModeIcon {
+      font-size: 0.8em !important;
+    }
+    #screenModeIcon,
+    #settingsBtn i,
+    #captionsBtn i,
+    .play-pause-btn i {
+      font-size: 1.1em !important;
+    }
+    .right-controls,
+    .screen-mode-container {
+      gap: 0 !important;
+      justify-content: flex-start !important;
+      margin-left: -100px !important;
+      float: none !important;
+    }
+    .right-controls {
+      float: none !important;
+      margin-left: -50px !important;
+    }
+    .screen-mode-container {
+      margin-left: 0px !important;
+    }
+    .movie-info-overlay {
+      display: none !important;
+    }
+
+    .skip-btn {
+      color: #fff;
+      position: relative;
+      min-width: 26px !important;
+      min-height: 26px !important;
+      max-width: 26px !important;
+      max-height: 26px !important;
+      width: 26px !important;
+      height: 26px !important;
+      border-radius: 8px !important;
+      background: transparent !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    #video {
       width: 100vw !important;
       max-width: 100vw !important;
       height: 60vh !important;
@@ -110,6 +214,7 @@
       min-height: 44px;
       box-sizing: border-box;
     }
+  }
 
   @media (orientation: portrait) and (max-width: 600px) {
     .movie-info-overlay {
@@ -473,8 +578,7 @@
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title id="pageTitle">Loading...</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <!-- Swapped to Roboto to avoid 403s on Netflix Sans CDN -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Netflix+Sans:wght@300;400;500;700&display=swap">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="stylesheet" href="css/subtitles.css">
   <script src="ui.js"></script>
@@ -666,9 +770,8 @@
 
   <script>
     window.overlayClickEnabled = true;
-
-    // Delay gesture wiring until the DOM is ready so elements exist
-    document.addEventListener('DOMContentLoaded', () => {
+    
+    document.addEventListener('DOMContentLoaded', function () {
       const urlParams = new URLSearchParams(window.location.search);
       const movieTitle = urlParams.get('title') || 'Movie';
       document.title = movieTitle;
@@ -676,11 +779,6 @@
       // --- Gesture Controls for Landscape ---
       const video = document.getElementById('video');
       const videoContainer = document.getElementById('videoContainer');
-      if (!video || !videoContainer) {
-        console.warn('Video elements not ready, skipping gesture handlers');
-        return;
-      }
-
       let lastTap = 0;
       let tapTimeout = null;
       let overlayShownForThisTap = false;
@@ -860,9 +958,8 @@
 
       // Attach listeners only in landscape mode
       function attachGestureListeners() {
-        if (!video || !videoContainer) return;
-
-        // Remove previous listeners (guards prevent errors if called early)
+        if (!video) return;
+        // Remove previous listeners
         videoContainer.removeEventListener('touchstart', handleGesture);
         videoContainer.removeEventListener('mousedown', handleGesture);
         
@@ -2827,6 +2924,77 @@
     // Movie database - maps movie titles to their sources
     // NOW USING TMDB ONLY - Old database removed to avoid conflicts
     const movieDatabase = {};
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Diagnostic check for fullscreen compatibility
+      console.log('=== Fullscreen Diagnostic ===');
+      console.log('DOMContentLoaded fired!');
+      console.log('Secure context (HTTPS):', window.isSecureContext);
+      console.log('Document fullscreenEnabled:', document.fullscreenEnabled);
+      console.log('Webkit fullscreen enabled:', 'webkitFullscreenEnabled' in document ? document.webkitFullscreenEnabled : 'N/A');
+      console.log('Moz fullscreen enabled:', 'mozFullScreenEnabled' in document ? document.mozFullScreenEnabled : 'N/A');
+
+      // Get URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+
+      // Initialize player elements
+      const video = document.getElementById('video');
+      
+      // If a start time (?t=seconds) was provided, let player-continue-watching.js handle it
+      const startTimeParam = parseInt(urlParams.get('t') || '0', 10);
+      
+      if (!isNaN(startTimeParam) && startTimeParam > 0) {
+        console.log('Resume time parameter found:', startTimeParam, 'seconds - will be handled by player-continue-watching.js');
+        // Don't auto-seek here - let player-continue-watching.js show the resume prompt
+        // This ensures consistent behavior across all resume scenarios
+      } else {
+        // Check for continue watching progress and block auto-seek to 0:00
+        setTimeout(() => {
+          if (window.ContinueWatchingManager) {
+            let videoSrc = '';
+            if (video.src && video.src.length > 0) {
+              videoSrc = video.src;
+            } else {
+              const sourceTag = video.querySelector('source');
+              if (sourceTag && sourceTag.src && sourceTag.src.length > 0) {
+                videoSrc = sourceTag.src;
+              }
+            }
+            let movieId = urlParams.get('movieId');
+            if (!movieId) {
+              movieId = btoa(videoSrc).replace(/[^a-zA-Z0-9]/g, '').substring(0, 16);
+            }
+            let savedProgress = window.ContinueWatchingManager.getMovieProgress(movieId);
+            
+            // If not found by generated movieId, try the actual id from URL
+            if (!savedProgress) {
+              const actualId = urlParams.get('id');
+              if (actualId && actualId !== movieId) {
+                savedProgress = window.ContinueWatchingManager.getMovieProgress(actualId);
+              }
+            }
+            
+            console.log('Continue watching check - savedProgress:', savedProgress, 'currentTime:', video.currentTime);
+            if (savedProgress && savedProgress.currentTime > 0 && video.currentTime === 0) {
+              console.log('Setting video to 0 for continue watching');
+              // Only force reset if video is actually at the beginning
+              video.currentTime = 0;
+              video.pause();
+              // Prevent any autoplay
+              video.autoplay = false;
+              // Resume modal will be shown by player-continue-watching.js
+            }
+          }
+        }, 100);
+      }
+      const videoContainer = document.getElementById('videoContainer');
+      const controlsContainer = document.getElementById('controlsContainer');
+      const playPauseBtn = document.getElementById('playPauseBtn');
+      const muteBtn = document.getElementById('muteBtn');
+      const volumeSlider = document.getElementById('volumeSlider');
+      const timeDisplay = document.getElementById('timeDisplay');
+      const progressBar = document.getElementById('progressBar');
+      const progressBuffer = document.getElementById('progressBuffer');
       const progressBarContainer = document.getElementById('progressContainer');
       const fullscreenBtn = document.getElementById('fullscreenBtn');
       const subtitleBtn = document.getElementById('subtitleBtn');
@@ -3418,7 +3586,7 @@
               e.clientY < pathBounds.top ||
               e.clientY > pathBounds.bottom;
 
-            if (isOutsideMenus) {
+            if (isOutsideAll) {
               // Animate out
               playbackSpeedSubmenu.classList.remove('visible');
               settingsMenu.style.opacity = '0';
@@ -3530,7 +3698,6 @@
       }
 
       // Get movie info from URL parameters
-      const urlParams = new URLSearchParams(window.location.search);
       const title = urlParams.get('title') || 'Movie';
       const year = urlParams.get('year') || '';
       const rating = urlParams.get('rating');
@@ -5369,61 +5536,34 @@
               serverMenu.style.display = 'none';
               
               try {
-                // Use enhanced stream API with selected provider
-                const selectedProvider = provider;
+                // Fallback: construct URL based on provider
+                let embedUrl;
+                if (provider === 'videasy') {
+                  embedUrl = mediaType === 'tv' 
+                    ? `https://player.videasy.net/tv/${tmdbId}/${season}/${episode}`
+                    : `https://player.videasy.net/movie/${tmdbId}`;
+                } else if (provider === 'vidsrcxyz') {
+                  embedUrl = mediaType === 'tv' 
+                    ? `https://vidsrc.xyz/embed/tv/${tmdbId}/${season}/${episode}`
+                    : `https://vidsrc.xyz/embed/movie/${tmdbId}`;
+                } else if (provider === 'superembed') {
+                  embedUrl = mediaType === 'tv'
+                    ? `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${season}&e=${episode}`
+                    : `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`;
+                }
                 
-                if (window.getEnhancedStream) {
-                  // Get stream using the selected provider
-                  const result = await window.getEnhancedStream(tmdbId, mediaType, season, episode, selectedProvider);
-
-                  if (result && result.success) {
-                    // Update current stream info
-                    const newUrl = new URL(window.location.href);
-                    newUrl.searchParams.set('provider', selectedProvider);
-                    newUrl.searchParams.set('src', result.url);
-                    newUrl.searchParams.set('type', result.type || 'iframe');
-                    window.location.href = newUrl.toString();
-                  } else {
-                    throw new Error('Provider failed to load stream');
-                  }
-                } else {
-                  // Fallback: construct URL based on provider manually
-                  let embedUrl;
-                  if (provider === 'videasy') {
-                    embedUrl = mediaType === 'tv' 
-                      ? `https://player.videasy.net/tv/${tmdbId}/${season}/${episode}`
-                      : `https://player.videasy.net/movie/${tmdbId}`;
-                  } else if (provider === 'mxplayer') {
-                    embedUrl = mediaType === 'tv'
-                      ? `https://www.mxplayer.in/search?q=${encodeURIComponent(movieTitle)}`
-                      : `https://www.mxplayer.in/watch/${tmdbId}`;
-                  } else if (provider === 'rabbitstream') {
-                    embedUrl = mediaType === 'tv'
-                      ? `https://rabbitstream.net/embed/${tmdbId}/${season}/${episode}`
-                      : `https://rabbitstream.net/embed/${tmdbId}`;
-                  } else if (provider === 'vidsrcxyz') {
-                    embedUrl = mediaType === 'tv' 
-                      ? `https://vidsrc.xyz/embed/tv/${tmdbId}/${season}/${episode}`
-                      : `https://vidsrc.xyz/embed/movie/${tmdbId}`;
-                  } else if (provider === 'vidsrcpro') {
-                    embedUrl = mediaType === 'tv'
-                      ? `https://vidsrc.pro/embed/tv/${tmdbId}/${season}/${episode}`
-                      : `https://vidsrc.pro/embed/movie/${tmdbId}`;
-                  }
-                  
-                  if (embedUrl) {
-                    const newUrl = new URL(window.location.href);
-                    newUrl.searchParams.set('provider', provider);
-                    newUrl.searchParams.set('src', embedUrl);
-                    newUrl.searchParams.set('type', 'iframe');
-                    window.location.href = newUrl.toString();
-                  }
+                if (embedUrl) {
+                  const newUrl = new URL(window.location.href);
+                  newUrl.searchParams.set('provider', provider);
+                  newUrl.searchParams.set('src', embedUrl);
+                  newUrl.searchParams.set('type', 'iframe');
+                  window.location.href = newUrl.toString();
                 }
               } catch (error) {
                 console.error('Server switch error:', error);
                 currentServerDisplay.innerHTML = '<i class=\"fas fa-exclamation-triangle\"></i> Error';
                 setTimeout(() => {
-                  currentServerDisplay.textContent = 'Provider';
+                  currentServerDisplay.textContent = 'Server ' + (index + 1);
                 }, 2000);
               }
             });
@@ -6512,6 +6652,7 @@
         });
         updateScreenMode();
       }
+    });
   </script>
   <!-- Add the subtitles CSS -->
   <link rel="stylesheet" href="css/subtitles.css">

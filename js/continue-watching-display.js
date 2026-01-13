@@ -369,8 +369,7 @@ class ContinueWatchingDisplay {
       return `${playerBase}?${params.toString()}`;
     }
     
-    // For 8Stream API movies, trigger async resolution like the Stream button does
-    console.log('🎬 Resolving stream for resume via 8Stream API...');
+    // ...existing code...
     
     // Ensure resolveStreamUrlForMovie is available
     if (typeof window.resolveStreamUrlForMovie === 'function') {

@@ -4,13 +4,22 @@
   "description": "Cinematic Hub static site with Firebase integration",
   "scripts": {
     "prebuild": "node scripts/generateFirebaseConfig.js && node scripts/generateEmailConfig.js && node scripts/generateStreamApiConfig.js",
-    "snoop:net20": "node scripts/snoop-net20.js"
+    "snoop:net20": "node scripts/snoop-net20.js",
+    "start": "node api/ad-blocker-proxy.js",
+    "dev": "nodemon api/ad-blocker-proxy.js"
   },
   "dependencies": {
+    "@ghostery/adblocker": "^2.13.3",
     "@sendgrid/mail": "^8.1.6",
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
+    "nodemon": "^3.0.1",
     "playwright": "^1.41.2"
   }
 }

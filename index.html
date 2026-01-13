@@ -2,6 +2,24 @@
 <html lang="en">
 
 <head>
+  <!-- CRITICAL: Block all redirects IMMEDIATELY -->
+  <script>
+    // Block window.open completely
+    const originalOpen = window.open;
+    window.open = function(url) {
+      console.log('🚫 BLOCKED: window.open(' + url + ')');
+      return null;
+    };
+    
+    // Block eval
+    window.eval = function() { 
+      console.log('🚫 BLOCKED: eval()');
+      return undefined;
+    };
+    
+    console.log('✅ Security barrier loaded');
+  </script>
+
   <style>
     @media (orientation: portrait) {
       .user-name.hide-mobile {
@@ -26,6 +44,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
   <style>
     @keyframes ripple {
       to {
@@ -5854,52 +5873,8 @@
       "20": "",  // Thalaivan Thalaivii (2025)
     };
 
-    // Direct MP4 overrides by normalized title
-    const mp4Overrides = {
-      "tourist family": "https://ia601005.us.archive.org/3/items/tourist-family-2025-hindi-1080p/Tourist%20Family-%282025%29-Hindi-1080p.mp4",
-      "manjummel boys": "https://ia600304.us.archive.org/11/items/manjummel-boys-2024/Manjummel%20Boys%20%282024%29.ia.mp4",
-      "kaithi": "https://ia801009.us.archive.org/23/items/kaithi-2019-1080p-hindi/Kaithi%2B2019%2B1080p%2BHindi.ia.mp4",
-      "vikram": "https://ia902807.us.archive.org/8/items/vikram-2022-lcu.mp-4/Vikram-%282022%29-%5BLCU%5D.mp4.mp4",
-      "leo": "https://ia600602.us.archive.org/19/items/leo-2023-south-hindi-dubbed-un-cut-hd-1080p/Leo-%282023%29-South-Hindi-Dubbed-UnCut-HD-1080p.mp4",
-      "coolie": "https://ia601002.us.archive.org/23/items/coolie-2025-1080p-hindi/Coolie-2025-1080p-Hindi.mp4",
-      "maharaja": "https://ia800404.us.archive.org/14/items/maharaja-2024-hindi-tamil-dual-audio-un-cut-movie-hd-1080p-esub/Maharaja%20%282024%29%20%28Hindi%20%2B%20Tamil%29%20Dual%20Audio%20UnCut%20Movie%20HD%201080p%20ESub.mp4",
-      "hi papa": "https://dn710109.ca.archive.org/0/items/hi-nannas/Hi%20Nanna%20%282023%29%201080p%20HDRip.%20%5BDual%20Audio%5D%20%5BHindi%20%2B%20Telugu%5D%20x264%20ESubs%20%5B3.2GB%5D%20-%20QRips.mp4",
-      "kantara": "https://ia600404.us.archive.org/34/items/kantara-2022-hindi-dubbed-1080p/Kantara%20%282022%29%20Hindi%20Dubbed%201080p.mp4",
-      "kantara chapter 1": "https://ia802308.us.archive.org/28/items/kantara-chapter.-1.2025.-hindi/Kantara-Chapter.1.2025.Hindi.mp4",
-      "hridayam": "https://ia601003.us.archive.org/33/items/hridayam-2022-hindi-1080p/Hridayam%20%282022%29%20Hindi%201080p.mp4",
-      "lokah chapter 1": "https://ia601709.us.archive.org/32/items/lokah.-chapter.-1-chandra.-2025-hindi/Lokah.Chapter.1-Chandra.2025-hindi.mp4",
-      "lucky bhaskar": "https://ia600301.us.archive.org/4/items/lucky-baskhar-2024-hindi-hd-1080p/Lucky-Baskhar-%282024%29-Hindi-HD-1080p.mp4",
-      "court - state vs. a nobody": "https://ia601001.us.archive.org/20/items/court-state-vs-a-nobody-2025-hindi-hd-1080p/Court-State-Vs-A-Nobody-%282025%29-Hindi-HD-1080p.mp4",
-      "master": "https://ia902807.us.archive.org/0/items/master-2021-1080p-hindi/Master-2021-1080p-Hindi.mp4",
-      "hit: the first case": "https://ia800505.us.archive.org/30/items/hit-the-first-case-2020-1080p-hindi/HIT-The-First-Case-2020-1080p-Hindi.mp4",
-      "hit: the second case": "https://ia801003.us.archive.org/22/items/hit-the-2nd-case-2022-1080p-hindi/HIT-The-2nd-Case-2022-1080p-Hindi.mp4",
-      "hit: the third case": "https://ia800505.us.archive.org/35/items/hit-the-third-case-2025-1080p-hindi/HIT-The-Third-Case-2025-1080p-Hindi.mp4",
-      "retro": "https://ia600301.us.archive.org/10/items/retro-2025-hindi-1080p/Retro-%282025%29-Hindi-1080p.mp4",
-      "kuberaa": "https://ia601302.us.archive.org/0/items/kuberaa-2025-hindi-1080p/Kuberaa-%282025%29-Hindi-1080p.mp4",
-      "thalaivan thalaivii": "https://ia600201.us.archive.org/14/items/thalaivan-thalaivii-2025-hindi-1080p/Thalaivan-Thalaivii-%282025%29-Hindi-1080p.mp4",
-      "dil se..": "https://ia801607.us.archive.org/32/items/dil-se..-1998/Dil%20Se..%20%281998%29.mp4",
-      "mohabbatein": "https://ia801207.us.archive.org/5/items/mohabbatein-2000_202511/Mohabbatein-%282000%29.mp4",
-      "bhool bhulaiyaa": "https://ia600500.us.archive.org/23/items/bhool-bhulaiyaa-2007/Bhool-Bhulaiyaa-%282007%29.mp4",
-      "dude": "https://ia903101.us.archive.org/35/items/dude.-2025.1080p-hindi/Dude.2025.1080p-Hindi.mp4",
-      "they call him og": "https://ia903104.us.archive.org/12/items/they-call-him-og-2025-hindi_202511/They%20Call%20Him%20OG%20%282025%29-%28Hindi%29.mp4",
-      "bombay": "https://ia801700.us.archive.org/11/items/bombay-1995_202511/Bombay-1995.mp4",
-      "dilwale dulhania le jayenge": "https://ia801701.us.archive.org/24/items/dilwale-dulhania-le-jayenge-1995_202511/Dilwale%20Dulhania%20Le%20Jayenge%20%281995%29.mp4",
-      "my name is khan": "https://ia802309.us.archive.org/28/items/my-name-is-khan-2010_202511/My%20Name%20Is%20Khan%20%282010%29.mp4",
-      "munjya": "https://ia801702.us.archive.org/6/items/munjya.-2024/Munjya.%282024%29.mp4",
-      "stree": "https://ia601706.us.archive.org/16/items/stree.-2018/Stree.%282018%29.mp4",
-      "stree 2": "https://ia601701.us.archive.org/29/items/stree.-2.-2024/Stree.2.%282024%29.mp4",
-      "3 idiots": "https://ia601707.us.archive.org/13/items/3.-idiots.-2009/3.Idiots.%282009%29.mp4",
-      "kesari": "https://ia601707.us.archive.org/21/items/kesari.-2019_202512/Kesari.%282019%29.mp4",
-      "kesari chapter 2": "https://ia601708.us.archive.org/8/items/kesari.-chapter.-2.-2025/Kesari.Chapter.2.%282025%29.mp4",
-      "thamma": "https://ia601700.us.archive.org/17/items/thamma.-2025_202512/Thamma.2025.mp4",
-      "bhediya": "https://ia801704.us.archive.org/13/items/bhediya.-2022/Bhediya.%282022%29.mp4",
-      "param sundari": "https://ia801709.us.archive.org/16/items/param.-sundari.-2025/Param.Sundari.%282025%29.mp4",
-      "dhadak": "https://ia801707.us.archive.org/12/items/dhadak.-2018/Dhadak.%282018%29.mp4",
-      "dhadak 2": "https://ia601706.us.archive.org/29/items/dhadak.-2.-2025/Dhadak.2.%282025%29.mp4",
-      "chennai express": "https://ia601701.us.archive.org/10/items/chennai.-express.-2013/Chennai.Express.%282013%29.mp4",
-      "dil chahta hai": "https://ia801707.us.archive.org/8/items/dil.-chahta.-hai.-2001-en/Dil.Chahta.Hai.%282001%29.mp4",
-
-    };
+    // Direct MP4 overrides by normalized title (DISABLED - use WebStreamr API instead)
+    const mp4Overrides = {};
 
     // Normalize titles and resolve MP4 override by title robustly
     function normalizeTitleForKey(t) {
@@ -6093,8 +6068,12 @@
 
       // Hide/show popular movies section based on category
       const popularSection = document.getElementById('popularMoviesSection');
+      const popularTVSection = document.getElementById('popularTVSection');
       if (popularSection) {
         popularSection.style.display = (cat === 'all') ? '' : 'none';
+      }
+      if (popularTVSection) {
+        popularTVSection.style.display = (cat === 'all') ? '' : 'none';
       }
 
       // TMDB-driven catalog handling
@@ -6500,22 +6479,37 @@
       const seriesMeta = document.getElementById('seriesMeta');
 
       // Custom dropdown elements
-      const seasonTrigger = document.getElementById('seasonTrigger');
-      const seasonDropdown = document.getElementById('seasonDropdown');
-      const seasonWrapper = document.getElementById('seasonSelectWrapper');
-      const episodeTrigger = document.getElementById('episodeTrigger');
-      const episodeDropdown = document.getElementById('episodeDropdown');
-      const episodeWrapper = document.getElementById('episodeSelectWrapper');
-
-      // Initialize custom dropdown functionality (only once per modal open)
       let dropdownsInitialized = false;
       function initCustomDropdowns() {
+        // Always re-initialize dropdowns when series picker is shown
+        dropdownsInitialized = false;
+        // Always get fresh references to dropdown elements
+        const seasonTrigger = document.getElementById('seasonTrigger');
+        const seasonDropdown = document.getElementById('seasonDropdown');
+        const seasonWrapper = document.getElementById('seasonSelectWrapper');
+        const episodeTrigger = document.getElementById('episodeTrigger');
+        const episodeDropdown = document.getElementById('episodeDropdown');
+        const episodeWrapper = document.getElementById('episodeSelectWrapper');
         if (dropdownsInitialized) return;
         dropdownsInitialized = true;
 
+        // Remove previous event listeners by replacing elements with clones
+        if (seasonTrigger) {
+          const newSeasonTrigger = seasonTrigger.cloneNode(true);
+          seasonTrigger.parentNode.replaceChild(newSeasonTrigger, seasonTrigger);
+        }
+        if (episodeTrigger) {
+          const newEpisodeTrigger = episodeTrigger.cloneNode(true);
+          episodeTrigger.parentNode.replaceChild(newEpisodeTrigger, episodeTrigger);
+        }
+
+        // Get fresh references again after cloning
+        const freshSeasonTrigger = document.getElementById('seasonTrigger');
+        const freshEpisodeTrigger = document.getElementById('episodeTrigger');
+
         // Season dropdown toggle - use mousedown for instant response
-        if (seasonTrigger && seasonWrapper) {
-          seasonTrigger.addEventListener('mousedown', function(e) {
+        if (freshSeasonTrigger && seasonWrapper) {
+          freshSeasonTrigger.addEventListener('mousedown', function(e) {
             e.preventDefault();
             e.stopPropagation();
             if (episodeWrapper) episodeWrapper.classList.remove('active');
@@ -6528,8 +6522,8 @@
         }
 
         // Episode dropdown toggle - use mousedown for instant response
-        if (episodeTrigger && episodeWrapper) {
-          episodeTrigger.addEventListener('mousedown', function(e) {
+        if (freshEpisodeTrigger && episodeWrapper) {
+          freshEpisodeTrigger.addEventListener('mousedown', function(e) {
             e.preventDefault();
             e.stopPropagation();
             if (seasonWrapper) seasonWrapper.classList.remove('active');
@@ -6658,6 +6652,8 @@
 
       // If series, load seasons/episodes and skip stream button wiring
       if (isSeries && seriesPicker && seasonSelect && episodeSelect) {
+        // Always re-initialize dropdowns when series picker is shown
+        initCustomDropdowns();
         // reset selects
         const seasonValue = seasonTrigger?.querySelector('.select-value');
         const episodeValue = episodeTrigger?.querySelector('.select-value');
@@ -7705,6 +7701,7 @@
     function performSearch() {
       const query = searchInput.value.trim();
       const popularSection = document.getElementById('popularMoviesSection');
+      const popularTVSection = document.getElementById('popularTVSection');
 
       // Add searching class to body
       document.body.classList.add('searching');
@@ -7715,12 +7712,14 @@
           document.body.classList.remove('searching');
           isSearching = false;
           if (popularSection) popularSection.style.display = '';
+          if (popularTVSection) popularTVSection.style.display = '';
           loadAllTMDBMovies().then(movies => displayMovies(movies, false, 'All Movies'));
           return;
         }
 
         // Hide popular movies section during search
         if (popularSection) popularSection.style.display = 'none';
+        if (popularTVSection) popularTVSection.style.display = 'none';
         isSearching = true;
         searchTMDB(query);
         return;
@@ -7731,12 +7730,14 @@
         document.body.classList.remove('searching');
         isSearching = false;
         if (popularSection) popularSection.style.display = '';
+        if (popularTVSection) popularTVSection.style.display = '';
         displayMovies(curatedMovies, false);
         return;
       }
 
       // Hide popular movies section during search
       if (popularSection) popularSection.style.display = 'none';
+      if (popularTVSection) popularTVSection.style.display = 'none';
 
       // Set searching state
       isSearching = true;
@@ -7915,7 +7916,9 @@
 
         // Show popular movies section
         const popularSection = document.getElementById('popularMoviesSection');
+        const popularTVSection = document.getElementById('popularTVSection');
         if (popularSection) popularSection.style.display = '';
+        if (popularTVSection) popularTVSection.style.display = '';
 
         // Reset category filter and show TMDB movies
         try { currentCategory = 'all'; } catch (_) { }
@@ -7952,7 +7955,9 @@
         }
         // Show popular movies section
         const popularSection = document.getElementById('popularMoviesSection');
+        const popularTVSection = document.getElementById('popularTVSection');
         if (popularSection) popularSection.style.display = '';
+        if (popularTVSection) popularTVSection.style.display = '';
         
         // reset movies and category filter
         try { currentCategory = 'all'; } catch (_) { }
@@ -8443,15 +8448,18 @@
   <script src="js/stream-api.js"></script>
   
   <!-- Enhanced Multi-Provider Streaming API with Multi-Language Support -->
-  <script src="js/enhanced-stream-api.js"></script>
+  <script src="js/enhanced-stream-api.js?v=20260113-fixed"></script>
   <script src="js/audio-language-selector.js"></script>
   <script src="js/stream-player-handler.js"></script>
   
   <!-- Streaming Compatibility Layer - bridges old & new APIs -->
-  <script src="js/stream-compatibility.js"></script>
+  <script src="js/stream-compatibility.js?v=20260113-fixed"></script>
   
   <!-- Stream Debug Helper -->
   <script src="js/stream-debug.js"></script>
+  
+  <!-- Ad-Blocker Proxy Integration -->
+  <script src="js/ad-blocker-proxy-integration.js"></script>
   
   <script src="js/player-integration.js"></script>
   <script>

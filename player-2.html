@@ -21,9 +21,6 @@
     
     <!-- Stream API Configuration and Client -->
     <script src="public/streamApiConfig.js"></script>
-    <!-- Consumet API for Stream 2 fallback resolution -->
-    <script src="js/consumet-api.js"></script>
-    <script src="js/stream-api.js"></script>
     <!-- Enhanced multi-provider (adds 8Stream) + compatibility bridge -->
     <script src="js/enhanced-stream-api.js"></script>
     <script src="js/stream-compatibility.js"></script>
@@ -1298,305 +1295,6 @@
     </div>
 
     <script>
-        // Movie database (same as original)
-        const movieDatabase = {
-                        "tourist family": {
-                                src: "https://ia601005.us.archive.org/3/items/tourist-family-2025-hindi-1080p/Tourist%20Family-%282025%29-Hindi-1080p.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/tourist-family-2025-hindi-1080p/Tourist-Family-%282025%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "manjummel boys": {
-                                src: "https://ia800304.us.archive.org/11/items/manjummel-boys-2024/Manjummel%20Boys%20%282024%29.ia.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/manjummel-boys-2024/Manjummel-Boys-%282024%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "kaithi": {
-                                src: "https://ia601009.us.archive.org/23/items/kaithi-2019-1080p-hindi/Kaithi%2B2019%2B1080p%2BHindi.ia.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/kaithi-2019-1080p-hindi/Kaithi-2019-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "vikram": {
-                                src: "https://ia601007.us.archive.org/8/items/vikram-2022-lcu.mp-4/Vikram-%282022%29-%5BLCU%5D.mp4.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/vikram-2022-lcu.mp-4/Vikram-%282022%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "leo": {
-                                src: "https://ia600602.us.archive.org/19/items/leo-2023-south-hindi-dubbed-un-cut-hd-1080p/Leo-%282023%29-South-Hindi-Dubbed-UnCut-HD-1080p.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/leo-2023-south-hindi-dubbed-un-cut-hd-1080p/Leo-%282023%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "coolie": {
-                                src: "https://ia601002.us.archive.org/23/items/coolie-2025-1080p-hindi/Coolie-2025-1080p-Hindi.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/coolie-2025-1080p-hindi/Coolie-%282025%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "maharaja": {
-                                src: "https://ia800404.us.archive.org/14/items/maharaja-2024-hindi-tamil-dual-audio-un-cut-movie-hd-1080p-esub/Maharaja%20%282024%29%20%28Hindi%20%2B%20Tamil%29%20Dual%20Audio%20UnCut%20Movie%20HD%201080p%20ESub.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/maharaja-2024-hindi-tamil-dual-audio-un-cut-movie-hd-1080p-esub/Maharaja-%282024%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "hi papa": {
-                                src: "https://ia600801.us.archive.org/34/items/hi-papa-hi-nanna-2023-hindi-1080p/Hi%20Papa-%28Hi%20Nanna%29-%282023%29-%7BHindi-1080p%29.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/hi-papa-hi-nanna-2023-hindi-1080p/Hi-Nanna-%282023%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "kantara": {
-                                src: "https://ia600404.us.archive.org/34/items/kantara-2022-hindi-dubbed-1080p/Kantara%20%282022%29%20Hindi%20Dubbed%201080p.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/kantara-2022-hindi-dubbed-1080p/Kantara-%282022%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "hridayam": {
-                                src: "https://ia601003.us.archive.org/33/items/hridayam-2022-hindi-1080p/Hridayam%20%282022%29%20Hindi%201080p.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/hridayam-2022-hindi-1080p/Hridayam-%282022%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "lokah chapter 1": {
-                                src: "https://ia601709.us.archive.org/32/items/lokah.-chapter.-1-chandra.-2025-hindi/Lokah.Chapter.1-Chandra.2025-hindi.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/lokah.-chapter.-1-chandra-en/Lokah.Chapter.1-Chandra-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "lucky bhaskar": {
-                                src: "https://ia600301.us.archive.org/4/items/lucky-baskhar-2024-hindi-hd-1080p/Lucky-Baskhar-%282024%29-Hindi-HD-1080p.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/lucky-baskhar-2024-hindi-hd-1080p/Lucky-Baskhar-2024-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "court - state vs. a nobody": {
-                                src: "https://ia601001.us.archive.org/20/items/court-state-vs-a-nobody-2025-hindi-hd-1080p/Court-State-Vs-A-Nobody-%282025%29-Hindi-HD-1080p.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/court-state-vs-a-nobody-2025-hindi-hd-1080p/court-state-vs-a-nobody-2025-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "master": {
-                                src: "https://ia902807.us.archive.org/0/items/master-2021-1080p-hindi/Master-2021-1080p-Hindi.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/master-2021-1080p-hindi/MASTER-%282021%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "hit: the first case": {
-                                src: "https://ia801003.us.archive.org/22/items/hit-the-first-case-2020-1080p-hindi/HIT-The-First-Case-2020-1080p-Hindi.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/hit-the-first-case-2020-1080p-hindi/HIT-The-First-Case-%282020%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "hit: the second case": {
-                                src: "https://ia801003.us.archive.org/22/items/hit-the-2nd-case-2022-1080p-hindi/HIT-The-2nd-Case-2022-1080p-Hindi.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/hit-the-2nd-case-2022-1080p-hindi/HIT-The-Second-Case-2022-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "hit: the third case": {
-                                src: "https://ia800505.us.archive.org/35/items/hit-the-third-case-2025-1080p-hindi/HIT-The-Third-Case-2025-1080p-Hindi.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/hit-the-third-case-2025-1080p-hindi/HIT-The-Third-Case-%282025%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "retro": {
-                                src: "https://ia600301.us.archive.org/10/items/retro-2025-hindi-1080p/Retro-%282025%29-Hindi-1080p.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/retro-2025-hindi-1080p/Retro-2025-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "kuberaa": {
-                                src: "https://ia601302.us.archive.org/0/items/kuberaa-2025-hindi-1080p/Kuberaa-%282025%29-Hindi-1080p.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/kuberaa-2025-hindi-1080p/kuberaa-2025-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "thalaivan thalaivii": {
-                                src: "https://ia600201.us.archive.org/14/items/thalaivan-thalaivii-2025-hindi-1080p/Thalaivan-Thalaivii-%282025%29-Hindi-1080p.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/thalaivan-thalaivii-2025-hindi-1080p/Thalaivan-Thalaivii-%282025%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "dil se..": {
-                                src: "https://ia801607.us.archive.org/32/items/dil-se..-1998/Dil%20Se..%20%281998%29.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/dil-se..-1998/Dil%20Se..%281998%29.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "mohabbatein": {
-                                src: "https://ia601207.us.archive.org/5/items/mohabbatein-2000_202511/Mohabbatein-%282000%29.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/mohabbatein-2000_202511/Mohabbatein-%282000%29-Eng.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "dude": {
-                                src: "https://ia903101.us.archive.org/35/items/dude.-2025.1080p-hindi/Dude.2025.1080p-Hindi.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/dude.-2025.1080p-hindi/Dude.2025.1080p-eng.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "they call him og": {
-                                src: "https://ia903104.us.archive.org/12/items/they-call-him-og-2025-hindi_202511/They%20Call%20Him%20OG%20%282025%29-%28Hindi%29.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/they-call-him-og-2025-hindi_202511/They%20Call%20Him%20OG%20%282025%29-%28Hindi%29.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "bombay": {
-                                src: "https://ia801700.us.archive.org/11/items/bombay-1995_202511/Bombay-1995.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/bombay-1995_202511/Bombay-1995-eng.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "dilwale dulhania le jayenge": {
-                                src: "https://ia801701.us.archive.org/24/items/dilwale-dulhania-le-jayenge-1995_202511/Dilwale%20Dulhania%20Le%20Jayenge%20%281995%29.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/dilwale-dulhania-le-jayenge-1995_202511/Dilwale%20Dulhania%20Le%20Jayenge%20%281995%29.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "kantara chapter 1": {
-                                src: "https://ia802308.us.archive.org/28/items/kantara-chapter.-1.2025.-hindi/Kantara-Chapter.1.2025.Hindi.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/kantara-chapter.-1.2025.-hindi/Kantara-Chapter.1.en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "my name is khan": {
-                                src: "https://ia802307.us.archive.org/25/items/my-name-is-khan-2010_202512/My-Name-Is-Khan-%282010%29.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/my-name-is-khan-2010_202512/My-Name-Is-Khan-%282010%29.en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "bhool bhulaiyaa": {
-                                src: "https://ia600500.us.archive.org/23/items/bhool-bhulaiyaa-2007/Bhool-Bhulaiyaa-%282007%29.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/bhool-bhulaiyaa-2007/Bhool-Bhulaiyaa-%282007%29.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "munjya": {
-                                src: "https://ia801702.us.archive.org/6/items/munjya.-2024/Munjya.%282024%29.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/munjya.-2024/Munjya.%282024%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "stree": {
-                                src: "https://ia601706.us.archive.org/16/items/stree.-2018/Stree.%282018%29.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/stree.-2018/Stree.%282018%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "stree 2": {
-                                src: "https://ia601701.us.archive.org/29/items/stree.-2.-2024/Stree.2.%282024%29.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/stree.-2.-2024/Stree.2.%282024%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "3 idiots": {
-                                src: "https://ia601707.us.archive.org/13/items/3.-idiots.-2009/3.Idiots.%282009%29.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/3.-idiots.-2009/3.Idiots.%282009%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "kesari": {
-                                src: "https://ia601707.us.archive.org/21/items/kesari.-2019_202512/Kesari.%282019%29.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/kesari.-2019_202512/Kesari.%282019%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "kesari chapter 2": {
-                                src: "https://ia601708.us.archive.org/8/items/kesari.-chapter.-2.-2025/Kesari.Chapter.2.%282025%29.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/kesari.-chapter.-2.-2025/Kesari.Chapter.2.%282025%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "thamma": {
-                                src: "https://ia601700.us.archive.org/17/items/thamma.-2025_202512/Thamma.2025.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/thamma.-2025_202512/Thamma.2025-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "bhediya": {
-                                src: "https://ia801704.us.archive.org/13/items/bhediya.-2022/Bhediya.%282022%29.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/bhediya.-2022/Bhediya.%282022%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "param sundari": {
-                                src: "https://ia801709.us.archive.org/16/items/param.-sundari.-2025/Param.Sundari.%282025%29.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/param.-sundari.-2025/Param.Sundari.%282025%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "dhadak": {
-                                src: "https://ia801707.us.archive.org/12/items/dhadak.-2018/Dhadak.%282018%29.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/dhadak.-2018/Dhadak.%282018%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "dhadak 2": {
-                                src: "https://ia601706.us.archive.org/29/items/dhadak.-2.-2025/Dhadak.2.%282025%29.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/dhadak.-2.-2025/Dhadak.2.%282025%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "chennai express": {
-                                src: "https://ia601701.us.archive.org/10/items/chennai.-express.-2013/Chennai.Express.%282013%29.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/chennai.-express.-2013/Chennai.Express.%282013%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        "dil chahta hai": {
-                                src: "https://ia801707.us.archive.org/8/items/dil.-chahta.-hai.-2001-en/Dil.Chahta.Hai.%282001%29.mp4",
-                                type: "mp4",
-                                subtitles: [
-                                    { src: 'https://archive.org/download/dil.-chahta.-hai.-2001-en/Dil.Chahta.Hai.%282001%29-en.vtt', srclang: 'en', label: 'English', default: false }
-                                ]
-                        },
-                        
-                };
-
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const title = urlParams.get('title') || 'Unknown Movie';
@@ -1660,6 +1358,9 @@
         let lastTapTime = 0;
         let tapCount = 0;
 
+        // Movie database for subtitles (empty for now - can be populated later)
+        const movieDatabase = {};
+
         // Screen mode global variables
         let screenModeBtn, screenModeIcon;
         const modes = [
@@ -1675,11 +1376,61 @@
         // Get video source
         let videoSrc = urlParams.get('src') || urlParams.get('video') || '';
         let sourceType = urlParams.get('type') || 'mp4';
+        let webStreamrDone = false;
+
+        // Try WebStreamr API first if we have a TMDB ID
+        const tmdbId = urlParams.get('id') || urlParams.get('tmdbId') || urlParams.get('movieId') || '';
+        console.log('Player-2: TMDB ID from URL:', tmdbId);
+
+        if (tmdbId) {
+            console.log('Player-2: TMDB ID found, attempting WebStreamr API call...');
+            // This will run synchronously and may override videoSrc
+            (async () => {
+                console.log('Player-2: Starting WebStreamr async call...');
+                const mediaType = urlParams.get('mediaType') || 'movie';
+                const season = urlParams.get('season');
+                const episode = urlParams.get('episode');
+                console.log('Player-2: Calling enhanced stream API with TMDB ID:', tmdbId);
+                // Try multiple providers from the enhanced API
+                let stream = null;
+                const providers = ['webstreamr', 'videasy', 'vidsrcxyz', 'vidsrcpro', 'superembed', 'nuviostreams'];
+                
+                for (const provider of providers) {
+                    console.log('Player-2: Trying provider:', provider);
+                    try {
+                        const result = await window.StreamProviders?.[provider]?.getStream(tmdbId, mediaType, season, episode);
+                        console.log('Player-2: Provider', provider, 'result:', result);
+                        if (result?.success) {
+                            stream = {
+                                url: result.url,
+                                type: result.type,
+                                title: result.provider
+                            };
+                            console.log('Player-2: Success with provider:', provider, '- type:', result.type, '- url:', result.url);
+                            break;
+                        }
+                    } catch (e) {
+                        console.warn('Player-2: Provider', provider, 'failed:', e);
+                    }
+                }
+                if (stream) {
+                    videoSrc = stream.url;
+                    sourceType = stream.type;
+                    console.log('Player-2: WebStreamr override successful - videoSrc:', videoSrc, 'sourceType:', sourceType);
+                } else {
+                    console.log('Player-2: All streaming providers failed, no video source available');
+                }
+                webStreamrDone = true;
+                console.log('Player-2: WebStreamr processing complete, webStreamrDone = true');
+            })();
+        } else {
+            console.log('Player-2: No TMDB ID found, skipping WebStreamr');
+            webStreamrDone = true;
+        }
 
         // Check movie database for the video source
         const normalizedTitle = title.toLowerCase().trim();
         console.log('Looking for movie:', normalizedTitle);
-        console.log('Available movies:', Object.keys(movieDatabase));
         
         if (!videoSrc && movieDatabase[normalizedTitle]) {
             const movieData = movieDatabase[normalizedTitle];
@@ -1690,6 +1441,113 @@
         } else {
             console.log('Movie not found in database, using URL parameters');
         }
+
+        // Function to get direct stream from WebStreamr addon
+        async function getWebStreamrStream(tmdbId, mediaType, season, episode) {
+            console.log('Player-2: getWebStreamrStream called with TMDB ID:', tmdbId);
+            try {
+                // WebStreamr uses Stremio format: tmdb:{id} for TMDB IDs
+                const contentId = `tmdb:${tmdbId}`;
+                let apiUrl = `https://webstreamr.hayd.uk/stream/movie/${contentId}.json`;
+                console.log('Player-2: querying WebStreamr API:', apiUrl);
+
+                const response = await fetch(apiUrl);
+                console.log('Player-2: WebStreamr API response status:', response.status);
+
+                if (!response.ok) {
+                    console.error('Player-2: WebStreamr API failed with status:', response.status);
+                    return null;
+                }
+
+                const data = await response.json();
+                console.log('Player-2: WebStreamr API response data:', data);
+
+                if (!data.streams || data.streams.length === 0) {
+                    console.warn('Player-2: No streams found in WebStreamr response');
+                    return null;
+                }
+
+                console.log('Player-2: Found', data.streams.length, 'streams from WebStreamr');
+
+                // Filter for web-ready streams (prefer streams that can play directly in browser)
+                const webReadyStreams = data.streams.filter(stream =>
+                    !stream.behaviorHints || !stream.behaviorHints.notWebReady
+                );
+
+                // Special priority for love.polgen.buzz URLs (user confirmed they work)
+                const lovePolgenStreams = data.streams.filter(stream =>
+                    stream.url && stream.url.includes('love.polgen.buzz')
+                );
+
+                console.log('Player-2: Web-ready streams:', webReadyStreams.length, 'love.polgen.buzz streams:', lovePolgenStreams.length, 'out of', data.streams.length);
+
+                // Prioritize love.polgen.buzz streams, then web-ready streams, then all streams
+                const availableStreams = lovePolgenStreams.length > 0 ? lovePolgenStreams : 
+                                       webReadyStreams.length > 0 ? webReadyStreams : data.streams;
+
+                // Prefer RgShows over VixSrc for potentially better compatibility
+                const rgShowsStream = availableStreams.find(stream =>
+                    stream.title && stream.title.includes('RgShows')
+                );
+                const vixSrcStream = availableStreams.find(stream =>
+                    stream.title && stream.title.includes('VixSrc')
+                );
+                const selectedStream = rgShowsStream || vixSrcStream || availableStreams[0];
+                console.log('Player-2: selected WebStreamr stream:', selectedStream);
+                console.log('Player-2: selected stream URL:', selectedStream.url);
+                console.log('Player-2: selected stream title:', selectedStream.title);
+                    
+                    // Handle .txt files (like RgShows) that contain the actual stream URL
+                    let finalUrl = selectedStream.url;
+                    if (selectedStream.url.endsWith('.txt')) {
+                        try {
+                            console.log('Player-2: Fetching .txt file for actual stream URL...');
+                            const txtResponse = await fetch(selectedStream.url);
+                            console.log('Player-2: .txt file response status:', txtResponse.status);
+                            const txtContent = await txtResponse.text();
+                            console.log('Player-2: .txt file content:', txtContent);
+                            // Extract the actual stream URL from the text
+                            const urlMatch = txtContent.match(/https?:\/\/[^\s]+/);
+                            if (urlMatch) {
+                                finalUrl = urlMatch[0];
+                                console.log('Player-2: Extracted stream URL from .txt:', finalUrl);
+                            } else {
+                                console.warn('Player-2: No URL found in .txt file content');
+                            }
+                        } catch (e) {
+                            console.warn('Player-2: Failed to fetch .txt file:', e);
+                        }
+                    }
+
+                    // Return the stream URL (try direct access for RgShows .txt files, proxy for others)
+                    let proxyUrl = '';
+                    if (selectedStream.title && selectedStream.title.includes('RgShows') && selectedStream.url.endsWith('.txt')) {
+                        // For RgShows .txt files, try direct access first
+                        proxyUrl = '';
+                        console.log('Player-2: Using direct access for RgShows .txt file');
+                    } else {
+                        // Use proxy for other streams
+                        proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                        console.log('Player-2: Using proxy for stream');
+                    }
+
+                    const finalStreamUrl = proxyUrl + finalUrl;
+                    console.log('Player-2: Final stream URL:', finalStreamUrl);
+                    console.log('Player-2: Stream type:', finalUrl.includes('.m3u8') ? 'hls' : finalUrl.includes('.mkv') ? 'mkv' : 'mp4');
+
+                    return {
+                        url: finalStreamUrl,
+                        type: finalUrl.includes('.m3u8') ? 'hls' : finalUrl.includes('.mkv') ? 'mkv' : 'mp4',
+                        title: selectedStream.title || selectedStream.name || 'WebStreamr Stream'
+                    };
+            } catch (e) {
+                console.warn('Player-2: WebStreamr API failed:', e);
+            }
+            console.log('Player-2: getWebStreamrStream function completed');
+            return null;
+        }
+
+
 
         // Initialize screen mode functionality
         function initScreenMode() {
@@ -1831,7 +1689,96 @@
         }
 
         // Initialize video (or iframe embed)
+        async function resolveTxtToStream(txtUrl) {
+            console.log('Player-2: resolveTxtToStream called for:', txtUrl);
+            // Try direct fetch first
+            try {
+                const resp = await fetch(txtUrl);
+                console.log('Player-2: .txt direct fetch status:', resp.status);
+                if (resp.ok) {
+                    const txt = await resp.text();
+                    console.log('Player-2: .txt content snippet:', txt ? txt.slice(0,200) : '');
+                    const match = txt.match(/https?:\/\/[^\s'"<>]+/);
+                    if (match) return { url: match[0], type: match[0].includes('.m3u8') ? 'hls' : match[0].includes('.mkv') ? 'mkv' : match[0].includes('.mp4') ? 'mp4' : 'url' };
+                    if (/^#EXTM3U/m.test(txt) || txt.includes('.m3u8')) return { url: txtUrl, type: 'hls' };
+                }
+            } catch (e) {
+                console.warn('Player-2: Direct .txt fetch failed (CORS or network):', e && e.message ? e.message : e);
+            }
+            // Try proxy fallbacks
+            const proxies = ['https://thingproxy.freeboard.io/fetch/', 'https://cors-anywhere.herokuapp.com/','https://corsproxy.io/?'];
+            for (const proxy of proxies) {
+                try {
+                    const pUrl = proxy + txtUrl;
+                    console.log('Player-2: Trying proxy:', proxy);
+                    const pResp = await fetch(pUrl);
+                    console.log('Player-2: proxy fetch status:', pResp.status);
+                    if (!pResp.ok) continue;
+                    const pTxt = await pResp.text();
+                    const match = pTxt.match(/https?:\/\/[^\s'"<>]+/);
+                    if (match) return { url: match[0], type: match[0].includes('.m3u8') ? 'hls' : match[0].includes('.mkv') ? 'mkv' : match[0].includes('.mp4') ? 'mp4' : 'url' };
+                    if (/^#EXTM3U/m.test(pTxt) || pTxt.includes('.m3u8')) return { url: txtUrl, type: 'hls' };
+                } catch (e) {
+                    console.warn('Player-2: Proxy fetch failed for', proxy, e && e.message ? e.message : e);
+                }
+            }
+
+            // Server resolver fallback
+            try {
+                const resolver = `http://localhost:3001/api/resolve?url=${encodeURIComponent(txtUrl)}`;
+                console.log('Player-2: Trying server resolver:', resolver);
+                const resp = await fetch(resolver);
+                if (resp.ok) {
+                    const json = await resp.json();
+                    console.log('Player-2: Server resolver response:', json);
+                    if (json.success && json.resolvedUrl) return { url: json.resolvedUrl, type: json.type || 'url' };
+                } else {
+                    console.warn('Player-2: Server resolver returned non-OK status:', resp.status);
+                }
+            } catch (e) {
+                console.warn('Player-2: Server resolver failed:', e && e.message ? e.message : e);
+            }
+
+            return null;
+        }
+
         async function initVideo() {
+            console.log('initVideo called with videoSrc:', videoSrc, 'sourceType:', sourceType);
+
+            // Resolve .txt streams to playable URL where possible
+            if (sourceType === 'url' && /\.txt(\?.*)?$/.test(videoSrc)) {
+                console.log('Player-2: Detected .txt stream, attempting to resolve to playable URL:', videoSrc);
+                try {
+                    const resolved = await resolveTxtToStream(videoSrc);
+                    if (resolved && resolved.url) {
+                        console.log('Player-2: .txt resolved to:', resolved);
+                        videoSrc = resolved.url;
+                        sourceType = resolved.type || (videoSrc.includes('.m3u8') ? 'hls' : videoSrc.includes('.mkv') ? 'mkv' : videoSrc.includes('.mp4') ? 'mp4' : 'mp4');
+                    } else {
+                        console.warn('Player-2: Could not resolve .txt to playable stream; proceeding with original URL');
+                    }
+                } catch (e) {
+                    console.warn('Player-2: .txt resolution error:', e);
+                }
+            }
+
+            // If we received a .txt URL, try to resolve it to a playable stream (m3u8/mp4/mkv)
+            if (sourceType === 'url' && /\.txt(\?.*)?$/.test(videoSrc)) {
+                console.log('Player-2: Detected .txt stream, attempting to resolve to playable URL');
+                try {
+                    const resolved = await resolveTxtToStream(videoSrc);
+                    if (resolved && resolved.url) {
+                        console.log('Player-2: .txt resolved to:', resolved);
+                        videoSrc = resolved.url;
+                        sourceType = resolved.type || sourceType;
+                    } else {
+                        console.warn('Player-2: Could not resolve .txt to playable stream; continuing with original URL');
+                    }
+                } catch (e) {
+                    console.warn('Player-2: .txt resolution error:', e);
+                }
+            }
+
             if (videoSrc) {
                 // Remove any existing <track> elements
                 const oldTracks = video.querySelectorAll('track');
@@ -1842,7 +1789,7 @@
                 video.crossOrigin = 'anonymous';
 
                 if (isIframe) {
-                    console.log('📺 Initializing iframe embed (player-2)...');
+                    console.log('📺 Initializing iframe embed (player-2) with URL:', videoSrc);
                     const container = document.querySelector('.video-container') || video.parentElement;
                     if (container) {
                         video.style.display = 'none';
@@ -1862,7 +1809,10 @@
                         iframe.setAttribute('webkitallowfullscreen', '');
                         iframe.setAttribute('mozallowfullscreen', '');
                         container.appendChild(iframe);
+                        console.log('📺 Iframe created and added to container');
                         return; // Skip video-specific setup
+                    } else {
+                        console.error('📺 No container found for iframe');
                     }
                 } else if (isHls) {
                     console.log('📺 Initializing HLS playback (player-2)...');
@@ -1922,9 +1872,14 @@
                         video.src = videoSrc;
                     }
                 } else {
-                    // MP4 or other direct sources
+                    // MP4, MKV, or other direct sources
                     video.src = videoSrc;
-                    video.type = `video/${sourceType}`;
+                    if (sourceType === 'mkv') {
+                        video.type = 'video/x-matroska';
+                        console.log('🎬 Setting video type to MKV (video/x-matroska)');
+                    } else {
+                        video.type = `video/${sourceType}`;
+                    }
                 }
 
                 // Wait for video to load
@@ -3493,47 +3448,62 @@ Try hosting subtitles on same server as video`;
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM loaded, initializing...');
             
-            // Setup language selector
-            setupLanguageSelector();
-            
-            // Test if screen mode button exists
-            const testBtn = document.getElementById('screenModeToggle');
-            console.log('Screen mode button found on DOM load:', testBtn);
-            
-            // Check if tap overlay exists
-            if (!tapOverlay) {
-                console.error('Tap overlay element not found!');
-            } else {
-                console.log('Tap overlay element found:', tapOverlay);
-            }
-            
-            initVideo();
-            
-            // Setup quality selector when HLS is ready (independent initialization)
-            setTimeout(() => {
-                if (window.playerHls || window.__hlsInstance2) {
-                    setupQualitySelector();
+            // Wait for WebStreamr to complete if it's running
+            const initializeWhenReady = () => {
+                if (!webStreamrDone) {
+                    console.log('Waiting for WebStreamr to complete...');
+                    setTimeout(initializeWhenReady, 100);
+                    return;
+                }
+                
+                console.log('WebStreamr done, proceeding with initialization...');
+                console.log('Current videoSrc:', videoSrc);
+                console.log('Current sourceType:', sourceType);
+                
+                // Setup language selector
+                setupLanguageSelector();
+                
+                // Test if screen mode button exists
+                const testBtn = document.getElementById('screenModeToggle');
+                console.log('Screen mode button found on DOM load:', testBtn);
+                
+                // Check if tap overlay exists
+                if (!tapOverlay) {
+                    console.error('Tap overlay element not found!');
                 } else {
-                    // Try again after another delay
-                    setTimeout(() => {
-                        if (window.playerHls || window.__hlsInstance2) {
-                            setupQualitySelector();
-                        }
-                    }, 1500);
+                    console.log('Tap overlay element found:', tapOverlay);
                 }
-            }, 500);
+                
+                initVideo();
+                
+                // Setup quality selector when HLS is ready (independent initialization)
+                setTimeout(() => {
+                    if (window.playerHls || window.__hlsInstance2) {
+                        setupQualitySelector();
+                    } else {
+                        // Try again after another delay
+                        setTimeout(() => {
+                            if (window.playerHls || window.__hlsInstance2) {
+                                setupQualitySelector();
+                            }
+                        }, 1500);
+                    }
+                }, 500);
+                
+                // Show controls immediately so screen mode button is clickable
+                showControls();
+                
+                // Force controls to stay visible initially
+                setTimeout(() => {
+                    const controlsOverlay = document.getElementById('controlsOverlay');
+                    if (controlsOverlay) {
+                        controlsOverlay.classList.add('visible');
+                        console.log('Controls forced visible');
+                    }
+                }, 100);
+            };
             
-            // Show controls immediately so screen mode button is clickable
-            showControls();
-            
-            // Force controls to stay visible initially
-            setTimeout(() => {
-                const controlsOverlay = document.getElementById('controlsOverlay');
-                if (controlsOverlay) {
-                    controlsOverlay.classList.add('visible');
-                    console.log('Controls forced visible');
-                }
-            }, 100);
+            initializeWhenReady();
         });
     </script>
 </body>

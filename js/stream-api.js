@@ -143,9 +143,34 @@
         return { success:false, message:'No IMDb ID', src:null, type:null };
       }
       
-      // No fallback providers configured
-      console.log('❌ No stream providers available');
-      return { success: false, message: 'No stream providers configured', src: null, type: null };
+      // Language-specific providers (legacy)
+      const isTV = movie.mediaType === 'tv';
+      const tmdbId = movie.id;
+      
+      // Create language-specific server options
+      const servers = {
+        'English': isTV ? `https://vidsrc.xyz/embed/tv/${tmdbId}/1-1` : `https://vidsrc.xyz/embed/movie/${tmdbId}`,
+        'Hindi': isTV ? `https://vidsrc.cc/v2/embed/tv/${tmdbId}/1/1` : `https://vidsrc.cc/v2/embed/movie/${imdbId}`,
+        'Tamil': isTV ? `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=1&episode=1` : `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`,
+        'Telugu': isTV ? `https://moviesapi.club/tv/${tmdbId}-1-1` : `https://moviesapi.club/movie/${imdbId}`,
+        'Multi-Audio': isTV ? `https://vidsrc.in/embed/tv/${tmdbId}/1-1` : `https://vidsrc.in/embed/movie/${imdbId}`,
+      };
+      
+      // Default to English
+      const src = servers['English'];
+      
+      console.log('🎬 Resolved language-specific stream:', { imdbId, tmdbId, src, servers });
+      return { 
+        success: true, 
+        imdbId, 
+        src, 
+        type: 'iframe',
+        language: 'English',
+        availableLanguages: ['English', 'Hindi', 'Tamil', 'Telugu', 'Multi-Audio'],
+        languageStreams: servers,
+        tmdbId: tmdbId,
+        provider: 'Legacy Iframe Providers'
+      };
     }catch(e){
       console.error('resolveStreamUrlForMovie error:', e);
       return { success:false, message:String(e?.message||e), src:null, type:null };

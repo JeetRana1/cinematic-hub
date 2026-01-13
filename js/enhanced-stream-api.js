@@ -182,6 +182,31 @@
           return { success: false };
         }
       }
+    },
+
+    // Provider: Custom Embed (user-supplied URL via query param customEmbed)
+    custom: {
+      name: 'Custom Embed',
+      priority: 6,
+      async getStream(tmdbId, mediaType = 'movie', season = null, episode = null) {
+        try {
+          const customUrl = getUrlParam('customEmbed');
+          if (!customUrl) {
+            return { success: false };
+          }
+          console.log('🎬 Custom embed URL:', customUrl);
+          return {
+            success: true,
+            provider: 'Custom Embed',
+            url: customUrl,
+            type: 'iframe',
+            quality: 'auto'
+          };
+        } catch (error) {
+          console.warn('⚠️ Custom embed error:', error.message);
+          return { success: false };
+        }
+      }
     }
   };
 

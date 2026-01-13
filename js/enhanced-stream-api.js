@@ -153,18 +153,54 @@
           return { success: false };
         }
       }
+    },
+
+    // Provider: SuperEmbed (generic multi-source embed)
+    superembed: {
+      name: 'SuperEmbed',
+      priority: 4,
+      async getStream(tmdbId, mediaType = 'movie', season = null, episode = null, imdbId = null) {
+        try {
+          // MultiEmbed style URLs support tmdbId directly
+          let embedUrl;
+          if (mediaType === 'tv' && season && episode) {
+            embedUrl = `https://multiembed.mov/?video_id=${tmdbId}&s=${season}&e=${episode}`;
+          } else {
+            embedUrl = `https://multiembed.mov/?video_id=${tmdbId}`;
+          }
+
+          console.log('🎬 SuperEmbed embed:', embedUrl);
+          return {
+            success: true,
+            provider: 'SuperEmbed',
+            url: embedUrl,
+            type: 'iframe',
+            quality: 'auto'
+          };
+        } catch (error) {
+          console.warn('⚠️ SuperEmbed error:', error.message);
+          return { success: false };
+        }
+      }
     }
   };
 
   /**
    * Main function to get stream with fallback support
    */
-  window.getEnhancedStream = async function(tmdbId, mediaType = 'movie', season = null, episode = null) {
+  window.getEnhancedStream = async function(tmdbId, mediaType = 'movie', season = null, episode = null, preferredProvider = null) {
     console.log('🚀 Getting stream with multi-provider fallback...');
     
-    const providers = Object.keys(StreamProviders)
+    let providers = Object.keys(StreamProviders)
       .map(key => ({ key, ...StreamProviders[key] }))
       .sort((a, b) => a.priority - b.priority);
+
+    if (preferredProvider && StreamProviders[preferredProvider]) {
+      const preferred = providers.find(p => p.key === preferredProvider);
+      const rest = providers.filter(p => p.key !== preferredProvider);
+      providers = [preferred, ...rest];
+      console.log(`🎯 Preferred provider requested: ${preferred.name}`);
+    }
 
     for (const provider of providers) {
       try {

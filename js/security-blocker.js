@@ -66,15 +66,23 @@
     console.warn('⚠️ Could not override location.replace:', e.message);
   }
 
-  // 4. Block location.assign calls
-  const originalAssign = window.location.assign;
-  window.location.assign = function(url) {
-    if (url && !url.includes(window.location.hostname)) {
-      console.warn('🚫 Location.assign blocked:', url);
-      return;
-    }
-    originalAssign.call(window.location, url);
-  };
+  // 4. Block location.assign calls (guarded for read-only properties)
+  try {
+    const originalAssign = window.location.assign;
+    Object.defineProperty(window.location, 'assign', {
+      value: function(url) {
+        if (url && !url.includes(window.location.hostname)) {
+          console.warn('🚫 Location.assign blocked:', url);
+          return;
+        }
+        return originalAssign.call(window.location, url);
+      },
+      writable: false,
+      configurable: false
+    });
+  } catch (e) {
+    console.warn('⚠️ Could not override location.assign:', e.message);
+  }
 
   // 5. Block top.location changes
   try {
@@ -92,23 +100,28 @@
     });
   } catch (e) {}
 
-  // 5. Sandbox iframes properly (except video iframes)
+  // 5. Sandbox iframes properly (except player embeds)
   const originalCreateElement = document.createElement;
   document.createElement = function(tag) {
     const element = originalCreateElement.call(document, tag);
     
     if (tag.toLowerCase() === 'iframe') {
-      // Don't sandbox video player iframes
-      if (element.id === 'streamIframe' || element.id === 'video-iframe') {
+      // On the player page, do NOT sandbox embeds (otherwise providers break)
+      if (window.location.pathname.toLowerCase().includes('player.html')) {
+        return element;
+      }
+
+      // Don't sandbox known video player iframes
+      const id = (element.id || '').toLowerCase();
+      if (id === 'streamiframe' || id === 'stream-iframe' || id === 'video-iframe') {
         console.log('🎬 Video iframe - no sandbox restrictions');
         return element;
       }
       
-      // Add sandbox restrictions to other iframes
-      element.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-presentation allow-fullscreen');
-      // Prevent navigation
+      // Add sandbox restrictions to other iframes (valid flags only)
+      element.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-forms allow-presentation allow-popups allow-pointer-lock allow-modals allow-top-navigation-by-user-activation');
       element.setAttribute('referrerpolicy', 'no-referrer');
-      console.log('🔒 Iframe sandboxed:', element.id);
+      console.log('🔒 Iframe sandboxed:', element.id || '(no id)');
     }
     
     return element;

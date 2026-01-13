@@ -241,7 +241,7 @@
   };
 
   // Helper function to play a movie/show
-  window.playStream = async function(tmdbId, mediaType = 'movie', season = null, episode = null, videoId = 'video') {
+  window.playStream = async function(tmdbId, mediaType = 'movie', season = null, episode = null, videoId = 'video', title = null) {
     try {
       // Initialize player if not already done
       if (!window.streamPlayer) {
@@ -256,7 +256,7 @@
         throw new Error('Enhanced Stream API not loaded. Make sure js/enhanced-stream-api.js is included.');
       }
 
-      const stream = await window.getEnhancedStream(tmdbId, mediaType, season, episode);
+      const stream = await window.getEnhancedStream(tmdbId, mediaType, season, episode, null, title);
 
       if (!stream.success) {
         throw new Error(stream.error || 'Failed to get stream');

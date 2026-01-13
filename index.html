@@ -6653,7 +6653,7 @@
       // If series, load seasons/episodes and skip stream button wiring
       if (isSeries && seriesPicker && seasonSelect && episodeSelect) {
         // Always re-initialize dropdowns when series picker is shown
-        initCustomDropdowns();
+        setTimeout(() => { initCustomDropdowns(); }, 0);
         // reset selects
         const seasonValue = seasonTrigger?.querySelector('.select-value');
         const episodeValue = episodeTrigger?.querySelector('.select-value');

@@ -6193,20 +6193,28 @@
         });
       };
       setActive(activeCat || 'all');
-      bar.addEventListener('click', (e) => {
-        const btn = e.target.closest('.cat-btn');
-        if (!btn) return;
-        applyCategory(btn.dataset.cat);
-      });
+      // Event listener is attached in mountCategoryBar using event delegation
+      // to avoid duplicate listeners when the bar is rebuilt
       return bar;
     }
 
     // Mount the category bar into the persistent mount point
+    let categoryBarListenerAttached = false;
     function mountCategoryBar() {
       const mount = document.getElementById('categoryBarMount');
       if (!mount) return;
       mount.innerHTML = '';
       mount.appendChild(buildCategoryBar(currentCategory));
+      
+      // Attach event listener only once using event delegation
+      if (!categoryBarListenerAttached) {
+        mount.addEventListener('click', (e) => {
+          const btn = e.target.closest('.cat-btn');
+          if (!btn) return;
+          applyCategory(btn.dataset.cat);
+        });
+        categoryBarListenerAttached = true;
+      }
     }
 
     function displayMovies(movies, isSearchResults = false, titleOverride = null) {
@@ -6575,10 +6583,13 @@
             option.classList.add('selected');
             if (seasonValue) seasonValue.textContent = option.textContent;
             
-            // Update hidden select and trigger change
-            const num = season.season_number;
-            seasonSelect.value = String(num);
-            seasonSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            // Update hidden select and trigger change - get fresh reference
+            const currentSeasonSelect = document.getElementById('seasonSelect');
+            if (currentSeasonSelect) {
+              const num = season.season_number;
+              currentSeasonSelect.value = String(num);
+              currentSeasonSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
             
             // Close dropdown
             if (seasonWrapper) seasonWrapper.classList.remove('active');
@@ -6620,9 +6631,12 @@
             option.classList.add('selected');
             if (episodeValue) episodeValue.textContent = option.textContent;
             
-            // Update hidden select and trigger change
-            episodeSelect.value = String(epNum);
-            episodeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            // Update hidden select and trigger change - get fresh reference
+            const currentEpisodeSelect = document.getElementById('episodeSelect');
+            if (currentEpisodeSelect) {
+              currentEpisodeSelect.value = String(epNum);
+              currentEpisodeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
             
             // Close dropdown
             if (episodeWrapper) episodeWrapper.classList.remove('active');
@@ -6795,7 +6809,10 @@
             }
           } catch (err) {
             console.error('Failed to load TV details', err);
-            seasonSelect.innerHTML = '<option>Error loading seasons</option>';
+            const currentSeasonSelect = document.getElementById('seasonSelect');
+            if (currentSeasonSelect) {
+              currentSeasonSelect.innerHTML = '<option>Error loading seasons</option>';
+            }
             if (seriesMeta) seriesMeta.textContent = 'Unable to load series info';
           }
         })();

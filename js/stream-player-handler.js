@@ -73,9 +73,10 @@
         this.iframeContainer.style.display = 'block';
         this.iframeContainer.innerHTML = '';
 
-        // Create iframe
+        // Create iframe using Vercel proxy endpoint
         const iframe = document.createElement('iframe');
-        iframe.src = stream.url;
+        // Use deployed Vercel proxy endpoint for embed URLs
+        iframe.src = `https://cinematic-hub.vercel.app/api/proxy?url=${encodeURIComponent(stream.url)}`;
         iframe.style.cssText = `
           position: absolute;
           top: 0;
@@ -90,7 +91,7 @@
 
         this.iframeContainer.appendChild(iframe);
 
-        console.log(`✅ Iframe stream loaded from ${stream.provider}`);
+        console.log(`✅ Iframe stream loaded via Vercel proxy from ${stream.provider}`);
         return true;
       } catch (error) {
         console.error('❌ Iframe load error:', error);

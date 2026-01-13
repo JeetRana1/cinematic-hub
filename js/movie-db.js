@@ -213,6 +213,130 @@ class MovieDatabase {
   }
 
   /**
+   * Get trending movies for the day with pagination
+   * @param {number} page - Page number (1-indexed)
+   */
+  async getTrendingMovies(page = 1) {
+    try {
+      const cacheKey = `trending_${page}`;
+      if (this.cache.has(cacheKey)) {
+        return this.cache.get(cacheKey);
+      }
+
+      const url = `${this.baseUrl}/trending/movie/day?api_key=${this.apiKey}&page=${page}`;
+      console.log('Fetching trending movies from:', url);
+      
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        const text = await response.text();
+        console.error('API Response status:', response.status, 'Body:', text);
+        throw new Error(`API Error: ${response.status}`);
+      }
+
+      const text = await response.text();
+      console.log('API Response text length:', text.length, 'First 200 chars:', text.substring(0, 200));
+      
+      if (!text || text.trim().length === 0) {
+        console.error('Empty response from TMDB API');
+        return { movies: [], totalPages: 0, totalResults: 0, currentPage: page };
+      }
+
+      const data = JSON.parse(text);
+
+      const movies = (data.results || []).map(movie => ({
+        id: movie.id,
+        title: movie.title,
+        poster: movie.poster_path ? `${this.imageUrl}${movie.poster_path}` : null,
+        backdrop: movie.backdrop_path ? `${this.imageUrl}${movie.backdrop_path}` : null,
+        overview: movie.overview,
+        releaseDate: movie.release_date,
+        rating: movie.vote_average,
+        originalLanguage: movie.original_language,
+        popularity: movie.popularity,
+        voteCount: movie.vote_count,
+        genreIds: movie.genre_ids || []
+      }));
+
+      const result = {
+        movies,
+        totalPages: data.total_pages || 0,
+        totalResults: data.total_results || 0,
+        currentPage: page
+      };
+
+      this.cache.set(cacheKey, result);
+      return result;
+    } catch (error) {
+      console.error('Trending error:', error);
+      // Return empty result instead of throwing to prevent page break
+      return { movies: [], totalPages: 0, totalResults: 0, currentPage: page };
+    }
+  }
+
+  /**
+   * Get trending TV shows for the day with pagination
+   * @param {number} page - Page number (1-indexed)
+   */
+  async getTrendingTV(page = 1) {
+    try {
+      const cacheKey = `trending_tv_${page}`;
+      if (this.cache.has(cacheKey)) {
+        return this.cache.get(cacheKey);
+      }
+
+      const url = `${this.baseUrl}/trending/tv/day?api_key=${this.apiKey}&page=${page}`;
+      console.log('Fetching trending TV shows from:', url);
+      
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        const text = await response.text();
+        console.error('API Response status:', response.status, 'Body:', text);
+        throw new Error(`API Error: ${response.status}`);
+      }
+
+      const text = await response.text();
+      console.log('API Response text length:', text.length, 'First 200 chars:', text.substring(0, 200));
+      
+      if (!text || text.trim().length === 0) {
+        console.error('Empty response from TMDB API');
+        return { movies: [], totalPages: 0, totalResults: 0, currentPage: page };
+      }
+
+      const data = JSON.parse(text);
+
+      const shows = (data.results || []).map(show => ({
+        id: show.id,
+        title: show.name,
+        poster: show.poster_path ? `${this.imageUrl}${show.poster_path}` : null,
+        backdrop: show.backdrop_path ? `${this.imageUrl}${show.backdrop_path}` : null,
+        overview: show.overview,
+        releaseDate: show.first_air_date,
+        rating: show.vote_average,
+        originalLanguage: show.original_language,
+        popularity: show.popularity,
+        voteCount: show.vote_count,
+        genreIds: show.genre_ids || []
+      }));
+
+      const result = {
+        movies: shows,
+        totalPages: data.total_pages || 0,
+        totalResults: data.total_results || 0,
+        currentPage: page
+      };
+
+      this.cache.set(cacheKey, result);
+      return result;
+    } catch (error) {
+      console.error('Trending TV error:', error);
+      // Return empty result instead of throwing to prevent page break
+      return { movies: [], totalPages: 0, totalResults: 0, currentPage: page };
+    }
+  }
+
+  /**
    * TV: Search for TV shows by name
    * @param {string} query
    * @param {number} page

@@ -2544,6 +2544,27 @@
       line-height: 1;
     }
 
+    .poster .trending-rank-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background: rgba(20, 20, 20, 0.85);
+      border: 1px solid rgba(255, 61, 87, 0.3);
+      border-radius: 8px;
+      color: #ff3d57;
+      font-weight: 700;
+      font-size: 0.95rem;
+      z-index: 6;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+      pointer-events: none;
+      letter-spacing: 0.5px;
+    }
+
     .movie-card:hover .poster img {
       transform: scale(1.05);
       opacity: 0.9;
@@ -4666,6 +4687,15 @@
         </h2>
       </div>
       <div class="movies-grid" id="trendingMoviesContainer"></div>
+    </section>
+
+    <section class="movies-section" id="popularTVSection">
+      <div class="section-header">
+        <h2 class="section-title">
+          <i class="fas fa-tv"></i> Popular Series
+        </h2>
+      </div>
+      <div class="movies-grid" id="trendingTVContainer"></div>
     </section>
 
     <div class="movies" id="moviesContainer"></div>
@@ -8449,34 +8479,51 @@
       movieDb = new MovieDatabase(TMDB_API_KEY);
       // Expose to window for stream-api.js
       window.movieDb = movieDb;
-      loadTrendingMovies(); // Load trending on page load
+      // Load trending movies and TV shows
+      loadTrendingMovies();
+      loadTrendingTV();
+      // Start trending refresh with auto-updates every 5-15 minutes
+      if (typeof startTrendingRefresh === 'function') {
+        console.log('Starting trending refresh on page load...');
+        startTrendingRefresh();
+      }
       if (typeof initializeTMDBIntegration === 'function') {
         initializeTMDBIntegration();
       }
     }
 
-    // Load and display trending movies (now using popular movies from TMDB)
+    // Load and display trending movies from TMDB trending endpoint with rank badges
     async function loadTrendingMovies() {
       if (!movieDb) return;
       try {
-        const result = await movieDb.getPopularMovies(1);
+        // Use getTrendingMovies if available (new method), fallback to getPopularMovies
+        const getTrending = typeof movieDb.getTrendingMovies === 'function' ? movieDb.getTrendingMovies : movieDb.getPopularMovies;
+        const result = await getTrending.call(movieDb, 1);
         const container = document.getElementById('trendingMoviesContainer');
         if (!container) return;
         container.innerHTML = '';
 
         const movies = (result && result.movies) ? result.movies.slice(0, 20) : [];
-        movies.forEach(m => {
+        
+        if (movies.length === 0) {
+          container.innerHTML = '<p style="padding: 20px; text-align: center; color: #999;">No trending movies available</p>';
+          return;
+        }
+
+        movies.forEach((m, index) => {
           const title = m.title || 'Untitled';
           const posterPath = m.poster || (m.posterUrl || (m.poster_path ? `${movieDb.imageUrl}${m.poster_path}` : null)) || (`https://via.placeholder.com/500x750?text=${encodeURIComponent(title)}`);
           const year = m.releaseDate ? (m.releaseDate.split('-')[0]) : (m.year || '');
           const rating = m.rating || (typeof m.vote_average === 'number' ? m.vote_average : null);
+          const rank = index + 1; // Trending rank badge
 
           const card = document.createElement('div');
-          card.className = 'movie-card movie-' + (m.id || 'popular');
+          card.className = 'movie-card movie-' + (m.id || 'trending-' + index);
           card.innerHTML = `
             <div class="poster">
               <img src="${posterPath}" alt="${title}" loading="lazy" />
               <div class="rating-badge"><span class="star">★</span><span class="value">${rating ? Number(rating).toFixed(1) : 'N/A'}</span></div>
+              <div class="trending-rank-badge">#${rank}</div>
               <div class="play-icon"></div>
               <div class="movie-title-overlay">${title}</div>
             </div>
@@ -8526,6 +8573,100 @@
         });
       } catch (error) {
         console.error('Failed to load trending movies:', error);
+        const container = document.getElementById('trendingMoviesContainer');
+        if (container) {
+          container.innerHTML = '<p style="padding: 20px; text-align: center; color: #999;">Failed to load trending movies</p>';
+        }
+      }
+    }
+
+    // Load and display trending TV shows from TMDB trending endpoint with rank badges
+    async function loadTrendingTV() {
+      if (!movieDb) return;
+      try {
+        // Use getTrendingTV if available (new method), fallback to popular TV
+        const getTrending = typeof movieDb.getTrendingTV === 'function' ? movieDb.getTrendingTV : movieDb.getPopularTV;
+        const result = await getTrending.call(movieDb, 1);
+        const container = document.getElementById('trendingTVContainer');
+        if (!container) return;
+        container.innerHTML = '';
+
+        const shows = (result && result.movies) ? result.movies.slice(0, 20) : [];
+        
+        if (shows.length === 0) {
+          container.innerHTML = '<p style="padding: 20px; text-align: center; color: #999;">No trending series available</p>';
+          return;
+        }
+
+        shows.forEach((m, index) => {
+          const title = m.title || 'Untitled';
+          const posterPath = m.poster || (m.posterUrl || (m.poster_path ? `${movieDb.imageUrl}${m.poster_path}` : null)) || (`https://via.placeholder.com/500x750?text=${encodeURIComponent(title)}`);
+          const year = m.releaseDate ? (m.releaseDate.split('-')[0]) : (m.year || '');
+          const rating = m.rating || (typeof m.vote_average === 'number' ? m.vote_average : null);
+          const rank = index + 1; // Trending rank badge
+
+          const card = document.createElement('div');
+          card.className = 'movie-card movie-' + (m.id || 'trending-tv-' + index);
+          card.innerHTML = `
+            <div class="poster">
+              <img src="${posterPath}" alt="${title}" loading="lazy" />
+              <div class="rating-badge"><span class="star">★</span><span class="value">${rating ? Number(rating).toFixed(1) : 'N/A'}</span></div>
+              <div class="trending-rank-badge">#${rank}</div>
+              <div class="play-icon"></div>
+              <div class="movie-title-overlay">${title}</div>
+            </div>
+            <div class="movie-info">
+              <h3 class="movie-title">${title} (${year || ''})</h3>
+            </div>
+          `;
+
+          const img = card.querySelector('img');
+          if (img) {
+            img.addEventListener('error', () => {
+              img.src = `https://via.placeholder.com/500x750?text=${encodeURIComponent(title)}`;
+            });
+          }
+
+          card.addEventListener('click', async () => {
+            const details = await movieDb.getTVDetails(m.id);
+            const mappedShow = details ? {
+              id: details.id,
+              title: details.title,
+              year: details.releaseDate ? details.releaseDate.split('-')[0] : '',
+              genres: details.genres || [],
+              rating: details.rating || 0,
+              overview: details.overview || '',
+              release_date: details.releaseDate || '',
+              posterUrl: details.poster || null,
+              backdropUrl: details.backdrop || null,
+              trailerUrl: '',
+              streamUrl: '',
+              mediaType: 'tv'
+            } : {
+              id: m.id,
+              title: title,
+              year: year,
+              genres: [],
+              rating: rating || 0,
+              overview: m.overview || '',
+              release_date: m.releaseDate || '',
+              posterUrl: posterPath,
+              backdropUrl: m.backdrop || null,
+              trailerUrl: '',
+              streamUrl: '',
+              mediaType: 'tv'
+            };
+            if (typeof openMovieModal === 'function') openMovieModal(mappedShow);
+          });
+
+          container.appendChild(card);
+        });
+      } catch (error) {
+        console.error('Failed to load trending TV shows:', error);
+        const container = document.getElementById('trendingTVContainer');
+        if (container) {
+          container.innerHTML = '<p style="padding: 20px; text-align: center; color: #999;">Failed to load trending series</p>';
+        }
       }
     }
 

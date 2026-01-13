@@ -19,6 +19,11 @@ let seenIds = new Set();
 let currentCategoryLangs = null; // array of langs for current language feed
 let languagePaging = {}; // { lang: { current: 1, total: N } }
 
+// Trending data state
+let currentTrendingMovies = [];
+let trendingRefreshInterval = null;
+let lastTrendingUpdateTime = 0;
+
 function mapGenres(ids = []) {
   if (!genreMap) return [];
   return ids.map(id => genreMap.get(id)).filter(Boolean);
@@ -776,9 +781,171 @@ function sortByReleaseDesc(a, b) {
   return normalizeDate(b) - normalizeDate(a);
 }
 
+/**
+ * Load trending movies with rank badges
+ */
+async function loadTrendingMovies(maxPages = 1) {
+  if (!movieDb) {
+    console.warn('Movie database not initialized');
+    return [];
+  }
+
+  try {
+    await ensureGenres();
+
+    const first = await movieDb.getTrendingMovies(1);
+    
+    // Check if we got actual data
+    if (!first || !first.movies || first.movies.length === 0) {
+      console.warn('TMDB returned empty trending results');
+      return [];
+    }
+    
+    const pageLimit = Math.min(maxPages, first.totalPages);
+    const movies = [...first.movies];
+
+    for (let p = 2; p <= pageLimit; p++) {
+      const pageData = await movieDb.getTrendingMovies(p);
+      if (pageData && pageData.movies && pageData.movies.length > 0) {
+        movies.push(...pageData.movies);
+      }
+    }
+
+    currentTrendingMovies = movies.filter(isReleased).map(m => {
+      const mapped = mapTmdbItem(m, 'movie');
+      // Add rank position (1-indexed)
+      mapped.trendingRank = movies.indexOf(m) + 1;
+      return mapped;
+    });
+
+    lastTrendingUpdateTime = Date.now();
+    console.log(`Loaded ${currentTrendingMovies.length} trending movies`);
+    
+    return currentTrendingMovies;
+  } catch (error) {
+    console.error('Failed to load trending movies:', error);
+    return [];
+  }
+}
+
+/**
+ * Display trending movies in the trending section
+ */
+function displayTrendingMovies() {
+  const container = document.getElementById('trendingMoviesContainer');
+  if (!container) {
+    console.warn('trendingMoviesContainer not found');
+    return;
+  }
+
+  if (!currentTrendingMovies || currentTrendingMovies.length === 0) {
+    container.innerHTML = '<p style="padding: 20px; text-align: center; color: #999;">No trending movies available</p>';
+    return;
+  }
+
+  container.innerHTML = '';
+
+  const moviesGrid = document.createElement('div');
+  moviesGrid.className = 'movies-grid';
+
+  currentTrendingMovies.forEach((movie, index) => {
+    const title = movie.title || 'Untitled';
+    const posterPath = movie.posterUrl || ('https://via.placeholder.com/500x750?text=' + encodeURIComponent(title));
+    const rank = movie.trendingRank || (index + 1);
+
+    const movieCard = document.createElement('div');
+    movieCard.className = 'movie-card movie-' + movie.id;
+    movieCard.innerHTML = `
+      <div class="poster">
+        <img src="${posterPath}" alt="${title}" loading="lazy" />
+        <div class="rating-badge"><span class="star">★</span><span class="value">${movie.rating ? movie.rating.toFixed(1) : 'N/A'}</span></div>
+        <div class="trending-rank-badge">#${rank}</div>
+        <div class="play-icon"></div>
+        <div class="movie-title-overlay">${title}</div>
+      </div>
+      <div class="movie-info">
+        <h3 class="movie-title">${title} (${movie.year || ''})</h3>
+      </div>
+    `;
+
+    // Add error handler for broken images
+    const img = movieCard.querySelector('img');
+    if (img) {
+      img.addEventListener('error', () => {
+        img.src = `https://via.placeholder.com/500x750?text=${encodeURIComponent(title)}`;
+      });
+    }
+
+    movieCard.addEventListener('click', () => openMovieModal(movie));
+    moviesGrid.appendChild(movieCard);
+  });
+
+  container.appendChild(moviesGrid);
+}
+
+/**
+ * Start auto-refreshing trending movies and TV shows every 5-15 minutes
+ */
+function startTrendingRefresh() {
+  if (trendingRefreshInterval) {
+    clearInterval(trendingRefreshInterval);
+  }
+
+  // Load immediately on start using the index.html functions
+  if (typeof loadTrendingMovies === 'function') {
+    loadTrendingMovies();
+  }
+  if (typeof loadTrendingTV === 'function') {
+    loadTrendingTV();
+  }
+
+  // Set up periodic refresh (random interval between 5-15 minutes)
+  const scheduleNextRefresh = () => {
+    const minMinutes = 5;
+    const maxMinutes = 15;
+    const randomMinutes = minMinutes + Math.random() * (maxMinutes - minMinutes);
+    const intervalMs = randomMinutes * 60 * 1000;
+
+    console.log(`Scheduling trending refresh in ${randomMinutes.toFixed(2)} minutes`);
+
+    trendingRefreshInterval = setTimeout(async () => {
+      try {
+        if (typeof loadTrendingMovies === 'function') {
+          loadTrendingMovies();
+        }
+        if (typeof loadTrendingTV === 'function') {
+          loadTrendingTV();
+        }
+        console.log('Trending movies and TV shows refreshed');
+      } catch (error) {
+        console.error('Trending refresh failed:', error);
+      }
+
+      // Schedule next refresh
+      scheduleNextRefresh();
+    }, intervalMs);
+  };
+
+  scheduleNextRefresh();
+}
+
+/**
+ * Stop auto-refreshing trending movies
+ */
+function stopTrendingRefresh() {
+  if (trendingRefreshInterval) {
+    clearInterval(trendingRefreshInterval);
+    trendingRefreshInterval = null;
+  }
+}
+
 // Expose functions globally
 window.setTMDBMode = setTMDBMode;
 window.loadAllTMDBTV = loadAllTMDBTV;
+window.loadTrendingMovies = loadTrendingMovies;
+window.displayTrendingMovies = displayTrendingMovies;
+window.startTrendingRefresh = startTrendingRefresh;
+window.stopTrendingRefresh = stopTrendingRefresh;
 window.loadAllTMDBMovies = loadAllTMDBMovies;
 window.filterTMDBByCategory = filterTMDBByCategory;
 window.loadTMDBByLanguage = loadTMDBByLanguage;

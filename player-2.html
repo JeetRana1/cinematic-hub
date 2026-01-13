@@ -21,7 +21,12 @@
     
     <!-- Stream API Configuration and Client -->
     <script src="public/streamApiConfig.js"></script>
+    <!-- Consumet API for Stream 2 fallback resolution -->
+    <script src="js/consumet-api.js"></script>
     <script src="js/stream-api.js"></script>
+    <!-- Enhanced multi-provider (adds 8Stream) + compatibility bridge -->
+    <script src="js/enhanced-stream-api.js"></script>
+    <script src="js/stream-compatibility.js"></script>
     
     <!-- Continue Watching and Player Resume scripts -->
     <script src="js/continue-watching.js"></script>
@@ -1825,18 +1830,41 @@
             video.offsetHeight;
         }
 
-        // Initialize video
+        // Initialize video (or iframe embed)
         async function initVideo() {
             if (videoSrc) {
                 // Remove any existing <track> elements
                 const oldTracks = video.querySelectorAll('track');
                 oldTracks.forEach(track => track.remove());
 
-                // Decide playback method based on sourceType or URL
+                const isIframe = String(sourceType).toLowerCase() === 'iframe';
                 const isHls = (String(sourceType).toLowerCase() === 'hls') || /\.m3u8(\?.*)?$/.test(videoSrc);
                 video.crossOrigin = 'anonymous';
 
-                if (isHls) {
+                if (isIframe) {
+                    console.log('📺 Initializing iframe embed (player-2)...');
+                    const container = document.querySelector('.video-container') || video.parentElement;
+                    if (container) {
+                        video.style.display = 'none';
+                        const existing = container.querySelector('#stream-iframe');
+                        if (existing) existing.remove();
+                        const iframe = document.createElement('iframe');
+                        iframe.id = 'stream-iframe';
+                        iframe.src = videoSrc;
+                        iframe.style.width = '100%';
+                        iframe.style.height = '100%';
+                        iframe.style.border = 'none';
+                        iframe.style.position = 'absolute';
+                        iframe.style.top = '0';
+                        iframe.style.left = '0';
+                        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen';
+                        iframe.setAttribute('allowfullscreen', '');
+                        iframe.setAttribute('webkitallowfullscreen', '');
+                        iframe.setAttribute('mozallowfullscreen', '');
+                        container.appendChild(iframe);
+                        return; // Skip video-specific setup
+                    }
+                } else if (isHls) {
                     console.log('📺 Initializing HLS playback (player-2)...');
                     if (window.Hls && Hls.isSupported()) {
                         const hls = new Hls({

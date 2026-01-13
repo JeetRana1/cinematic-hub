@@ -62,6 +62,17 @@ async function ensureGenres() {
 }
 
 /**
+ * Check if a movie/show has been released (past release date)
+ */
+function isReleased(item) {
+  const releaseDate = item.release_date || item.releaseDate || item.first_air_date;
+  if (!releaseDate) return true; // Allow items without date info
+  const releaseTime = new Date(releaseDate).getTime();
+  const now = new Date().getTime();
+  return releaseTime <= now;
+}
+
+/**
  * Load popular TMDB movies across multiple pages
  */
 async function loadAllTMDBMovies(maxPages = 3) {
@@ -74,6 +85,13 @@ async function loadAllTMDBMovies(maxPages = 3) {
     await ensureGenres();
 
     const first = await movieDb.getPopularMovies(1);
+    
+    // Check if we got actual data
+    if (!first || !first.movies || first.movies.length === 0) {
+      console.warn('TMDB returned empty results, using fallback');
+      return getFallbackMovies();
+    }
+    
     totalPages = first.totalPages;
     currentPage = 1;
     const pageLimit = Math.min(maxPages, totalPages);
@@ -83,12 +101,14 @@ async function loadAllTMDBMovies(maxPages = 3) {
 
     for (let p = 2; p <= pageLimit; p++) {
       const pageData = await movieDb.getPopularMovies(p);
-      movies.push(...pageData.movies);
-      currentPage = p;
-      hasMorePages = currentPage < totalPages;
+      if (pageData && pageData.movies && pageData.movies.length > 0) {
+        movies.push(...pageData.movies);
+        currentPage = p;
+        hasMorePages = currentPage < totalPages;
+      }
     }
 
-    allMovies = movies.map(m => mapTmdbItem(m, 'movie'));
+    allMovies = movies.filter(isReleased).map(m => mapTmdbItem(m, 'movie')).sort(sortByReleaseDesc);
     seenIds = new Set(allMovies.map(m => m.id));
     currentListMode = 'popular';
 
@@ -105,8 +125,245 @@ async function loadAllTMDBMovies(maxPages = 3) {
     return allMovies;
   } catch (error) {
     console.error('Failed to load TMDB movies:', error);
-    return [];
+    // Return fallback movies instead of empty array
+    return getFallbackMovies();
   }
+}
+
+/**
+ * Fallback movies when TMDB API is unavailable
+ */
+function getFallbackMovies() {
+  return [
+    {
+      id: 550,
+      title: 'Fight Club',
+      year: '1999',
+      genres: ['Drama', 'Thriller'],
+      rating: 8.8,
+      overview: 'An insomniac office worker and a devil-may-care soap maker form an underground fight club that evolves into much more.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=Fight+Club',
+      mediaType: 'movie'
+    },
+    {
+      id: 278,
+      title: 'The Shawshank Redemption',
+      year: '1994',
+      genres: ['Drama'],
+      rating: 9.3,
+      overview: 'Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=Shawshank+Redemption',
+      mediaType: 'movie'
+    },
+    {
+      id: 238,
+      title: 'The Godfather',
+      year: '1972',
+      genres: ['Crime', 'Drama'],
+      rating: 9.2,
+      overview: 'The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant youngest son.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=The+Godfather',
+      mediaType: 'movie'
+    },
+    {
+      id: 240,
+      title: 'The Godfather Part II',
+      year: '1974',
+      genres: ['Crime', 'Drama'],
+      rating: 9.0,
+      overview: 'The continuation of the saga of the Corleone crime family.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=Godfather+II',
+      mediaType: 'movie'
+    },
+    {
+      id: 968,
+      title: 'The Dark Knight',
+      year: '2008',
+      genres: ['Action', 'Crime', 'Drama'],
+      rating: 9.0,
+      overview: 'When the menace known as the Joker wreaks havoc on Gotham, Batman must accept one of the greatest tests.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=The+Dark+Knight',
+      mediaType: 'movie'
+    },
+    {
+      id: 372058,
+      title: 'Inception',
+      year: '2010',
+      genres: ['Action', 'Sci-Fi', 'Thriller'],
+      rating: 8.8,
+      overview: 'A skilled thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=Inception',
+      mediaType: 'movie'
+    },
+    {
+      id: 680,
+      title: 'Pulp Fiction',
+      year: '1994',
+      genres: ['Crime', 'Drama'],
+      rating: 8.9,
+      overview: 'The lives of two mob hitmen, a boxer, a gangster and his wife intertwine in four tales of violence and redemption.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=Pulp+Fiction',
+      mediaType: 'movie'
+    },
+    {
+      id: 238215,
+      title: 'The Matrix',
+      year: '1999',
+      genres: ['Action', 'Sci-Fi'],
+      rating: 8.7,
+      overview: 'A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=The+Matrix',
+      mediaType: 'movie'
+    },
+    {
+      id: 278154,
+      title: 'Interstellar',
+      year: '2014',
+      genres: ['Adventure', 'Drama', 'Sci-Fi'],
+      rating: 8.6,
+      overview: 'A team of explorers travel through a wormhole in space in an attempt to ensure humanity\'s survival.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=Interstellar',
+      mediaType: 'movie'
+    },
+    {
+      id: 278870,
+      title: 'Forrest Gump',
+      year: '1994',
+      genres: ['Drama', 'Romance'],
+      rating: 8.8,
+      overview: 'The presidencies of Kennedy and Johnson unfold from the perspective of an Alabama man with an IQ of 75.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=Forrest+Gump',
+      mediaType: 'movie'
+    }
+  ];
+}
+
+/**
+ * Fallback TV shows when TMDB API is unavailable
+ */
+function getFallbackTV() {
+  return [
+    {
+      id: 1399,
+      title: 'Breaking Bad',
+      year: '2008',
+      genres: ['Crime', 'Drama'],
+      rating: 9.5,
+      overview: 'A chemistry teacher diagnosed with inoperable lung cancer turns to cooking meth with his former student.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=Breaking+Bad',
+      mediaType: 'tv'
+    },
+    {
+      id: 1396,
+      title: 'Game of Thrones',
+      year: '2011',
+      genres: ['Action', 'Adventure', 'Drama'],
+      rating: 9.2,
+      overview: 'Nine noble families fight for control over the lands of Westeros.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=Game+of+Thrones',
+      mediaType: 'tv'
+    },
+    {
+      id: 1408,
+      title: 'The Office',
+      year: '2005',
+      genres: ['Comedy'],
+      rating: 9.0,
+      overview: 'A mockumentary on a group of typical office workers, where the workday consists of ego clashes, inappropriate behavior, and tedium.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=The+Office',
+      mediaType: 'tv'
+    },
+    {
+      id: 1436,
+      title: 'Stranger Things',
+      year: '2016',
+      genres: ['Drama', 'Fantasy', 'Horror'],
+      rating: 8.7,
+      overview: 'When a young boy disappears, his friends discover strange secrets and terrifying forces lurking in the woods outside their town.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=Stranger+Things',
+      mediaType: 'tv'
+    },
+    {
+      id: 1414,
+      title: 'Chernobyl',
+      year: '2019',
+      genres: ['Drama', 'History', 'Thriller'],
+      rating: 9.4,
+      overview: 'The story of the Chernobyl accident told through the eyes of the Soviet officials.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=Chernobyl',
+      mediaType: 'tv'
+    },
+    {
+      id: 1418,
+      title: 'The Crown',
+      year: '2016',
+      genres: ['Biography', 'Drama', 'History'],
+      rating: 8.6,
+      overview: 'Follows the political rivalries and romance of Queen Elizabeth II\'s reign and the events that shaped the second half of the twentieth century.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=The+Crown',
+      mediaType: 'tv'
+    },
+    {
+      id: 1402,
+      title: 'The Sopranos',
+      year: '1999',
+      genres: ['Crime', 'Drama'],
+      rating: 9.2,
+      overview: 'New Jersey mob boss Tony Soprano deals with personal issues and professional challenges as he leads his criminal organization.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=The+Sopranos',
+      mediaType: 'tv'
+    },
+    {
+      id: 1403,
+      title: 'The Wire',
+      year: '2002',
+      genres: ['Crime', 'Drama', 'Thriller'],
+      rating: 9.3,
+      overview: 'The drug trade in Baltimore, Maryland as seen through the eyes of law enforcement, street dealers, and everyday people.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=The+Wire',
+      mediaType: 'tv'
+    },
+    {
+      id: 1404,
+      title: 'Friends',
+      year: '1994',
+      genres: ['Comedy', 'Romance'],
+      rating: 8.9,
+      overview: 'Six friends living in New York City navigate relationships, careers, and everything in between.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=Friends',
+      mediaType: 'tv'
+    },
+    {
+      id: 1405,
+      title: 'The Crown',
+      year: '2016',
+      genres: ['Biography', 'Drama'],
+      rating: 8.6,
+      overview: 'A drama following the political rivalries and romance of Queen Elizabeth II\'s reign.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=Crown+Season+2',
+      mediaType: 'tv'
+    },
+    {
+      id: 1406,
+      title: 'Succession',
+      year: '2018',
+      genres: ['Drama'],
+      rating: 9.0,
+      overview: 'The ruthless members of the Roy family fight for power and control of their media empire.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=Succession',
+      mediaType: 'tv'
+    },
+    {
+      id: 1407,
+      title: 'Peaky Blinders',
+      year: '2013',
+      genres: ['Crime', 'Drama'],
+      rating: 8.8,
+      overview: 'A gangster family epic spanning post-war Birmingham and set during the Great Depression.',
+      posterUrl: 'https://via.placeholder.com/500x750?text=Peaky+Blinders',
+      mediaType: 'tv'
+    }
+  ];
 }
 
 /**
@@ -115,28 +372,40 @@ async function loadAllTMDBMovies(maxPages = 3) {
 async function loadAllTMDBTV(maxPages = 3) {
   if (!movieDb) {
     console.warn('Movie database not initialized');
-    return [];
+    return getFallbackTV();
   }
 
   try {
     await ensureGenres();
 
     const first = await movieDb.getPopularTV(1);
+    
+    // Check for both 'shows' and 'movies' properties (backwards compatibility)
+    const firstShows = (first && (first.shows || first.movies)) || [];
+    
+    if (!first || firstShows.length === 0) {
+      console.warn('TMDB TV returned empty results, using fallback');
+      return getFallbackTV();
+    }
+    
     totalPages = first.totalPages;
     currentPage = 1;
     const pageLimit = Math.min(maxPages, totalPages);
     hasMorePages = currentPage < totalPages;
 
-    const shows = [...first.movies];
+    const shows = [...firstShows];
 
     for (let p = 2; p <= pageLimit; p++) {
       const pageData = await movieDb.getPopularTV(p);
-      shows.push(...pageData.movies);
-      currentPage = p;
-      hasMorePages = currentPage < totalPages;
+      const pageShows = (pageData && (pageData.shows || pageData.movies)) || [];
+      if (pageShows.length > 0) {
+        shows.push(...pageShows);
+        currentPage = p;
+        hasMorePages = currentPage < totalPages;
+      }
     }
 
-    allTV = shows.map(s => mapTmdbItem(s, 'tv'));
+    allTV = shows.filter(isReleased).map(s => mapTmdbItem(s, 'tv')).sort(sortByReleaseDesc);
     currentListMode = 'popular';
 
     if (typeof useTMDBCatalog === 'undefined') {
@@ -148,7 +417,7 @@ async function loadAllTMDBTV(maxPages = 3) {
     return allTV;
   } catch (error) {
     console.error('Failed to load TMDB TV shows:', error);
-    return [];
+    return getFallbackTV();
   }
 }
 
@@ -187,20 +456,20 @@ async function loadTMDBByLanguage(category, maxPages = 10) {
       }
       const flat = batch.flat();
       flat.forEach(m => {
-        if (!seenIds.has(m.id)) {
+        if (isReleased(m) && !seenIds.has(m.id)) {
           seenIds.add(m.id);
           combined.push(mapTmdbItem(m, 'movie'));
         }
       });
     }
 
-    // If results are too few, pad using filtered popular movies
+      // If results are too few, pad using filtered popular movies
     if (combined.length < 24) {
       try {
         const popularFallback = await loadAllTMDBMovies(5);
         const padded = filterTMDBByCategory(popularFallback, category) || [];
         padded.forEach(m => {
-          if (!seenIds.has(m.id)) {
+          if (isReleased(m) && !seenIds.has(m.id)) {
             seenIds.add(m.id);
             combined.push(m);
           }
@@ -222,7 +491,7 @@ async function loadTMDBByLanguage(category, maxPages = 10) {
       useTMDBCatalog = true;
     }
 
-    return combined;
+    return combined.sort(sortByReleaseDesc);
   } catch (error) {
     console.error('Failed to load TMDB by language:', error);
     return [];
@@ -250,7 +519,8 @@ async function loadMoreTMDBMovies() {
     currentPage = nextPage;
     hasMorePages = currentPage < totalPages;
 
-    const newMovies = pageData.movies.map(mapTmdbMovie);
+    const newMovies = (pageData.movies || []).map(m => mapTmdbItem(m, 'movie'))
+      .filter(isReleased);
     allMovies.push(...newMovies);
 
     if (typeof curatedMovies !== 'undefined' && Array.isArray(curatedMovies)) {
@@ -287,7 +557,9 @@ async function loadMoreTMDBTV() {
     currentPage = nextPage;
     hasMorePages = currentPage < totalPages;
 
-    const newShows = pageData.movies.map(s => mapTmdbItem(s, 'tv'));
+    const pageItems = (pageData && (pageData.shows || pageData.movies)) || [];
+    const newShows = pageItems.map(s => mapTmdbItem(s, 'tv'))
+      .filter(isReleased);
     allTV.push(...newShows);
 
     isLoadingMore = false;
@@ -308,21 +580,33 @@ async function searchTMDB(query) {
   if (!query) {
     if (tmdbMode === 'tv') {
       const popularTV = await loadAllTMDBTV();
-      displayMovies(popularTV, false, 'Series');
+      displayMovies(popularTV.sort(sortByReleaseDesc), false, 'Series');
     } else {
       const popular = await loadAllTMDBMovies();
-      displayMovies(popular, false, 'All Movies');
+      displayMovies(popular.sort(sortByReleaseDesc), false, 'All Movies');
     }
     return;
   }
 
   try {
-    const results = tmdbMode === 'tv' ? await movieDb.searchTV(query) : await movieDb.searchMovies(query);
-    const mapped = (results.movies || []).map(it => mapTmdbItem(it, tmdbMode));
-    if (mapped.length > 0) {
-      displayMovies(mapped, true, `Search Results for "${query}"`);
+    if (tmdbMode === 'tv') {
+      const results = await movieDb.searchTV(query);
+      const mapped = (results.movies || []).map(it => mapTmdbItem(it, 'tv')).filter(isReleased);
+      displayMovies(mapped.sort(sortByReleaseDesc), true, `Search Results for "${query}"`);
     } else {
-      displayMovies([], true, `No results for "${query}"`);
+      // Combined search: movies + TV when in 'All' mode
+      const [movieRes, tvRes] = await Promise.all([
+        movieDb.searchMovies(query),
+        movieDb.searchTV(query)
+      ]);
+      const movies = (movieRes.movies || []).map(it => mapTmdbItem(it, 'movie')).filter(isReleased);
+      const shows = (tvRes.movies || []).map(it => mapTmdbItem(it, 'tv')).filter(isReleased);
+      const combined = [...movies, ...shows].filter(Boolean);
+      if (combined.length > 0) {
+        displayMovies(combined.sort(sortByReleaseDesc), true, `Search Results for "${query}"`);
+      } else {
+        displayMovies([], true, `No results for "${query}"`);
+      }
     }
   } catch (error) {
     console.error('Search failed:', error);
@@ -341,7 +625,14 @@ async function initializeTMDBIntegration() {
 
   const tmdbMovies = await loadAllTMDBMovies(3);
   if (tmdbMovies.length > 0) {
-    displayMovies(tmdbMovies, false, 'TMDB Popular');
+    // Check if displayMovies is available (from index.html)
+    if (typeof displayMovies === 'function') {
+      displayMovies(tmdbMovies.sort(sortByReleaseDesc), false, 'All Movies');
+    } else {
+      console.warn('displayMovies function not found in index.html');
+    }
+  } else {
+    console.warn('No TMDB movies loaded');
   }
 
   // Setup infinite scroll
@@ -357,7 +648,7 @@ function setupInfiniteScroll() {
   window.addEventListener('scroll', () => {
     clearTimeout(scrollTimeout);
     scrollTimeout = setTimeout(async () => {
-      if (!useTMDBCatalog || !hasMorePages || isLoadingMore) return;
+      if (!useTMDBCatalog || isLoadingMore) return;
 
       const scrollPosition = window.innerHeight + window.scrollY;
       const threshold = document.documentElement.scrollHeight - 800;
@@ -365,13 +656,13 @@ function setupInfiniteScroll() {
       if (scrollPosition >= threshold) {
         if (tmdbMode === 'tv') {
           const newShows = await loadMoreTMDBTV();
-          if (newShows.length > 0) appendMoviesToGrid(newShows);
+          if (newShows.length > 0) appendMoviesToGrid(newShows.sort(sortByReleaseDesc));
         } else if (currentListMode === 'language') {
           const newLangMovies = await loadMoreTMDBByLanguage();
-          if (newLangMovies.length > 0) appendMoviesToGrid(newLangMovies);
+          if (newLangMovies.length > 0) appendMoviesToGrid(newLangMovies.sort(sortByReleaseDesc));
         } else {
           const newMovies = await loadMoreTMDBMovies();
-          if (newMovies.length > 0) appendMoviesToGrid(newMovies);
+          if (newMovies.length > 0) appendMoviesToGrid(newMovies.sort(sortByReleaseDesc));
         }
       }
     }, 100);
@@ -382,7 +673,8 @@ function setupInfiniteScroll() {
  * Append movies to existing grid without full re-render
  */
 function appendMoviesToGrid(movies) {
-  const moviesGrid = document.querySelector('.movies-grid');
+  // Append to the main catalog grid (exclude Popular section)
+  const moviesGrid = document.querySelector('#moviesContainer .movies-grid') || document.querySelector('.movies-grid');
   if (!moviesGrid) return;
 
   movies.forEach(movie => {
@@ -392,17 +684,23 @@ function appendMoviesToGrid(movies) {
     const movieCard = document.createElement('div');
     movieCard.className = 'movie-card movie-' + movie.id;
     movieCard.innerHTML = `
-      <div class="movie-code-badge">MOVIE_${movie.id}</div>
       <div class="poster">
         <img src="${posterPath}" alt="${title}" loading="lazy" />
+        <div class="rating-badge"><span class="star">★</span><span class="value">${movie.rating ? Number(movie.rating).toFixed(1) : 'N/A'}</span></div>
         <div class="play-icon"></div>
         <div class="movie-title-overlay">${title}</div>
       </div>
       <div class="movie-info">
         <h3 class="movie-title">${title} (${movie.year || ''})</h3>
-        <p class="movie-rating">⭐ ${movie.rating ? movie.rating.toFixed(1) : 'N/A'}</p>
       </div>
     `;
+
+    const img = movieCard.querySelector('img');
+    if (img) {
+      img.addEventListener('error', () => {
+        img.src = `https://via.placeholder.com/500x750?text=${encodeURIComponent(title)}`;
+      });
+    }
 
     movieCard.addEventListener('click', () => {
       if (typeof openMovieModal === 'function') {
@@ -435,11 +733,7 @@ async function loadMoreTMDBByLanguage() {
     languagePaging[nextLang].current = nextPage;
 
     const newMovies = (pageData.movies || []).map(m => mapTmdbItem(m, 'movie'))
-      .filter(m => {
-        if (seenIds.has(m.id)) return false;
-        seenIds.add(m.id);
-        return true;
-      });
+      .filter(isReleased);
 
     hasMorePages = Object.values(languagePaging).some(p => p.current < p.total);
     isLoadingMore = false;
@@ -471,6 +765,15 @@ function filterTMDBByCategory(items, category) {
  */
 function setTMDBMode(mode) {
   tmdbMode = mode === 'tv' ? 'tv' : 'movie';
+}
+
+function normalizeDate(m) {
+  const d = m.release_date || m.releaseDate || m.first_air_date || '';
+  return d ? new Date(d).getTime() : 0;
+}
+
+function sortByReleaseDesc(a, b) {
+  return normalizeDate(b) - normalizeDate(a);
 }
 
 // Expose functions globally

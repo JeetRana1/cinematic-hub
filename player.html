@@ -1,4 +1,25 @@
 <style>
+  /* Ad-blocking CSS - hide common ad elements */
+  [class*="ad-"], [class*="advert"], [class*="ads-"],
+  [id*="ad-"], [id*="advert"], [id*="ads-"],
+  [class*="banner"], [id*="banner"],
+  [class*="popup"], [id*="popup"],
+  [class*="modal"], [id*="modal"],
+  .advertisement, #advertisement,
+  .ad-container, #ad-container,
+  .ad-space, .ad_space,
+  [style*="position: fixed"][style*="z-index"],
+  .google-auto-placed,
+  ins.adsbygoogle {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+  
   @media (orientation: portrait) and (max-width: 600px) {
         .time-display {
           font-size: 0.55em !important;
@@ -128,23 +149,6 @@
     }
     .video-container {
       position: relative !important;
-    }
-    
-    .player-error-msg {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(255, 68, 68, 0.9);
-      color: white;
-      padding: 20px;
-      border-radius: 8px;
-      text-align: center;
-      z-index: 100;
-      max-width: 80%;
-      display: none;
-      font-size: 14px;
-      line-height: 1.6;
     }
 
     .controls {
@@ -450,6 +454,79 @@
 
 <head>
     <script>
+      // Register service worker for ad blocking
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw-adblock.js').then(reg => {
+          console.log('✅ Ad-blocking service worker registered');
+        }).catch(err => {
+          console.log('Service worker registration failed:', err);
+        });
+      }
+      
+      // Minimal security - prevent popups only
+      window.open = function() { 
+        console.log('🚫 Popup blocked'); 
+        return null; 
+      };
+      window.blur = function() {};
+      window.focus = function() {};
+      
+      // DOM-based ad remover
+      const removeAds = () => {
+        const adSelectors = [
+          '[class*="ad-"]', '[class*="advert"]', '[class*="ads-"]',
+          '[id*="ad-"]', '[id*="advert"]', '[id*="ads-"]',
+          '[class*="banner"]', '[id*="banner"]',
+          '[class*="popup"]', '[id*="popup"]',
+          '.advertisement', '#advertisement',
+          '.ad-container', '#ad-container',
+          'ins.adsbygoogle',
+          '[data-ad-slot]',
+          '[data-ad-format]'
+        ];
+        
+        adSelectors.forEach(selector => {
+          try {
+            document.querySelectorAll(selector).forEach(el => {
+              // Make sure it's not our player
+              if (!el.closest('#stream-iframe') && !el.closest('#video') && !el.closest('.player-container')) {
+                el.remove();
+                console.log('🚫 Ad element removed:', selector);
+              }
+            });
+          } catch (e) {}
+        });
+        
+        // Also monitor for new ads being added
+        const observer = new MutationObserver(() => {
+          adSelectors.forEach(selector => {
+            try {
+              document.querySelectorAll(selector).forEach(el => {
+                if (!el.closest('#stream-iframe') && !el.closest('#video') && !el.closest('.player-container')) {
+                  el.remove();
+                }
+              });
+            } catch (e) {}
+          });
+        });
+        
+        observer.observe(document.body, { 
+          childList: true, 
+          subtree: true, 
+          attributes: true,
+          attributeFilter: ['class', 'id']
+        });
+      };
+      
+      // Start removing ads when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', removeAds);
+      } else {
+        removeAds();
+      }
+      // Also run every 2 seconds to catch dynamically added ads
+      setInterval(removeAds, 2000);
+      
       // Force landscape mode on mobile
       document.addEventListener('DOMContentLoaded', function () {
         if (window.screen && window.screen.orientation && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
@@ -505,6 +582,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="stylesheet" href="css/subtitles.css">
   <script src="ui.js"></script>
+  <script src="js/adguard-blocker.js"></script>
   <!-- Firebase compat SDKs + Auth helpers for per-profile continue-watching scoping -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="public/firebaseConfig.js"></script>
@@ -515,13 +593,24 @@
   <script src="storage-adapter.js"></script>
   <!-- hls.js for HLS (.m3u8) playback -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <!-- Iframe Embed Providers (Primary) -->
-  <script src="js/filemoon-provider.js"></script>
-  <script src="js/doodstream-provider.js"></script>
-  <script src="js/streamtape-provider.js"></script>
-  <script src="js/googledrive-provider.js"></script>
-  <!-- Stream Diagnostics -->
-  <script src="stream-diagnostics.js"></script>
+  <!-- Security Layer - MUST load first -->
+  <script src="js/security-blocker.js"></script>
+  <!-- Stream API Configuration -->
+  <script src="public/streamApiConfig.js"></script>
+  <script src="js/stream-api.js"></script>
+  
+  <!-- Enhanced Multi-Provider Streaming -->
+  <script src="js/enhanced-stream-api.js"></script>
+  <script src="js/stream-player-handler.js"></script>
+  
+  <!-- Streaming Compatibility Layer - bridges old & new APIs -->
+  <script src="js/stream-compatibility.js"></script>
+  
+  <!-- Stream Debug Helper -->
+  <script src="js/stream-debug.js"></script>
+  
+  <script src="js/player-integration.js"></script>
+  
   <!-- Continue Watching Scripts -->
   <script src="js/continue-watching.js"></script>
   <script src="js/continue-watching-ui.js"></script>
@@ -2101,55 +2190,6 @@
       z-index: 9999 !important;
     }
 
-    /* Provider Selector Sidebar */
-    .provider-sidebar {
-      position: fixed;
-      left: 0;
-      top: 0;
-      width: 100px;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding-top: 60px;
-      gap: 15px;
-      z-index: 100;
-      border-right: 2px solid #ff6b00;
-    }
-
-    .provider-btn {
-      width: 80px;
-      padding: 12px 8px;
-      background: rgba(255, 107, 0, 0.2);
-      color: #fff;
-      border: 2px solid #ff6b00;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: bold;
-      text-align: center;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .provider-btn:hover {
-      background: rgba(255, 107, 0, 0.4);
-      transform: scale(1.05);
-    }
-
-    .provider-btn.active {
-      background: #ff6b00;
-      color: #000;
-      box-shadow: 0 0 10px rgba(255, 107, 0, 0.8);
-    }
-
-    .video-container {
-      margin-left: 100px;
-    }
-
     /* Close button removed */
     @keyframes fadeIn {
       from {
@@ -2162,26 +2202,198 @@
         transform: none;
       }
     }
+
+    /* Ad Blocker - Hide common ad overlays and popups */
+    iframe[id*="ad"],
+    iframe[id*="banner"],
+    iframe[class*="ad"],
+    iframe[class*="banner"],
+    div[id*="ad-"],
+    div[class*="ad-"],
+    div[id*="popup"],
+    div[class*="popup"],
+    a[href*="redirect"],
+    a[href*="ads"],
+    a[target="_blank"]:not(.allowed) {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    /* Prevent overlay clicks from ads */
+    #streamIframe {
+      pointer-events: auto !important;
+    }
+
+    /* Click Shield Styles */
+    #clickShield.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Server Switcher Styles */
+    .server-switcher {
+      position: absolute;
+      top: 20px;
+      left: 80px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      color: #fff;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 1000;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+
+    .server-switcher:hover {
+      background: rgba(0, 0, 0, 0.85);
+      border-color: rgba(255, 255, 255, 0.4);
+      transform: scale(1.05);
+    }
+
+    .server-switcher i {
+      font-size: 16px;
+    }
+
+    .server-menu {
+      position: absolute;
+      top: 70px;
+      left: 80px;
+      background: rgba(30, 32, 36, 0.95);
+      backdrop-filter: blur(12px);
+      border: 1.5px solid rgba(255, 255, 255, 0.18);
+      border-radius: 16px;
+      padding: 12px;
+      z-index: 2000;
+      min-width: 320px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      animation: menuFadeIn 0.2s ease;
+    }
+
+    .server-menu-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .server-option {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: #fff;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 4px 0;
+      text-align: left;
+    }
+
+    .server-option:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateX(4px);
+    }
+
+    .server-option.active {
+      background: rgba(229, 9, 20, 0.2);
+      border: 1px solid rgba(229, 9, 20, 0.5);
+    }
+
+    .server-option i {
+      font-size: 18px;
+      color: #e50914;
+      min-width: 20px;
+    }
+
+    .server-option.active i {
+      color: #e50914;
+    }
+
+    .server-name {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .server-features {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    @media (max-width: 768px) {
+      .server-switcher {
+        top: 15px;
+        left: 70px;
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+
+      .server-menu {
+        top: 60px;
+        left: 70px;
+        min-width: 280px;
+      }
+    }
   </style>
 
 <body>
-  <!-- Provider Selector Sidebar -->
-  <div class="provider-sidebar" id="providerSidebar">
-    <div class="provider-btn active" data-provider="filemoon">FileMoon</div>
-    <div class="provider-btn" data-provider="doodstream">Doodstream</div>
-    <div class="provider-btn" data-provider="streamtape">StreamTape</div>
-  </div>
   <!-- Add allowfullscreen attribute to the video container -->
   <div class="video-container" id="videoContainer" allowfullscreen>
     <button id="backButton" class="back-button" aria-label="Back">
       <i class="fa-solid fa-house"></i>
     </button>
     
-    <!-- Error message display -->
-    <div class="player-error-msg" id="playerError"></div>
+    <!-- Server Switcher Button -->
+    <button id="serverSwitcher" class="server-switcher" aria-label="Switch Server">
+      <i class="fas fa-server"></i>
+      <span id="currentServer">Server 1</span>
+    </button>
     
-    <!-- Iframe for embed players - NO SANDBOX -->
-    <iframe id="streamIframe" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; border:none;" allowfullscreen webkitallowfullscreen mozallowfullscreen scrolling="no" frameborder="0" allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>
+    <!-- Server Menu -->
+    <div id="serverMenu" class="server-menu" style="display: none;">
+      <div class="server-menu-title">Select Server</div>
+      <button class="server-option" data-provider="videasy" data-priority="1">
+        <i class="fas fa-circle-dot"></i>
+        <div>
+          <div class="server-name">Videasy</div>
+          <div class="server-features">Multi-Audio • Multi-Language • HD</div>
+        </div>
+      </button>
+      <button class="server-option" data-provider="vidsrcxyz" data-priority="2">
+        <i class="fas fa-circle"></i>
+        <div>
+          <div class="server-name">VidSrc.xyz</div>
+          <div class="server-features">Fast • HD Quality</div>
+        </div>
+      </button>
+      <button class="server-option" data-provider="superembed" data-priority="3">
+        <i class="fas fa-circle"></i>
+        <div>
+          <div class="server-name">SuperEmbed</div>
+          <div class="server-features">Multi-Source • Fallback</div>
+        </div>
+      </button>
+    </div>
+    
+    <!-- Iframe for embed players (VidSrc, etc.) - NO SANDBOX -->
+    <iframe id="streamIframe" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; border:none;" allowfullscreen webkitallowfullscreen mozallowfullscreen scrolling="no" frameborder="0" allow="autoplay; encrypted-media; fullscreen; picture-in-picture; payment; microphone; camera"></iframe>
     
     <video id="video" playsinline>
       <source src="" type="video/mp4">
@@ -2262,6 +2474,9 @@
           </button>
           <button class="control-btn" id="subtitleBtn" data-tooltip="Subtitles">
             <i class="fas fa-closed-captioning"></i>
+          </button>
+          <button class="control-btn" id="languageBtn" data-tooltip="Audio Language" style="display:none;">
+            <i class="fas fa-language"></i>
           </button>
           <button class="control-btn" id="settingsBtn" data-tooltip="Settings">
             <i class="fas fa-cog"></i>
@@ -2390,6 +2605,92 @@
       }
     }
     
+    /* Language menu styles - matching settings menu */
+    #languageMenu {
+      position: fixed;
+      display: none;
+      flex-direction: column;
+      background: rgba(30, 32, 36, 0.7);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      opacity: 0;
+      transform: translateY(-10px) scale(0.98);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      backdrop-filter: blur(12px);
+      border: 1.5px solid rgba(255, 255, 255, 0.18);
+      min-width: 180px;
+      max-width: 220px;
+      padding: 18px 0 10px 0;
+      z-index: 2147483647;
+      font-family: 'Segoe UI', 'Netflix Sans', Arial, sans-serif;
+      font-size: 16px;
+      color: #fff;
+    }
+    
+    #languageMenu.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    
+    #languageMenu .settings-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      padding: 0 24px;
+      color: #fff;
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    #languageOptions .settings-option {
+      padding: 12px 24px;
+      border: none;
+      background: none;
+      color: #fff;
+      font-size: 16px;
+      border-radius: 8px;
+      margin: 2px 0;
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s, transform 0.18s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    #languageOptions .settings-option:hover {
+      background: rgba(255, 255, 255, 0.10);
+      color: #e0e0e0;
+      transform: scale(1.03);
+    }
+    
+    #languageOptions .settings-option.selected {
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffd700;
+      font-weight: 500;
+    }
+    
+    @media (max-width: 600px) {
+      #languageMenu {
+        min-width: 90vw;
+        max-width: 98vw;
+        padding: 12px 0 6px 0;
+        font-size: 15px;
+        border-radius: 12px;
+      }
+      
+      #languageMenu .settings-title {
+        font-size: 16px;
+        padding: 0 16px;
+      }
+      
+      #languageOptions .settings-option {
+        padding: 10px 16px;
+        font-size: 15px;
+        border-radius: 7px;
+      }
+    }
   </style>
   <div id="settingsMenu" class="settings-menu">
     <div class="settings-item" id="playbackSpeedMenu">
@@ -2398,6 +2699,17 @@
         <span class="current-value">Normal</span>
         <i class="fas fa-chevron-right"></i>
       </div>
+    </div>
+  </div>
+
+  <!-- Language Selection Menu -->
+  <div id="languageMenu" class="settings-menu" style="display: none;">
+    <div class="settings-title">
+      <i class="fas fa-language"></i>
+      <span>Audio Language</span>
+    </div>
+    <div id="languageOptions">
+      <!-- Language options will be populated dynamically -->
     </div>
   </div>
 
@@ -2610,343 +2922,10 @@
 
 
     // Movie database - maps movie titles to their sources
-    const movieDatabase = {
-      /* Done */
-      "tourist family": {
-        src: "https://ia601005.us.archive.org/3/items/tourist-family-2025-hindi-1080p/Tourist%20Family-%282025%29-Hindi-1080p.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/tourist-family-2025-hindi-1080p/Tourist-Family-%282025%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "manjummel boys": {
-        src: "https://ia800304.us.archive.org/11/items/manjummel-boys-2024/Manjummel%20Boys%20%282024%29.ia.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/manjummel-boys-2024/Manjummel-Boys-%282024%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "kaithi": {
-        src: "https://ia601009.us.archive.org/23/items/kaithi-2019-1080p-hindi/Kaithi%2B2019%2B1080p%2BHindi.ia.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/kaithi-2019-1080p-hindi/Kaithi.2019.en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "vikram": {
-        src: "https://ia601007.us.archive.org/8/items/vikram-2022-lcu.mp-4/Vikram-%282022%29-%5BLCU%5D.mp4.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/vikram-2022-lcu.mp-4/Vikram-%282022%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      "leo": {
-        src: "https://ia600602.us.archive.org/19/items/leo-2023-south-hindi-dubbed-un-cut-hd-1080p/Leo-%282023%29-South-Hindi-Dubbed-UnCut-HD-1080p.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/leo-2023-south-hindi-dubbed-un-cut-hd-1080p/leo.hindi.2023.en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "coolie": {
-        src: "https://ia601002.us.archive.org/23/items/coolie-2025-1080p-hindi/Coolie-2025-1080p-Hindi.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/coolie-2025-1080p-hindi/Coolie-%282025%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "maharaja": {
-        src: "https://ia800404.us.archive.org/14/items/maharaja-2024-hindi-tamil-dual-audio-un-cut-movie-hd-1080p-esub/Maharaja%20%282024%29%20%28Hindi%20%2B%20Tamil%29%20Dual%20Audio%20UnCut%20Movie%20HD%201080p%20ESub.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/maharaja-2024-hindi-tamil-dual-audio-un-cut-movie-hd-1080p-esub/Maharaja-%282024%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "hi papa": {
-        src: "https://ia600801.us.archive.org/34/items/hi-papa-hi-nanna-2023-hindi-1080p/Hi%20Papa-%28Hi%20Nanna%29-%282023%29-%7BHindi-1080p%29.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/hi-papa-hi-nanna-2023-hindi-1080p/Hi-Nanna-%282023%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "kantara": {
-        src: "https://ia600404.us.archive.org/34/items/kantara-2022-hindi-dubbed-1080p/Kantara%20%282022%29%20Hindi%20Dubbed%201080p.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/kantara-2022-hindi-dubbed-1080p/Kantara-%282022%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "hridayam": {
-        src: "https://ia601003.us.archive.org/33/items/hridayam-2022-hindi-1080p/Hridayam%20%282022%29%20Hindi%201080p.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/hridayam-2022-hindi-1080p/Hridayam-%282022%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      "lokah chapter 1": {
-        src: "https://ia601709.us.archive.org/32/items/lokah.-chapter.-1-chandra.-2025-hindi/Lokah.Chapter.1-Chandra.2025-hindi.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/lokah.-chapter.-1-chandra-en/Lokah.Chapter.1-Chandra-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "lucky bhaskar": {
-        src: "https://ia600301.us.archive.org/4/items/lucky-baskhar-2024-hindi-hd-1080p/Lucky-Baskhar-%282024%29-Hindi-HD-1080p.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/lucky-baskhar-2024-hindi-hd-1080p/Lucky-Baskhar-2024-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "court - state vs. a nobody": {
-        src: "https://ia601001.us.archive.org/20/items/court-state-vs-a-nobody-2025-hindi-hd-1080p/Court-State-Vs-A-Nobody-%282025%29-Hindi-HD-1080p.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/court-state-vs-a-nobody-2025-hindi-hd-1080p/court-state-vs-a-nobody-2025-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "master": {
-        src: "https://ia902807.us.archive.org/0/items/master-2021-1080p-hindi/Master-2021-1080p-Hindi.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/master-2021-1080p-hindi/MASTER-%282021%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "hit: the first case": {
-        src: "https://ia801003.us.archive.org/22/items/hit-the-first-case-2020-1080p-hindi/HIT-The-First-Case-2020-1080p-Hindi.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/hit-the-first-case-2020-1080p-hindi/HIT-The-First-Case-%282020%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "hit: the second case": {
-        src: "https://ia801003.us.archive.org/22/items/hit-the-2nd-case-2022-1080p-hindi/HIT-The-2nd-Case-2022-1080p-Hindi.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/hit-the-2nd-case-2022-1080p-hindi/HIT-The-Second-Case-2022-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "hit: the third case": {
-        src: "https://ia800505.us.archive.org/35/items/hit-the-third-case-2025-1080p-hindi/HIT-The-Third-Case-2025-1080p-Hindi.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/hit-the-third-case-2025-1080p-hindi/HIT-The-Third-Case-%282025%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "retro": {
-        src: "https://ia600301.us.archive.org/10/items/retro-2025-hindi-1080p/Retro-%282025%29-Hindi-1080p.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/retro-2025-hindi-1080p/Retro-2025-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "kuberaa": {
-        src: "https://ia601302.us.archive.org/0/items/kuberaa-2025-hindi-1080p/Kuberaa-%282025%29-Hindi-1080p.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/kuberaa-2025-hindi-1080p/kuberaa-2025-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "thalaivan thalaivii": {
-        src: "https://ia600201.us.archive.org/14/items/thalaivan-thalaivii-2025-hindi-1080p/Thalaivan-Thalaivii-%282025%29-Hindi-1080p.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/thalaivan-thalaivii-2025-hindi-1080p/Thalaivan-Thalaivii-%282025%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "dil se..": {
-        src: "https://ia801607.us.archive.org/32/items/dil-se..-1998/Dil%20Se..%20%281998%29.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/dil-se..-1998/Dil%20Se..%281998%29.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "mohabbatein": {
-        src: "https://ia601207.us.archive.org/5/items/mohabbatein-2000_202511/Mohabbatein-%282000%29.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/mohabbatein-2000_202511/Mohabbatein-%282000%29-Eng.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "dude": {
-        src: "https://ia903101.us.archive.org/35/items/dude.-2025.1080p-hindi/Dude.2025.1080p-Hindi.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/dude.-2025.1080p-hindi/Dude.2025.1080p-eng.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "they call him og": {
-        src: "https://ia903104.us.archive.org/12/items/they-call-him-og-2025-hindi_202511/They%20Call%20Him%20OG%20%282025%29-%28Hindi%29.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/they-call-him-og-2025-hindi_202511/They%20Call%20Him%20OG%20%282025%29-%28Hindi%29.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "bombay": {
-        src: "https://ia801700.us.archive.org/11/items/bombay-1995_202511/Bombay-1995.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/bombay-1995_202511/Bombay-1995-eng.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "dilwale dulhania le jayenge": {
-        src: "https://ia801701.us.archive.org/24/items/dilwale-dulhania-le-jayenge-1995_202511/Dilwale%20Dulhania%20Le%20Jayenge%20%281995%29.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/dilwale-dulhania-le-jayenge-1995_202511/Dilwale%20Dulhania%20Le%20Jayenge%20%281995%29.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      "kantara chapter 1": {
-        src: "https://ia802308.us.archive.org/28/items/kantara-chapter.-1.2025.-hindi/Kantara-Chapter.1.2025.Hindi.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/kantara-chapter.-1.2025.-hindi/Kantara-Chapter.1.en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      "my name is khan": {
-        src: "https://ia802307.us.archive.org/25/items/my-name-is-khan-2010_202512/My-Name-Is-Khan-%282010%29.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/my-name-is-khan-2010_202512/My-Name-Is-Khan-%282010%29.en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-      /* Done */
-      "bhool bhulaiyaa": {
-        src: "https://ia600500.us.archive.org/23/items/bhool-bhulaiyaa-2007/Bhool-Bhulaiyaa-%282007%29.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/bhool-bhulaiyaa-2007/Bhool-Bhulaiyaa-%282007%29.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
+    // NOW USING TMDB ONLY - Old database removed to avoid conflicts
+    const movieDatabase = {};
 
-      "munjya": {
-        src: "https://ia801702.us.archive.org/6/items/munjya.-2024/Munjya.%282024%29.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/munjya.-2024/Munjya.%282024%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-
-        "stree": {
-        src: "https://ia601706.us.archive.org/16/items/stree.-2018/Stree.%282018%29.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/stree.-2018/Stree.%282018%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-
-        "stree 2": {
-        src: "https://ia601701.us.archive.org/29/items/stree.-2.-2024/Stree.2.%282024%29.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/stree.-2.-2024/Stree.2.%282024%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-
-        "3 idiots": {
-        src: "https://ia601707.us.archive.org/13/items/3.-idiots.-2009/3.Idiots.%282009%29.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/3.-idiots.-2009/3.Idiots.%282009%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-
-        "kesari": {
-        src: "https://ia601707.us.archive.org/21/items/kesari.-2019_202512/Kesari.%282019%29.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/kesari.-2019_202512/Kesari.%282019%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-
-        "kesari chapter 2": {
-        src: "https://ia601708.us.archive.org/8/items/kesari.-chapter.-2.-2025/Kesari.Chapter.2.%282025%29.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/kesari.-chapter.-2.-2025/Kesari.Chapter.2.%282025%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-
-        "thamma": {
-        src: "https://ia601700.us.archive.org/17/items/thamma.-2025_202512/Thamma.2025.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/thamma.-2025_202512/Thamma.2025-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-
-        "bhediya": {
-        src: "https://ia801704.us.archive.org/13/items/bhediya.-2022/Bhediya.%282022%29.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/bhediya.-2022/Bhediya.%282022%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-
-        "param sundari": {
-        src: "https://ia801709.us.archive.org/16/items/param.-sundari.-2025/Param.Sundari.%282025%29.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/param.-sundari.-2025/Param.Sundari.%282025%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-
-        "dhadak": {
-        src: "https://ia801707.us.archive.org/12/items/dhadak.-2018/Dhadak.%282018%29.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/dhadak.-2018/Dhadak.%282018%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-
-        "dhadak 2": {
-        src: "https://ia601706.us.archive.org/29/items/dhadak.-2.-2025/Dhadak.2.%282025%29.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/dhadak.-2.-2025/Dhadak.2.%282025%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-
-        "chennai express": {
-        src: "https://ia601701.us.archive.org/10/items/chennai.-express.-2013/Chennai.Express.%282013%29.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/chennai.-express.-2013/Chennai.Express.%282013%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-
-        "dil chahta hai": {
-        src: "https://ia801707.us.archive.org/8/items/dil.-chahta.-hai.-2001-en/Dil.Chahta.Hai.%282001%29.mp4",
-        type: "mp4",
-        subtitles: [
-          { src: 'https://archive.org/download/dil.-chahta.-hai.-2001-en/Dil.Chahta.Hai.%282001%29-en.vtt', srclang: 'en', label: 'English', default: false }
-        ]
-      },
-
-    };
-
-    document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener('DOMContentLoaded', () => {
       // Diagnostic check for fullscreen compatibility
       console.log('=== Fullscreen Diagnostic ===');
       console.log('DOMContentLoaded fired!');
@@ -3257,6 +3236,36 @@
         });
       } else {
         console.error('Settings button or menu not found!', { settingsBtn, settingsMenu });
+      }
+
+      // Language button handler
+      const languageBtn = document.getElementById('languageBtn');
+      const languageMenu = document.getElementById('languageMenu');
+      
+      if (languageBtn && languageMenu) {
+        languageBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          
+          const isMenuVisible = languageMenu.style.display === 'flex';
+          
+          if (!isMenuVisible) {
+            // Position above the language button
+            const rect = languageBtn.getBoundingClientRect();
+            
+            languageMenu.style.display = 'flex';
+            languageMenu.style.position = 'fixed';
+            languageMenu.style.left = `${rect.left - 200}px`;
+            languageMenu.style.setProperty('bottom', `${window.innerHeight - rect.top + 30}px`, 'important');
+            languageMenu.style.right = 'auto';
+            languageMenu.style.top = 'auto';
+            
+            // Hide settings menu when opening language menu
+            if (settingsMenu) settingsMenu.style.display = 'none';
+            if (playbackSpeedSubmenu) playbackSpeedSubmenu.style.display = 'none';
+          } else {
+            languageMenu.style.display = 'none';
+          }
+        });
       }
 
       // Open playback speed submenu - using dynamic positioning like settings menu
@@ -3718,66 +3727,157 @@
       let sourceType = urlParams.get('type') || 'mp4';
       let src = urlParams.get('src') || urlParams.get('video') || '';
       
-      // Get episode/season parameters for TV series
-      const season = urlParams.get('season');
-      const episode = urlParams.get('episode');
-      const isSeries = season && episode;
+      // Support for new enhanced streaming API - fetch stream if TMDB ID provided
+      const tmdbId = urlParams.get('movieId') || urlParams.get('tmdbId') || urlParams.get('id');
+      let mediaType = urlParams.get('mediaType') || 'movie';
+      const season = urlParams.get('season') ? parseInt(urlParams.get('season')) : null;
+      const episode = urlParams.get('episode') ? parseInt(urlParams.get('episode')) : null;
+      
+      // Auto-detect TV show if season and episode are present
+      if (season && episode) {
+        mediaType = 'tv';
+      }
+      
+      // Flag to track if we're using enhanced streaming API
+      let usingEnhancedAPI = false;
       
       console.log('🎬 Player.html initialization:');
       console.log('   - src:', src);
       console.log('   - sourceType:', sourceType);
-      console.log('   - isSeries:', isSeries, `S${season}E${episode}`);
       console.log('   - title:', title);
+      console.log('   - tmdbId:', tmdbId);
+      console.log('   - mediaType:', mediaType);
+      console.log('   - season:', season);
+      console.log('   - episode:', episode);
       
-      // Check movie database for the video source and subtitles
-      const normalizedTitle = title.toLowerCase().trim();
-      console.log('Looking up movie:', normalizedTitle);
-
-      // 🎬 ALL PROVIDERS MUST PROVIDE IFRAME EMBEDS
-      const iframeProviders = [
-        { name: 'FileMoon', module: window.filemoon, getUrl: (id, type, s, e) => window.filemoon?.getUrl?.(id, type, s, e) },
-        { name: 'Doodstream', module: window.doodstream, getUrl: (id, type, s, e) => window.doodstream?.getUrl?.(id, type, s, e) },
-        { name: 'StreamTape', module: window.streamtape, getUrl: (id, type, s, e) => window.streamtape?.getUrl?.(id, type, s, e) }
-      ];
-
-      for (const provider of iframeProviders) {
-        if (!src && movieId && provider.module && provider.getUrl) {
-          console.log(`📺 Attempting ${provider.name} for TMDB ID: ${movieId}`);
-          try {
-            const embedUrl = provider.getUrl(movieId, isSeries ? 'TV' : 'MOVIE', season, episode);
-            if (embedUrl) {
-              console.log(`✅ ${provider.name} URL generated:`, embedUrl);
-              src = embedUrl;
-              sourceType = 'iframe';
-              console.log(`✓ Using ${provider.name} stream:`, src);
-              break; // Stop trying other providers
-            } else {
-              console.log(`⚠️ ${provider.name} URL generation failed`);
+      // Get language parameters from URL
+      const imdbId = urlParams.get('imdbId');
+      const streamKey = urlParams.get('streamKey');
+      const currentLang = urlParams.get('currentLang');
+      const availableLangsParam = urlParams.get('availableLangs');
+      let availableLanguages = [];
+      
+      if (availableLangsParam) {
+        try {
+          availableLanguages = JSON.parse(decodeURIComponent(availableLangsParam));
+          console.log('Available languages:', availableLanguages);
+        } catch (e) {
+          console.error('Error parsing available languages:', e);
+        }
+      }
+      
+      // Populate language menu if languages are available
+      if (availableLanguages.length > 0 && imdbId && streamKey) {
+        const languageBtn = document.getElementById('languageBtn');
+        const languageOptions = document.getElementById('languageOptions');
+        
+        if (languageBtn && languageOptions) {
+          // Show language button
+          languageBtn.style.display = 'block';
+          
+          // Populate language options
+          languageOptions.innerHTML = '';
+          availableLanguages.forEach(lang => {
+            const option = document.createElement('div');
+            option.className = 'settings-option';
+            if (lang === currentLang) {
+              option.classList.add('selected');
             }
-          } catch (error) {
-            console.error(`❌ ${provider.name} error:`, error);
-          }
+            option.innerHTML = `<span>${lang}</span>`;
+            option.addEventListener('click', async () => {
+              if (lang === currentLang) return; // Already selected
+              
+              // Show loading state
+              option.innerHTML = '<span>Loading...</span>';
+              
+              try {
+                // Call the stream API to get the new language stream
+                if (typeof window.resolveStreamForLanguage === 'function') {
+                  const result = await window.resolveStreamForLanguage(imdbId, lang, streamKey);
+                  
+                  if (result.success && result.src) {
+                    // Update video source
+                    const video = document.getElementById('mainVideo');
+                    const currentTime = video.currentTime; // Save current position
+                    
+                    // Update HLS source
+                    if (window.hls) {
+                      window.hls.destroy();
+                    }
+                    
+                    if (Hls.isSupported()) {
+                      window.hls = new Hls();
+                      window.hls.loadSource(result.src);
+                      window.hls.attachMedia(video);
+                      window.hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                        video.currentTime = currentTime; // Restore position
+                        video.play().catch(e => console.log('Autoplay prevented:', e));
+                      });
+                    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                      video.src = result.src;
+                      video.addEventListener('loadedmetadata', () => {
+                        video.currentTime = currentTime;
+                        video.play().catch(e => console.log('Autoplay prevented:', e));
+                      });
+                    }
+                    
+                    // Update UI
+                    document.querySelectorAll('#languageOptions .settings-option').forEach(opt => {
+                      opt.classList.remove('selected');
+                    });
+                    option.classList.add('selected');
+                    option.innerHTML = `<span>${lang}</span>`;
+                    
+                    // Hide menu
+                    const languageMenu = document.getElementById('languageMenu');
+                    if (languageMenu) languageMenu.style.display = 'none';
+                    
+                    console.log('✓ Language switched to:', lang);
+                  } else {
+                    console.error('Failed to resolve stream for language:', lang);
+                    option.innerHTML = `<span>${lang}</span>`;
+                  }
+                } else {
+                  console.error('resolveStreamForLanguage function not found');
+                  option.innerHTML = `<span>${lang}</span>`;
+                }
+              } catch (error) {
+                console.error('Error switching language:', error);
+                option.innerHTML = `<span>${lang}</span>`;
+              }
+            });
+            
+            languageOptions.appendChild(option);
+          });
         }
       }
 
-      // If still no source, show error
-      if (!src) {
-        console.error('❌ FATAL: No video source found!');
-        if (isSeries) {
-          console.error(`   Series S${season}E${episode} may not be available`);
-        } else {
-          console.error('   Make sure the movie exists in the database');
+      // Check movie database for the video source and subtitles
+      const normalizedTitle = title.toLowerCase().trim();
+      console.log('Looking up movie:', normalizedTitle);
+      console.log('Available movies in database:', Object.keys(movieDatabase));
+
+      // PRIORITY: Use Videasy as primary (more reliable), with VidSrc as fallback
+      // TV shows work better with Videasy
+      if (tmdbId) {
+        if (!src || src.includes('archive.org')) {
+          // Use Videasy for TV shows (more reliable), and for movies
+          if (season && episode) {
+            src = `https://player.videasy.net/tv/${tmdbId}/${season}/${episode}`;
+          } else {
+            src = `https://player.videasy.net/movie/${tmdbId}`;
+          }
+          sourceType = 'iframe';
+          console.log('✓ Using Videasy as primary provider for TMDB ID:', tmdbId);
         }
-        
-        // Show user-friendly error
-        const errorDiv = document.getElementById('errorMessage');
-        if (errorDiv) {
-          const msg = isSeries 
-            ? `❌ Episode not found. S${season}E${episode} may not be available.`
-            : '❌ Video not found. The movie may not be available.';
-          errorDiv.innerHTML = msg;
-          errorDiv.style.display = 'block';
-        }
+      } else if (!src && movieDatabase[normalizedTitle]) {
+        // Only use database source if no TMDB ID
+        const movieData = movieDatabase[normalizedTitle];
+        src = movieData.src;
+        sourceType = movieData.type;
+        console.log('✓ Found movie in database:', normalizedTitle, movieData);
+      } else {
+        console.log('✗ Movie not found in database:', normalizedTitle);
       }
 
       // Check for subtitle data in URL parameters
@@ -3792,31 +3892,248 @@
         }
       }
 
-      // Load subtitles only from Consumet
-      if (subtitleData && subtitleData.length > 0) {
-        console.log('Loading subtitles from Consumet:', subtitleData.length, 'tracks');
-        loadSubtitles(subtitleData);
-      } else {
-        console.log('No subtitles found from Consumet');
+      // Define loadStreamInPlayer function for loading stream into player
+      function loadStreamInPlayer() {
+        if (subtitleData && subtitleData.length > 0) {
+          console.log('Loading subtitles from URL data:', subtitleData.length, 'tracks');
+          loadSubtitles(subtitleData);
+        } else if (movieDatabase[normalizedTitle] && movieDatabase[normalizedTitle].subtitles && movieDatabase[normalizedTitle].subtitles.length > 0) {
+          console.log('Loading subtitles from movie database:', movieDatabase[normalizedTitle].subtitles.length, 'tracks');
+          loadSubtitles(movieDatabase[normalizedTitle].subtitles);
+        } else {
+          console.log('No subtitle data found');
+        }
+
+        // Debug: Log the source URL and parameters
+        console.log('Final Source URL:', src);
+        console.log('Final Source type:', sourceType);
+        console.log('URL parameters:', Object.fromEntries(urlParams.entries()));
+
+        // Initialize time display elements
+        if (timeDisplay) timeDisplay.textContent = '0:00 / 0:00';
+
+        // Set movie info
+        document.title = `${title}`;
+        movieTitle.textContent = title;
+        movieYear.textContent = year;
+        movieRating.textContent = rating ? `${rating}/10` : 'N/A';
+        movieDescription.textContent = description;
+
+        // Set solid black background
+        document.querySelector('.video-container').style.background = '#000';
+        
+        // Show provider info badge if using enhanced API
+        if (window.currentStreamData && window.currentStreamData.provider) {
+          const providerBadge = document.createElement('div');
+          providerBadge.style.cssText = 'position:fixed; top:20px; right:20px; background:rgba(229, 9, 20, 0.9); color:white; padding:8px 15px; border-radius:6px; font-size:12px; font-weight:bold; z-index:9999;';
+          providerBadge.textContent = '🎬 ' + window.currentStreamData.provider;
+          document.body.appendChild(providerBadge);
+          console.log('📺 Playing from provider:', window.currentStreamData.provider);
+        }
+        
+        // NOW Initialize the actual video player with the stream
+        if (src) {
+          console.log('✓ Initializing video with source:', src.substring(0, 100) + '...');
+          initializeVideoPlayer();
+        } else {
+          console.error('❌ No video source available after loading!');
+        }
+      }
+      
+      // Separate function to initialize video player
+      function initializeVideoPlayer() {
+        console.log('✓ Video source found:', src.substring(0, 100) + '...');
+        console.log('Loading video:', src, 'Type:', sourceType);
+
+        // Ensure window.currentMovie is properly set
+        if (!window.currentMovie) {
+          const title = urlParams.get('title') || 'Unknown Movie';
+          const movieId = urlParams.get('id') || urlParams.get('movieId') || `generated-${Date.now()}`;
+
+          window.currentMovie = {
+            id: movieId,
+            title: title,
+            year: urlParams.get('year') || '',
+            timestamp: Date.now()
+          };
+
+          console.warn('Initialized missing currentMovie:', window.currentMovie);
+        }
+
+        const movie = window.currentMovie;
+
+        // Set video attributes
+        let pendingPlay = false;
+        video.playsInline = true;
+        video.preload = 'auto';
+        video.setAttribute('preload', 'auto');
+        video.muted = false;  // Unmuted by default
+        video.volume = 1;     // Full volume
+        video.autoplay = true;
+        video.controls = false;
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'contain';
+
+        // Decide playback method based on sourceType or URL
+        const isIframe = (String(sourceType).toLowerCase() === 'iframe');
+        const isHls = (String(sourceType).toLowerCase() === 'hls') || /\.m3u8(\?.*)?$/.test(src);
+        
+        if (isIframe) {
+          console.log('📺 Initializing iframe embed...');
+          // Hide video element and create iframe
+          video.style.display = 'none';
+          const iframe = document.createElement('iframe');
+          iframe.id = 'stream-iframe';
+          iframe.src = src;
+          iframe.style.width = '100%';
+          iframe.style.height = '100%';
+          iframe.style.border = 'none';
+          iframe.style.position = 'absolute';
+          iframe.style.top = '0';
+          iframe.style.left = '0';
+          iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen';
+          iframe.allowFullscreen = true;
+          iframe.setAttribute('allowfullscreen', 'true');
+          iframe.setAttribute('webkitallowfullscreen', 'true');
+          iframe.setAttribute('mozallowfullscreen', 'true');
+          iframe.setAttribute('scrolling', 'no');
+          iframe.setAttribute('frameborder', '0');
+          // Enable iframe clicks
+          iframe.style.pointerEvents = 'auto';
+          video.parentElement.appendChild(iframe);
+          console.log('✓ Iframe embed loaded:', src);
+          
+          // Block navigation attempts from within the iframe
+          iframe.addEventListener('load', function() {
+            try {
+              // Monitor for any location changes
+              iframe.contentWindow.addEventListener('beforeunload', function(e) {
+                // If user is trying to navigate away from the player, prevent it
+                if (iframe.contentWindow.location.href !== src) {
+                  e.preventDefault();
+                  console.log('🚫 Navigation blocked:', iframe.contentWindow.location.href);
+                  return false;
+                }
+              });
+            } catch (e) {
+              console.log('Cannot access iframe content (cross-origin protection)');
+            }
+          });
+          
+          // Hide custom controls for iframe embeds (they have their own controls)
+          const controlsContainer = document.getElementById('controlsContainer');
+          if (controlsContainer) controlsContainer.style.display = 'none';
+        } else {
+          video.crossOrigin = 'anonymous';
+          
+          if (isHls) {
+            console.log('📺 Initializing HLS playback...');
+            if (window.Hls && Hls.isSupported()) {
+              const hls = new Hls({
+                maxBufferLength: 30,
+                maxMaxBufferLength: 60,
+                lowLatencyMode: true
+              });
+              hls.loadSource(src);
+              hls.attachMedia(video);
+              hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                console.log('✓ HLS manifest parsed successfully');
+                
+                // Ensure video is unmuted
+                video.muted = false;
+                video.volume = 1;
+                
+                // Setup quality selector
+                setupQualitySelector(hls);
+                
+                const playPromise = video.play();
+                if (playPromise) playPromise.catch(err => console.warn('Autoplay blocked:', err));
+              });
+              hls.on(Hls.Events.ERROR, function (event, data) {
+                console.error('❌ HLS error:', data.type, data.details || data);
+                
+                // If we get a fatal error and still have other providers available
+                if (data.fatal) {
+                  console.warn('⚠️ Fatal HLS error, playback cannot continue with current provider');
+                }
+              });
+              window.__hlsInstance = hls;
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+              // Safari native HLS
+              video.src = src;
+              video.addEventListener('loadedmetadata', () => {
+                const playPromise = video.play();
+                if (playPromise) playPromise.catch(err => console.warn('Autoplay blocked:', err));
+              });
+            } else {
+              console.warn('HLS not supported, falling back to direct src');
+              video.src = src;
+            }
+          } else {
+            // MP4 or other direct sources
+            const source = document.createElement('source');
+            source.src = src;
+            source.type = 'video/mp4';
+            video.appendChild(source);
+            
+            // Add error handler for MP4 sources
+            video.addEventListener('error', function() {
+              console.error('❌ Error loading MP4 stream:', video.error?.message);
+              if (window.currentStreamData) {
+                console.log('Stream provider:', window.currentStreamData.provider);
+              }
+            }, { once: true });
+          }
+        }
+
+        // Setup automatic progress tracking for continue watching
+        if (window.ContinueWatchingManager && window.currentMovie) {
+          video.addEventListener('loadedmetadata', () => {
+            console.log('✓ Setting up progress tracking for:', window.currentMovie.title);
+            window.ContinueWatchingManager.setupProgressTracking(video, {
+              movieId: window.currentMovie.id,
+              title: window.currentMovie.title,
+              posterUrl: window.currentMovie.posterUrl || window.currentMovie.poster || urlParams.get('poster') || ''
+            });
+          }, { once: true });
+        } else {
+          console.warn('⚠️ Progress tracking not available');
+        }
       }
 
-      // Debug: Log the source URL and parameters
-      console.log('Final Source URL:', src);
-      console.log('Final Source type:', sourceType);
-      console.log('URL parameters:', Object.fromEntries(urlParams.entries()));
-
-      // Initialize time display elements
-      if (timeDisplay) timeDisplay.textContent = '0:00 / 0:00';
-
-      // Set movie info
-      document.title = `${title}`;
-      movieTitle.textContent = title;
-      movieYear.textContent = year;
-      movieRating.textContent = rating ? `${rating}/10` : 'N/A';
-      movieDescription.textContent = description;
-
-      // Set solid black background
-      document.querySelector('.video-container').style.background = '#000';
+      // Try to fetch stream using enhanced API if needed
+      if (!src && tmdbId && typeof window.getEnhancedStream === 'function') {
+        console.log('🔄 Fetching stream using enhanced API for TMDB ID:', tmdbId);
+        
+        // Try to get stream with automatic fallback
+        async function getStreamWithFallback() {
+          const result = await window.getEnhancedStream(tmdbId, mediaType, season, episode);
+          if (result && result.success) {
+            src = result.url;
+            sourceType = result.type || 'iframe';
+            usingEnhancedAPI = true;
+            console.log('✓ Got stream from enhanced API:', { provider: result.provider, type: sourceType, url: src.substring(0, 80) });
+            
+            // Store stream metadata
+            window.currentStreamData = result;
+            
+            // Load the stream
+            loadStreamInPlayer();
+          } else {
+            console.warn('⚠️ Enhanced API returned no stream');
+            loadStreamInPlayer();
+          }
+        }
+        
+        getStreamWithFallback().catch(err => {
+          console.error('❌ Error fetching stream from enhanced API:', err);
+          loadStreamInPlayer();
+        });
+      } else {
+        // No enhanced API needed, load normally
+        loadStreamInPlayer();
+      }
 
       // System message function using UI toast system
       function showSubtitleNotification(message) {
@@ -3980,167 +4297,7 @@
 
       // Initialize video directly (like player.html)
       if (src) {
-        console.log('✓ Video source found:', src.substring(0, 100) + '...');
-        console.log('Loading video:', src, 'Type:', sourceType);
-
-        // Ensure window.currentMovie is properly set
-        if (!window.currentMovie) {
-          const title = urlParams.get('title') || 'Unknown Movie';
-          const movieId = urlParams.get('id') || urlParams.get('movieId') || `generated-${Date.now()}`;
-
-          window.currentMovie = {
-            id: movieId,
-            title: title,
-            year: urlParams.get('year') || '',
-            timestamp: Date.now()
-          };
-
-          console.warn('Initialized missing currentMovie:', window.currentMovie);
-        }
-
-        const movie = window.currentMovie;
-
-        // Set video attributes
-        let pendingPlay = false;
-        video.playsInline = true;
-        video.preload = 'auto';
-        video.setAttribute('preload', 'auto');
-        video.muted = false;
-        video.autoplay = true;
-        video.controls = false;
-        video.style.width = '100%';
-        video.style.height = '100%';
-        video.style.objectFit = 'contain';
-
-        // Decide playback method based on sourceType or URL
-        const isIframe = (String(sourceType).toLowerCase() === 'iframe');
-        const isHls = (String(sourceType).toLowerCase() === 'hls') || /\.m3u8(\?.*)?$/.test(src);
-        
-        if (isIframe) {
-          console.log('📺 Initializing iframe embed...');
-          // Hide video element and create iframe
-          video.style.display = 'none';
-          const iframe = document.createElement('iframe');
-          iframe.id = 'stream-iframe';
-          iframe.src = src;
-          iframe.style.width = '100%';
-          iframe.style.height = '100%';
-          iframe.style.border = 'none';
-          iframe.style.position = 'absolute';
-          iframe.style.top = '0';
-          iframe.style.left = '0';
-          iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen';
-          iframe.allowFullscreen = true;
-          iframe.setAttribute('allowfullscreen', 'true');
-          iframe.setAttribute('webkitallowfullscreen', 'true');
-          iframe.setAttribute('mozallowfullscreen', 'true');
-          iframe.setAttribute('scrolling', 'no');
-          iframe.setAttribute('frameborder', '0');
-          video.parentElement.appendChild(iframe);
-          console.log('✓ Iframe embed loaded:', src);
-          
-          // Hide custom controls for iframe embeds (they have their own controls)
-          const controlsContainer = document.getElementById('controlsContainer');
-          if (controlsContainer) controlsContainer.style.display = 'none';
-        } else {
-          video.crossOrigin = 'anonymous';
-          
-          if (isHls) {
-            console.log('📺 Initializing HLS playback...');
-            if (window.Hls && Hls.isSupported()) {
-              // CORS Proxy configuration for streaming URLs
-              const corsProxies = [
-                'https://cors-anywhere.herokuapp.com/',
-                'https://api.allorigins.win/raw?url='
-              ];
-              
-              let proxyUrl = src;
-              // Try using CORS proxy if the URL has CORS issues
-              const useProxy = src.includes('rainbloom44.xyz') || src.includes('2embed');
-              
-              const hlsConfig = {
-                maxBufferLength: 30,
-                maxMaxBufferLength: 60,
-                lowLatencyMode: true,
-                // Enable headers for CORS requests
-                xhrSetup: function(xhr, url) {
-                  xhr.withCredentials = false;
-                  // Note: User-Agent cannot be set in browsers due to security restrictions
-                  // The browser will automatically send appropriate headers
-                }
-              };
-              
-              const hls = new Hls(hlsConfig);
-              hls.loadSource(src);
-              hls.attachMedia(video);
-              hls.on(Hls.Events.MANIFEST_PARSED, function () {
-                console.log('✓ HLS manifest parsed successfully');
-                
-                // Setup quality selector
-                setupQualitySelector(hls);
-                
-                const playPromise = video.play();
-                if (playPromise) playPromise.catch(err => console.warn('Autoplay blocked:', err));
-              });
-              hls.on(Hls.Events.ERROR, function (event, data) {
-                console.error('❌ HLS error:', data.type, data.details || data);
-                
-                // Handle CORS errors
-                if (data.details === 'manifestLoadError' || data.details === 'networkError') {
-                  console.warn('⚠️ CORS or Network error detected. The streaming provider may have CORS restrictions.');
-                  const errorMsg = document.querySelector('.player-error-msg');
-                  if (errorMsg) {
-                    errorMsg.style.display = 'block';
-                    errorMsg.innerHTML = '⚠️ Streaming URL blocked by CORS policy. Try a different source or use a CORS proxy.';
-                  }
-                }
-              });
-              window.__hlsInstance = hls;
-            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-              // Safari native HLS
-              video.src = src;
-              video.addEventListener('loadedmetadata', () => {
-                const playPromise = video.play();
-                if (playPromise) playPromise.catch(err => console.warn('Autoplay blocked:', err));
-              });
-            } else {
-              console.warn('HLS not supported, falling back to direct src');
-              video.src = src;
-            }
-          } else {
-            // MP4 or other direct sources
-            const source = document.createElement('source');
-            source.src = src;
-            source.type = 'video/mp4';
-            video.appendChild(source);
-          }
-        }
-
-        // DISABLED: Old resume code - now handled by player-continue-watching.js
-        // These flags are set to true to prevent this old code from running
-        let hasSetResumeTime = true; // Disabled - using player-continue-watching.js instead
-        let resumePromptShown = true; // Disabled - using player-continue-watching.js instead
-        
-        // Setup automatic progress tracking for continue watching
-        if (window.ContinueWatchingManager && window.currentMovie) {
-          video.addEventListener('loadedmetadata', () => {
-            console.log('✓ Setting up progress tracking for:', window.currentMovie.title);
-            window.ContinueWatchingManager.setupProgressTracking(video, {
-              movieId: window.currentMovie.id,
-              title: window.currentMovie.title,
-              posterUrl: window.currentMovie.posterUrl || window.currentMovie.poster || urlParams.get('poster') || ''
-            });
-          }, { once: true });
-        } else {
-          console.warn('⚠️ Progress tracking not available - ContinueWatchingManager or currentMovie not ready');
-        }
-      } else {
-        console.error('❌ No video source provided in URL parameters!');
-        console.error('   URL:', window.location.href);
-        const videoTitle = document.querySelector('h1');
-        if (videoTitle) {
-          videoTitle.textContent = 'Error: No video source available';
-        }
+        initializeVideoPlayer();
       }
 
       // Function to save current playback position
@@ -5312,8 +5469,109 @@
 
       // Back button functionality
       backButton.addEventListener('click', () => {
+        // Signal index.html to restore the modal
+        sessionStorage.setItem('restoreModalOnLoad', 'true');
         window.location.href = 'index.html';
       });
+
+      // Server Switcher functionality (wrapped in try-catch to prevent errors)
+      try {
+        const serverSwitcher = document.getElementById('serverSwitcher');
+        const serverMenu = document.getElementById('serverMenu');
+        const currentServerDisplay = document.getElementById('currentServer');
+        const serverOptions = document.querySelectorAll('.server-option');
+        
+        if (serverSwitcher && serverMenu && currentServerDisplay) {
+          // Get current URL params
+          const urlParams = new URLSearchParams(window.location.search);
+          const tmdbId = urlParams.get('id') || urlParams.get('movieId');
+          const mediaType = urlParams.get('mediaType') || 'movie';
+          const season = urlParams.get('season');
+          const episode = urlParams.get('episode');
+          const movieTitle = urlParams.get('title') || 'Movie';
+          
+          // Toggle server menu
+          serverSwitcher.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isVisible = serverMenu.style.display === 'block';
+            serverMenu.style.display = isVisible ? 'none' : 'block';
+          });
+          
+          // Close menu when clicking outside
+          document.addEventListener('click', (e) => {
+            if (!serverMenu.contains(e.target) && !serverSwitcher.contains(e.target)) {
+              serverMenu.style.display = 'none';
+            }
+          });
+          
+          // Set active server on load
+          const currentProvider = urlParams.get('provider') || 'videasy';
+          serverOptions.forEach(option => {
+            const provider = option.getAttribute('data-provider');
+            if (provider === currentProvider) {
+              option.classList.add('active');
+              const icon = option.querySelector('i');
+              const nameEl = option.querySelector('.server-name');
+              if (icon) {
+                icon.classList.remove('fa-circle');
+                icon.classList.add('fa-circle-dot');
+              }
+              if (nameEl) {
+                currentServerDisplay.textContent = nameEl.textContent;
+              }
+            }
+          });
+          
+          // Handle server switching
+          serverOptions.forEach((option, index) => {
+            option.addEventListener('click', async (e) => {
+              e.stopPropagation();
+              
+              const provider = option.getAttribute('data-provider');
+              const nameEl = option.querySelector('.server-name');
+              const serverName = nameEl ? nameEl.textContent : 'Server';
+              
+              // Show loading
+              currentServerDisplay.innerHTML = '<i class=\"fas fa-spinner fa-spin\"></i> Loading...';
+              serverMenu.style.display = 'none';
+              
+              try {
+                // Fallback: construct URL based on provider
+                let embedUrl;
+                if (provider === 'videasy') {
+                  embedUrl = mediaType === 'tv' 
+                    ? `https://player.videasy.net/tv/${tmdbId}/${season}/${episode}`
+                    : `https://player.videasy.net/movie/${tmdbId}`;
+                } else if (provider === 'vidsrcxyz') {
+                  embedUrl = mediaType === 'tv' 
+                    ? `https://vidsrc.xyz/embed/tv/${tmdbId}/${season}/${episode}`
+                    : `https://vidsrc.xyz/embed/movie/${tmdbId}`;
+                } else if (provider === 'superembed') {
+                  embedUrl = mediaType === 'tv'
+                    ? `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${season}&e=${episode}`
+                    : `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`;
+                }
+                
+                if (embedUrl) {
+                  const newUrl = new URL(window.location.href);
+                  newUrl.searchParams.set('provider', provider);
+                  newUrl.searchParams.set('src', embedUrl);
+                  newUrl.searchParams.set('type', 'iframe');
+                  window.location.href = newUrl.toString();
+                }
+              } catch (error) {
+                console.error('Server switch error:', error);
+                currentServerDisplay.innerHTML = '<i class=\"fas fa-exclamation-triangle\"></i> Error';
+                setTimeout(() => {
+                  currentServerDisplay.textContent = 'Server ' + (index + 1);
+                }, 2000);
+              }
+            });
+          });
+        }
+      } catch (error) {
+        console.warn('Server switcher initialization failed:', error);
+      }
 
       // --- Enhanced Player Features ---
       (function enhancePlayer() {
@@ -6393,99 +6651,6 @@
           updateScreenMode();
         });
         updateScreenMode();
-      }
-
-      // ========== PROVIDER SELECTOR LOGIC ==========
-      const providerButtons = document.querySelectorAll('.provider-btn');
-      const providerData = {
-        filemoon: { module: window.filemoon, name: 'FileMoon' },
-        doodstream: { module: window.doodstream, name: 'Doodstream' },
-        streamtape: { module: window.streamtape, name: 'StreamTape' }
-      };
-
-      function loadProviderStream(providerKey) {
-        const provider = providerData[providerKey];
-        if (!provider || !provider.module || !movieId) {
-          console.log('⚠️ Provider not available:', providerKey);
-          return;
-        }
-
-        try {
-          console.log(`📺 Loading ${provider.name}...`);
-          const embedUrl = provider.module.getUrl(movieId, isSeries ? 'TV' : 'MOVIE', season, episode);
-          
-          if (!embedUrl) {
-            console.error(`❌ ${provider.name} URL generation failed`);
-            return;
-          }
-
-          // Load the iframe
-          const iframe = document.getElementById('streamIframe');
-          iframe.src = embedUrl;
-          iframe.style.display = 'block';
-          
-          // Hide video element if showing
-          const video = document.getElementById('video');
-          if (video) video.style.display = 'none';
-
-          // Hide controls for iframe
-          const controlsContainer = document.getElementById('controlsContainer');
-          if (controlsContainer) controlsContainer.style.display = 'none';
-
-          console.log(`✅ ${provider.name} stream loaded!`);
-
-          // Update active button
-          providerButtons.forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.dataset.provider === providerKey) {
-              btn.classList.add('active');
-            }
-          });
-
-          // Save preference
-          localStorage.setItem('preferredProvider', providerKey);
-        } catch (error) {
-          console.error(`❌ ${provider.name} error:`, error);
-        }
-      }
-
-      // Add click handlers to provider buttons
-      providerButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-          const providerKey = btn.dataset.provider;
-          console.log(`User clicked provider: ${providerKey}`);
-          loadProviderStream(providerKey);
-        });
-      });
-
-      // Only auto-load provider if no direct src was found
-      if (!src) {
-        // Wait for provider modules to load
-        setTimeout(() => {
-          console.log('🔍 Checking available providers...');
-          console.log('window.filemoon:', window.filemoon ? '✅ loaded' : '❌ not loaded');
-          console.log('window.doodstream:', window.doodstream ? '✅ loaded' : '❌ not loaded');
-          console.log('window.streamtape:', window.streamtape ? '✅ loaded' : '❌ not loaded');
-
-          const savedProvider = localStorage.getItem('preferredProvider') || 'filemoon';
-          
-          // Check if saved provider exists and is available
-          if (providerData[savedProvider] && providerData[savedProvider].module) {
-            console.log(`⚡ Auto-loading saved provider: ${savedProvider}`);
-            loadProviderStream(savedProvider);
-          } else {
-            // Try first available provider
-            const availableProviders = Object.keys(providerData).filter(key => providerData[key].module);
-            if (availableProviders.length > 0) {
-              console.log(`⚡ Auto-loading first available provider: ${availableProviders[0]}`);
-              loadProviderStream(availableProviders[0]);
-            } else {
-              console.error('❌ No providers available!');
-            }
-          }
-        }, 500);
-      } else {
-        console.log('✅ Stream source already provided via URL, skipping provider auto-load');
       }
     });
   </script>

@@ -1,0 +1,6 @@
+2026/01/12-19:04:08.142 4c68 Creating DB C:\Users\Jeet\Documents\Movies-Website\cinematic-hubs\.desi-profile\Default\IndexedDB\https_blunchagen.com_0.indexeddb.leveldb since it was missing.
+2026/01/12-19:04:08.154 4c68 Reusing MANIFEST C:\Users\Jeet\Documents\Movies-Website\cinematic-hubs\.desi-profile\Default\IndexedDB\https_blunchagen.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/01/12-19:04:08.501 26b4 Level-0 table #5: started
+2026/01/12-19:04:08.513 26b4 Level-0 table #5: 1412 bytes OK
+2026/01/12-19:04:08.515 26b4 Delete type=0 #3
+2026/01/12-19:04:08.515 2348 Manual compaction at level-0 from '\x00\x01\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x02\x00\x00\x00' @ 0 : 0; will stop at (end)

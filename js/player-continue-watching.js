@@ -4,6 +4,16 @@
  */
 (function () {
   'use strict';
+  
+  // Skip if using iframe embed
+  const urlParams = new URLSearchParams(window.location.search);
+  const type = urlParams.get('type') || '';
+  const sourceType = urlParams.get('source') || '';
+  if (String(type).toLowerCase() === 'iframe' || String(sourceType).toLowerCase() === 'iframe') {
+    console.log('[Resume] Skipping continue watching for iframe embed');
+    return;
+  }
+  
   // --- Custom Pause Overlay Logic ---
   document.addEventListener('DOMContentLoaded', function () {
     const video = document.getElementById('video');

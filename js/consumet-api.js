@@ -1,72 +1,106 @@
 /**
  * Consumet API Integration
  * Provides streaming links for movies and TV shows using the Consumet API
- * Documentation: https://docs.consumet.org
+ * Docs: https://docs.consumet.org
  */
 
 (function() {
   'use strict';
 
-  // Get Consumet API base URL
   function getConsumetApiBase() {
-    return window.CONSUMET_API || 'http://localhost:3000';
+    return window.CONSUMET_API || 'https://api.consumet.org';
   }
 
-  /**
-   * Fetch stream links from Consumet API using FlixHQ provider
-   * @param {string} tmdbId - TMDB ID of the movie/show
-   * @param {string} mediaType - 'movie' or 'tv'
-   * @param {number} season - Season number (for TV shows)
-   * @param {number} episode - Episode number (for TV shows)
-   * @returns {Promise<Object>} Stream data with URLs and quality options
-   */
+  // Fetch JSON with graceful parse errors
+  async function fetchJson(url, options = {}) {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        Accept: 'application/json',
+        ...(options.headers || {})
+      }
+    });
+
+    const text = await response.text();
+    let data;
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch (err) {
+      throw new Error(`Invalid JSON from ${url} (status ${response.status})`);
+    }
+
+    if (!response.ok) {
+      const message = (data && data.message) ? data.message : response.statusText;
+      throw new Error(`Request failed ${response.status}: ${message}`);
+    }
+
+    return data;
+  }
+
+  // Resolve Consumet watch parameters using TMDB meta mapping
+  async function resolveWatchIds(base, tmdbId, mediaType, season, episode) {
+    const type = mediaType === 'tv' ? 'tv' : 'movie';
+    const metaUrl = `${base}/meta/tmdb/info/${tmdbId}?type=${type}`;
+    console.log('🔍 Consumet meta lookup:', metaUrl);
+
+    const meta = await fetchJson(metaUrl);
+
+    // movies: use meta.id for both mediaId and episodeId
+    if (type === 'movie') {
+      const id = meta.id || meta.episodeId;
+      if (!id) throw new Error('Meta response missing movie id');
+      return { mediaId: id, episodeId: id };
+    }
+
+    // tv: need a valid episode id plus series media id
+    if (!meta.episodes || !Array.isArray(meta.episodes) || !meta.id) {
+      throw new Error('No episodes or media id found in meta response');
+    }
+
+    let chosen = null;
+    if (season && episode) {
+      chosen = meta.episodes.find(
+        ep => String(ep.seasonNumber) === String(season) && String(ep.number) === String(episode)
+      );
+    }
+
+    if (!chosen) {
+      // fall back to first episode
+      chosen = meta.episodes[0];
+    }
+
+    const episodeId = chosen && (chosen.episodeId || chosen.id);
+    if (!episodeId) throw new Error('No usable episodeId found');
+
+    return { mediaId: meta.id, episodeId };
+  }
+
+  // Primary: FlixHQ via Consumet
   async function fetchConsumetStream(tmdbId, mediaType = 'movie', season = null, episode = null) {
     const base = getConsumetApiBase();
-    
+
     try {
-      // Step 1: Search for the media on FlixHQ using TMDB ID
-      console.log('🔍 Searching Consumet for TMDB ID:', tmdbId, 'Type:', mediaType);
-      
-      let watchUrl;
-      if (mediaType === 'tv' && season && episode) {
-        watchUrl = `${base}/movies/flixhq/watch?episodeId=tv/${tmdbId}-${season}-${episode}&mediaId=${tmdbId}`;
-      } else {
-        watchUrl = `${base}/movies/flixhq/watch?episodeId=${tmdbId}&mediaId=${tmdbId}`;
-      }
-      
-      console.log('📡 Fetching stream from:', watchUrl);
-      
-      const response = await fetch(watchUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        }
-      });
+      const { mediaId, episodeId } = await resolveWatchIds(base, tmdbId, mediaType, season, episode);
+      const watchUrl = `${base}/movies/flixhq/watch?mediaId=${encodeURIComponent(mediaId)}&episodeId=${encodeURIComponent(episodeId)}`;
+      console.log('📡 Consumet watch URL:', watchUrl);
 
-      if (!response.ok) {
-        throw new Error(`Consumet API error: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log('📦 Consumet response:', data);
+      const data = await fetchJson(watchUrl);
 
       if (!data || !data.sources || data.sources.length === 0) {
         throw new Error('No streaming sources found');
       }
 
-      // Get the best quality source
-      const sources = data.sources;
-      const bestSource = sources.find(s => s.quality === 'auto') || 
-                        sources.find(s => s.quality === '1080p') ||
-                        sources.find(s => s.quality === '720p') ||
-                        sources[0];
+      const pick = data.sources.find(s => s.quality === 'auto') ||
+                   data.sources.find(s => s.quality === '1080p') ||
+                   data.sources.find(s => s.quality === '720p') ||
+                   data.sources[0];
 
       return {
         success: true,
-        url: bestSource.url,
-        type: bestSource.isM3U8 ? 'hls' : 'mp4',
-        quality: bestSource.quality,
-        sources: sources,
+        url: pick.url,
+        type: pick.isM3U8 ? 'hls' : 'mp4',
+        quality: pick.quality || 'auto',
+        sources: data.sources,
         subtitles: data.subtitles || [],
         provider: 'Consumet - FlixHQ'
       };
@@ -82,55 +116,15 @@
     }
   }
 
-  /**
-   * Alternative method using VidSrc provider
-   */
-  async function fetchVidSrcStream(tmdbId, mediaType = 'movie', season = null, episode = null) {
-    const base = getConsumetApiBase();
-    
-    try {
-      let apiUrl;
-      if (mediaType === 'tv' && season && episode) {
-        apiUrl = `${base}/movies/vidsrc/watch?episodeId=${tmdbId}?s=${season}&e=${episode}&mediaId=${tmdbId}`;
-      } else {
-        apiUrl = `${base}/movies/vidsrc/watch?episodeId=${tmdbId}&mediaId=${tmdbId}`;
-      }
-      
-      console.log('📡 Fetching VidSrc stream from:', apiUrl);
-      
-      const response = await fetch(apiUrl);
-      
-      if (!response.ok) {
-        throw new Error(`VidSrc API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (!data || !data.sources || data.sources.length === 0) {
-        throw new Error('No VidSrc sources found');
-      }
-
-      return {
-        success: true,
-        url: data.sources[0].url,
-        type: 'hls',
-        sources: data.sources,
-        subtitles: data.subtitles || [],
-        provider: 'Consumet - VidSrc'
-      };
-
-    } catch (error) {
-      console.error('❌ VidSrc API error:', error);
-      return {
-        success: false,
-        message: error.message
-      };
-    }
+  // Optional VidSrc path (currently disabled to avoid bad episodeId mapping)
+  async function fetchVidSrcStream() {
+    return {
+      success: false,
+      message: 'VidSrc provider disabled'
+    };
   }
 
-  /**
-   * Main resolver - tries multiple providers
-   */
+  // Resolver that tries FlixHQ first
   async function resolveConsumetStream(movie, season = null, episode = null) {
     const mediaType = movie.mediaType === 'tv' ? 'tv' : 'movie';
     const tmdbId = movie.id;
@@ -142,57 +136,34 @@
       episode
     });
 
-    // Try FlixHQ first (primary provider)
-    let result = await fetchConsumetStream(tmdbId, mediaType, season, episode);
-    
+    const result = await fetchConsumetStream(tmdbId, mediaType, season, episode);
+
     if (result.success) {
       console.log('✅ Stream resolved via FlixHQ:', result.url);
       return result;
     }
 
-    // Fallback to VidSrc
-    console.log('⚠️ FlixHQ failed, trying VidSrc...');
-    result = await fetchVidSrcStream(tmdbId, mediaType, season, episode);
-    
-    if (result.success) {
-      console.log('✅ Stream resolved via VidSrc:', result.url);
-      return result;
-    }
-
-    // All providers failed
     console.error('❌ All Consumet providers failed');
     return {
       success: false,
-      message: 'No streams available from Consumet providers',
+      message: result.message || 'No streams available from Consumet providers',
       url: null,
       type: null
     };
   }
 
-  /**
-   * Search for media on Consumet
-   */
+  // Search wrapper
   async function searchConsumet(query, page = 1) {
     const base = getConsumetApiBase();
     const searchUrl = `${base}/movies/flixhq/${encodeURIComponent(query)}?page=${page}`;
-    
-    try {
-      console.log('🔍 Searching Consumet:', searchUrl);
-      const response = await fetch(searchUrl);
-      
-      if (!response.ok) {
-        throw new Error(`Search failed: ${response.status}`);
-      }
 
-      const data = await response.json();
-      console.log('📦 Search results:', data);
-      
+    try {
+      const data = await fetchJson(searchUrl);
       return {
         success: true,
         results: data.results || [],
         hasNextPage: data.hasNextPage || false
       };
-
     } catch (error) {
       console.error('❌ Consumet search error:', error);
       return {
@@ -203,29 +174,17 @@
     }
   }
 
-  /**
-   * Get media info from Consumet
-   */
+  // Info wrapper
   async function getConsumetInfo(mediaId) {
     const base = getConsumetApiBase();
     const infoUrl = `${base}/movies/flixhq/info?id=${encodeURIComponent(mediaId)}`;
-    
-    try {
-      console.log('📡 Fetching media info:', infoUrl);
-      const response = await fetch(infoUrl);
-      
-      if (!response.ok) {
-        throw new Error(`Info fetch failed: ${response.status}`);
-      }
 
-      const data = await response.json();
-      console.log('📦 Media info:', data);
-      
+    try {
+      const data = await fetchJson(infoUrl);
       return {
         success: true,
         data: data
       };
-
     } catch (error) {
       console.error('❌ Consumet info error:', error);
       return {

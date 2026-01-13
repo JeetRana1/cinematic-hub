@@ -1796,6 +1796,7 @@
 
     .movies {
       margin-top: 8rem;
+      padding-top: 1rem;
     }
 
     /* Category bar styles */
@@ -1803,7 +1804,7 @@
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
-      margin: 0 0 1rem 0;
+      margin: 10rem 0 1rem 0;
     }
 
     .cat-btn {
@@ -2511,9 +2512,36 @@
       border-radius: 6px;
       z-index: 5;
       border: 1px solid rgba(255, 255, 255, 0.06);
-      font-weight: 600;
-      letter-spacing: 0.3px;
-      display: none;
+    }
+
+    /* Rating badge overlay on poster cards (modern pill style) */
+    .poster .rating-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      background: rgba(20, 20, 20, 0.85);
+      border: 1px solid rgba(255, 193, 7, 0.28);
+      border-radius: 9999px; /* pill */
+      color: #ffc107;
+      font-weight: 700;
+      font-size: 0.9rem;
+      z-index: 6;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+      pointer-events: none; /* keep clicks going to the card */
+    }
+
+    .poster .rating-badge .star {
+      line-height: 1;
+      font-size: 1rem;
+      transform: translateY(-0.5px);
+    }
+
+    .poster .rating-badge .value {
+      line-height: 1;
     }
 
     .movie-card:hover .poster img {
@@ -2978,6 +3006,171 @@
 
     .rating-badge i {
       font-size: 0.85rem;
+    }
+
+    /* Modern Custom Dropdown Styles for Series Selector */
+    .series-picker {
+      display: flex;
+      flex-direction: row;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+      padding: 0;
+    }
+
+    .series-meta {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.95rem;
+      font-weight: 500;
+      flex: 0 0 auto;
+    }
+
+    .series-selectors {
+      display: flex;
+      flex-direction: row;
+      gap: 16px;
+      align-items: center;
+      flex: 1;
+    }
+
+    @media (max-width: 600px) {
+      .series-selectors {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+
+    .custom-select-wrapper {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .select-label {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .custom-select {
+      position: relative;
+      min-width: 180px;
+    }
+
+    .select-trigger {
+      background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 14px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+
+    .select-trigger:hover {
+      border-color: rgba(167, 139, 250, 0.4);
+      background: linear-gradient(135deg, rgba(35, 35, 35, 0.95) 0%, rgba(25, 25, 25, 0.95) 100%);
+      box-shadow: 0 4px 12px rgba(167, 139, 250, 0.1);
+    }
+
+    .custom-select.active .select-trigger {
+      border-color: rgba(167, 139, 250, 0.6);
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.1);
+    }
+
+    .select-value {
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .select-arrow {
+      color: rgba(255, 255, 255, 0.6);
+      transition: transform 0.3s ease;
+    }
+
+    .custom-select.active .select-arrow {
+      transform: rotate(180deg);
+    }
+
+    .select-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, rgba(25, 25, 25, 0.98) 0%, rgba(15, 15, 15, 0.98) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      max-height: 280px;
+      overflow-y: auto;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px);
+    }
+
+    .custom-select.active .select-dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .select-dropdown::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .select-dropdown::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+    }
+
+    .select-dropdown::-webkit-scrollbar-thumb {
+      background: rgba(167, 139, 250, 0.5);
+      border-radius: 10px;
+    }
+
+    .select-dropdown::-webkit-scrollbar-thumb:hover {
+      background: rgba(167, 139, 250, 0.7);
+    }
+
+    .select-option {
+      padding: 12px 16px;
+      cursor: pointer;
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 0.93rem;
+      transition: all 0.2s ease;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .select-option:last-child {
+      border-bottom: none;
+    }
+
+    .select-option:hover {
+      background: rgba(167, 139, 250, 0.15);
+      color: #fff;
+      padding-left: 20px;
+    }
+
+    .select-option.selected {
+      background: rgba(167, 139, 250, 0.2);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .select-option.selected::before {
+      content: '✓ ';
+      margin-right: 8px;
+      color: rgba(167, 139, 250, 1);
     }
 
     .trailer-container {
@@ -4472,7 +4665,7 @@
           <i class="fas fa-fire"></i> Popular Movies
         </h2>
       </div>
-      <div class="trending-movies-container" id="trendingMoviesContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; padding: 0 20px;"></div>
+      <div class="movies-grid" id="trendingMoviesContainer"></div>
     </section>
 
     <div class="movies" id="moviesContainer"></div>
@@ -4523,13 +4716,38 @@
             <span>Stream 2</span>
           </button>
         </div>
-        <div class="series-picker" id="seriesPicker" style="display:none; gap: 10px; align-items: center; flex-wrap: wrap;">
-          <div class="series-meta" id="seriesMeta" style="color:#ccc; font-size: 0.95rem;"></div>
-          <label for="seasonSelect" style="color:#fff; font-size:0.9rem;">Season</label>
-          <select id="seasonSelect" style="background:#111; color:#fff; border:1px solid #333; padding:8px 10px; border-radius:6px; min-width:160px;"></select>
-          <label for="episodeSelect" style="color:#fff; font-size:0.9rem;">Episode</label>
-          <select id="episodeSelect" style="background:#111; color:#fff; border:1px solid #333; padding:8px 10px; border-radius:6px; min-width:200px;"></select>
-          <button id="seriesPlayBtn" class="stream-btn" style="background:#e50914; border:none; color:#fff; padding:10px 14px; border-radius:8px; cursor:pointer;">
+        <div class="series-picker" id="seriesPicker" style="display:none;">
+          <div class="series-meta" id="seriesMeta"></div>
+          <div class="series-selectors">
+            <div class="custom-select-wrapper">
+              <label class="select-label">Season</label>
+              <div class="custom-select" id="seasonSelectWrapper">
+                <div class="select-trigger" id="seasonTrigger">
+                  <span class="select-value">Select Season</span>
+                  <svg class="select-arrow" width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                    <path d="M2 4l4 4 4-4H2z"/>
+                  </svg>
+                </div>
+                <div class="select-dropdown" id="seasonDropdown"></div>
+              </div>
+              <select id="seasonSelect" style="display: none;"></select>
+            </div>
+            <div class="custom-select-wrapper">
+              <label class="select-label">Episode</label>
+              <div class="custom-select" id="episodeSelectWrapper">
+                <div class="select-trigger" id="episodeTrigger">
+                  <span class="select-value">Select Episode</span>
+                  <svg class="select-arrow" width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                    <path d="M2 4l4 4 4-4H2z"/>
+                  </svg>
+                </div>
+                <div class="select-dropdown" id="episodeDropdown"></div>
+              </div>
+              <select id="episodeSelect" style="display: none;"></select>
+            </div>
+          </div>
+          <button id="seriesPlayBtn" class="stream-btn primary-stream">
+            <i class="fas fa-play"></i>
             <span>Play Episode</span>
           </button>
           <button id="openOnYouTubeBtn" class="stream-btn" style="display:none; background:#FF0000; border:none; color:#fff; padding:10px 14px; border-radius:8px; cursor:pointer; align-items:center; gap:6px;">
@@ -4687,639 +4905,11 @@
       });
     }
 
-        const MOVIE_1 =
-    {
-      id: 1,
-      title: 'Manjummel Boys',
-      year: 2024,
-      original_language: 'ml',
-      genres: ['Survival', 'Thriller', 'Drama', 'Adventure'],
-      rating: 8.6,
-      overview: 'Manjummel Boys, based on a real story, is about a bunch of friends who set out on a trip to Kodaikanal and the events that occur there.',
-      release_date: '2024',
-      posterUrl: 'https://archive.org/download/manjummel-boys-poster/Manjummel-Boys-Poster.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Manjummel.Boys.Hindi.Trailer.mp4',
-    };
+    // All hardcoded movies removed - using TMDB API instead
 
-    const MOVIE_2 =
-    {
-      id: 2,
-      title: 'Tourist Family',
-      year: 2024,
-      original_language: 'ta',
-      genres: ['Comedy', 'Drama'],
-      rating: 8.5,
-      overview: 'A quirky Sri Lankan family seeking a fresh start in India transforms a disconnected neighborhood into a vibrant community with their infectious love and kindness.',
-      release_date: '2024',
-      posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Tourist-Family-Poster.jpg',
-      trailerUrl: 'https://ia801700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Tourist.Family.Hindi.Trailer.mp4',
-    };
 
-    const MOVIE_3 =
-    {
-      id: 3,
-      title: 'Kaithi',
-      year: 2023,
-      original_language: 'ta',
-      genres: ['Comedy', 'Drama'],
-      rating: 8.5,
-      overview: 'The story revolves around a man named Karthi who is trying to find his missing wife. He meets a girl named Dheena who helps him in finding her.',
-      release_date: '2023',
-      posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Kaithi-Poster.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Kaithi.Hindi.Trailer.mp4',
-    };
-
-    const MOVIE_4 =
-    {
-      id: 4,
-      title: 'Vikram',
-      year: 2022,
-      original_language: 'ta',
-      genres: ['Action', 'Thriller', 'Gun-Fu', 'One-Person Army Action', 'Crime'],
-      rating: 8.3,
-      overview: 'A special investigator discovers a case of serial killings is not what it seems to be, and leading down this path is only going to end in a war between everyone involved.',
-      release_date: '2022',
-      posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Vikram-Poster.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Vikram.Hindi.Trailer.mp4',
-    };
-
-    const MOVIE_5 =
-    {
-      id: 5,
-      title: 'Leo',
-      year: 2023,
-      original_language: 'ta',
-      genres: ['Action', 'Crime', 'Thriller', 'One-Person Army Action', 'Action Epic', 'Gangster', 'Drama'],
-      rating: 7.2,
-      overview: 'Parthiban is a mild-mannered cafe owner who fends off a gang of murderous thugs and gains attention from a drug cartel claiming he was once a part of them.',
-      release_date: '2023',
-      posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Leo-Poster.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Leo.Hindi.Trailer.mp4',
-    };
-
-    const MOVIE_6 =
-    {
-      id: 6,
-      title: 'Coolie',
-      year: 2025,
-      original_language: 'ta',
-      genres: ['Action', 'Thriller', 'Crime'],
-      rating: 6.1,
-      overview: 'Delves into a mans relentless quest for vengeance since youth, driven by righting past wrongs, shaping his very existence. Viewers experience the complexities of his tumultuous vendetta journey.',
-      release_date: '2025',
-      posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Coolie-Poster.jpg',
-      trailerUrl: 'https://ia801700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Coolie.Hindi.Trailer.mp4',
-    };
-
-    const MOVIE_7 =
-    {
-      id: 7,
-      title: 'Maharaja',
-      year: 2024,
-      original_language: 'ta',
-      genres: ['Action', 'Drama', 'Thriller', 'Crime', 'Drama', 'One-Person Army Action'],
-      rating: 8.4,
-      overview: 'A barber seeks vengeance after his home is burglarized, cryptically telling police his "Lakshmi" has been taken, leaving them uncertain if its a person or object, jeer at his request until they learn what they are really looking for.',
-      release_date: '2024',
-      posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Maharaja-Poster.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Maharaja.Hindi.Trailer.mp4',
-    };
-
-    const MOVIE_8 =
-    {
-      id: 8,
-      title: 'Hi Papa',
-      year: 2023,
-      original_language: 'ta',
-      genres: ['Romance', 'Drama', 'Family'],
-      rating: 8.3,
-      overview: 'A single father begins to narrate the story of the missing mother to his child and nothing remains the same.',
-      release_date: '2023',
-      posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Hi-Papa-Poster.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Hi.Papa.Hindi.Trailer.mp4',
-    };
-
-    const MOVIE_9 =
-    {
-      id: 9,
-      title: 'Kantara',
-      year: 2022,
-      original_language: 'ta',
-      genres: ['Action', 'Thriller', 'Action Epic', 'Drama', 'One-Person Army Action', 'Epic', 'Adventure'],
-      rating: 8.2,
-      overview: 'When greed paves the way for betrayal, scheming and murder, a young tribal reluctantly dons the traditions of his ancestors to seek justice.',
-      release_date: '2022',
-      posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Kantara-Poster.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Kantara.Hindi.Trailer.mp4',
-    };
-
-    const MOVIE_10 =
-    {
-      id: 10,
-      title: 'Hridayam',
-      year: 2022,
-      original_language: 'ta',
-      genres: ['Musical', 'Drama', 'Romance'],
-      rating: 8.1,
-      overview: 'The emotional journey of Arun, his carefree bachelor days in engineering college, and how he matures through various phases of life.',
-      release_date: '2022',
-      posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Hridayam-poster.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Hridayam.Hindi.Trailer.mp4',
-    };
-
-    const MOVIE_11 =
-    {
-      id: 11,
-      title: 'Lokah Chapter 1',
-      year: 2025,
-      original_language: 'ta',
-      genres: ['Action', 'Superhero', 'Fantasy'],
-      rating: 8.1,
-      overview: 'Chandra, a young woman, arrives in Bengaluru with a mission. Her neighbor, Sunny, sets out to unravel the mystery about her and they are on an unexpected adventure ride together.',
-      release_date: '2025',
-      posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Lokah-Chapter-1-Chandra-Poster.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Lokah.Chapter.1.Chandra.Hindi.Trailer.mp4',
-    };
-
-    const MOVIE_12 =
-    {
-      id: 12,
-      title: 'Kantara Chapter 1',
-      year: 2025,
-      original_language: 'ta',
-      genres: ['Action Epic', 'Epic', 'Fantasy Epic', 'Period Drama', 'Supernatural Fantasy', 'Action', 'Fantasy', 'Thriller'],
-      rating: 8.2,
-      overview: 'Exploring the origins of Kaadubettu Shiva during the Kadamba dynasty era, it delves into the untamed wilderness and forgotten lore surrounding his past.',
-      release_date: '2025',
-      posterUrl: 'https://ia902308.us.archive.org/28/items/kantara-chapter.-1.2025.-hindi/Kantara-_Chapter_1_poster.jpg',
-      trailerUrl: 'https://ia801700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Kantara.Chapter.1.Hindi.Trailer.mp4',
-    };
-
-    const MOVIE_13 =
-    {
-      id: 13,
-      title: 'Lucky Bhaskar',
-      year: 2024,
-      original_language: 'ta',
-      genres: ['Crime', 'Drama', 'Caper', 'Thriller'],
-      rating: 8.0,
-      overview: 'A cash-strapped cashier working at a bank embarks on a risky investment scheme and soon gets drawn into the murky world of money laundering.',
-      release_date: '2024',
-      posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Lucky-Baskhar-Poster.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Lucky.Baskhar.Hindi.Trailer.mp4',
-    };
-
-    const MOVIE_14 =
-    {
-      id: 14,
-      title: 'Court - State Vs. A Nobody',
-      year: 2025,
-      original_language: 'ta',
-      genres: ['Legal Drama', 'Drama'],
-      rating: 7.9,
-      overview: 'A passionate defense attorney fights against prejudice and corruption in the justice system while representing a teenage client wrongly presumed guilty of a serious crime.',
-      release_date: '2025',
-      posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Court-State-Vs-A-Nobody-Poster.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Court.State.vs.A.Nobody.Trailer.mp4',
-    };
-
-    const MOVIE_15 =
-    {
-      id: 15,
-      title: 'Master',
-      year: 2021,
-      original_language: 'ta',
-      genres: ['Action', 'Thriller', 'Drama', 'One-Person Army Action', 'Crime', 'Prison Drama'],
-      rating: 7.4,
-      overview: 'An alcoholic professor is sent to a juvenile school, where he clashes with a gangster who uses the school children for criminal activities.',
-      release_date: '2021',
-      posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Master-Poster.jpg',
-      trailerUrl: 'https://ia801700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Master.Hindi.Trailer.mp4',
-    };
-
-    const MOVIE_16 =
-    {
-      id: 16,
-      title: 'HIT: The First Case',
-      year: 2020,
-      original_language: 'ta',
-      genres: ['Crime', 'Thriller', 'Cop Drama', 'Police Procedural', 'Suspense Mystery', 'Whodunnit', 'Drama', 'Mystery'],
-      rating: 7.6,
-      overview: 'An officer of the "Homicide Intervention Team" who frequently suffers from having his panic attacks does everything in his power to rescue a woman who went missing.',
-      release_date: '2020',
-      posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/HIT-The-First-Case-Poster.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/HIT.1st.Case.Hindi.Trailer.mp4',
-    };
-
-    const MOVIE_17 =
-    {
-      id: 17,
-      title: 'HIT: The Second Case',
-      year: 2022,
-      original_language: 'ta',
-      genres: ['Crime', 'Thriller', 'Drama', 'Mystery'],
-      rating: 7.3,
-      overview: 'Krishna Dev aka KD, a laid back cop, works in AP HIT, has to take up a gruesome murder case. As KD unravels the layers of the crime, the stakes rise unbelievably high and the threat comes unusually close.',
-      release_date: '2022',
-      posterUrl: 'https://ia801004.us.archive.org/3/items/manjummel-boys-poster/HIT-The-2nd-Case-Poster.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/HIT.2nd.Case.Hindi.Trailer.mp4',
-    };
-
-    const MOVIE_18 =
-    {
-      id: 18,
-      title: 'HIT: The Third Case',
-      year: 2025,
-      original_language: 'ta',
-      genres: ['Crime', 'Thriller', 'Action', 'Serial Killer', 'One-Person Army Action'],
-      rating: 6.9,
-      overview: 'Arjun Sarkaar, a top HIT officer from Visakhapatnam, is sent to Jammu and Kashmir to investigate a series of brutal murders. As he pursues a group of elusive killers, the case tests his skills and his bravery.',
-      release_date: '2025',
-      posterUrl: 'https://ia801004.us.archive.org/3/items/manjummel-boys-poster/HIT-The-Third-Case-Poster.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/HIT.3rd.Case.Hindi.Trailer.mp4',
-    };
-
-    const MOVIE_19 =
-    {
-      id: 19,
-      title: 'Retro',
-      year: 2025,
-      original_language: 'ta',
-      genres: ['Action', 'Drama', 'Romance', 'Crime', 'Thriller'],
-      rating: 6.6,
-      overview: 'Raised by a criminal father, Paari leaves behind his adoptive family to build a quiet life with his love, Rukmini. But his violent past wont let him go.',
-      release_date: '2025',
-      posterUrl: 'https://ia601004.us.archive.org/3/items/manjummel-boys-poster/Retro-Poster.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Retro.Hindi.Trailer.mp4',
-    };
-
-    const MOVIE_20 =
-    {
-      id: 20,
-      title: 'Kuberaa',
-      year: 2025,
-      original_language: 'ta',
-      genres: ['Crime', 'Drama', 'Political Thriller', 'Thriller', 'Action'],
-      rating: 6.4,
-      overview: 'A beggar undergoes a dramatic transformation, exploring themes of greed, ambition, and moral dilemmas faced by the characters leading to a quest for redemption.',
-      release_date: '2025',
-      posterUrl: 'https://ia801004.us.archive.org/3/items/manjummel-boys-poster/Kuberaa-Poster.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Kuberaa.Hindi.Trailer.mp4',
-    };
-
-    const MOVIE_21 =
-    {
-      id: 21,
-      title: 'Thalaivan Thalaivii',
-      year: 2025,
-      original_language: 'ta',
-      genres: ['Feel-Good Romance', 'Romantic Comedy', 'Steamy Romance', 'Action', 'Comedy', 'Drama', 'Romance'],
-      rating: 5.7,
-      overview: 'Two headstrong lovers navigate a turbulent relationship where passion and conflict intertwine, creating an intense emotional bond through their shared journey.',
-      release_date: '2025',
-      posterUrl: 'https://ia801004.us.archive.org/3/items/manjummel-boys-poster/Thalaivan-Thalaivii-Poster.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Thalaivan.Thalaivii.Trailer.mp4',
-    };
-
-    const MOVIE_22 =
-    {
-      id: 22,
-      title: 'Dil Se..',
-      year: 1998,
-      original_language: 'hi',
-      genres: ['Poltical Drama', 'Tragic Romance', 'Drama', 'Romance'],
-      rating: 7.5,
-      overview: 'A radio broadcaster\'s intense attraction to a mysterious woman opens the door to a tidal wave of powerful emotions and desires.',
-      release_date: '1998',
-      posterUrl: 'https://ia801004.us.archive.org/3/items/manjummel-boys-poster/Dil%20Se..%20Poster.jpg',
-      trailerUrl: 'https://ia801700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Dil.Se..Trailer.mp4',
-    };
-
-    const MOVIE_23 =
-    {
-      id: 23,
-      title: 'Mohabbatein',
-      year: 2000,
-      original_language: 'hi',
-      genres: ['Drama', 'Musical', 'Romance'],
-      rating: 7.1,
-      overview: 'A film about the battle between love and fear, between two stubborn men and their opposing beliefs and the outcome of the love stories of 3 couples.',
-      release_date: '2000',
-      posterUrl: 'https://dn720705.ca.archive.org/0/items/manjummel-boys-poster/Mohabbatein.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Mohabbatein.Trailer.mp4',
-    };
-
-    const MOVIE_24 =
-    {
-      id: 24,
-      title: 'Bhool Bhulaiyaa',
-      year: 2007,
-      original_language: 'hi',
-      genres: ['Psychological Horror', 'Comedy', 'Horror', 'Mystery', 'Thriller'],
-      rating: 7.5,
-      overview: 'An NRI and his wife decide to stay in his ancestral home, paying no heed to the warnings about ghosts. Soon, inexplicable occurrences cause him to call a psychiatrist to help solve the mystery.',
-      release_date: '2007',
-      posterUrl: 'https://dn720705.ca.archive.org/0/items/manjummel-boys-poster/Bhool_bhulaiyaa.jpg',
-      trailerUrl: 'https://ia800504.us.archive.org/5/items/bhool-bhulaiyaa-trailer-2007/Bhool%20Bhulaiyaa%20Trailer%202007.mp4',
-    };
-
-    const MOVIE_25 =
-    {
-      id: 25,
-      title: 'Dude',
-      year: 2025,
-      original_language: 'ta',
-      genres: ['Action', 'Comedy', 'Drama', 'Romance'],
-      rating: 6.4,
-      overview: 'Childhood friends Agan and Kural are inseparable. When Kural encounters romantic troubles, Agan must balance his hidden feelings for her with his desire to ensure her happiness.',
-      release_date: '2025',
-      posterUrl: 'https://ia803101.us.archive.org/35/items/dude.-2025.1080p-hindi/Dude-poster.png',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Dude.Hindi.Trailer.mp4',
-    };
-
-    const MOVIE_26 =
-    {
-      id: 26,
-      title: 'They Call Him OG',
-      year: 2025,
-      original_language: 'ta',
-      genres: ['Gangster', 'Martial Arts', 'One-Person Army Action', 'Action', 'Crime', 'Drama'],
-      rating: 6.1,
-      overview: 'After vanishing from Mumbai\'s underworld for a decade, mob boss Ojas Gambheera resurfaces seeking vengeance against rival crime lords.',
-      release_date: '2025',
-      posterUrl: 'https://ia903104.us.archive.org/12/items/they-call-him-og-2025-hindi_202511/OG_Poster.png',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/They.Call.Him.OG.Hindi.Trailer.mp4',
-    };
-
-    const MOVIE_27 =
-    {
-      id: 27,
-      title: 'Bombay',
-      year: 1995,
-      original_language: 'hi',
-      genres: ['Political Drama', 'Drama', 'Musical', 'Romance'],
-      rating: 8.1,
-      overview: 'A Hindu man and a Muslim woman fall in love in a small village and move to Mumbai, where they have two children. However, growing religious tensions and erupting riots threaten to tear the family apart.',
-      release_date: '1995',
-      posterUrl: 'https://ia801700.us.archive.org/11/items/bombay-1995_202511/Bombay-1995-Poster-V2_thumb.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Bombay.Trailer.mp4',
-    };
-
-    const MOVIE_28 =
-    {
-      id: 28,
-      title: 'Dilwale Dulhania Le Jayenge',
-      year: 1995,
-      original_language: 'hi',
-      genres: ['Drama', 'Romance'],
-      rating: 8.0,
-      overview: 'When Raj meets Simran in Europe, it isn\'t love at first sight but when Simran moves to India for an arranged marriage, love makes its presence felt.',
-      release_date: '1995',
-      posterUrl: 'https://ia801701.us.archive.org/24/items/dilwale-dulhania-le-jayenge-1995_202511/DDLJ-Posterjpg.jpg',
-      trailerUrl: 'https://ia601700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Dilwale.Dulhania.Le.Jayenge.Trailer.mp4',
-    };
-
-    const MOVIE_29 =
-    {
-      id: 29,
-      title: 'My Name is Khan',
-      year: 2010,
-      original_language: 'hi',
-      genres: ['Psychological Drama', 'Road Trip', 'Tragedy', 'Drama', 'Romance'],
-      rating: 7.9,
-      overview: 'Rizwan Khan is a Muslim immigrant to the US with Asperger\'s syndrome. After his family falls apart in the aftermath of 9/11, he begins an epic quest across the country to speak to the President of the United States and clear his name.',
-      release_date: '2010',
-      posterUrl: 'https://ia802307.us.archive.org/25/items/my-name-is-khan-2010_202512/My%20Name%20is%20Khan%20poster.jpg',
-      trailerUrl: 'https://ia801700.us.archive.org/17/items/manjummel.-boys.-hindi.-trailer/Kantara.Chapter.1.Hindi.Trailer.mp4',
-    };
-
-     const MOVIE_30 =
-    {
-      id: 30,
-      title: 'Munjya',
-      year: 2024,
-      original_language: 'hi',
-      genres: ['Folk Horror', 'Supernatural Horror', 'Comedy', 'Horror'],
-      rating: 6.3,
-      overview: 'A young man\'s visit to his native village unveils a family secret and a vengeful spirit, the Munjya, who wants to get married. Now the young man must fight to protect himself and his love from Munjya\'s clutches.',
-      release_date: '2024',
-      posterUrl: 'https://ia801702.us.archive.org/6/items/munjya.-2024/Munjya.poster.jpg',
-      trailerUrl: 'https://www.youtube.com/watch?v=8X3uF80H5LU',
-    };
-
- const MOVIE_31 =
-    {
-      id: 31,
-      title: 'Stree',
-      year: 2018,
-      original_language: 'hi',
-      genres: ['Comedy', 'Horror'],
-      rating: 7.5,
-      overview: 'In the small town of Chanderi, the menfolk live in fear of an evil spirit named "Stree" who abducts men in the night. Based on the urban legend of "Nale Ba" that went viral in Karnataka in the 1990s.',
-      release_date: '2018',
-      posterUrl: 'https://ia801706.us.archive.org/16/items/stree.-2018/Stree.poster.jpg',
-      trailerUrl: '',
-    };
-
- const MOVIE_32 =
-    {
-      id: 31,
-      title: 'Stree 2',
-      year: 2024,
-      original_language: 'hi',
-      genres: ['Monster Horror', 'Supernatural Horror', 'Comedy', 'Horror'],
-      rating: 6.9,
-      overview: 'After the events of Stree, the town of Chanderi is being haunted again. This time, women are mysteriously abducted by a terrifying headless entity. Once again, it\'s up to Vicky and his friends to save their town and loved ones.',
-      release_date: '2024',
-      posterUrl: 'https://ia601701.us.archive.org/29/items/stree.-2.-2024/Stree.2.poster.jpg',
-      trailerUrl: '',
-    };
-
- const MOVIE_33 =
-    {
-      id: 33,
-      title: '3 idiots',
-      year: 2009,
-      original_language: 'hi',
-      genres: ['Buddy Comedy', 'Coming-of-Age', 'Quirky Comedy', 'Satire', 'Comedy', 'Drama'],
-      rating: 6.9,
-      overview: 'Two friends are searching for their long lost companion. They revisit their college days and recall the memories of their friend who inspired them to think differently, even as the rest of the world called them "idiots".',
-      release_date: '2009',
-      posterUrl: 'https://ia601707.us.archive.org/13/items/3.-idiots.-2009/3.idiots.poster.jpg',
-      trailerUrl: '',
-    };
-
- const MOVIE_34 =
-    {
-      id: 34,
-      title: 'Kesari',
-      year: 2019,
-      original_language: 'hi',
-      genres: ['Action Epic', 'Epic', 'Historical Epic', 'Period Drama', 'Tragedy', 'War Epic', 'Action', 'Drama', 'History'],
-      rating: 7.4,
-      overview: 'Based on an incredible true story of the Battle of Saragarhi in which an army of 21 Sikhs fought against 10,000 Afghans in 1897.',
-      release_date: '2019',
-      posterUrl: 'https://ia801707.us.archive.org/21/items/kesari.-2019_202512/Kesari.poster.jpg',
-      trailerUrl: '',
-    };
-
- const MOVIE_35 =
-    {
-      id: 35,
-      title: 'Kesari Chapter 2',
-      year: 2025,
-      original_language: 'hi',
-      genres: ['Docudrama', 'Legal Drama', 'Period Drama', 'Tragedy', 'Drama', 'History'],
-      rating: 8.0,
-      overview: 'After learning the truth behind the brutal massacre at the Jallianwala Bagh, C Sankaran Nair, a member of the Viceroy\'s Council, sets out to challenge the Crown and the military general responsible.',
-      release_date: '2025',
-      posterUrl: 'https://ia601708.us.archive.org/8/items/kesari.-chapter.-2.-2025/Kesari.Chapter.2.poster.jpg',
-      trailerUrl: '',
-    };
-
- const MOVIE_36 =
-    {
-      id: 36,
-      title: 'Thamma',
-      year: 2025,
-      original_language: 'hi',
-      genres: ['Supernatural Horror', 'Comedy', 'Horror', 'Thriller'],
-      rating: 6.1,
-      overview: 'Two destined lovers battle supernatural forces, family ties, and nature itself to defend their forbidden romance in a mystical world where ancient powers and prophecies threaten to keep them apart.',
-      release_date: '2025',
-      posterUrl: 'https://ia801700.us.archive.org/17/items/thamma.-2025_202512/Thamma_poster.jpg',
-      trailerUrl: '',
-    };
-
- const MOVIE_37 =
-    {
-      id: 37,
-      title: 'Bhediya',
-      year: 2022,
-      original_language: 'hi',
-      genres: ['Buddy Comedy', 'Supernatural Horror', 'Werewolf Horror', 'Comedy', 'Horror', 'Thriller'],
-      rating: 6.7,
-      overview: 'Two destined lovers battle supernatural forces, family ties, and nature itself to defend their forbidden romance in a mystical world where ancient powers and prophecies threaten to keep them apart.',
-      release_date: '2022',
-      posterUrl: 'https://ia801704.us.archive.org/13/items/bhediya.-2022/Bhediya.poster.jpg',
-      trailerUrl: '',
-    };
-
- const MOVIE_38 =
-    {
-      id: 38,
-      title: 'Param Sundari',
-      year: 2025,
-      original_language: 'hi',
-      genres: ['Romance'],
-      rating: 5.2,
-      overview: 'In Kerala\'s picturesque backwaters, a North Indian and South Indian find unexpected love. Their cultural differences spark a hilarious and chaotic romance, full of twists and turns. Two diverse worlds collide in a heartwarming story.',
-      release_date: '2025',
-      posterUrl: 'https://ia801709.us.archive.org/16/items/param.-sundari.-2025/Param.Sundari.poster.jpg',
-      trailerUrl: '',
-    };
-
- const MOVIE_39 =
-    {
-      id: 39,
-      title: 'Dhadak',
-      year: 2018,
-      original_language: 'hi',
-      genres: ['Drama', 'Romance'],
-      rating: 4.7,
-      overview: 'Set in Rajasthan, this love story explores how the protagonists deal with issues like differences between castes and honor killings.',
-      release_date: '2018',
-      posterUrl: 'https://ia801707.us.archive.org/12/items/dhadak.-2018/Dhadak.poster.jpg',
-      trailerUrl: '',
-    };
-
- const MOVIE_40 =
-    {
-      id: 40,
-      title: 'Dhadak 2',
-      year: 2025,
-      original_language: 'hi',
-      genres: ['Drama', 'Mystery', 'Romance', 'Thriller'],
-      rating: 6.8,
-      overview: 'Targeted for his caste, a first-year student at an elite college fights off vicious bullies and lethal threats to protect his dignity and forbidden love.',
-      release_date: '2025',
-      posterUrl: 'https://ia601706.us.archive.org/29/items/dhadak.-2.-2025/Dhadak.2.poster.jpg',
-      trailerUrl: '',
-    };
-
- const MOVIE_41 =
-    {
-      id: 41,
-      title: 'Chennai Express',
-      year: 2013,
-      original_language: 'hi',
-      genres: ['Road Trip', 'Action', 'Comedy', 'Romance'],
-      rating: 6.2,
-      overview: 'A man travelling to Rameswaram via Chennai express for his late grandfather\'s ashes immersion finds himself in trouble after helping a don\'s daughter and her cousins board the train.',
-      release_date: '2013',
-      posterUrl: 'https://ia801701.us.archive.org/10/items/chennai.-express.-2013/Chennai.Express.poster.jpg',
-      trailerUrl: '',
-    };
-
- const MOVIE_42 =
-    {
-      id: 42,
-      title: 'Dil Chahta Hai',
-      year: 2001,
-      original_language: 'hi',
-      genres: ['Coming-Of-Age', 'Comedy', 'Drama', 'Romance'],
-      rating: 8.1,
-      overview: 'Three inseparable childhood friends are just out of college. Nothing comes between them - until they each fall in love, and their wildly different approaches to relationships creates tension.',
-      release_date: '2001',
-      posterUrl: 'https://ia801707.us.archive.org/8/items/dil.-chahta.-hai.-2001-en/Dil.Chahta.Hai.poster.jpg',
-      trailerUrl: '',
-    };
-
-    const curatedMovies =
-      [
-        MOVIE_1,
-        MOVIE_2,
-        MOVIE_3,
-        MOVIE_4,
-        MOVIE_5,
-        MOVIE_6,
-        MOVIE_7,
-        MOVIE_8,
-        MOVIE_9,
-        MOVIE_10,
-        MOVIE_11,
-        MOVIE_12,
-        MOVIE_13,
-        MOVIE_14,
-        MOVIE_15,
-        MOVIE_16,
-        MOVIE_17,
-        MOVIE_18,
-        MOVIE_19,
-        MOVIE_20,
-        MOVIE_21,
-        MOVIE_22,
-        MOVIE_23,
-        MOVIE_24,
-        MOVIE_25,
-        MOVIE_26,
-        MOVIE_27,
-        MOVIE_28,
-        MOVIE_29,
-        MOVIE_30,
-        MOVIE_31,
-        MOVIE_32,
-        MOVIE_33,
-        MOVIE_34,
-        MOVIE_35,
-        MOVIE_36,
-        MOVIE_37,
-        MOVIE_38,
-        MOVIE_39,
-        MOVIE_40,
-        MOVIE_41,
-        MOVIE_42,
-      ];
+    const curatedMovies = [];
+    // Note: Using TMDB API instead of hardcoded movies to avoid conflicts
 
     // Support email config (edit this to your target email)
     const SUPPORT_EMAIL = 'moive776@gmail.com';
@@ -6306,6 +5896,9 @@
     // Flag to toggle TMDB-driven catalog rendering
     let useTMDBCatalog = false;
 
+    // Store scroll position before opening modal
+    let savedScrollPosition = 0;
+
     // Elements
     const moviesContainer = document.getElementById('moviesContainer');
     const modal = document.getElementById('movieModal');
@@ -6313,6 +5906,7 @@
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
     const streamBtn = document.getElementById('streamBtn');
+
 
 
 
@@ -6489,6 +6083,11 @@
           setTMDBMode('tv');
           loadAllTMDBTV().then(shows => {
             displayMovies(shows, false, 'Series');
+            // Scroll to movies section
+            setTimeout(() => {
+              const title = document.querySelector('.section-title');
+              if (title) title.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
           });
           return;
         }
@@ -6497,13 +6096,32 @@
         if (typeof setTMDBMode === 'function') setTMDBMode('movie');
         const label = cat === 'all' ? 'All Movies' : (cat.charAt(0).toUpperCase() + cat.slice(1));
         if (cat === 'all' && typeof loadAllTMDBMovies === 'function') {
-          loadAllTMDBMovies().then(movies => displayMovies(movies, false, label));
+          loadAllTMDBMovies().then(movies => {
+            displayMovies(movies, false, label);
+            // Scroll to movies section
+            setTimeout(() => {
+              const title = document.querySelector('.section-title');
+              if (title) title.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+          });
         } else if (typeof loadTMDBByLanguage === 'function') {
-          loadTMDBByLanguage(cat, 10).then(movies => displayMovies(movies, false, label));
+          loadTMDBByLanguage(cat, 10).then(movies => {
+            displayMovies(movies, false, label);
+            // Scroll to movies section
+            setTimeout(() => {
+              const title = document.querySelector('.section-title');
+              if (title) title.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+          });
         } else if (typeof loadAllTMDBMovies === 'function') {
           loadAllTMDBMovies().then(movies => {
             const filtered = typeof filterTMDBByCategory === 'function' ? filterTMDBByCategory(movies, cat) : movies;
             displayMovies(filtered, false, label);
+            // Scroll to movies section
+            setTimeout(() => {
+              const title = document.querySelector('.section-title');
+              if (title) title.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
           });
         }
         return;
@@ -6523,7 +6141,11 @@
         cwSection.style.display = (cat === 'all') ? '' : 'none';
       }
       mountCategoryBar();
-      displayMovies(filtered, false, label);
+      // Scroll to movies section
+      setTimeout(() => {
+        const title = document.querySelector('.section-title');
+        if (title) title.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     }
 
     function buildCategoryBar(activeCat) {
@@ -6571,6 +6193,7 @@
       // Add section title for all movies
       const sectionTitle = document.createElement('h2');
       sectionTitle.className = 'section-title';
+      sectionTitle.style.marginTop = '0.5rem';
       sectionTitle.textContent = titleOverride || (movies === curatedMovies ? 'All Movies' : 'Search Results');
       moviesContainer.appendChild(sectionTitle);
 
@@ -6585,17 +6208,25 @@
         const movieCard = document.createElement('div');
         movieCard.className = 'movie-card movie-' + movie.id;
         movieCard.innerHTML = `
-          <div class="movie-code-badge">MOVIE_${movie.id}</div>
           <div class="poster">
             <img src="${posterPath}" alt="${title}" loading="lazy" />
+            <div class="rating-badge"><span class="star">★</span><span class="value">${movie.rating ? movie.rating.toFixed(1) : 'N/A'}</span></div>
             <div class="play-icon"></div>
             <div class="movie-title-overlay">${title}</div>
           </div>
           <div class="movie-info">
             <h3 class="movie-title">${title} (${movie.year || ''})</h3>
-            <p class="movie-rating">⭐ ${movie.rating ? movie.rating.toFixed(1) : 'N/A'}</p>
           </div>
         `;
+
+        // Add error handler for broken images
+        const img = movieCard.querySelector('img');
+        if (img) {
+          img.addEventListener('error', () => {
+            // Replace with placeholder if image fails to load
+            img.src = `https://via.placeholder.com/500x750?text=${encodeURIComponent(title)}`;
+          });
+        }
 
         movieCard.addEventListener('click', () => openMovieModal(movie));
         moviesGrid.appendChild(movieCard);
@@ -6684,6 +6315,13 @@
 
     // Open Modal (lazy-load trailer iframe on demand)
     function openMovieModal(movie) {
+            // Save current scroll position before opening modal
+            savedScrollPosition = window.scrollY || window.pageYOffset;
+            
+            // Store current movie and category in sessionStorage so player can restore on back
+            sessionStorage.setItem('currentModalMovie', JSON.stringify(movie));
+            sessionStorage.setItem('currentModalCategory', currentCategory);
+            
             console.log('Opening modal for movie:', movie.title);
             const isSeries = (movie && (movie.mediaType === 'tv' || movie.type === 'series' || movie.isSeries));
             // Set up Stream 2 button to open player-2.html with the same logic as Stream (movies only)
@@ -6702,46 +6340,52 @@
               streamBtn2.onclick = null;
               streamBtn2.onclick = (e) => {
                 e.preventDefault();
-                
+                const isAvailable = streamBtn2.dataset.available === '1';
+                if (!isAvailable) {
+                  // Fallback: resolve via 8Stream API for player-2
+                  streamBtn2.textContent = 'Resolving…';
+                  streamBtn2.disabled = true;
+                  (async () => {
+                    try {
+                      const result = await window.resolveStreamUrlForMovie(movie, ['English','Hindi','Tamil','Telugu','Bengali']);
+                      if (result && result.success && result.src) {
+                        const params = new URLSearchParams();
+                        params.append('id', movie.id);
+                        params.append('movieId', movie.id);
+                        params.append('title', movie.title);
+                        if (movie.posterUrl) params.append('poster', movie.posterUrl);
+                        const isHls2 = /\.m3u8(\?.*)?$/.test(result.src) || result.type === 'hls';
+                        params.append('type', isHls2 ? 'hls' : (result.type || 'mp4'));
+                        params.append('src', result.src);
+                        if (result.imdbId) params.append('imdbId', result.imdbId);
+                        if (result.key) params.append('streamKey', result.key);
+                        if (result.language) params.append('currentLang', result.language);
+                        if (result.availableLanguages) params.append('availableLangs', JSON.stringify(result.availableLanguages));
+                        const finalUrl = `player-2.html?${params.toString()}`;
+                        localStorage.setItem('lastPlayerUsed', 'player2');
+                        window.location.href = finalUrl;
+                      } else {
+                        showToast('error', 'Stream Unavailable', 'Could not resolve a stream for this title.');
+                      }
+                    } catch (e) {
+                      console.error('Stream resolve failed:', e);
+                      showToast('error', 'Stream Error', 'Failed to resolve stream.');
+                    } finally {
+                      streamBtn2.textContent = 'Stream 2';
+                      streamBtn2.disabled = false;
+                    }
+                  })();
+                  return;
+                }
                 // Build the player-2.html URL with the current movie's details
                 const params = new URLSearchParams();
                 params.append('id', movie.id);
                 params.append('movieId', movie.id);
                 params.append('title', movie.title);
                 if (movie.posterUrl) params.append('poster', movie.posterUrl);
-                params.append('type', 'hls');
-
+                const normTitle = String(movie.title || '').trim().toLowerCase();
                 let player2Url = null;
-                
-                // 1) Check for direct MP4 override
-                const mp4Url = getMp4Override(movie.title);
-                if (mp4Url) {
-                  const isHls = /\.m3u8(\?.*)?$/.test(mp4Url);
-                  params.set('type', isHls ? 'hls' : 'mp4');
-                  params.append('src', mp4Url);
-                  player2Url = `player-2.html?${params.toString()}`;
-                }
-                // 2) Check for Google Drive mapping
-                else if (driveMovieMappings[String(movie.id)]) {
-                  params.set('type', 'drive');
-                  params.append('id', driveMovieMappings[String(movie.id)]);
-                  player2Url = `player-2.html?${params.toString()}`;
-                }
-                // 3) Check for direct stream URL
-                else if (movie.streamUrl) {
-                  const isHls = /\.m3u8(\?.*)?$/.test(movie.streamUrl);
-                  params.set('type', isHls ? 'hls' : 'mp4');
-                  params.append('src', movie.streamUrl);
-                  player2Url = `player-2.html?${params.toString()}`;
-                } else {
-                  // No direct source - let player handle via 8StreamAPI + VidPlay fallback
-                  player2Url = `player-2.html?${params.toString()}`;
-                }
-
-                if (player2Url) {
-                  localStorage.setItem('lastPlayerUsed', 'player2');
-                  window.location.href = player2Url;
-                }
+                const mp4Url = mp4Overrides[normTitle];
                 if (mp4Url) {
                   const isHls = /\.m3u8(\?.*)?$/.test(mp4Url);
                   params.append('type', isHls ? 'hls' : 'mp4');
@@ -6817,6 +6461,149 @@
       const episodeSelect = document.getElementById('episodeSelect');
       const seriesMeta = document.getElementById('seriesMeta');
 
+      // Custom dropdown elements
+      const seasonTrigger = document.getElementById('seasonTrigger');
+      const seasonDropdown = document.getElementById('seasonDropdown');
+      const seasonWrapper = document.getElementById('seasonSelectWrapper');
+      const episodeTrigger = document.getElementById('episodeTrigger');
+      const episodeDropdown = document.getElementById('episodeDropdown');
+      const episodeWrapper = document.getElementById('episodeSelectWrapper');
+
+      // Initialize custom dropdown functionality (only once per modal open)
+      let dropdownsInitialized = false;
+      function initCustomDropdowns() {
+        if (dropdownsInitialized) return;
+        dropdownsInitialized = true;
+
+        // Season dropdown toggle - use mousedown for instant response
+        if (seasonTrigger && seasonWrapper) {
+          seasonTrigger.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (episodeWrapper) episodeWrapper.classList.remove('active');
+            if (seasonWrapper.classList.contains('active')) {
+              seasonWrapper.classList.remove('active');
+            } else {
+              seasonWrapper.classList.add('active');
+            }
+          }, { passive: false });
+        }
+
+        // Episode dropdown toggle - use mousedown for instant response
+        if (episodeTrigger && episodeWrapper) {
+          episodeTrigger.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (seasonWrapper) seasonWrapper.classList.remove('active');
+            if (episodeWrapper.classList.contains('active')) {
+              episodeWrapper.classList.remove('active');
+            } else {
+              episodeWrapper.classList.add('active');
+            }
+          }, { passive: false });
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('mousedown', function(e) {
+          if (seasonWrapper && !seasonWrapper.contains(e.target)) {
+            seasonWrapper.classList.remove('active');
+          }
+          if (episodeWrapper && !episodeWrapper.contains(e.target)) {
+            episodeWrapper.classList.remove('active');
+          }
+        });
+      }
+
+      function updateSeasonDropdown(seasons) {
+        if (!seasonDropdown || !seasonTrigger) return;
+        
+        seasonDropdown.innerHTML = '';
+        const seasonValue = seasonTrigger.querySelector('.select-value');
+        
+        if (!seasons || seasons.length === 0) {
+          if (seasonValue) seasonValue.textContent = 'No seasons available';
+          return;
+        }
+
+        seasons.forEach((season, index) => {
+          const option = document.createElement('div');
+          option.className = 'select-option';
+          option.textContent = season.name || `Season ${season.season_number}`;
+          option.dataset.value = season.season_number;
+          
+          if (index === 0) {
+            option.classList.add('selected');
+            if (seasonValue) seasonValue.textContent = option.textContent;
+          }
+
+          option.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Update visual selection
+            seasonDropdown.querySelectorAll('.select-option').forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+            if (seasonValue) seasonValue.textContent = option.textContent;
+            
+            // Update hidden select and trigger change
+            const num = season.season_number;
+            seasonSelect.value = String(num);
+            seasonSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            
+            // Close dropdown
+            if (seasonWrapper) seasonWrapper.classList.remove('active');
+          }, { passive: false });
+
+          seasonDropdown.appendChild(option);
+        });
+      }
+
+      function updateEpisodeDropdown(episodes, seasonNumber) {
+        if (!episodeDropdown || !episodeTrigger) return;
+        
+        episodeDropdown.innerHTML = '';
+        const episodeValue = episodeTrigger.querySelector('.select-value');
+        
+        if (!episodes || episodes.length === 0) {
+          if (episodeValue) episodeValue.textContent = 'No episodes available';
+          return;
+        }
+
+        episodes.forEach((ep, index) => {
+          const option = document.createElement('div');
+          option.className = 'select-option';
+          const epNum = ep.episode_number;
+          option.textContent = `E${epNum} • ${ep.name || 'Episode ' + epNum}`;
+          option.dataset.value = epNum;
+          
+          if (index === 0) {
+            option.classList.add('selected');
+            if (episodeValue) episodeValue.textContent = option.textContent;
+          }
+
+          option.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Update visual selection
+            episodeDropdown.querySelectorAll('.select-option').forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+            if (episodeValue) episodeValue.textContent = option.textContent;
+            
+            // Update hidden select and trigger change
+            episodeSelect.value = String(epNum);
+            episodeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            
+            // Close dropdown
+            if (episodeWrapper) episodeWrapper.classList.remove('active');
+          }, { passive: false });
+
+          episodeDropdown.appendChild(option);
+        });
+      }
+
+      initCustomDropdowns();
+
       const streamButtonsWrapper = document.querySelector('.stream-buttons');
       if (streamButtonsWrapper) {
         streamButtonsWrapper.style.display = isSeries ? 'none' : 'flex';
@@ -6828,17 +6615,23 @@
       // If series, load seasons/episodes and skip stream button wiring
       if (isSeries && seriesPicker && seasonSelect && episodeSelect) {
         // reset selects
+        const seasonValue = seasonTrigger?.querySelector('.select-value');
+        const episodeValue = episodeTrigger?.querySelector('.select-value');
+        if (seasonValue) seasonValue.textContent = 'Loading seasons...';
+        if (episodeValue) episodeValue.textContent = 'Select a season first';
         seasonSelect.innerHTML = '<option>Loading seasons...</option>';
         episodeSelect.innerHTML = '<option>Select a season first</option>';
         if (seriesMeta) seriesMeta.textContent = 'Loading series info...';
 
         const loadEpisodesForSeason = async (seasonNumber) => {
           if (!movieDb || typeof movieDb.getTVSeason !== 'function') return;
+          if (episodeValue) episodeValue.textContent = 'Loading episodes...';
           episodeSelect.innerHTML = '<option>Loading episodes...</option>';
           try {
             const seasonData = await movieDb.getTVSeason(movie.id, seasonNumber);
             const episodes = (seasonData && seasonData.episodes) ? seasonData.episodes : [];
             if (!episodes.length) {
+              if (episodeValue) episodeValue.textContent = 'No episodes found';
               episodeSelect.innerHTML = '<option>No episodes found</option>';
               return;
             }
@@ -6850,8 +6643,12 @@
               opt.textContent = `S${seasonNumber} · E${epNum} — ${ep.name || 'Episode'}`;
               episodeSelect.appendChild(opt);
             });
+            
+            // Update custom dropdown
+            updateEpisodeDropdown(episodes, seasonNumber);
           } catch (err) {
             console.error('Failed to load episodes', err);
+            if (episodeValue) episodeValue.textContent = 'Error loading episodes';
             episodeSelect.innerHTML = '<option>Error loading episodes</option>';
           }
         };
@@ -6864,10 +6661,11 @@
             const seasonCount = seasons.length;
             const episodeCount = seasons.reduce((sum, s) => sum + (s.episode_count || 0), 0);
             if (seriesMeta) {
-              seriesMeta.textContent = `Seasons: ${seasonCount}${episodeCount ? ` • Episodes: ${episodeCount}` : ''}`;
+              seriesMeta.textContent = `${seasonCount} Season${seasonCount !== 1 ? 's' : ''}${episodeCount ? ` • ${episodeCount} Episode${episodeCount !== 1 ? 's' : ''}` : ''}`;
             }
             seasonSelect.innerHTML = '';
             if (!seasons.length) {
+              if (seasonValue) seasonValue.textContent = 'No seasons found';
               seasonSelect.innerHTML = '<option>No seasons found</option>';
               return;
             }
@@ -6877,6 +6675,9 @@
               opt.textContent = s.name || `Season ${s.season_number}`;
               seasonSelect.appendChild(opt);
             });
+
+            // Update custom dropdown
+            updateSeasonDropdown(seasons);
 
             // Load first season by default
             const firstSeason = seasons[0];
@@ -6986,65 +6787,150 @@
         // Always check for saved progress and show appropriate button label
         if (watchData && watchData.progress > 0 && watchData.progress < 95) {
           streamBtn.innerHTML = `
-            <i class="fas fa-play"></i>
             <span>Resume (${Math.round(watchData.progress)}%)</span>
+            <span class="stream-icon">▶️</span>
           `;
         } else {
           streamBtn.innerHTML = `
-            <i class="fas fa-play"></i>
             <span>Watch Now</span>
+            <span class="stream-icon">▶️</span>
           `;
         }
 
         // Remove any existing onclick handlers
         streamBtn.onclick = null;
-        streamBtn.addEventListener('click', function(e) {
+        streamBtn.onclick = (e) => {
           e.preventDefault();
-          e.stopPropagation();
-          
-          console.log('Stream button clicked for movie:', movie.id, movie.title);
-          
+          const isAvailable = streamBtn.dataset.available === '1';
+          if (!isAvailable) {
+            // Fallback: resolve via 8Stream API even when no direct source
+            streamBtn.textContent = 'Resolving stream…';
+            streamBtn.disabled = true;
+            (async () => {
+              try {
+                const result = await window.resolveStreamUrlForMovie(movie, ['English','Hindi','Tamil','Telugu','Bengali']);
+                if (result && result.success && result.src) {
+                  const params = new URLSearchParams();
+                  params.append('id', movie.id);
+                  params.append('movieId', movie.id);
+                  params.append('title', movie.title);
+                  if (movie.posterUrl) params.append('poster', movie.posterUrl);
+                  const isHls = /\.m3u8(\?.*)?$/.test(result.src) || result.type === 'hls';
+                  params.append('type', isHls ? 'hls' : (result.type || 'mp4'));
+                  params.append('src', result.src);
+                  if (result.imdbId) params.append('imdbId', result.imdbId);
+                  if (result.key) params.append('streamKey', result.key);
+                  if (result.language) params.append('currentLang', result.language);
+                  if (result.availableLanguages) params.append('availableLangs', JSON.stringify(result.availableLanguages));
+                  const finalUrl = `player.html?${params.toString()}`;
+                  window.location.href = finalUrl;
+                } else {
+                  showToast('error', 'Stream Unavailable', 'Could not resolve a stream for this title.');
+                }
+              } catch (e) {
+                console.error('Stream resolve failed:', e);
+                showToast('error', 'Stream Error', 'Failed to resolve stream.');
+              } finally {
+                streamBtn.textContent = (watchData && watchData.progress > 0 && watchData.progress < 95) ? `Resume (${Math.round(watchData.progress)}%)` : 'Watch Now';
+                streamBtn.disabled = false;
+              }
+            })();
+            return;
+          }
+
           // Build the player URL with the movie's details
           const params = new URLSearchParams();
           params.append('id', movie.id);
           params.append('movieId', movie.id);
           params.append('title', movie.title);
-          params.append('mediaType', 'movie');
           if (movie.posterUrl) params.append('poster', movie.posterUrl);
 
           // Check for available sources in order of preference
+          const normTitle = String(movie.title || '').trim().toLowerCase();
           let playerUrl = null;
 
           // 1) Check for direct MP4 override
           const mp4Url = getMp4Override(movie.title);
           if (mp4Url) {
             const isHls = /\.m3u8(\?.*)?$/.test(mp4Url);
-            params.set('type', isHls ? 'hls' : 'mp4');
+            params.append('type', isHls ? 'hls' : 'mp4');
             params.append('src', mp4Url);
             playerUrl = `player.html?${params.toString()}`;
           }
           // 2) Check for Google Drive mapping
           else if (driveMovieMappings[String(movie.id)]) {
-            params.set('type', 'drive');
-            params.append('driveId', driveMovieMappings[String(movie.id)]);
+            params.append('type', 'drive');
+            params.append('id', driveMovieMappings[String(movie.id)]);
             playerUrl = `player.html?${params.toString()}`;
           }
           // 3) Check for direct stream URL
           else if (movie.streamUrl) {
             const isHls = /\.m3u8(\?.*)?$/.test(movie.streamUrl);
-            params.set('type', isHls ? 'hls' : 'mp4');
+            params.append('type', isHls ? 'hls' : 'mp4');
             params.append('src', movie.streamUrl);
             playerUrl = `player.html?${params.toString()}`;
           } else {
-            // No direct source - let player handle via providers (FileMoon, Doodstream, StreamTape)
-            playerUrl = `player.html?${params.toString()}`;
+            // 5) Resolve via 8Stream API on-demand
+            streamBtn.textContent = 'Resolving stream…';
+            streamBtn.disabled = true;
+            (async () => {
+              try {
+                const result = await window.resolveStreamUrlForMovie(movie, ['English','Hindi','Tamil','Telugu','Bengali']);
+                if (result && result.success && result.src) {
+                  // Handle iframe embeds (VidSrc) differently
+                  if (result.type === 'iframe') {
+                    params.append('type', 'iframe');
+                    params.append('src', result.src);
+                    if (result.provider) params.append('provider', result.provider);
+                    if (result.languageStreams) params.append('languageStreams', JSON.stringify(result.languageStreams));
+                    if (result.tmdbId) params.append('tmdbId', result.tmdbId);
+                  } else {
+                    const isHls2 = /\.m3u8(\?.*)?$/.test(result.src) || result.type === 'hls';
+                    params.append('type', isHls2 ? 'hls' : (result.type || 'mp4'));
+                    params.append('src', result.src);
+                  }
+                  if (result.imdbId) params.append('imdbId', result.imdbId);
+                  if (result.key) params.append('streamKey', result.key);
+                  if (result.language) params.append('currentLang', result.language);
+                  if (result.availableLanguages) params.append('availableLangs', JSON.stringify(result.availableLanguages));
+                  if (result.languageInfo) params.append('languageInfo', JSON.stringify(result.languageInfo));
+                  const finalUrl = `player.html?${params.toString()}`;
+                  window.location.href = finalUrl;
+                } else {
+                  const errorMsg = result?.message || 'Could not resolve a stream for this title.';
+                  console.warn('Stream resolution failed:', errorMsg);
+                  showToast('error', 'Stream Unavailable', errorMsg);
+                }
+              } catch (e) {
+                console.error('Stream resolve failed:', e);
+                showToast('error', 'Stream Error', 'Failed to resolve stream.');
+              } finally {
+                streamBtn.textContent = (watchData && watchData.progress > 0 && watchData.progress < 95) ? `Resume (${Math.round(watchData.progress)}%)` : 'Watch Now';
+                streamBtn.disabled = false;
+              }
+            })();
+            return;
           }
 
-          console.log('Navigating to:', playerUrl);
           if (playerUrl) {
-            window.location.href = playerUrl;
+            // Check if we have saved progress and ask whether to resume
+            if (watchData && watchData.progress > 0 && watchData.progress < 95) {
+              const duration = Number(watchData.duration) || 0;
+              const savedCurrent = Number(watchData.currentTime) || 0;
+              const percentBased = duration > 0 && watchData.progress ? (duration * watchData.progress) / 100 : 0;
+              const resumeTime = savedCurrent > 0 ? savedCurrent : percentBased;
+              const wantsResume = window.confirm(`You have progress at ${Math.round(watchData.progress)}%.\n\nOK: Resume from there\nCancel: Start from beginning`);
+              
+              const finalUrl = wantsResume ? `${playerUrl}&t=${Math.floor(resumeTime)}` : playerUrl;
+              window.location.href = finalUrl;
+            } else {
+              // No saved progress, navigate in the same tab
+              window.location.href = playerUrl;
+            }
+          } else {
+            showToast('error', 'Stream Unavailable', 'Stream is not available for this movie yet.');
           }
-        }, false);
+        };
       }
 
       // ... existing code for setting up modal content ...
@@ -7101,7 +6987,7 @@
       }
 
     // Update bookmark button state - now async
-      let bookmarkBtn = document.getElementById('bookmarkBtn');
+      const bookmarkBtn = document.getElementById('bookmarkBtn');
       if (bookmarkBtn) {
         // Update button state immediately when modal opens
         isBookmarked(movie.id).then(bookmarked => {
@@ -7832,6 +7718,8 @@
     // Close modal: stop playback and remove iframe to free resources
     closeModalBtn.addEventListener('click', () => {
       modal.style.display = 'none';
+      // Restore scroll position to where user was
+      window.scrollTo(0, savedScrollPosition);
       // Restore background scrolling when modal closes
       document.body.style.overflow = '';
       // Re-enable theme switch
@@ -7966,7 +7854,7 @@
       const homeBtn = document.getElementById('homeBtn');
       if (!homeBtn) return;
 
-      homeBtn.addEventListener('click', (e) => {
+      homeBtn.addEventListener('click', async (e) => {
         e.preventDefault();
         // Clear search input and any active search state
         searchInput.value = '';
@@ -7982,10 +7870,21 @@
         const popularSection = document.getElementById('popularMoviesSection');
         if (popularSection) popularSection.style.display = '';
 
-        // Reset category filter and show all movies with continue watching
+        // Reset category filter and show TMDB movies
         try { currentCategory = 'all'; } catch (_) { }
         mountCategoryBar();
-        displayMovies(curatedMovies, false);
+        
+        // Load and display TMDB movies if available
+        if (typeof loadAllTMDBMovies === 'function' && typeof displayMovies === 'function') {
+          const tmdbMovies = await loadAllTMDBMovies(3);
+          if (tmdbMovies.length > 0) {
+            displayMovies(tmdbMovies, false, 'All Movies');
+          } else {
+            displayMovies([], false, 'All Movies');
+          }
+        } else {
+          displayMovies([], false, 'All Movies');
+        }
 
         // Ensure continue watching is shown
         const continueWatchingSection = document.getElementById('continueWatchingSection');
@@ -8492,19 +8391,54 @@
   <!-- Movie Database Integration -->
   <script src="js/movie-db.js"></script>
   <script src="js/tmdb-integration.js"></script>
-  <!-- Streaming Providers -->
-  <script src="js/filemoon-provider.js"></script>
-  <script src="js/doodstream-provider.js"></script>
-  <script src="js/streamtape-provider.js"></script>
-  <script src="js/googledrive-provider.js"></script>
-  <script src="stream-diagnostics.js"></script>
   <script src="public/streamApiConfig.js?v=20260112"></script>
+  <script src="js/consumet-api.js"></script>
+  <script src="js/stream-api.js"></script>
+  
+  <!-- Enhanced Multi-Provider Streaming API with Multi-Language Support -->
+  <script src="js/enhanced-stream-api.js"></script>
+  <script src="js/audio-language-selector.js"></script>
+  <script src="js/stream-player-handler.js"></script>
+  
+  <!-- Streaming Compatibility Layer - bridges old & new APIs -->
+  <script src="js/stream-compatibility.js"></script>
+  
+  <!-- Stream Debug Helper -->
+  <script src="js/stream-debug.js"></script>
+  
+  <script src="js/player-integration.js"></script>
   <script>
     // TMDB API Configuration - Add your free API key from https://www.themoviedb.org/settings/api
     const TMDB_API_KEY = 'f66d9d54a03e21f8ef99dd0c4258aa8a'; // Replace with your actual API key
     // YouTube Data API key for trailer fallback (optional but required for auto lookup)
     const YT_API_KEY = 'AIzaSyAZQSlyEUO5yMN0AGp94RVarUFxOlceuDM';
     let movieDb = null;
+
+    // Check if there's a movie modal to restore from player back button
+    (function restoreModalOnPageLoad() {
+      try {
+        const storedMovie = sessionStorage.getItem('currentModalMovie');
+        const storedCategory = sessionStorage.getItem('currentModalCategory');
+        const shouldRestore = sessionStorage.getItem('restoreModalOnLoad');
+        
+        if (storedMovie && shouldRestore === 'true') {
+          const movie = JSON.parse(storedMovie);
+          const categoryToRestore = storedCategory || 'all';
+          sessionStorage.removeItem('restoreModalOnLoad');
+          
+          // Delay slightly to ensure DOM is ready
+          setTimeout(() => {
+            // Restore the category first, then open the modal
+            if (categoryToRestore !== currentCategory) {
+              applyCategory(categoryToRestore);
+            }
+            openMovieModal(movie);
+          }, 100);
+        }
+      } catch (e) {
+        console.warn('Failed to restore modal:', e);
+      }
+    })();
 
     // Initialize movie database
     function initMovieDb() {
@@ -8527,74 +8461,69 @@
       try {
         const result = await movieDb.getPopularMovies(1);
         const container = document.getElementById('trendingMoviesContainer');
-        
-        if (container && result && result.movies && result.movies.length > 0) {
-          container.innerHTML = ''; // Clear loading state
-          
-          result.movies.slice(0, 20).forEach(movie => {
-            const movieEl = document.createElement('div');
-            movieEl.className = 'trending-movie-card';
-            movieEl.style.cssText = `
-              cursor: pointer;
-              border-radius: 8px;
-              overflow: hidden;
-              transition: transform 0.3s, box-shadow 0.3s;
-              background: #1a1a1a;
-              border: 1px solid #333;
-            `;
-            
-            const posterUrl = movie.poster;
-            const year = movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : 'N/A';
-            
-            movieEl.innerHTML = `
-              <div style="position: relative; overflow: hidden; height: 220px; background: #0a0a0a;">
-                ${posterUrl ? `<img src="${posterUrl}" alt="${movie.title}" style="width: 100%; height: 100%; object-fit: cover;">` : '<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #666;">No Image</div>'}
-                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(180deg, transparent, rgba(0,0,0,0.8)); padding: 10px; color: white; font-size: 12px;">
-                  ⭐ ${movie.rating ? movie.rating.toFixed(1) : 'N/A'}
-                </div>
-              </div>
-              <div style="padding: 10px;">
-                <div style="font-size: 13px; font-weight: 600; margin-bottom: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${movie.title}</div>
-                <div style="font-size: 11px; color: #888;">${year}</div>
-              </div>
-            `;
-            
-            movieEl.addEventListener('mouseenter', () => {
-              movieEl.style.transform = 'translateY(-8px)';
-              movieEl.style.boxShadow = '0 8px 20px rgba(229, 9, 20, 0.3)';
+        if (!container) return;
+        container.innerHTML = '';
+
+        const movies = (result && result.movies) ? result.movies.slice(0, 20) : [];
+        movies.forEach(m => {
+          const title = m.title || 'Untitled';
+          const posterPath = m.poster || (m.posterUrl || (m.poster_path ? `${movieDb.imageUrl}${m.poster_path}` : null)) || (`https://via.placeholder.com/500x750?text=${encodeURIComponent(title)}`);
+          const year = m.releaseDate ? (m.releaseDate.split('-')[0]) : (m.year || '');
+          const rating = m.rating || (typeof m.vote_average === 'number' ? m.vote_average : null);
+
+          const card = document.createElement('div');
+          card.className = 'movie-card movie-' + (m.id || 'popular');
+          card.innerHTML = `
+            <div class="poster">
+              <img src="${posterPath}" alt="${title}" loading="lazy" />
+              <div class="rating-badge"><span class="star">★</span><span class="value">${rating ? Number(rating).toFixed(1) : 'N/A'}</span></div>
+              <div class="play-icon"></div>
+              <div class="movie-title-overlay">${title}</div>
+            </div>
+            <div class="movie-info">
+              <h3 class="movie-title">${title} (${year || ''})</h3>
+            </div>
+          `;
+
+          const img = card.querySelector('img');
+          if (img) {
+            img.addEventListener('error', () => {
+              img.src = `https://via.placeholder.com/500x750?text=${encodeURIComponent(title)}`;
             });
-            
-            movieEl.addEventListener('mouseleave', () => {
-              movieEl.style.transform = 'none';
-              movieEl.style.boxShadow = 'none';
-            });
-            
-            movieEl.addEventListener('click', async () => {
-              const details = await getMovieDetailsDb(movie.id);
-              if (details) {
-                // Map TMDB details to expected format
-                const mappedMovie = {
-                  id: details.id,
-                  title: details.title,
-                  year: details.releaseDate ? details.releaseDate.split('-')[0] : '',
-                  genres: details.genres || [],
-                  rating: details.rating || 0,
-                  overview: details.overview || '',
-                  release_date: details.releaseDate || '',
-                  posterUrl: details.poster || null,
-                  backdropUrl: details.backdrop || null,
-                  trailerUrl: '',
-                  streamUrl: ''
-                };
-                if (typeof openMovieModal === 'function') {
-                  openMovieModal(mappedMovie);
-                }
-              }
-            });
-            
-            container.appendChild(movieEl);
+          }
+
+          card.addEventListener('click', async () => {
+            const details = await getMovieDetailsDb(m.id);
+            const mappedMovie = details ? {
+              id: details.id,
+              title: details.title,
+              year: details.releaseDate ? details.releaseDate.split('-')[0] : '',
+              genres: details.genres || [],
+              rating: details.rating || 0,
+              overview: details.overview || '',
+              release_date: details.releaseDate || '',
+              posterUrl: details.poster || null,
+              backdropUrl: details.backdrop || null,
+              trailerUrl: '',
+              streamUrl: ''
+            } : {
+              id: m.id,
+              title: title,
+              year: year,
+              genres: [],
+              rating: rating || 0,
+              overview: m.overview || '',
+              release_date: m.releaseDate || '',
+              posterUrl: posterPath,
+              backdropUrl: m.backdrop || null,
+              trailerUrl: '',
+              streamUrl: ''
+            };
+            if (typeof openMovieModal === 'function') openMovieModal(mappedMovie);
           });
-        }
+
+          container.appendChild(card);
+        });
       } catch (error) {
         console.error('Failed to load trending movies:', error);
       }

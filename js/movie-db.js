@@ -161,17 +161,28 @@ class MovieDatabase {
         return this.cache.get(cacheKey);
       }
 
-      const response = await fetch(
-        `${this.baseUrl}/movie/popular?api_key=${this.apiKey}&page=${page}`
-      );
+      const url = `${this.baseUrl}/movie/popular?api_key=${this.apiKey}&page=${page}`;
+      console.log('Fetching popular movies from:', url);
+      
+      const response = await fetch(url);
 
       if (!response.ok) {
+        const text = await response.text();
+        console.error('API Response status:', response.status, 'Body:', text);
         throw new Error(`API Error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const text = await response.text();
+      console.log('API Response text length:', text.length, 'First 200 chars:', text.substring(0, 200));
+      
+      if (!text || text.trim().length === 0) {
+        console.error('Empty response from TMDB API');
+        return { movies: [], totalPages: 0, totalResults: 0, currentPage: page };
+      }
 
-      const movies = data.results.map(movie => ({
+      const data = JSON.parse(text);
+
+      const movies = (data.results || []).map(movie => ({
         id: movie.id,
         title: movie.title,
         poster: movie.poster_path ? `${this.imageUrl}${movie.poster_path}` : null,
@@ -187,8 +198,8 @@ class MovieDatabase {
 
       const result = {
         movies,
-        totalPages: data.total_pages,
-        totalResults: data.total_results,
+        totalPages: data.total_pages || 0,
+        totalResults: data.total_results || 0,
         currentPage: page
       };
 
@@ -196,7 +207,8 @@ class MovieDatabase {
       return result;
     } catch (error) {
       console.error('Popular error:', error);
-      throw error;
+      // Return empty result instead of throwing to prevent page break
+      return { movies: [], totalPages: 0, totalResults: 0, currentPage: page };
     }
   }
 
@@ -261,17 +273,28 @@ class MovieDatabase {
         return this.cache.get(cacheKey);
       }
 
-      const response = await fetch(
-        `${this.baseUrl}/tv/popular?api_key=${this.apiKey}&page=${page}`
-      );
+      const url = `${this.baseUrl}/tv/popular?api_key=${this.apiKey}&page=${page}`;
+      console.log('Fetching popular TV shows from:', url);
+      
+      const response = await fetch(url);
 
       if (!response.ok) {
+        const text = await response.text();
+        console.error('API Response status:', response.status, 'Body:', text);
         throw new Error(`API Error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const text = await response.text();
+      console.log('TV API Response text length:', text.length, 'First 200 chars:', text.substring(0, 200));
+      
+      if (!text || text.trim().length === 0) {
+        console.error('Empty response from TMDB TV API');
+        return { movies: [], shows: [], totalPages: 0, totalResults: 0, currentPage: page };
+      }
 
-      const shows = data.results.map(tv => ({
+      const data = JSON.parse(text);
+
+      const shows = (data.results || []).map(tv => ({
         id: tv.id,
         title: tv.name,
         poster: tv.poster_path ? `${this.imageUrl}${tv.poster_path}` : null,
@@ -287,8 +310,9 @@ class MovieDatabase {
 
       const result = {
         movies: shows,
-        totalPages: data.total_pages,
-        totalResults: data.total_results,
+        shows: shows,
+        totalPages: data.total_pages || 0,
+        totalResults: data.total_results || 0,
         currentPage: page
       };
 
@@ -296,7 +320,8 @@ class MovieDatabase {
       return result;
     } catch (error) {
       console.error('Popular TV error:', error);
-      throw error;
+      // Return empty result instead of throwing to prevent page break
+      return { movies: [], shows: [], totalPages: 0, totalResults: 0, currentPage: page };
     }
   }
 
@@ -545,7 +570,7 @@ class MovieDatabase {
 
       const url = `${this.baseUrl}/discover/movie?api_key=${this.apiKey}` +
         `&with_original_language=${encodeURIComponent(lang)}` +
-        `&region=IN&sort_by=popularity.desc&page=${page}`;
+        `&region=IN&sort_by=release_date.desc&page=${page}`;
 
       const response = await fetch(url);
       if (!response.ok) {

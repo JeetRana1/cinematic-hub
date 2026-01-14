@@ -454,14 +454,8 @@
 
 <head>
     <script>
-      // Register service worker for ad blocking
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw-adblock.js').then(reg => {
-          console.log('✅ Ad-blocking service worker registered');
-        }).catch(err => {
-          console.log('Service worker registration failed:', err);
-        });
-      }
+      // Ad-blocking service worker removed per request (disabled)
+      // Previously registered /sw-adblock.js - removed to avoid interfering with page requests.
       
       // Minimal security - prevent popups only
       window.open = function() { 
@@ -2388,6 +2382,13 @@
         <div>
           <div class="server-name">SuperEmbed</div>
           <div class="server-features">Multi-Source • Fallback</div>
+        </div>
+      </button>
+      <button class="server-option" data-provider="torrentio" data-priority="5">
+        <i class="fas fa-magnet"></i>
+        <div>
+          <div class="server-name">Torrentio</div>
+          <div class="server-features">P2P • Torrent (Player 2)</div>
         </div>
       </button>
     </div>

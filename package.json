@@ -5,8 +5,8 @@
   "scripts": {
     "prebuild": "node scripts/generateFirebaseConfig.js && node scripts/generateEmailConfig.js && node scripts/generateStreamApiConfig.js",
     "snoop:net20": "node scripts/snoop-net20.js",
-    "start": "node api/ad-blocker-proxy.js",
-    "dev": "nodemon api/ad-blocker-proxy.js"
+    "start": "node -e \"console.log('Ad-blocker proxy disabled')\"",
+    "dev": "node -e \"console.log('Ad-blocker proxy disabled (dev)')\""
   },
   "dependencies": {
     "@ghostery/adblocker": "^2.13.3",
@@ -16,7 +16,8 @@
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "express-rate-limit": "^7.1.5",
-    "node-fetch": "^3.3.2"
+    "node-fetch": "^3.3.2",
+    "puppeteer": "^24.35.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1",

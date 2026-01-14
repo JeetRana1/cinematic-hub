@@ -21,6 +21,8 @@
     // Priority order for providers
     const providerOrder = [
       'videasy',      // Primary
+      'nontongo',     // NontonGo - TMDB embed API (Player 2)
+      'rivestream',   // Rive - non-embed HLS preferred for Player 2
       'mxplayer',     // Good for Indian content
       'rabbitstream', // Good for Hindi
       'vidsrcxyz',    // Fallback
@@ -72,6 +74,7 @@
           const currentServerDisplay = document.getElementById('currentServer');
           const nameEl = newOption.querySelector('.server-name');
           const serverName = nameEl ? nameEl.textContent : 'Provider';
+          const providerKey = newOption.getAttribute('data-provider');
 
           // Show loading
           if (currentServerDisplay) {
@@ -88,16 +91,26 @@
             const episode = urlParams.get('episode');
             const movieTitle = urlParams.get('title') || urlParams.get('contentTitle') || 'Content';
 
-            console.log(`📺 Loading ${serverName} for: ${movieTitle}`);
+            console.log(`📺 Loading ${serverName} for: ${movieTitle} (provider: ${providerKey})`);
 
-            // Use enhanced stream API with title
+            // Use enhanced stream API with title and optional preferred provider
             if (window.getEnhancedStream) {
-              const result = await window.getEnhancedStream(tmdbId, mediaType, season, episode, null, movieTitle);
+              const result = await window.getEnhancedStream(tmdbId, mediaType, season, episode, providerKey, movieTitle);
 
               if (result && result.success) {
                 console.log(`✅ Got stream from ${result.provider}`);
-                
-                // Update URL and reload
+
+                // If provider is Torrentio and returned a magnet, open Player 2 with magnet param
+                if (providerKey === 'torrentio' && result.type === 'magnet') {
+                  const newUrl = new URL(window.location.origin + '/player-2.nontongo.html');
+                  newUrl.searchParams.set('id', tmdbId);
+                  newUrl.searchParams.set('magnet', result.url);
+                  newUrl.searchParams.set('provider', 'torrentio');
+                  window.location.href = newUrl.toString();
+                  return;
+                }
+
+                // Update URL and reload on same page for normal providers
                 const newUrl = new URL(window.location.href);
                 newUrl.searchParams.set('provider', serverName.toLowerCase().replace(/\s+/g, '-'));
                 newUrl.searchParams.set('src', result.url);

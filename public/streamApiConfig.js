@@ -4,5 +4,10 @@
 window.CONSUMET_API = 'https://api.consumet.org';
 // 8Stream API (primary ad-free backend) - Fresh deployment
 window.STREAM_API = 'https://8stream-api-pi.vercel.app/api/v1';
+// Optional: set this to your Torrentio-compatible API or proxy. Leave empty to disable.
+window.TORRENTIO_API = '';
+window.TWOEMBED_API = ''; // e.g. https://api.2embed.cc/movie  (set to use the 2embed API)
 console.log('✓ Consumet API configured:', window.CONSUMET_API);
 console.log('✓ Stream API configured:', window.STREAM_API);
+console.log('✓ Torrentio API configured:', window.TORRENTIO_API || '(not configured)');
+console.log('✓ 2Embed API configured:', window.TWOEMBED_API || '(not configured)');

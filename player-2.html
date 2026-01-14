@@ -21,9 +21,7 @@
     
     <!-- Stream API Configuration and Client -->
     <script src="public/streamApiConfig.js"></script>
-    <!-- Enhanced multi-provider (adds 8Stream) + compatibility bridge -->
-    <script src="js/enhanced-stream-api.js"></script>
-    <script src="js/stream-compatibility.js"></script>
+    <script src="js/stream-api.js"></script>
     
     <!-- Continue Watching and Player Resume scripts -->
     <script src="js/continue-watching.js"></script>
@@ -1173,6 +1171,10 @@
                     <button class="control-btn" id="lockButton" onclick="toggleLock()" title="Lock/Unlock Controls">
                         <i class="fas fa-lock" id="lockIcon"></i>
                     </button>
+                    <!-- Provider: NontonGo (Player 2 fixed) -->
+                    <div style="position:relative; display:inline-block; margin-left:10px;">
+                      <div style="font-size:13px; color:#fff; padding:6px 10px; background:rgba(30,30,30,0.5); border-radius:6px;">Provider: <strong>NontonGo</strong></div>
+                    </div>
                 </div>
             </div>
             
@@ -1295,9 +1297,17 @@
     </div>
 
     <script>
+
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const title = urlParams.get('title') || 'Unknown Movie';
+
+        // Dev helper (safe no-op if not provided by other debug tooling)
+        if (typeof window.appendDev !== 'function') {
+            window.appendDev = function(msg, level){
+                try { if (level === 'warn') console.warn('[DEV]', msg); else if (level === 'error') console.error('[DEV]', msg); else console.log('[DEV]', msg); } catch(e) {}
+            };
+        }
         const year = urlParams.get('year') || '';
         const movieId = urlParams.get('movieId') || '';
 
@@ -1358,9 +1368,6 @@
         let lastTapTime = 0;
         let tapCount = 0;
 
-        // Movie database for subtitles (empty for now - can be populated later)
-        const movieDatabase = {};
-
         // Screen mode global variables
         let screenModeBtn, screenModeIcon;
         const modes = [
@@ -1376,61 +1383,31 @@
         // Get video source
         let videoSrc = urlParams.get('src') || urlParams.get('video') || '';
         let sourceType = urlParams.get('type') || 'mp4';
-        let webStreamrDone = false;
 
-        // Try WebStreamr API first if we have a TMDB ID
-        const tmdbId = urlParams.get('id') || urlParams.get('tmdbId') || urlParams.get('movieId') || '';
-        console.log('Player-2: TMDB ID from URL:', tmdbId);
-
-        if (tmdbId) {
-            console.log('Player-2: TMDB ID found, attempting WebStreamr API call...');
-            // This will run synchronously and may override videoSrc
-            (async () => {
-                console.log('Player-2: Starting WebStreamr async call...');
-                const mediaType = urlParams.get('mediaType') || 'movie';
+        // Auto-load NontonGo embed on Player 2 - simplified flow (NontonGo only)
+        (function initNontonGoAuto(){
+            try {
+                const tmdbId = urlParams.get('movieId') || urlParams.get('tmdbId') || urlParams.get('id');
+                const mediaType = urlParams.get('mediaType') || ((urlParams.get('season') && urlParams.get('episode')) ? 'tv' : 'movie');
                 const season = urlParams.get('season');
                 const episode = urlParams.get('episode');
-                console.log('Player-2: Calling enhanced stream API with TMDB ID:', tmdbId);
-                // Try multiple providers from the enhanced API
-                let stream = null;
-                const providers = ['webstreamr', 'videasy', 'vidsrcxyz', 'vidsrcpro', 'superembed', 'nuviostreams'];
-                
-                for (const provider of providers) {
-                    console.log('Player-2: Trying provider:', provider);
-                    try {
-                        const result = await window.StreamProviders?.[provider]?.getStream(tmdbId, mediaType, season, episode);
-                        console.log('Player-2: Provider', provider, 'result:', result);
-                        if (result?.success) {
-                            stream = {
-                                url: result.url,
-                                type: result.type,
-                                title: result.provider
-                            };
-                            console.log('Player-2: Success with provider:', provider, '- type:', result.type, '- url:', result.url);
-                            break;
-                        }
-                    } catch (e) {
-                        console.warn('Player-2: Provider', provider, 'failed:', e);
-                    }
-                }
-                if (stream) {
-                    videoSrc = stream.url;
-                    sourceType = stream.type;
-                    console.log('Player-2: WebStreamr override successful - videoSrc:', videoSrc, 'sourceType:', sourceType);
+                if (tmdbId) {
+                    // Delay slightly to allow UI to initialize
+                    setTimeout(()=>{
+                        try { openNontonGoEmbed(tmdbId, mediaType, season, episode); } catch(e){ console.warn('openNontonGoEmbed failed', e); }
+                    }, 200);
                 } else {
-                    console.log('Player-2: All streaming providers failed, no video source available');
+                    console.warn('initNontonGoAuto: No TMDB ID present, waiting for manual invocation');
                 }
-                webStreamrDone = true;
-                console.log('Player-2: WebStreamr processing complete, webStreamrDone = true');
-            })();
-        } else {
-            console.log('Player-2: No TMDB ID found, skipping WebStreamr');
-            webStreamrDone = true;
-        }
+            } catch (e) { console.warn('initNontonGoAuto failed', e); }
+        })();
 
         // Check movie database for the video source
         const normalizedTitle = title.toLowerCase().trim();
+        // Ensure movieDatabase exists (can be populated from elsewhere)
+        const movieDatabase = window.movieDatabase || {};
         console.log('Looking for movie:', normalizedTitle);
+        console.log('Available movies:', Object.keys(movieDatabase));
         
         if (!videoSrc && movieDatabase[normalizedTitle]) {
             const movieData = movieDatabase[normalizedTitle];
@@ -1441,113 +1418,6 @@
         } else {
             console.log('Movie not found in database, using URL parameters');
         }
-
-        // Function to get direct stream from WebStreamr addon
-        async function getWebStreamrStream(tmdbId, mediaType, season, episode) {
-            console.log('Player-2: getWebStreamrStream called with TMDB ID:', tmdbId);
-            try {
-                // WebStreamr uses Stremio format: tmdb:{id} for TMDB IDs
-                const contentId = `tmdb:${tmdbId}`;
-                let apiUrl = `https://webstreamr.hayd.uk/stream/movie/${contentId}.json`;
-                console.log('Player-2: querying WebStreamr API:', apiUrl);
-
-                const response = await fetch(apiUrl);
-                console.log('Player-2: WebStreamr API response status:', response.status);
-
-                if (!response.ok) {
-                    console.error('Player-2: WebStreamr API failed with status:', response.status);
-                    return null;
-                }
-
-                const data = await response.json();
-                console.log('Player-2: WebStreamr API response data:', data);
-
-                if (!data.streams || data.streams.length === 0) {
-                    console.warn('Player-2: No streams found in WebStreamr response');
-                    return null;
-                }
-
-                console.log('Player-2: Found', data.streams.length, 'streams from WebStreamr');
-
-                // Filter for web-ready streams (prefer streams that can play directly in browser)
-                const webReadyStreams = data.streams.filter(stream =>
-                    !stream.behaviorHints || !stream.behaviorHints.notWebReady
-                );
-
-                // Special priority for love.polgen.buzz URLs (user confirmed they work)
-                const lovePolgenStreams = data.streams.filter(stream =>
-                    stream.url && stream.url.includes('love.polgen.buzz')
-                );
-
-                console.log('Player-2: Web-ready streams:', webReadyStreams.length, 'love.polgen.buzz streams:', lovePolgenStreams.length, 'out of', data.streams.length);
-
-                // Prioritize love.polgen.buzz streams, then web-ready streams, then all streams
-                const availableStreams = lovePolgenStreams.length > 0 ? lovePolgenStreams : 
-                                       webReadyStreams.length > 0 ? webReadyStreams : data.streams;
-
-                // Prefer RgShows over VixSrc for potentially better compatibility
-                const rgShowsStream = availableStreams.find(stream =>
-                    stream.title && stream.title.includes('RgShows')
-                );
-                const vixSrcStream = availableStreams.find(stream =>
-                    stream.title && stream.title.includes('VixSrc')
-                );
-                const selectedStream = rgShowsStream || vixSrcStream || availableStreams[0];
-                console.log('Player-2: selected WebStreamr stream:', selectedStream);
-                console.log('Player-2: selected stream URL:', selectedStream.url);
-                console.log('Player-2: selected stream title:', selectedStream.title);
-                    
-                    // Handle .txt files (like RgShows) that contain the actual stream URL
-                    let finalUrl = selectedStream.url;
-                    if (selectedStream.url.endsWith('.txt')) {
-                        try {
-                            console.log('Player-2: Fetching .txt file for actual stream URL...');
-                            const txtResponse = await fetch(selectedStream.url);
-                            console.log('Player-2: .txt file response status:', txtResponse.status);
-                            const txtContent = await txtResponse.text();
-                            console.log('Player-2: .txt file content:', txtContent);
-                            // Extract the actual stream URL from the text
-                            const urlMatch = txtContent.match(/https?:\/\/[^\s]+/);
-                            if (urlMatch) {
-                                finalUrl = urlMatch[0];
-                                console.log('Player-2: Extracted stream URL from .txt:', finalUrl);
-                            } else {
-                                console.warn('Player-2: No URL found in .txt file content');
-                            }
-                        } catch (e) {
-                            console.warn('Player-2: Failed to fetch .txt file:', e);
-                        }
-                    }
-
-                    // Return the stream URL (try direct access for RgShows .txt files, proxy for others)
-                    let proxyUrl = '';
-                    if (selectedStream.title && selectedStream.title.includes('RgShows') && selectedStream.url.endsWith('.txt')) {
-                        // For RgShows .txt files, try direct access first
-                        proxyUrl = '';
-                        console.log('Player-2: Using direct access for RgShows .txt file');
-                    } else {
-                        // Use proxy for other streams
-                        proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-                        console.log('Player-2: Using proxy for stream');
-                    }
-
-                    const finalStreamUrl = proxyUrl + finalUrl;
-                    console.log('Player-2: Final stream URL:', finalStreamUrl);
-                    console.log('Player-2: Stream type:', finalUrl.includes('.m3u8') ? 'hls' : finalUrl.includes('.mkv') ? 'mkv' : 'mp4');
-
-                    return {
-                        url: finalStreamUrl,
-                        type: finalUrl.includes('.m3u8') ? 'hls' : finalUrl.includes('.mkv') ? 'mkv' : 'mp4',
-                        title: selectedStream.title || selectedStream.name || 'WebStreamr Stream'
-                    };
-            } catch (e) {
-                console.warn('Player-2: WebStreamr API failed:', e);
-            }
-            console.log('Player-2: getWebStreamrStream function completed');
-            return null;
-        }
-
-
 
         // Initialize screen mode functionality
         function initScreenMode() {
@@ -1688,133 +1558,18 @@
             video.offsetHeight;
         }
 
-        // Initialize video (or iframe embed)
-        async function resolveTxtToStream(txtUrl) {
-            console.log('Player-2: resolveTxtToStream called for:', txtUrl);
-            // Try direct fetch first
-            try {
-                const resp = await fetch(txtUrl);
-                console.log('Player-2: .txt direct fetch status:', resp.status);
-                if (resp.ok) {
-                    const txt = await resp.text();
-                    console.log('Player-2: .txt content snippet:', txt ? txt.slice(0,200) : '');
-                    const match = txt.match(/https?:\/\/[^\s'"<>]+/);
-                    if (match) return { url: match[0], type: match[0].includes('.m3u8') ? 'hls' : match[0].includes('.mkv') ? 'mkv' : match[0].includes('.mp4') ? 'mp4' : 'url' };
-                    if (/^#EXTM3U/m.test(txt) || txt.includes('.m3u8')) return { url: txtUrl, type: 'hls' };
-                }
-            } catch (e) {
-                console.warn('Player-2: Direct .txt fetch failed (CORS or network):', e && e.message ? e.message : e);
-            }
-            // Try proxy fallbacks
-            const proxies = ['https://thingproxy.freeboard.io/fetch/', 'https://cors-anywhere.herokuapp.com/','https://corsproxy.io/?'];
-            for (const proxy of proxies) {
-                try {
-                    const pUrl = proxy + txtUrl;
-                    console.log('Player-2: Trying proxy:', proxy);
-                    const pResp = await fetch(pUrl);
-                    console.log('Player-2: proxy fetch status:', pResp.status);
-                    if (!pResp.ok) continue;
-                    const pTxt = await pResp.text();
-                    const match = pTxt.match(/https?:\/\/[^\s'"<>]+/);
-                    if (match) return { url: match[0], type: match[0].includes('.m3u8') ? 'hls' : match[0].includes('.mkv') ? 'mkv' : match[0].includes('.mp4') ? 'mp4' : 'url' };
-                    if (/^#EXTM3U/m.test(pTxt) || pTxt.includes('.m3u8')) return { url: txtUrl, type: 'hls' };
-                } catch (e) {
-                    console.warn('Player-2: Proxy fetch failed for', proxy, e && e.message ? e.message : e);
-                }
-            }
-
-            // Server resolver fallback
-            try {
-                const resolver = `http://localhost:3001/api/resolve?url=${encodeURIComponent(txtUrl)}`;
-                console.log('Player-2: Trying server resolver:', resolver);
-                const resp = await fetch(resolver);
-                if (resp.ok) {
-                    const json = await resp.json();
-                    console.log('Player-2: Server resolver response:', json);
-                    if (json.success && json.resolvedUrl) return { url: json.resolvedUrl, type: json.type || 'url' };
-                } else {
-                    console.warn('Player-2: Server resolver returned non-OK status:', resp.status);
-                }
-            } catch (e) {
-                console.warn('Player-2: Server resolver failed:', e && e.message ? e.message : e);
-            }
-
-            return null;
-        }
-
+        // Initialize video
         async function initVideo() {
-            console.log('initVideo called with videoSrc:', videoSrc, 'sourceType:', sourceType);
-
-            // Resolve .txt streams to playable URL where possible
-            if (sourceType === 'url' && /\.txt(\?.*)?$/.test(videoSrc)) {
-                console.log('Player-2: Detected .txt stream, attempting to resolve to playable URL:', videoSrc);
-                try {
-                    const resolved = await resolveTxtToStream(videoSrc);
-                    if (resolved && resolved.url) {
-                        console.log('Player-2: .txt resolved to:', resolved);
-                        videoSrc = resolved.url;
-                        sourceType = resolved.type || (videoSrc.includes('.m3u8') ? 'hls' : videoSrc.includes('.mkv') ? 'mkv' : videoSrc.includes('.mp4') ? 'mp4' : 'mp4');
-                    } else {
-                        console.warn('Player-2: Could not resolve .txt to playable stream; proceeding with original URL');
-                    }
-                } catch (e) {
-                    console.warn('Player-2: .txt resolution error:', e);
-                }
-            }
-
-            // If we received a .txt URL, try to resolve it to a playable stream (m3u8/mp4/mkv)
-            if (sourceType === 'url' && /\.txt(\?.*)?$/.test(videoSrc)) {
-                console.log('Player-2: Detected .txt stream, attempting to resolve to playable URL');
-                try {
-                    const resolved = await resolveTxtToStream(videoSrc);
-                    if (resolved && resolved.url) {
-                        console.log('Player-2: .txt resolved to:', resolved);
-                        videoSrc = resolved.url;
-                        sourceType = resolved.type || sourceType;
-                    } else {
-                        console.warn('Player-2: Could not resolve .txt to playable stream; continuing with original URL');
-                    }
-                } catch (e) {
-                    console.warn('Player-2: .txt resolution error:', e);
-                }
-            }
-
             if (videoSrc) {
                 // Remove any existing <track> elements
                 const oldTracks = video.querySelectorAll('track');
                 oldTracks.forEach(track => track.remove());
 
-                const isIframe = String(sourceType).toLowerCase() === 'iframe';
+                // Decide playback method based on sourceType or URL
                 const isHls = (String(sourceType).toLowerCase() === 'hls') || /\.m3u8(\?.*)?$/.test(videoSrc);
                 video.crossOrigin = 'anonymous';
 
-                if (isIframe) {
-                    console.log('📺 Initializing iframe embed (player-2) with URL:', videoSrc);
-                    const container = document.querySelector('.video-container') || video.parentElement;
-                    if (container) {
-                        video.style.display = 'none';
-                        const existing = container.querySelector('#stream-iframe');
-                        if (existing) existing.remove();
-                        const iframe = document.createElement('iframe');
-                        iframe.id = 'stream-iframe';
-                        iframe.src = videoSrc;
-                        iframe.style.width = '100%';
-                        iframe.style.height = '100%';
-                        iframe.style.border = 'none';
-                        iframe.style.position = 'absolute';
-                        iframe.style.top = '0';
-                        iframe.style.left = '0';
-                        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen';
-                        iframe.setAttribute('allowfullscreen', '');
-                        iframe.setAttribute('webkitallowfullscreen', '');
-                        iframe.setAttribute('mozallowfullscreen', '');
-                        container.appendChild(iframe);
-                        console.log('📺 Iframe created and added to container');
-                        return; // Skip video-specific setup
-                    } else {
-                        console.error('📺 No container found for iframe');
-                    }
-                } else if (isHls) {
+                if (isHls) {
                     console.log('📺 Initializing HLS playback (player-2)...');
                     if (window.Hls && Hls.isSupported()) {
                         const hls = new Hls({
@@ -1872,14 +1627,9 @@
                         video.src = videoSrc;
                     }
                 } else {
-                    // MP4, MKV, or other direct sources
+                    // MP4 or other direct sources
                     video.src = videoSrc;
-                    if (sourceType === 'mkv') {
-                        video.type = 'video/x-matroska';
-                        console.log('🎬 Setting video type to MKV (video/x-matroska)');
-                    } else {
-                        video.type = `video/${sourceType}`;
-                    }
+                    video.type = `video/${sourceType}`;
                 }
 
                 // Wait for video to load
@@ -3448,63 +3198,204 @@ Try hosting subtitles on same server as video`;
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM loaded, initializing...');
             
-            // Wait for WebStreamr to complete if it's running
-            const initializeWhenReady = () => {
-                if (!webStreamrDone) {
-                    console.log('Waiting for WebStreamr to complete...');
-                    setTimeout(initializeWhenReady, 100);
-                    return;
-                }
-                
-                console.log('WebStreamr done, proceeding with initialization...');
-                console.log('Current videoSrc:', videoSrc);
-                console.log('Current sourceType:', sourceType);
-                
-                // Setup language selector
-                setupLanguageSelector();
-                
-                // Test if screen mode button exists
-                const testBtn = document.getElementById('screenModeToggle');
-                console.log('Screen mode button found on DOM load:', testBtn);
-                
-                // Check if tap overlay exists
-                if (!tapOverlay) {
-                    console.error('Tap overlay element not found!');
-                } else {
-                    console.log('Tap overlay element found:', tapOverlay);
-                }
-                
-                initVideo();
-                
-                // Setup quality selector when HLS is ready (independent initialization)
-                setTimeout(() => {
-                    if (window.playerHls || window.__hlsInstance2) {
-                        setupQualitySelector();
-                    } else {
-                        // Try again after another delay
-                        setTimeout(() => {
-                            if (window.playerHls || window.__hlsInstance2) {
-                                setupQualitySelector();
-                            }
-                        }, 1500);
-                    }
-                }, 500);
-                
-                // Show controls immediately so screen mode button is clickable
-                showControls();
-                
-                // Force controls to stay visible initially
-                setTimeout(() => {
-                    const controlsOverlay = document.getElementById('controlsOverlay');
-                    if (controlsOverlay) {
-                        controlsOverlay.classList.add('visible');
-                        console.log('Controls forced visible');
-                    }
-                }, 100);
-            };
+            // Setup language selector
+            setupLanguageSelector();
             
-            initializeWhenReady();
+            // Test if screen mode button exists
+            const testBtn = document.getElementById('screenModeToggle');
+            console.log('Screen mode button found on DOM load:', testBtn);
+            
+            // Check if tap overlay exists
+            if (!tapOverlay) {
+                console.error('Tap overlay element not found!');
+            } else {
+                console.log('Tap overlay element found:', tapOverlay);
+            }
+            
+            initVideo();
+            
+            // Setup quality selector when HLS is ready (independent initialization)
+            setTimeout(() => {
+                if (window.playerHls || window.__hlsInstance2) {
+                    setupQualitySelector();
+                } else {
+                    // Try again after another delay
+                    setTimeout(() => {
+                        if (window.playerHls || window.__hlsInstance2) {
+                            setupQualitySelector();
+                        }
+                    }, 1500);
+                }
+            }, 500);
+            
+            // Show controls immediately so screen mode button is clickable
+            showControls();
+            
+            // Force controls to stay visible initially
+            setTimeout(() => {
+                const controlsOverlay = document.getElementById('controlsOverlay');
+                if (controlsOverlay) {
+                    controlsOverlay.classList.add('visible');
+                    console.log('Controls forced visible');
+                }
+            }, 100);
         });
+
+        // NontonGo helper for Player 2 - build embed URLs and open proxied cleaned iframe
+        window.openNontonGoEmbed = function(tmdbId, mediaType = 'movie', season = null, episode = null) {
+            try {
+                if (!tmdbId) { console.warn('openNontonGoEmbed: tmdbId required'); return; }
+                let embedUrl = '';
+                if (mediaType === 'tv' && season && episode) embedUrl = `https://www.NontonGo.win/embed/tv/${tmdbId}/${season}/${episode}`;
+                else if (mediaType === 'tv') embedUrl = `https://www.NontonGo.win/embed/tv/?id=${tmdbId}&s=${season || ''}&e=${episode || ''}`;
+                else embedUrl = `https://www.NontonGo.win/embed/movie/${tmdbId}`;
+
+                const prox = `/api/proxy/video?url=${encodeURIComponent(embedUrl)}&provider=nontongo&clean=1&autoplay=1`;
+                console.log('openNontonGoEmbed: Loading proxied embed:', prox);
+                appendDev('Open NontonGo embed: ' + embedUrl);
+
+                const container = document.querySelector('.video-container') || document.body;
+                if (!container) { console.error('openNontonGoEmbed: container not found'); return; }
+
+                // Hide native video element
+                try { const vid = document.getElementById('videoPlayer') || document.getElementById('video'); if (vid) { vid.style.display = 'none'; } } catch(e) {}
+
+                const existing = container.querySelector('#stream-iframe');
+                if (existing) existing.remove();
+                const iframe = document.createElement('iframe');
+                iframe.id = 'stream-iframe';
+                iframe.src = prox;
+                iframe.style.width = '100%'; iframe.style.height = '100%'; iframe.style.border = 'none'; iframe.style.position = 'absolute'; iframe.style.top = '0'; iframe.style.left = '0';
+                iframe.style.zIndex = '2147483646'; iframe.style.background = '#000'; iframe.style.display = 'block';
+                iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen';
+                iframe.setAttribute('allowfullscreen', ''); iframe.setAttribute('webkitallowfullscreen', ''); iframe.setAttribute('mozallowfullscreen', '');
+                // Ensure native video is hidden behind iframe
+                try { const vid = document.getElementById('videoPlayer') || document.getElementById('video'); if (vid) { vid.style.display = 'none'; vid.style.zIndex = '0'; } } catch(e) {}
+                container.appendChild(iframe);
+
+                // Small helper: try a set of proxy endpoints and return first OK
+                async function findWorkingProxy(embedUrl){
+                    const candidates = [
+                        `/api/proxy/video?url=${encodeURIComponent(embedUrl)}&provider=nontongo&clean=1&autoplay=1`,
+                        `${location.origin}/api/proxy/video?url=${encodeURIComponent(embedUrl)}&provider=nontongo&clean=1&autoplay=1`,
+                        `http://127.0.0.1:5502/api/proxy/video?url=${encodeURIComponent(embedUrl)}&provider=nontongo&clean=1&autoplay=1`,
+                        `http://localhost:5502/api/proxy/video?url=${encodeURIComponent(embedUrl)}&provider=nontongo&clean=1&autoplay=1`,
+                        `http://127.0.0.1:3001/api/proxy/video?url=${encodeURIComponent(embedUrl)}&provider=nontongo&clean=1&autoplay=1`,
+                        `http://localhost:3001/api/proxy/video?url=${encodeURIComponent(embedUrl)}&provider=nontongo&clean=1&autoplay=1`
+                    ];
+                    for(const c of candidates){
+                        try{
+                            appendDev('Testing proxy candidate: ' + c);
+                            const r = await fetch(c, { method: 'GET', cache: 'no-store' });
+                            if (r && r.ok) { appendDev('Proxy candidate OK: ' + c); return c; }
+                            appendDev('Proxy candidate non-ok (' + (r && r.status) + '): ' + c, 'warn');
+                        }catch(e){ appendDev('Proxy candidate failed: ' + (e && e.message ? e.message : e) + ' -> ' + c, 'warn'); }
+                    }
+                    return null;
+                }
+
+                // Attempt to trigger playback inside the embed (postMessage + same-origin tries)
+                setTimeout(() => {
+                    try { iframe.contentWindow && iframe.contentWindow.postMessage({ type: 'cinema_play' }, '*'); } catch(e) { }
+                    try {
+                        const doc = iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document);
+                        if (doc) {
+                            const v = doc.querySelector('video');
+                            if (v) { try { v.muted = true; v.play().catch(()=>{}); } catch(e) {} }
+                            const btn = doc.querySelector('button.play, .play-button, .btn-play, #play');
+                            if (btn) try { btn.click(); } catch(e) {}
+                        }
+                    } catch(e) { }
+                }, 500);
+
+                // In parallel: probe the proxied cleaned embed HTML for direct streams (m3u8/mp4) or nested iframe and switch to them if found
+                (async function(){
+                    try {
+                        appendDev('Probing proxied cleaned embed for direct streams...');
+
+                        // Try to find a working proxy endpoint first (handles different dev host/ports)
+                        const workingProxy = await findWorkingProxy(embedUrl);
+                        if (!workingProxy) {
+                            appendDev('No working proxy found - falling back to remote embed: ' + embedUrl, 'warn');
+                            try { iframe.src = embedUrl; } catch (e) { console.warn('Fallback set iframe.src failed', e); }
+                            return;
+                        }
+
+                        appendDev('Using proxy for probe: ' + workingProxy);
+                        try { iframe.src = workingProxy; iframe.style.zIndex = '2147483646'; iframe.style.background = '#000'; iframe.style.display = 'block'; const vid = document.getElementById('videoPlayer') || document.getElementById('video'); if (vid) { vid.style.display = 'none'; vid.style.zIndex = '0'; } } catch(e) { console.warn('Setting iframe src to working proxy failed', e); }
+                        const probeResp = await fetch(workingProxy, { cache: 'no-store' });
+                        if (!probeResp.ok) {
+                            appendDev('Probe returned non-ok: ' + probeResp.status, 'warn');
+                            appendDev('Falling back to remote embed: ' + embedUrl, 'warn');
+                            try { iframe.src = embedUrl; } catch (e) { console.warn('Fallback set iframe.src failed', e); }
+                            return;
+                        }
+                        const txt = await probeResp.text();
+
+                        // HLS
+                        const m = txt.match(/https?:\/\/[^"'()\s]+\.m3u8[^"'()\s]*/i);
+                        if (m && m[0]) {
+                            const manifest = m[0];
+                            const proxManifest = `/api/hls-proxy?type=manifest&url=${encodeURIComponent(manifest)}&referer=${encodeURIComponent(embedUrl)}`;
+                            appendDev && appendDev('Found HLS manifest in cleaned embed: ' + manifest);
+                            // switch to HLS playback
+                            window.videoSrc = proxManifest;
+                            window.sourceType = 'hls';
+                            try { initVideo(); } catch(e) { console.warn('initVideo failed after HLS probe', e); }
+                            return;
+                        }
+
+                        // MP4
+                        const mp4 = txt.match(/https?:\/\/[^"'()\s]+\.mp4[^"'()\s]*/i);
+                        if (mp4 && mp4[0]) {
+                            const file = mp4[0];
+                            const proxFile = `/api/proxy/video?url=${encodeURIComponent(file)}&provider=nontongo`;
+                            appendDev && appendDev('Found MP4 in cleaned embed: ' + file);
+                            window.videoSrc = proxFile;
+                            window.sourceType = 'mp4';
+                            try { initVideo(); } catch(e) { console.warn('initVideo failed after MP4 probe', e); }
+                            return;
+                        }
+
+                        // Nested iframe
+                        const iframeMatch = txt.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+                        if (iframeMatch && iframeMatch[1]) {
+                            const nested = iframeMatch[1];
+                            const proxNested = nested && nested.startsWith('http') ? `/api/proxy/video?url=${encodeURIComponent(nested)}&provider=nontongo&clean=1&autoplay=1` : nested;
+                            appendDev && appendDev('Found nested iframe in cleaned embed: ' + nested + ' -> ' + proxNested);
+                            iframe.src = proxNested;
+                            return;
+                        }
+
+                        appendDev('No direct streams found in cleaned embed');
+                        try { iframe.style.display = 'block'; iframe.style.zIndex = '2147483646'; iframe.style.background = '#000'; const vid = document.getElementById('videoPlayer') || document.getElementById('video'); if (vid) { vid.style.display = 'none'; vid.style.zIndex = '0'; } } catch(e) {}
+                    } catch (err) {
+                        appendDev('Cleaned embed probe error: ' + (err && err.message ? err.message : err), 'error');
+                        // On probe exception (proxy unreachable etc) fall back to remote embed and show error
+                        try { appendDev('Probe exception — falling back to remote embed: ' + embedUrl, 'warn'); iframe.src = embedUrl; showEmbedError('Embed probe failed — showing remote embed, playback may require interaction'); } catch (e) { console.warn('Fallback set iframe.src failed', e); }
+                    }
+                })();
+
+                // Remove any start overlay if present
+                const startOv = document.getElementById('player2StartOverlay'); if (startOv && startOv.remove) startOv.remove();
+
+            } catch (err) { console.warn('openNontonGoEmbed error:', err); }
+        };
+
+        // Show a small overlay with an error message when embed fails
+        function showEmbedError(message){
+            try{
+                let e = document.getElementById('embedErrorOverlay');
+                if (!e){
+                    e = document.createElement('div');
+                    e.id = 'embedErrorOverlay';
+                    e.style.cssText = 'position:fixed; left:20px; right:20px; bottom:20px; padding:12px 16px; background:rgba(255,40,40,0.95); color:#fff; border-radius:8px; z-index:2147483647; font-weight:600;';
+                    document.body.appendChild(e);
+                }
+                e.textContent = message;
+                setTimeout(()=>{ try{ e.remove(); }catch(e){} }, 8000);
+            }catch(e){ console.warn('showEmbedError failed', e); }
+        }
     </script>
 </body>
 </html>

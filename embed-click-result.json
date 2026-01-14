@@ -1,0 +1,16 @@
+{
+  "url": "https://embed.smashystream.com/playere.php?imdb=tt13964560",
+  "referer": "https://uflix.cc/mPlayer?movieid=the-astronaut-2025&stream=stream2",
+  "m3u8": [],
+  "mp4": [],
+  "interesting": [
+    {
+      "type": "req",
+      "url": "https://embed.smashystream.com/playere.php?imdb=tt13964560",
+      "resourceType": "document",
+      "method": "GET",
+      "ts": 1768350601055
+    }
+  ],
+  "htmlSnippet": "<!DOCTYPE html><html dir=\"ltr\" lang=\"en\"><head>\n  <meta charset=\"utf-8\">\n  <meta name=\"color-scheme\" content=\"light dark\">\n  <meta name=\"theme-color\" content=\"#fff\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no\">\n  <title>embed.smashystream.com</title>\n  <style>/* Copyright 2017 The Chromium Authors\n * Use of this source code is governed by a BSD-style license that can be\n * found in the LICENSE file. */\n\na {\n  color: var(--link-color);\n}\n\nbody {\n  --background-color: #fff;\n  --error-code-color: var(--google-gray-700);\n  --google-blue-50: rgb(232, 240, 254);\n  --google-blue-100: rgb(210, 227, 252);\n  --google-blue-300: rgb(138, 180, 248);\n  --google-blue-600: rgb(26, 115, 232);\n  --google-blue-700: rgb(25, 103, 210);\n  --google-gray-100: rgb(241, 243, 244);\n  --google-gray-300: rgb(218, 220, 224);\n  --google-gray-500: rgb(154, 160, 166);\n  --google-gray-50: rgb(248, 249, 250);\n  --google-gray-600: rgb(128, 134, 139);\n  --google-gray-700: rgb(95, 99, 104);\n  --google-gray-800: rgb(60, 64, 67);\n  --google-gray-900: rgb(32, 33, 36);\n  --heading-color: var(--google-gray-900);\n  --link-color: rgb(88, 88, 88);\n  --primary-button-fill-color-active: var(--google-blue-700);\n  --primary-button-fill-color: var(--google-blue-600);\n  --primary-button-text-color: #fff;\n  --quiet-background-color: rgb(247, 247, 247);\n  --secondary-button-border-color: var(--google-gray-500);\n  --secondary-button-fill-color: #fff;\n  --secondary-button-hover-border-color: var(--google-gray-600);\n  --secondary-button-hover-fill-color: var(--google-gray-50);\n  --secondary-button-text-color: var(--google-gray-700);\n  --small-link-color: var(--google-gray-700);\n  --text-color: var(--google-gray-700);\n  background: var(--background-color);\n  color: var(--text-color);\n  word-wrap: break-word;\n}\n\n.nav-wrapper .secondary-button {\n  background: var(--secondary-button-fill-color);\n  border: 1px solid var(--secondar"
+}

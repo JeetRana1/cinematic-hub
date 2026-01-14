@@ -43,9 +43,46 @@
         return false;
       }
 
+      // Restrict WebStreamr/Hayduk providers to Player 2 (id: 'videoPlayer') only
+      if (stream.provider && /webstreamr|hayduk/i.test(stream.provider) && this.playerId !== 'videoPlayer') {
+        console.warn(`Provider ${stream.provider} is only supported in Player 2. Skipping load for ${this.playerId}`);
+        this.showError(`${stream.provider} streams are only supported in Player 2`);
+        return false;
+      }
+
       this.currentStream = stream;
 
       console.log(`🎬 Loading stream from ${stream.provider}`);
+
+      // Handle magnet (torrent) streams in Player 2 using client-side WebTorrent
+      if (stream.type === 'magnet') {
+        // Only allow magnet streams in Player 2 (video element id: 'videoPlayer')
+        if (this.playerId !== 'videoPlayer' && !(document.getElementById('videoPlayer'))) {
+          console.warn(`Magnet stream ${stream.provider} is only supported in Player 2.`);
+          this.showError(`${stream.provider} torrent streams are only supported in Player 2`);
+          return false;
+        }
+
+        if (typeof window.startWebTorrent === 'function') {
+          try {
+            const ok = await window.startWebTorrent(stream.url);
+            if (ok) {
+              console.log(`✅ Magnet stream started from ${stream.provider}`);
+              return true;
+            } else {
+              this.showError('Failed to start torrent stream');
+              return false;
+            }
+          } catch (e) {
+            console.error('❌ Error starting WebTorrent:', e);
+            this.showError('Error starting torrent stream: ' + (e.message || e));
+            return false;
+          }
+        } else {
+          this.showError('WebTorrent not available in this player');
+          return false;
+        }
+      }
 
       if (stream.type === 'iframe') {
         return this.loadIframeStream(stream);
@@ -60,6 +97,13 @@
 
     loadIframeStream(stream) {
       try {
+        // Restrict certain iframe providers to Player 2 only
+        if (stream.provider && /webstreamr|hayduk/i.test(stream.provider) && this.playerId !== 'videoPlayer') {
+          console.warn(`Iframe streams from provider ${stream.provider} are only supported in Player 2.`);
+          this.showError(`${stream.provider} iframe streams are only supported in Player 2`);
+          return false;
+        }
+
         // Hide video element
         if (this.videoElement) {
           this.videoElement.style.display = 'none';

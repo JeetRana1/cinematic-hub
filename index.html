@@ -1,3 +1,16 @@
+  <script>
+    // Restore modal state if returning from player-2.nontongo.html
+    document.addEventListener('DOMContentLoaded', function() {
+      try {
+        const restoreModal = sessionStorage.getItem('restoreModal');
+        if (restoreModal) {
+          sessionStorage.removeItem('restoreModal');
+          const movie = JSON.parse(restoreModal);
+          if (window.openMovieModal) window.openMovieModal(movie);
+        }
+      } catch(e) { console.error('Failed to restore modal:', e); }
+    });
+  </script>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -18,6 +31,71 @@
     };
     
     console.log('✅ Security barrier loaded');
+  </script>
+
+  <script>
+    // Global error reporting to help surface runtime issues in the console
+    window.addEventListener('error', function (evt) {
+      try { console.error('Global JS error:', evt && (evt.error || evt.message) ? (evt.error || evt.message) : evt); } catch (_) {}
+    });
+    window.addEventListener('unhandledrejection', function (evt) {
+      try { console.error('Unhandled rejection:', evt && evt.reason ? evt.reason : evt); } catch (_) {}
+    });
+
+    // Protect console from being cleared by third-party scripts and collect logs in an in-page panel
+    (function(){
+      if (typeof console === 'undefined') return;
+
+      // Save originals
+      try {
+        console._orig = {
+          log: console.log.bind(console),
+          info: console.info ? console.info.bind(console) : console.log.bind(console),
+          warn: console.warn ? console.warn.bind(console) : console.log.bind(console),
+          error: console.error ? console.error.bind(console) : console.log.bind(console),
+          clear: console.clear ? console.clear.bind(console) : function(){}
+        };
+      } catch(e) { console._orig = null; }
+
+    
+      // In-memory buffer and helper
+      console._buffer = [];
+      function pushLog(level, args){
+        const text = Array.from(args).map(a=>{
+          try { return (typeof a === 'object') ? JSON.stringify(a) : String(a); } catch(e){ return String(a); }
+        }).join(' ');
+        const line = document.createElement('div'); line.className='log-line'; line.style.padding='6px 0'; line.style.borderBottom='1px solid rgba(255,255,255,0.03)';
+        line.innerText = `[${level}] ${text}`;
+        const b = document.getElementById('devLogBody'); if (b) { b.insertBefore(line, b.firstChild); }
+        console._buffer.push({level,text,time:Date.now()});
+      }
+
+      // Override console methods to also write to panel
+      if (console._orig){
+        console.log = function(){ console._orig.log.apply(console, arguments); pushLog('log', arguments); };
+        console.info = function(){ console._orig.info.apply(console, arguments); pushLog('info', arguments); };
+        console.warn = function(){ console._orig.warn.apply(console, arguments); pushLog('warn', arguments); };
+        console.error = function(){ console._orig.error.apply(console, arguments); pushLog('error', arguments); };
+        console.clear = function(){
+          // count attempts and show a short message but DO NOT clear the panel
+          console._clearAttempts = (console._clearAttempts || 0) + 1;
+          pushLog('warn', ['console.clear() blocked (#' + console._clearAttempts + ')']);
+          // Keep the Dev Log visible so you can inspect attempts
+          const p = document.getElementById('devLogPanel'); if(p) p.style.display = 'block';
+        };
+      }
+
+      // Reinforce override every 1s in case some script tries to replace console
+      setInterval(()=>{
+        if (!console._orig) return;
+        if (console.log !== (function(){}) && console.log.name !== 'bound log' && console.log !== console._orig.log && console._orig.log){ console.log = function(){ console._orig.log.apply(console, arguments); pushLog('log', arguments); }; }
+        if (console._orig && console.clear !== console._orig.clear && typeof console.clear === 'function') {
+          // ensure our clear is active
+          console.clear = function(){ console._clearAttempts = (console._clearAttempts || 0) + 1; pushLog('warn', ['console.clear() blocked (#' + console._clearAttempts + ')']); const p=document.getElementById('devLogPanel'); if(p) p.style.display='block'; };
+        }
+      }, 1000);
+
+    })();
   </script>
 
   <style>
@@ -5328,7 +5406,7 @@
               // Use the player that was used when watching this movie
               // Default to player1 if playerUsed field is missing
               const playerUsed = movie.playerUsed || 'player1';
-              const playerBase = playerUsed === 'player2' ? 'player-2.html' : 'player.html';
+              const playerBase = playerUsed === 'player2' ? 'player-2.nontongo.html' : 'player.html';
               console.log('🎬 Resuming', movie.title);
               console.log('📊 Movie object:', JSON.stringify(movie, null, 2));
               console.log('📹 Player to use:', playerBase, '(playerUsed field:', playerUsed, ')');
@@ -6332,6 +6410,17 @@
 
     // Open Modal (lazy-load trailer iframe on demand)
     function openMovieModal(movie) {
+      // Ensure top-level variables are declared so later code (outside inner try) can reference them without throwing
+      let isSeries = false;
+      let streamBtn = document.getElementById('streamBtn');
+      let streamBtn2 = document.getElementById('streamBtn2');
+      let seasonTrigger = document.getElementById('seasonTrigger');
+      let episodeTrigger = document.getElementById('episodeTrigger');
+      let seasonDropdown = document.getElementById('seasonDropdown');
+      let episodeDropdown = document.getElementById('episodeDropdown');
+      let seasonWrapper = document.getElementById('seasonSelectWrapper');
+      let episodeWrapper = document.getElementById('episodeSelectWrapper');
+      try {
             // Save current scroll position before opening modal
             savedScrollPosition = window.scrollY || window.pageYOffset;
             
@@ -6340,9 +6429,9 @@
             sessionStorage.setItem('currentModalCategory', currentCategory);
             
             console.log('Opening modal for movie:', movie.title);
-            const isSeries = (movie && (movie.mediaType === 'tv' || movie.type === 'series' || movie.isSeries));
-            // Set up Stream 2 button to open player-2.html with the same logic as Stream (movies only)
-            const streamBtn2 = document.getElementById('streamBtn2');
+            isSeries = (movie && (movie.mediaType === 'tv' || movie.type === 'series' || movie.isSeries));
+            // Set up Stream 2 button to open player-2.nontongo.html with the same logic as Stream (movies only)
+            streamBtn2 = document.getElementById('streamBtn2');
             if (!isSeries && streamBtn2) {
               // Get watch data for Stream 2 button too
               let watchData2 = null;
@@ -6354,6 +6443,7 @@
                 watchData2 = legacyCW[movie.id];
               }
 
+              // streamBtn2 onclick initialized below; legacy logic removed
               streamBtn2.onclick = null;
               streamBtn2.onclick = (e) => {
                 e.preventDefault();
@@ -6378,7 +6468,7 @@
                         if (result.key) params.append('streamKey', result.key);
                         if (result.language) params.append('currentLang', result.language);
                         if (result.availableLanguages) params.append('availableLangs', JSON.stringify(result.availableLanguages));
-                        const finalUrl = `player-2.html?${params.toString()}`;
+                        const finalUrl = `player-2.nontongo.html?${params.toString()}`;
                         localStorage.setItem('lastPlayerUsed', 'player2');
                         window.location.href = finalUrl;
                       } else {
@@ -6394,7 +6484,7 @@
                   })();
                   return;
                 }
-                // Build the player-2.html URL with the current movie's details
+                // Build the player-2.nontongo.html URL with the current movie's details
                 const params = new URLSearchParams();
                 params.append('id', movie.id);
                 params.append('movieId', movie.id);
@@ -6407,16 +6497,16 @@
                   const isHls = /\.m3u8(\?.*)?$/.test(mp4Url);
                   params.append('type', isHls ? 'hls' : 'mp4');
                   params.append('src', mp4Url);
-                  player2Url = `player-2.html?${params.toString()}`;
+                  player2Url = `player-2.nontongo.html?${params.toString()}`;
                 } else if (driveMovieMappings[String(movie.id)]) {
                   params.append('type', 'drive');
                   params.append('id', driveMovieMappings[String(movie.id)]);
-                  player2Url = `player-2.html?${params.toString()}`;
+                  player2Url = `player-2.nontongo.html?${params.toString()}`;
                 } else if (movie.streamUrl) {
                   const isHls = /\.m3u8(\?.*)?$/.test(movie.streamUrl);
                   params.append('type', isHls ? 'hls' : 'mp4');
                   params.append('src', movie.streamUrl);
-                  player2Url = `player-2.html?${params.toString()}`;
+                  player2Url = `player-2.nontongo.html?${params.toString()}`;
                 } else {
                   // Resolve via 8Stream API for player-2
                   streamBtn2.textContent = 'Resolving…';
@@ -6432,7 +6522,7 @@
                         if (result.key) params.append('streamKey', result.key);
                         if (result.language) params.append('currentLang', result.language);
                         if (result.availableLanguages) params.append('availableLangs', JSON.stringify(result.availableLanguages));
-                        player2Url = `player-2.html?${params.toString()}`;
+                        player2Url = `player-2.nontongo.html?${params.toString()}`;
                         localStorage.setItem('lastPlayerUsed', 'player2');
                         window.location.href = player2Url;
                       } else {
@@ -6470,6 +6560,36 @@
               };
             }
       currentMovie = movie;
+      } catch (err) { console.error('openMovieModal error', err); if (typeof showToast === 'function') showToast('error', 'UI Error', 'See console for details'); }
+
+      // Override/ensure Stream 2 uses NontonGo-only flow and add defensive error handling
+      try {
+        if (streamBtn2) {
+          streamBtn2.onclick = (e) => {
+            try {
+              e.preventDefault();
+              const imdb = movie && (movie.imdb_id || movie.imdbId || movie.id);
+              if (!imdb) {
+                console.error('Stream2: missing imdb id for movie', movie);
+                if (typeof showToast === 'function') showToast('error', 'Missing data', 'IMDB id not available');
+                return;
+              }
+              const params = new URLSearchParams();
+              params.append('imdb', imdb);
+              params.append('type', (movie && (movie.mediaType === 'tv' || movie.type === 'series' || movie.isSeries)) ? 'tv' : 'movie');
+              if (movie && movie.title) params.append('title', movie.title);
+              if (movie && movie.posterUrl) params.append('poster', movie.posterUrl);
+              localStorage.setItem('lastPlayerUsed', 'player2');
+              window.location.href = `player-2.nontongo.html?${params.toString()}`;
+            } catch (err) {
+              console.error('Stream2 click handler error', err);
+              if (typeof showToast === 'function') showToast('error', 'Player Error', 'See console for details');
+            }
+          };
+        }
+      } catch (err) {
+        console.error('Failed to install Stream2 override', err);
+      }
 
       // Series handling: hide stream buttons, show season/episode selectors
       // isSeries already computed above
@@ -6483,29 +6603,35 @@
       function initCustomDropdowns() {
         // Always re-initialize dropdowns when series picker is shown
         dropdownsInitialized = false;
-        // Always get fresh references to dropdown elements
-        const seasonTrigger = document.getElementById('seasonTrigger');
-        const seasonDropdown = document.getElementById('seasonDropdown');
+        // Always get fresh references to dropdown elements (do NOT shadow outer scope variables)
+        let _seasonTrigger = document.getElementById('seasonTrigger');
+        let seasonDropdown = document.getElementById('seasonDropdown');
         const seasonWrapper = document.getElementById('seasonSelectWrapper');
-        const episodeTrigger = document.getElementById('episodeTrigger');
-        const episodeDropdown = document.getElementById('episodeDropdown');
+        let _episodeTrigger = document.getElementById('episodeTrigger');
+        let episodeDropdown = document.getElementById('episodeDropdown');
         const episodeWrapper = document.getElementById('episodeSelectWrapper');
         if (dropdownsInitialized) return;
         dropdownsInitialized = true;
 
         // Remove previous event listeners by replacing elements with clones
-        if (seasonTrigger) {
-          const newSeasonTrigger = seasonTrigger.cloneNode(true);
-          seasonTrigger.parentNode.replaceChild(newSeasonTrigger, seasonTrigger);
+        if (_seasonTrigger && _seasonTrigger.parentNode) {
+          const newSeasonTrigger = _seasonTrigger.cloneNode(true);
+          _seasonTrigger.parentNode.replaceChild(newSeasonTrigger, _seasonTrigger);
         }
-        if (episodeTrigger) {
-          const newEpisodeTrigger = episodeTrigger.cloneNode(true);
-          episodeTrigger.parentNode.replaceChild(newEpisodeTrigger, episodeTrigger);
+        if (_episodeTrigger && _episodeTrigger.parentNode) {
+          const newEpisodeTrigger = _episodeTrigger.cloneNode(true);
+          _episodeTrigger.parentNode.replaceChild(newEpisodeTrigger, _episodeTrigger);
         }
 
-        // Get fresh references again after cloning
-        const freshSeasonTrigger = document.getElementById('seasonTrigger');
-        const freshEpisodeTrigger = document.getElementById('episodeTrigger');
+        // Update outer scoped references so other code sees the fresh elements
+        seasonTrigger = document.getElementById('seasonTrigger');
+        episodeTrigger = document.getElementById('episodeTrigger');
+        seasonDropdown = document.getElementById('seasonDropdown');
+        episodeDropdown = document.getElementById('episodeDropdown');
+
+        // Get fresh references after cloning
+        const freshSeasonTrigger = seasonTrigger;
+        const freshEpisodeTrigger = episodeTrigger;
 
         // Season dropdown toggle - use mousedown for instant response
         if (freshSeasonTrigger && seasonWrapper) {
@@ -6547,10 +6673,11 @@
       }
 
       function updateSeasonDropdown(seasons) {
-        if (!seasonDropdown || !seasonTrigger) return;
+        const currentSeasonTrigger = document.getElementById('seasonTrigger');
+        if (!seasonDropdown || !currentSeasonTrigger) return;
         
         seasonDropdown.innerHTML = '';
-        const seasonValue = seasonTrigger.querySelector('.select-value');
+        const seasonValue = currentSeasonTrigger.querySelector('.select-value');
         
         if (!seasons || seasons.length === 0) {
           if (seasonValue) seasonValue.textContent = 'No seasons available';
@@ -6594,10 +6721,11 @@
       }
 
       function updateEpisodeDropdown(episodes, seasonNumber) {
-        if (!episodeDropdown || !episodeTrigger) return;
+        const currentEpisodeTrigger = document.getElementById('episodeTrigger');
+        if (!episodeDropdown || !currentEpisodeTrigger) return;
         
         episodeDropdown.innerHTML = '';
-        const episodeValue = episodeTrigger.querySelector('.select-value');
+        const episodeValue = currentEpisodeTrigger.querySelector('.select-value');
         
         if (!episodes || episodes.length === 0) {
           if (episodeValue) episodeValue.textContent = 'No episodes available';
@@ -6650,11 +6778,9 @@
         seriesPicker.style.display = isSeries ? 'flex' : 'none';
       }
 
-      // If series, load seasons/episodes and skip stream button wiring
+      // If series, load seasons and wire up dropdowns
       if (isSeries && seriesPicker && seasonSelect && episodeSelect) {
-        // Always re-initialize dropdowns when series picker is shown
         setTimeout(() => { initCustomDropdowns(); }, 0);
-        // reset selects
         const seasonValue = seasonTrigger?.querySelector('.select-value');
         const episodeValue = episodeTrigger?.querySelector('.select-value');
         if (seasonValue) seasonValue.textContent = 'Loading seasons...';
@@ -6663,7 +6789,37 @@
         episodeSelect.innerHTML = '<option>Select a season first</option>';
         if (seriesMeta) seriesMeta.textContent = 'Loading series info...';
 
-        const loadEpisodesForSeason = async (seasonNumber) => {
+        // Fetch seasons and populate dropdown
+        (async () => {
+          try {
+            if (!movieDb || typeof movieDb.getTVDetails !== 'function') return;
+            const tvDetails = await movieDb.getTVDetails(movie.id);
+            const seasons = tvDetails && tvDetails.seasons ? tvDetails.seasons : [];
+            if (!seasons.length) {
+              if (seasonValue) seasonValue.textContent = 'No seasons found';
+              seasonSelect.innerHTML = '<option>No seasons found</option>';
+              return;
+            }
+            seasonSelect.innerHTML = '';
+            seasons.forEach(season => {
+              const opt = document.createElement('option');
+              opt.value = String(season.season_number);
+              opt.textContent = season.name || `Season ${season.season_number}`;
+              seasonSelect.appendChild(opt);
+            });
+            if (typeof updateSeasonDropdown === 'function') updateSeasonDropdown(seasons);
+            // Auto-load episodes for first season
+            const firstSeasonNum = seasons[0].season_number;
+            if (firstSeasonNum) loadEpisodesForSeason(firstSeasonNum);
+          } catch (err) {
+            console.error('Failed to load seasons for series', err);
+            seasonSelect.innerHTML = '<option>Error loading seasons</option>';
+            if (seasonValue) seasonValue.textContent = 'Error loading seasons';
+          }
+        })();
+
+        // Loader for episodes of a season
+        async function loadEpisodesForSeason(seasonNumber) {
           if (!movieDb || typeof movieDb.getTVSeason !== 'function') return;
           if (episodeValue) episodeValue.textContent = 'Loading episodes...';
           episodeSelect.innerHTML = '<option>Loading episodes...</option>';
@@ -6683,297 +6839,21 @@
               opt.textContent = `S${seasonNumber} · E${epNum} — ${ep.name || 'Episode'}`;
               episodeSelect.appendChild(opt);
             });
-            
-            // Update custom dropdown
-            updateEpisodeDropdown(episodes, seasonNumber);
+            if (typeof updateEpisodeDropdown === 'function') updateEpisodeDropdown(episodes, seasonNumber);
+            try { const spBtn = document.getElementById('seriesPlayBtn'); if (spBtn) spBtn.disabled = false; } catch(e) { }
           } catch (err) {
-            console.error('Failed to load episodes', err);
-            if (episodeValue) episodeValue.textContent = 'Error loading episodes';
+            console.error('Failed to load episodes for season', seasonNumber, err);
             episodeSelect.innerHTML = '<option>Error loading episodes</option>';
+            if (episodeValue) episodeValue.textContent = 'Error loading episodes';
           }
-        };
-
-        (async () => {
-          if (!movieDb || typeof movieDb.getTVDetails !== 'function') return;
-          try {
-            const details = await movieDb.getTVDetails(movie.id);
-            const seasons = (details && details.seasons) ? details.seasons.filter(s => s.season_number > 0) : [];
-            const seasonCount = seasons.length;
-            const episodeCount = seasons.reduce((sum, s) => sum + (s.episode_count || 0), 0);
-            if (seriesMeta) {
-              seriesMeta.textContent = `${seasonCount} Season${seasonCount !== 1 ? 's' : ''}${episodeCount ? ` • ${episodeCount} Episode${episodeCount !== 1 ? 's' : ''}` : ''}`;
-            }
-            seasonSelect.innerHTML = '';
-            if (!seasons.length) {
-              if (seasonValue) seasonValue.textContent = 'No seasons found';
-              seasonSelect.innerHTML = '<option>No seasons found</option>';
-              return;
-            }
-            seasons.forEach(s => {
-              const opt = document.createElement('option');
-              opt.value = String(s.season_number);
-              opt.textContent = s.name || `Season ${s.season_number}`;
-              seasonSelect.appendChild(opt);
-            });
-
-            // Update custom dropdown
-            updateSeasonDropdown(seasons);
-
-            // Load first season by default
-            const firstSeason = seasons[0];
-            if (firstSeason) {
-              loadEpisodesForSeason(firstSeason.season_number);
-            }
-
-            seasonSelect.onchange = (e) => {
-              const seasonNumber = Number(e.target.value);
-              if (!seasonNumber) return;
-              loadEpisodesForSeason(seasonNumber);
-            };
-
-            // Handle episode selection to show YouTube fallback button
-            let currentYouTubeKey = null;
-            const openOnYouTubeBtn = document.getElementById('openOnYouTubeBtn');
-
-            episodeSelect.onchange = async (e) => {
-              const episodeNumber = Number(e.target.value);
-              const seasonNumber = Number(seasonSelect.value);
-              if (!episodeNumber || !seasonNumber) {
-                if (openOnYouTubeBtn) openOnYouTubeBtn.style.display = 'none';
-                return;
-              }
-
-              // Fetch episode videos to get YouTube key
-              try {
-                let videos = [];
-                if (movieDb && typeof movieDb.getTVEpisodeVideos === 'function') {
-                  videos = await movieDb.getTVEpisodeVideos(movie.id, seasonNumber, episodeNumber);
-                }
-                const best = videos.find(v => v.site === 'YouTube' && v.type === 'Trailer' && v.official) ||
-                  videos.find(v => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser' || v.type === 'Clip')) ||
-                  videos.find(v => v.site === 'YouTube');
-
-                if (best && best.key) {
-                  currentYouTubeKey = best.key;
-                  if (openOnYouTubeBtn) {
-                    openOnYouTubeBtn.style.display = 'inline-flex';
-                    openOnYouTubeBtn.onclick = (e) => {
-                      e.preventDefault();
-                      window.open(`https://www.youtube.com/watch?v=${currentYouTubeKey}`, '_blank');
-                    };
-                  }
-                } else {
-                  if (openOnYouTubeBtn) openOnYouTubeBtn.style.display = 'none';
-                }
-              } catch (err) {
-                console.error('Failed to fetch episode videos', err);
-                if (openOnYouTubeBtn) openOnYouTubeBtn.style.display = 'none';
-              }
-            };
-
-            // Handle Play Episode button click
-            const seriesPlayBtn = document.getElementById('seriesPlayBtn');
-            if (seriesPlayBtn) {
-              seriesPlayBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                
-                const seasonNumber = Number(seasonSelect.value);
-                const episodeNumber = Number(episodeSelect.value);
-                
-                if (!seasonNumber || !episodeNumber) {
-                  console.warn('Please select both season and episode');
-                  UIToast.warning('Select Episode', 'Please select both a season and episode');
-                  return;
-                }
-                
-                // Build player URL with season and episode parameters
-                const posterUrl = movie.poster_path 
-                  ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-                  : '';
-                  
-                const playerUrl = new URL('player.html', window.location.origin);
-                playerUrl.searchParams.set('title', movie.title || movie.name);
-                playerUrl.searchParams.set('movieId', movie.id);
-                playerUrl.searchParams.set('season', seasonNumber);
-                playerUrl.searchParams.set('episode', episodeNumber);
-                playerUrl.searchParams.set('poster', posterUrl);
-                playerUrl.searchParams.set('type', 'hls');
-                
-                console.log('Opening episode:', playerUrl.toString());
-                window.location.href = playerUrl.toString();
-              });
-            }
-          } catch (err) {
-            console.error('Failed to load TV details', err);
-            const currentSeasonSelect = document.getElementById('seasonSelect');
-            if (currentSeasonSelect) {
-              currentSeasonSelect.innerHTML = '<option>Error loading seasons</option>';
-            }
-            if (seriesMeta) seriesMeta.textContent = 'Unable to load series info';
-          }
-        })();
-      }
-
-      // Update or add resume button in modal
-      const streamBtn = document.getElementById('streamBtn');
-      if (!isSeries && streamBtn) {
-        // Prefer the unified ContinueWatchingManager; fall back to legacy storage
-        let watchData = null;
-        if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.getMovieProgress === 'function') {
-          watchData = window.ContinueWatchingManager.getMovieProgress(movie.id);
-        }
-        if (!watchData) {
-          const legacyCW = JSON.parse(localStorage.getItem('continueWatching') || '{}');
-          watchData = legacyCW[movie.id];
         }
 
-        // Always check for saved progress and show appropriate button label
-        if (watchData && watchData.progress > 0 && watchData.progress < 95) {
-          streamBtn.innerHTML = `
-            <span>Resume (${Math.round(watchData.progress)}%)</span>
-            <span class="stream-icon">▶️</span>
-          `;
-        } else {
-          streamBtn.innerHTML = `
-            <span>Watch Now</span>
-            <span class="stream-icon">▶️</span>
-          `;
-        }
-
-        // Remove any existing onclick handlers
-        streamBtn.onclick = null;
-        streamBtn.onclick = (e) => {
-          e.preventDefault();
-          const isAvailable = streamBtn.dataset.available === '1';
-          if (!isAvailable) {
-            // Fallback: resolve via 8Stream API even when no direct source
-            streamBtn.textContent = 'Resolving stream…';
-            streamBtn.disabled = true;
-            (async () => {
-              try {
-                const result = await window.resolveStreamUrlForMovie(movie, ['English','Hindi','Tamil','Telugu','Bengali']);
-                if (result && result.success && result.src) {
-                  const params = new URLSearchParams();
-                  params.append('id', movie.id);
-                  params.append('movieId', movie.id);
-                  params.append('title', movie.title);
-                  if (movie.posterUrl) params.append('poster', movie.posterUrl);
-                  const isHls = /\.m3u8(\?.*)?$/.test(result.src) || result.type === 'hls';
-                  params.append('type', isHls ? 'hls' : (result.type || 'mp4'));
-                  params.append('src', result.src);
-                  if (result.imdbId) params.append('imdbId', result.imdbId);
-                  if (result.key) params.append('streamKey', result.key);
-                  if (result.language) params.append('currentLang', result.language);
-                  if (result.availableLanguages) params.append('availableLangs', JSON.stringify(result.availableLanguages));
-                  const finalUrl = `player.html?${params.toString()}`;
-                  window.location.href = finalUrl;
-                } else {
-                  showToast('error', 'Stream Unavailable', 'Could not resolve a stream for this title.');
-                }
-              } catch (e) {
-                console.error('Stream resolve failed:', e);
-                showToast('error', 'Stream Error', 'Failed to resolve stream.');
-              } finally {
-                streamBtn.textContent = (watchData && watchData.progress > 0 && watchData.progress < 95) ? `Resume (${Math.round(watchData.progress)}%)` : 'Watch Now';
-                streamBtn.disabled = false;
-              }
-            })();
-            return;
-          }
-
-          // Build the player URL with the movie's details
-          const params = new URLSearchParams();
-          params.append('id', movie.id);
-          params.append('movieId', movie.id);
-          params.append('title', movie.title);
-          if (movie.posterUrl) params.append('poster', movie.posterUrl);
-
-          // Check for available sources in order of preference
-          const normTitle = String(movie.title || '').trim().toLowerCase();
-          let playerUrl = null;
-
-          // 1) Check for direct MP4 override
-          const mp4Url = getMp4Override(movie.title);
-          if (mp4Url) {
-            const isHls = /\.m3u8(\?.*)?$/.test(mp4Url);
-            params.append('type', isHls ? 'hls' : 'mp4');
-            params.append('src', mp4Url);
-            playerUrl = `player.html?${params.toString()}`;
-          }
-          // 2) Check for Google Drive mapping
-          else if (driveMovieMappings[String(movie.id)]) {
-            params.append('type', 'drive');
-            params.append('id', driveMovieMappings[String(movie.id)]);
-            playerUrl = `player.html?${params.toString()}`;
-          }
-          // 3) Check for direct stream URL
-          else if (movie.streamUrl) {
-            const isHls = /\.m3u8(\?.*)?$/.test(movie.streamUrl);
-            params.append('type', isHls ? 'hls' : 'mp4');
-            params.append('src', movie.streamUrl);
-            playerUrl = `player.html?${params.toString()}`;
-          } else {
-            // 5) Resolve via 8Stream API on-demand
-            streamBtn.textContent = 'Resolving stream…';
-            streamBtn.disabled = true;
-            (async () => {
-              try {
-                const result = await window.resolveStreamUrlForMovie(movie, ['English','Hindi','Tamil','Telugu','Bengali']);
-                if (result && result.success && result.src) {
-                  // Handle iframe embeds (VidSrc) differently
-                  if (result.type === 'iframe') {
-                    params.append('type', 'iframe');
-                    params.append('src', result.src);
-                    if (result.provider) params.append('provider', result.provider);
-                    if (result.languageStreams) params.append('languageStreams', JSON.stringify(result.languageStreams));
-                    if (result.tmdbId) params.append('tmdbId', result.tmdbId);
-                  } else {
-                    const isHls2 = /\.m3u8(\?.*)?$/.test(result.src) || result.type === 'hls';
-                    params.append('type', isHls2 ? 'hls' : (result.type || 'mp4'));
-                    params.append('src', result.src);
-                  }
-                  if (result.imdbId) params.append('imdbId', result.imdbId);
-                  if (result.key) params.append('streamKey', result.key);
-                  if (result.language) params.append('currentLang', result.language);
-                  if (result.availableLanguages) params.append('availableLangs', JSON.stringify(result.availableLanguages));
-                  if (result.languageInfo) params.append('languageInfo', JSON.stringify(result.languageInfo));
-                  const finalUrl = `player.html?${params.toString()}`;
-                  window.location.href = finalUrl;
-                } else {
-                  const errorMsg = result?.message || 'Could not resolve a stream for this title.';
-                  console.warn('Stream resolution failed:', errorMsg);
-                  showToast('error', 'Stream Unavailable', errorMsg);
-                }
-              } catch (e) {
-                console.error('Stream resolve failed:', e);
-                showToast('error', 'Stream Error', 'Failed to resolve stream.');
-              } finally {
-                streamBtn.textContent = (watchData && watchData.progress > 0 && watchData.progress < 95) ? `Resume (${Math.round(watchData.progress)}%)` : 'Watch Now';
-                streamBtn.disabled = false;
-              }
-            })();
-            return;
-          }
-
-          if (playerUrl) {
-            // Check if we have saved progress and ask whether to resume
-            if (watchData && watchData.progress > 0 && watchData.progress < 95) {
-              const duration = Number(watchData.duration) || 0;
-              const savedCurrent = Number(watchData.currentTime) || 0;
-              const percentBased = duration > 0 && watchData.progress ? (duration * watchData.progress) / 100 : 0;
-              const resumeTime = savedCurrent > 0 ? savedCurrent : percentBased;
-              const wantsResume = window.confirm(`You have progress at ${Math.round(watchData.progress)}%.\n\nOK: Resume from there\nCancel: Start from beginning`);
-              
-              const finalUrl = wantsResume ? `${playerUrl}&t=${Math.floor(resumeTime)}` : playerUrl;
-              window.location.href = finalUrl;
-            } else {
-              // No saved progress, navigate in the same tab
-              window.location.href = playerUrl;
-            }
-          } else {
-            showToast('error', 'Stream Unavailable', 'Stream is not available for this movie yet.');
-          }
-        };
+        // Wire up season/episode controls
+        try {
+          seasonSelect.addEventListener('change', function(e){ const sn = Number(e.target.value); if (!isNaN(sn)) loadEpisodesForSeason(sn); });
+          episodeSelect.addEventListener('change', function(e){ const ep = e.target.value; const spBtn = document.getElementById('seriesPlayBtn'); if (spBtn) spBtn.disabled = !(ep && ep.length>0); });
+          const seriesPlayBtn = document.getElementById('seriesPlayBtn'); if (seriesPlayBtn) { seriesPlayBtn.disabled = true; seriesPlayBtn.addEventListener('click', function(e){ try{ e.preventDefault(); const imdb = movie && (movie.imdb_id || movie.imdbId || movie.id); if (!imdb){ if (typeof showToast==='function') showToast('error','Missing data','IMDB id not available for this series'); return; } const seasonNum = seasonSelect.value || document.getElementById('seasonSelect')?.value; const episodeNum = episodeSelect.value || document.getElementById('episodeSelect')?.value; if (!seasonNum || !episodeNum){ if (typeof showToast==='function') showToast('error','Select episode','Please select season and episode'); return; } const params = new URLSearchParams(); params.append('imdb', imdb); params.append('type','tv'); params.append('season', seasonNum); params.append('episode', episodeNum); if (movie && movie.title) params.append('title', movie.title); if (movie && movie.posterUrl) params.append('poster', movie.posterUrl); localStorage.setItem('lastPlayerUsed','player2'); window.location.href = `player-2.nontongo.html?${params.toString()}`; } catch(err){ console.error('Series Play click handler error', err); } }); }
+        } catch(e) {}
       }
 
       // ... existing code for setting up modal content ...
@@ -7410,7 +7290,7 @@
       const head = document.head || document.getElementsByTagName('head')[0];
       const targets = [
         { href: 'player.html', as: 'document' },
-        { href: 'player-2.html', as: 'document' },
+        { href: 'player-2.nontongo.html', as: 'document' },
         { href: 'js/player-continue-watching.js', as: 'script' }
       ];
 
@@ -7807,9 +7687,9 @@
     });
 
     // Bookmark button handler
-    const bookmarkBtn = document.getElementById('bookmarkBtn');
-    if (bookmarkBtn) {
-      bookmarkBtn.addEventListener('click', async (e) => {
+    const bookmarkBtnEl = document.getElementById('bookmarkBtn');
+    if (bookmarkBtnEl) {
+      bookmarkBtnEl.addEventListener('click', async (e) => {
         e.stopPropagation();
         if (!currentMovie) return;
 
@@ -7819,22 +7699,22 @@
         if (bookmarked) {
           // Remove from bookmarks
           if (await removeBookmark(currentMovie.id)) {
-            bookmarkBtn.classList.remove('bookmarked');
-            bookmarkBtn.title = 'Add to My List';
-            bookmarkBtn.setAttribute('aria-label', 'Add to My List');
-            const icon = bookmarkBtn.querySelector('i');
+            bookmarkBtnEl.classList.remove('bookmarked');
+            bookmarkBtnEl.title = 'Add to My List';
+            bookmarkBtnEl.setAttribute('aria-label', 'Add to My List');
+            const icon = bookmarkBtnEl.querySelector('i');
             if (icon) icon.className = 'far fa-bookmark';
-            const textSpan = bookmarkBtn.querySelector('.bookmark-text');
+            const textSpan = bookmarkBtnEl.querySelector('.bookmark-text');
             if (textSpan) textSpan.textContent = 'Add to My List';
             showToast('info', 'Removed', `${currentMovie.title} removed from My List`, 2000);
           }
         } else {
           // Add to bookmarks
           if (await addBookmark(currentMovie)) {
-            bookmarkBtn.classList.add('bookmarked');
-            bookmarkBtn.title = 'Remove from My List';
-            bookmarkBtn.setAttribute('aria-label', 'Remove from My List');
-            const icon = bookmarkBtn.querySelector('i');
+            bookmarkBtnEl.classList.add('bookmarked');
+            bookmarkBtnEl.title = 'Remove from My List';
+            bookmarkBtnEl.setAttribute('aria-label', 'Remove from My List');
+            const icon = bookmarkBtnEl.querySelector('i');
             if (icon) icon.className = 'fas fa-bookmark';
             const textSpan = bookmarkBtn.querySelector('.bookmark-text');
             if (textSpan) textSpan.textContent = 'In My List';
@@ -8458,8 +8338,8 @@
   <!-- Stream Debug Helper -->
   <script src="js/stream-debug.js"></script>
   
-  <!-- Ad-Blocker Proxy Integration -->
-  <script src="js/ad-blocker-proxy-integration.js"></script>
+  <!-- Ad-Blocker Proxy Integration removed per request -->
+  <!-- script src="js/ad-blocker-proxy-integration.js"></script -->
   
   <script src="js/player-integration.js"></script>
   <script>

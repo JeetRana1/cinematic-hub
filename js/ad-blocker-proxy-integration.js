@@ -112,10 +112,10 @@ class AdBlockerProxy {
   }
 }
 
-// Create global instance
-window.adBlockerProxy = new AdBlockerProxy();
+// Ad-blocker proxy integration disabled by user request
+window.adBlockerProxy = { isHealthy: false, getProxiedUrl: (u)=>u, loadVideoInContainer: ()=>{}, getCleanedEmbed: async (u)=>u };
 
-// Export for module systems
+// Export stub
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = AdBlockerProxy;
+  module.exports = window.adBlockerProxy;
 }

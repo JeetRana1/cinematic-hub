@@ -1,0 +1,325 @@
+[
+  {
+    "mplayerUrl": "https://www.2embed.cc/embed/tt13964560",
+    "matches": [],
+    "mp4s": [],
+    "iframes": [],
+    "resources": [
+      {
+        "type": "req",
+        "url": "https://www.2embed.cc/embed/tt13964560",
+        "resourceType": "document",
+        "method": "GET",
+        "ts": 1768349567724
+      },
+      {
+        "type": "res",
+        "url": "https://www.2embed.cc/embed/tt13964560",
+        "status": 200,
+        "contentType": "text/html; charset=UTF-8",
+        "ts": 1768349567869
+      },
+      {
+        "type": "req",
+        "url": "https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js",
+        "resourceType": "script",
+        "method": "GET",
+        "ts": 1768349567875
+      },
+      {
+        "type": "req",
+        "url": "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css",
+        "resourceType": "stylesheet",
+        "method": "GET",
+        "ts": 1768349567875
+      },
+      {
+        "type": "req",
+        "url": "https://cdn.jsdelivr.net/npm/disable-devtool@latest",
+        "resourceType": "script",
+        "method": "GET",
+        "ts": 1768349567875
+      },
+      {
+        "type": "req",
+        "url": "https://www.2embed.cc/images/share-button.svg",
+        "resourceType": "image",
+        "method": "GET",
+        "ts": 1768349567875
+      },
+      {
+        "type": "req",
+        "url": "https://www.2embed.cc/images/play4.png",
+        "resourceType": "image",
+        "method": "GET",
+        "ts": 1768349567875
+      },
+      {
+        "type": "req",
+        "url": "https://whos.amung.us/widget/pcstream/",
+        "resourceType": "image",
+        "method": "GET",
+        "ts": 1768349567876
+      },
+      {
+        "type": "req",
+        "url": "https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015",
+        "resourceType": "script",
+        "method": "GET",
+        "ts": 1768349567876
+      },
+      {
+        "type": "res",
+        "url": "https://www.2embed.cc/images/play4.png",
+        "status": 200,
+        "contentType": "image/png",
+        "ts": 1768349567889
+      },
+      {
+        "type": "res",
+        "url": "https://www.2embed.cc/images/share-button.svg",
+        "status": 200,
+        "contentType": "image/svg+xml",
+        "ts": 1768349567919
+      },
+      {
+        "type": "res",
+        "url": "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css",
+        "status": 200,
+        "contentType": "text/css; charset=utf-8",
+        "ts": 1768349567941
+      },
+      {
+        "type": "res",
+        "url": "https://cdn.jsdelivr.net/npm/disable-devtool@latest",
+        "status": 200,
+        "contentType": "application/javascript; charset=utf-8",
+        "ts": 1768349567962
+      },
+      {
+        "type": "res",
+        "url": "https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js",
+        "status": 200,
+        "contentType": "text/javascript; charset=UTF-8",
+        "ts": 1768349567985
+      },
+      {
+        "type": "res",
+        "url": "https://whos.amung.us/widget/pcstream/",
+        "status": 307,
+        "contentType": "text/html; charset=UTF-8",
+        "ts": 1768349568003
+      },
+      {
+        "type": "req",
+        "url": "https://widgets.amung.us/classic/07/725.png",
+        "resourceType": "image",
+        "method": "GET",
+        "ts": 1768349568003
+      },
+      {
+        "type": "req",
+        "url": "https://www.2embed.cc/bgposters/tt13964560.jpg",
+        "resourceType": "image",
+        "method": "GET",
+        "ts": 1768349568010
+      },
+      {
+        "type": "req",
+        "url": "https://www.2embed.cc/images/loading.gif",
+        "resourceType": "image",
+        "method": "GET",
+        "ts": 1768349568010
+      },
+      {
+        "type": "res",
+        "url": "https://www.2embed.cc/images/loading.gif",
+        "status": 200,
+        "contentType": "image/gif",
+        "ts": 1768349568023
+      },
+      {
+        "type": "res",
+        "url": "https://www.2embed.cc/bgposters/tt13964560.jpg",
+        "status": 200,
+        "contentType": "image/jpeg",
+        "ts": 1768349568034
+      },
+      {
+        "type": "res",
+        "url": "https://widgets.amung.us/classic/07/725.png",
+        "status": 200,
+        "contentType": "image/png",
+        "ts": 1768349568034
+      },
+      {
+        "type": "res",
+        "url": "https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015",
+        "status": 200,
+        "contentType": "text/javascript;charset=UTF-8",
+        "ts": 1768349568063
+      },
+      {
+        "type": "req",
+        "url": "https://www.2embed.cc/cdn-cgi/challenge-platform/scripts/jsd/main.js",
+        "resourceType": "script",
+        "method": "GET",
+        "ts": 1768349568066
+      },
+      {
+        "type": "req",
+        "url": "https://strugglingelevenfallout.com/82/89/6b/82896b2332b74dfc6fec71bfcd31cba6.js",
+        "resourceType": "script",
+        "method": "GET",
+        "ts": 1768349568067
+      },
+      {
+        "type": "res",
+        "url": "https://www.2embed.cc/cdn-cgi/challenge-platform/scripts/jsd/main.js",
+        "status": 302,
+        "contentType": "",
+        "ts": 1768349568098
+      },
+      {
+        "type": "req",
+        "url": "https://www.2embed.cc/cdn-cgi/challenge-platform/h/g/scripts/jsd/fc21b7e0d793/main.js?",
+        "resourceType": "script",
+        "method": "GET",
+        "ts": 1768349568098
+      },
+      {
+        "type": "res",
+        "url": "https://www.2embed.cc/cdn-cgi/challenge-platform/h/g/scripts/jsd/fc21b7e0d793/main.js?",
+        "status": 200,
+        "contentType": "application/javascript; charset=UTF-8",
+        "ts": 1768349568122
+      },
+      {
+        "type": "req",
+        "url": "https://www.2embed.cc/cdn-cgi/challenge-platform/h/g/jsd/oneshot/fc21b7e0d793/0.6361169461884774:1768346636:5TFWXlOXtIVH-_2TOxz0JOgYf5fzXCpEAd25nua20Fo/9bd8ec8628e93e9d",
+        "resourceType": "xhr",
+        "method": "POST",
+        "ts": 1768349568151
+      },
+      {
+        "type": "res",
+        "url": "https://www.2embed.cc/cdn-cgi/challenge-platform/h/g/jsd/oneshot/fc21b7e0d793/0.6361169461884774:1768346636:5TFWXlOXtIVH-_2TOxz0JOgYf5fzXCpEAd25nua20Fo/9bd8ec8628e93e9d",
+        "status": 200,
+        "contentType": "text/plain; charset=UTF-8",
+        "ts": 1768349568202
+      },
+      {
+        "type": "res",
+        "url": "https://strugglingelevenfallout.com/82/89/6b/82896b2332b74dfc6fec71bfcd31cba6.js",
+        "status": 200,
+        "contentType": "application/javascript",
+        "ts": 1768349568236
+      },
+      {
+        "type": "req",
+        "url": "https://weirdopt.com/ad/advertisers.js",
+        "resourceType": "script",
+        "method": "GET",
+        "ts": 1768349568259
+      },
+      {
+        "type": "req",
+        "url": "https://preferencenail.com/sfp.js",
+        "resourceType": "script",
+        "method": "GET",
+        "ts": 1768349568260
+      },
+      {
+        "type": "req",
+        "url": "https://protrafficinspector.com/stats",
+        "resourceType": "xhr",
+        "method": "GET",
+        "ts": 1768349568260
+      },
+      {
+        "type": "res",
+        "url": "https://protrafficinspector.com/stats",
+        "status": 200,
+        "contentType": "text/html; charset=UTF-8",
+        "ts": 1768349568307
+      },
+      {
+        "type": "res",
+        "url": "https://weirdopt.com/ad/advertisers.js",
+        "status": 200,
+        "contentType": "application/javascript",
+        "ts": 1768349568308
+      },
+      {
+        "type": "res",
+        "url": "https://preferencenail.com/sfp.js",
+        "status": 200,
+        "contentType": "application/javascript; charset=utf-8",
+        "ts": 1768349568332
+      },
+      {
+        "type": "req",
+        "url": "https://www.2embed.cc/cdn-cgi/rum?",
+        "resourceType": "xhr",
+        "method": "POST",
+        "ts": 1768349568472
+      },
+      {
+        "type": "res",
+        "url": "https://www.2embed.cc/cdn-cgi/rum?",
+        "status": 204,
+        "contentType": "text/plain",
+        "ts": 1768349568474
+      },
+      {
+        "type": "req",
+        "url": "https://www.2embed.cc/images/favicon.png",
+        "resourceType": "other",
+        "method": "GET",
+        "ts": 1768349568475
+      },
+      {
+        "type": "res",
+        "url": "https://www.2embed.cc/images/favicon.png",
+        "status": 200,
+        "contentType": "image/png",
+        "ts": 1768349568805
+      },
+      {
+        "type": "req",
+        "url": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+        "resourceType": "image",
+        "method": "GET",
+        "ts": 1768349568890
+      },
+      {
+        "type": "res",
+        "url": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+        "status": 200,
+        "contentType": "image/gif",
+        "ts": 1768349568890
+      },
+      {
+        "type": "req",
+        "url": "https://flushpersist.com/pxf.gif?uuid=7a5920c4-bf8b-4e42-ae42-f7ed438be039&eb=9b87277f184ab0ca78b6151164484bb9&te=60f28188b75fcab353e8bf885f50a1d4&ua=Mozilla%2F5.0%20(Windows%20NT%2010.0%3B%20Win64%3B%20x64)%20AppleWebKit%2F537.36%20(KHTML%2C%20like%20Gecko)%20Chrome%2F120.0.0.0%20Safari%2F537.36&dev=r&res=14.31&b_frame=0&pk=82896b2332b74dfc6fec71bfcd31cba6&bl=en-US&sr=600x800&sz=600x800&hjs=19",
+        "resourceType": "image",
+        "method": "GET",
+        "ts": 1768349568890
+      },
+      {
+        "type": "res",
+        "url": "https://flushpersist.com/pxf.gif?uuid=7a5920c4-bf8b-4e42-ae42-f7ed438be039&eb=9b87277f184ab0ca78b6151164484bb9&te=60f28188b75fcab353e8bf885f50a1d4&ua=Mozilla%2F5.0%20(Windows%20NT%2010.0%3B%20Win64%3B%20x64)%20AppleWebKit%2F537.36%20(KHTML%2C%20like%20Gecko)%20Chrome%2F120.0.0.0%20Safari%2F537.36&dev=r&res=14.31&b_frame=0&pk=82896b2332b74dfc6fec71bfcd31cba6&bl=en-US&sr=600x800&sz=600x800&hjs=19",
+        "status": 200,
+        "contentType": "image/gif",
+        "ts": 1768349568988
+      },
+      {
+        "type": "req",
+        "url": "https://www.2embed.cc/cdn-cgi/rum?",
+        "resourceType": "ping",
+        "method": "POST",
+        "ts": 1768349570200
+      }
+    ]
+  }
+]

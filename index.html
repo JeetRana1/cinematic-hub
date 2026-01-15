@@ -36,7 +36,17 @@
   <script>
     // Global error reporting to help surface runtime issues in the console
     window.addEventListener('error', function (evt) {
-      try { console.error('Global JS error:', evt && (evt.error || evt.message) ? (evt.error || evt.message) : evt); } catch (_) {}
+      try {
+        // Provide richer context for errors (filename, line, column) to help debugging cross-origin 'Script error' cases
+        const info = {
+          message: evt && (evt.error || evt.message) ? (evt.error && evt.error.message ? evt.error.message : (evt.message || '(no message)')) : '(no event)',
+          filename: evt && evt.filename ? evt.filename : null,
+          lineno: evt && typeof evt.lineno !== 'undefined' ? evt.lineno : null,
+          colno: evt && typeof evt.colno !== 'undefined' ? evt.colno : null,
+          error: evt && evt.error ? evt.error : null
+        };
+        console.error('Global JS error:', info);
+      } catch (_) {}
     });
     window.addEventListener('unhandledrejection', function (evt) {
       try { console.error('Unhandled rejection:', evt && evt.reason ? evt.reason : evt); } catch (_) {}
@@ -4877,6 +4887,10 @@
             <i class="fas fa-play"></i>
             <span>Play Episode</span>
           </button>
+          <button id="seriesPlayBtnPlayer" class="stream-btn primary-stream" style="margin-left:8px;">
+            <i class="fas fa-play"></i>
+            <span>Play Episode Stream 2</span>
+          </button>
           <button id="openOnYouTubeBtn" class="stream-btn" style="display:none; background:#FF0000; border:none; color:#fff; padding:10px 14px; border-radius:8px; cursor:pointer; align-items:center; gap:6px;">
             <span>Open on YouTube</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -6840,7 +6854,7 @@
               episodeSelect.appendChild(opt);
             });
             if (typeof updateEpisodeDropdown === 'function') updateEpisodeDropdown(episodes, seasonNumber);
-            try { const spBtn = document.getElementById('seriesPlayBtn'); if (spBtn) spBtn.disabled = false; } catch(e) { }
+            try { const spBtn = document.getElementById('seriesPlayBtn'); const spBtnPlayer = document.getElementById('seriesPlayBtnPlayer'); if (spBtn) spBtn.disabled = false; if (spBtnPlayer) spBtnPlayer.disabled = false; } catch(e) { }
           } catch (err) {
             console.error('Failed to load episodes for season', seasonNumber, err);
             episodeSelect.innerHTML = '<option>Error loading episodes</option>';
@@ -6851,8 +6865,116 @@
         // Wire up season/episode controls
         try {
           seasonSelect.addEventListener('change', function(e){ const sn = Number(e.target.value); if (!isNaN(sn)) loadEpisodesForSeason(sn); });
-          episodeSelect.addEventListener('change', function(e){ const ep = e.target.value; const spBtn = document.getElementById('seriesPlayBtn'); if (spBtn) spBtn.disabled = !(ep && ep.length>0); });
-          const seriesPlayBtn = document.getElementById('seriesPlayBtn'); if (seriesPlayBtn) { seriesPlayBtn.disabled = true; seriesPlayBtn.addEventListener('click', function(e){ try{ e.preventDefault(); const imdb = movie && (movie.imdb_id || movie.imdbId || movie.id); if (!imdb){ if (typeof showToast==='function') showToast('error','Missing data','IMDB id not available for this series'); return; } const seasonNum = seasonSelect.value || document.getElementById('seasonSelect')?.value; const episodeNum = episodeSelect.value || document.getElementById('episodeSelect')?.value; if (!seasonNum || !episodeNum){ if (typeof showToast==='function') showToast('error','Select episode','Please select season and episode'); return; } const params = new URLSearchParams(); params.append('imdb', imdb); params.append('type','tv'); params.append('season', seasonNum); params.append('episode', episodeNum); if (movie && movie.title) params.append('title', movie.title); if (movie && movie.posterUrl) params.append('poster', movie.posterUrl); localStorage.setItem('lastPlayerUsed','player2'); window.location.href = `player-2.nontongo.html?${params.toString()}`; } catch(err){ console.error('Series Play click handler error', err); } }); }
+          episodeSelect.addEventListener('change', function(e){ const ep = e.target.value; const spBtn = document.getElementById('seriesPlayBtn'); const spBtnPlayer = document.getElementById('seriesPlayBtnPlayer'); if (spBtn) spBtn.disabled = !(ep && ep.length>0); if (spBtnPlayer) spBtnPlayer.disabled = !(ep && ep.length>0); });
+          const seriesPlayBtn = document.getElementById('seriesPlayBtn');
+          const seriesPlayBtnPlayer = document.getElementById('seriesPlayBtnPlayer');
+          if (seriesPlayBtn) {
+            seriesPlayBtn.disabled = true;
+            seriesPlayBtn.addEventListener('click', async function(e){
+              try {
+                e.preventDefault();
+                // Resolve IMDB id first; player-2.nontongo.html requires an IMDB id for NontonGo embeds
+                let imdbReal = movie && (movie.imdb_id || movie.imdbId);
+                const tmdbId = movie && (movie.id || movie.movieId || movie.tmdbId);
+
+                const seasonNum = seasonSelect.value || document.getElementById('seasonSelect')?.value;
+                const episodeNum = episodeSelect.value || document.getElementById('episodeSelect')?.value;
+                if (!seasonNum || !episodeNum) {
+                  if (typeof showToast==='function') showToast('error','Select episode','Please select season and episode');
+                  return;
+                }
+
+                if (!imdbReal && tmdbId && typeof movieDb !== 'undefined' && typeof movieDb.getTVDetails === 'function') {
+                  try {
+                    // Fetch TMDB details to extract IMDB id
+                    const details = await movieDb.getTVDetails(tmdbId);
+                    imdbReal = details && (details.imdb_id || (details.external_ids && details.external_ids.imdb_id) || details.imdbId);
+                    if (imdbReal) console.log('Resolved imdb via TMDB:', imdbReal);
+                  } catch (err) {
+                    console.warn('Failed to resolve IMDB id from TMDB details', err);
+                  }
+                }
+
+                if (!imdbReal) {
+                  if (typeof showToast==='function') showToast('error','Missing data','IMDB id not available for this series');
+                  return;
+                }
+
+                const params = new URLSearchParams();
+                params.append('imdb', imdbReal);
+                params.append('imdbId', imdbReal);
+                if (tmdbId) { params.append('movieId', tmdbId); params.append('tmdbId', tmdbId); }
+                params.append('type','tv');
+                params.append('season', seasonNum);
+                params.append('episode', episodeNum);
+                if (movie && movie.title) params.append('title', movie.title);
+                if (movie && movie.posterUrl) params.append('poster', movie.posterUrl);
+
+                // Debug: log final navigation URL and open
+                try { console.log('Series → player-2 URL (final):', `player-2.nontongo.html?${params.toString()}`); } catch(_) {}
+                try { if (typeof showToast === 'function') showToast('info','Opening player-2','Redirecting to NontonGo player…'); } catch(_) {}
+                localStorage.setItem('lastPlayerUsed','player2');
+                window.location.href = `player-2.nontongo.html?${params.toString()}`;
+              } catch(err){ console.error('Series Play click handler error', err); }
+            });
+          }
+          if (seriesPlayBtnPlayer) {
+            seriesPlayBtnPlayer.disabled = true;
+            seriesPlayBtnPlayer.addEventListener('click', function(e){
+              try {
+                e.preventDefault();
+                const tmdbId = movie && (movie.id || movie.movieId || movie.tmdbId);
+                const imdbReal = movie && (movie.imdb_id || movie.imdbId);
+                if (!tmdbId && !imdbReal) {
+                  if (typeof showToast==='function') showToast('error','Missing data','No TMDB or IMDB id available for this series');
+                  return;
+                }
+                const seasonNum = seasonSelect.value || document.getElementById('seasonSelect')?.value;
+                const episodeNum = episodeSelect.value || document.getElementById('episodeSelect')?.value;
+                if (!seasonNum || !episodeNum) {
+                  if (typeof showToast==='function') showToast('error','Select episode','Please select season and episode');
+                  return;
+                }
+                const params = new URLSearchParams();
+                if (imdbReal) { params.append('imdb', imdbReal); params.append('imdbId', imdbReal); }
+                if (tmdbId) { params.append('movieId', tmdbId); params.append('tmdbId', tmdbId); try { console.log('Series → tmdb id (player):', tmdbId); } catch(_) {} }
+                params.append('preferTmdb','1');
+                params.append('type','tv');
+                params.append('mediaType','tv');
+                params.append('season', seasonNum);
+                params.append('episode', episodeNum);
+                if (movie && movie.title) params.append('title', movie.title);
+                if (movie && movie.posterUrl) params.append('poster', movie.posterUrl);
+                // Debug: log final navigation URL
+                try { console.log('Series → player URL:', `player.html?${params.toString()}`); } catch(_) {}
+                try { if (typeof showToast === 'function') showToast('info','Opening player','Redirecting to player…'); } catch(_) {}
+                localStorage.setItem('lastPlayerUsed','player');
+                window.location.href = `player.html?${params.toString()}`;
+              } catch(err){ console.error('Series Play (Player) click handler error', err); }
+            });
+          }
+
+          // Debug helper: generate URLs for a given movie/season/episode
+          try {
+            window.debugSeriesPlayerUrl = function(movieObj, seasonNum, episodeNum) {
+              try {
+                const tmdbIdVal = movieObj && (movieObj.id || movieObj.movieId || movieObj.tmdbId);
+                const imdbVal = movieObj && (movieObj.imdb_id || movieObj.imdbId);
+                const p = new URLSearchParams();
+                if (imdbVal) { p.append('imdb', imdbVal); p.append('imdbId', imdbVal); }
+                if (tmdbIdVal) { p.append('movieId', tmdbIdVal); p.append('tmdbId', tmdbIdVal); }
+                p.append('type', 'tv');
+                p.append('season', seasonNum);
+                p.append('episode', episodeNum);
+                if (movieObj && movieObj.title) p.append('title', movieObj.title);
+                if (movieObj && movieObj.posterUrl) p.append('poster', movieObj.posterUrl);
+                return {
+                  player2: `player-2.nontongo.html?${p.toString()}`,
+                  player: `player.html?${p.toString()}`
+                };
+              } catch (err) { console.error('debugSeriesPlayerUrl error', err); return null; }
+            };
+          } catch(_) {}
         } catch(e) {}
       }
 

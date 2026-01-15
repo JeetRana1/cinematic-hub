@@ -3757,6 +3757,9 @@
       const currentLang = urlParams.get('currentLang');
       const availableLangsParam = urlParams.get('availableLangs');
       let availableLanguages = [];
+      // Prefer TMDB-based enhanced API when requested
+      const preferTmdb = (urlParams.get('preferTmdb') === '1' || urlParams.get('preferTmdb') === 'true');
+      if (preferTmdb) console.log('Player: preferTmdb = true');
       
       if (availableLangsParam) {
         try {
@@ -4103,8 +4106,8 @@
         }
       }
 
-      // Try to fetch stream using enhanced API if needed
-      if (!src && tmdbId && typeof window.getEnhancedStream === 'function') {
+      // Try to fetch stream using enhanced API if needed or when TMDB is preferred
+      if ((preferTmdb && tmdbId && typeof window.getEnhancedStream === 'function') || (!src && tmdbId && typeof window.getEnhancedStream === 'function')) {
         console.log('🔄 Fetching stream using enhanced API for TMDB ID:', tmdbId);
         
         // Try to get stream with automatic fallback

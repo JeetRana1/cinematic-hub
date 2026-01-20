@@ -35,16 +35,23 @@ class ContinueWatchingManager {
   }
 
   /**
-   * Get all continue watching data from Firebase (cloud-only)
+   * Get all continue watching data from localStorage and Firebase
    */
   getAllProgress() {
     try {
-      // Always use Firebase cache if available
+      let data = {};
+
+      // Get from localStorage first
+      const storageKey = this.getStorageKey();
+      const localData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      Object.assign(data, localData);
+
+      // Merge with Firebase cache if available
       if (window.FirebaseSync && window.FirebaseSync.cache && window.FirebaseSync.cache['continueWatching']) {
-        return window.FirebaseSync.cache['continueWatching'] || {};
+        Object.assign(data, window.FirebaseSync.cache['continueWatching']);
       }
-      // Return empty if Firebase not ready yet
-      return {};
+
+      return data;
     } catch (error) {
       console.error('Error reading continue watching data:', error);
       return {};
@@ -110,7 +117,7 @@ class ContinueWatchingManager {
         updatedAt: Date.now(),
         validUntil: Date.now() + (7 * 24 * 60 * 60 * 1000), // 7 days
         // Track which player was used for proper resume
-        playerUsed: isPlayer2 ? 'player2' : 'player1',
+        playerUsed: isPlayer2 ? 'player-2.nontongo.html' : 'player1',
         // Additional metadata for better resume experience
         playbackRate: progressData.playbackRate || 1,
         volume: progressData.volume || 1,
@@ -148,6 +155,17 @@ class ContinueWatchingManager {
       } else {
         console.warn('⚠️ Firebase not available, progress not saved');
       }
+
+      // Also save to localStorage for local testing
+      try {
+        const storageKey = this.getStorageKey();
+        let localData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        localData[normalizedKey] = allProgress[normalizedKey];
+        localStorage.setItem(storageKey, JSON.stringify(localData));
+        console.log('💾 Progress saved to localStorage:', normalizedKey);
+      } catch (localError) {
+        console.error('❌ Failed to save to localStorage:', localError);
+      }
     } catch (error) {
       console.error('Error saving continue watching data:', error);
     }
@@ -175,6 +193,17 @@ class ContinueWatchingManager {
         } catch (err) {
           console.error('❌ Failed to delete continue watching from Firestore:', err);
         }
+      }
+
+      // Also remove from localStorage
+      try {
+        const storageKey = this.getStorageKey();
+        let localData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        delete localData[movieId];
+        localStorage.setItem(storageKey, JSON.stringify(localData));
+        console.log('💾 Progress removed from localStorage:', movieId);
+      } catch (localError) {
+        console.error('❌ Failed to remove from localStorage:', localError);
       }
 
       // Dispatch custom event for live updates only after successful deletion

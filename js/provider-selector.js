@@ -100,16 +100,6 @@
               if (result && result.success) {
                 console.log(`✅ Got stream from ${result.provider}`);
 
-                // If provider is Torrentio and returned a magnet, open Player 2 with magnet param
-                if (providerKey === 'torrentio' && result.type === 'magnet') {
-                  const newUrl = new URL(window.location.origin + '/player-2.nontongo.html');
-                  newUrl.searchParams.set('id', tmdbId);
-                  newUrl.searchParams.set('magnet', result.url);
-                  newUrl.searchParams.set('provider', 'torrentio');
-                  window.location.href = newUrl.toString();
-                  return;
-                }
-
                 // Update URL and reload on same page for normal providers
                 const newUrl = new URL(window.location.href);
                 newUrl.searchParams.set('provider', serverName.toLowerCase().replace(/\s+/g, '-'));

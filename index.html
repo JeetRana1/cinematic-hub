@@ -1,16 +1,3 @@
-  <script>
-    // Restore modal state if returning from player-2.nontongo.html
-    document.addEventListener('DOMContentLoaded', function() {
-      try {
-        const restoreModal = sessionStorage.getItem('restoreModal');
-        if (restoreModal) {
-          sessionStorage.removeItem('restoreModal');
-          const movie = JSON.parse(restoreModal);
-          if (window.openMovieModal) window.openMovieModal(movie);
-        }
-      } catch(e) { console.error('Failed to restore modal:', e); }
-    });
-  </script>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -5613,7 +5600,7 @@
             const profileId = uid ? localStorage.getItem(`fb_selected_profile_${uid}`) : null;
             
             // Check all possible keys
-            const keys = ['continueWatching'];
+            const keys = ['continueWatching', 'continueWatching_guest'];
             if (uid) keys.push(`continueWatching_${uid}`);
             if (uid && profileId) keys.push(`continueWatching_${uid}_${profileId}`);
             
@@ -6155,8 +6142,65 @@
       return movies;
     }
 
+    /**
+     * Filter content for anime (TV shows with Animation genre, Japanese language/origin)
+     */
+    function filterAnimeContent(content) {
+      if (!content || !Array.isArray(content)) return [];
+      
+      return content.filter(item => {
+        // Must have Animation genre (this is the key requirement for anime)
+        const hasAnimationGenre = item.genres && item.genres.some(genre => 
+          genre && genre.toLowerCase().includes('animation')
+        );
+        
+        // Include only if it has the Animation genre
+        return hasAnimationGenre;
+      });
+    }
+
+    // Update URL state for category and search
+    function updateURLState({ category, search }) {
+      const url = new URL(window.location);
+      
+      if (category !== null) {
+        if (category === 'all') {
+          url.searchParams.delete('category');
+        } else {
+          url.searchParams.set('category', category);
+        }
+      }
+      
+      if (search !== null) {
+        if (!search) {
+          url.searchParams.delete('search');
+        } else {
+          url.searchParams.set('search', search);
+        }
+      }
+      
+      // Use history.replaceState to update URL without triggering page reload
+      window.history.replaceState(null, '', url.toString());
+    }
+
+    // Prevent race conditions when switching categories quickly
+    let isCategoryLoading = false;
+    let currentCategoryLoadId = 0;
+
     function applyCategory(cat) {
+      // Prevent multiple simultaneous category loads
+      if (isCategoryLoading) {
+        console.log('Category change already in progress, ignoring:', cat);
+        return;
+      }
+
+      const loadId = ++currentCategoryLoadId;
+      isCategoryLoading = true;
+
       currentCategory = cat;
+
+      // Update URL with category parameter
+      updateURLState({ category: cat, search: null });
 
       // Hide/show popular movies section based on category
       const popularSection = document.getElementById('popularMoviesSection');
@@ -6170,10 +6214,10 @@
 
       // TMDB-driven catalog handling
       if (useTMDBCatalog) {
-        // Show/hide continue watching section (only show for 'all' movies)
+        // Show/hide continue watching section (always show now)
         const cwSection = document.getElementById('continueWatchingSection');
         if (cwSection) {
-          cwSection.style.display = (cat === 'all') ? '' : 'none';
+          cwSection.style.display = '';
         }
 
         // Update category bar active state
@@ -6183,13 +6227,115 @@
         if (cat === 'series' && typeof setTMDBMode === 'function' && typeof loadAllTMDBTV === 'function') {
           setTMDBMode('tv');
           loadAllTMDBTV().then(shows => {
+            // Check if this is still the current load
+            if (loadId !== currentCategoryLoadId) return;
             displayMovies(shows, false, 'Series');
             // Scroll to movies section
             setTimeout(() => {
               const title = document.querySelector('.section-title');
               if (title) title.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 100);
+            isCategoryLoading = false;
+            // Re-enable category buttons
+            mountCategoryBar();
+          }).catch(error => {
+            console.error('Error loading series:', error);
+            isCategoryLoading = false;
+            // Re-enable category buttons
+            mountCategoryBar();
           });
+          return;
+        }
+
+        // Anime → load both movies and TV shows, then filter for anime content
+        if (cat === 'anime') {
+          // If TMDB is not loaded yet, load it first
+          if (!useTMDBCatalog && typeof loadAllTMDBMovies === 'function') {
+            console.log('Loading TMDB catalog for anime...');
+            loadAllTMDBMovies(10).then(() => {
+              console.log('TMDB movies loaded, now loading anime...');
+              applyCategory('anime'); // Re-apply anime category now that TMDB is loaded
+            }).catch(error => {
+              console.error('Failed to load TMDB for anime:', error);
+              // Fall back to local catalog
+              const animeContent = filterAnimeContent(curatedMovies);
+              if (animeContent.length === 0) {
+                moviesContainer.innerHTML = '';
+                const noResults = document.createElement('div');
+                noResults.style.textAlign = 'center';
+                noResults.style.padding = '2rem';
+                noResults.innerHTML = `
+                  <h2 class="section-title">Anime</h2>
+                  <p>No anime content available at this time.</p>
+                `;
+                moviesContainer.appendChild(noResults);
+              } else {
+                displayMovies(animeContent, false, 'Anime');
+              }
+              isCategoryLoading = false;
+              mountCategoryBar();
+            });
+            return;
+          }
+          
+          setTMDBMode('movie'); // Use movie mode for anime movies
+          
+          // Load only movies, then filter for anime content
+          if (typeof loadAllTMDBMovies === 'function') {
+            loadAllTMDBMovies(10).then(movies => {
+              // Check if this is still the current load
+              if (loadId !== currentCategoryLoadId) return;
+              
+              const animeContent = filterAnimeContent(movies);
+              if (animeContent.length === 0) {
+                // Show message when no anime found
+                moviesContainer.innerHTML = '';
+                const noResults = document.createElement('div');
+                noResults.style.textAlign = 'center';
+                noResults.style.padding = '2rem';
+                noResults.innerHTML = `
+                  <h2 class="section-title">Anime</h2>
+                  <p>No anime content found. Try refreshing the page or check back later.</p>
+                `;
+                moviesContainer.appendChild(noResults);
+              } else {
+                // Sort by release date (newest first)
+                const sortedAnimeContent = animeContent.sort((a, b) => {
+                  const dateA = new Date(a.release_date || a.releaseDate || '1900-01-01');
+                  const dateB = new Date(b.release_date || b.releaseDate || '1900-01-01');
+                  return dateB - dateA; // Newest first
+                });
+                displayMovies(sortedAnimeContent, false, 'Anime');
+              }
+              // Scroll to movies section
+              setTimeout(() => {
+                const title = document.querySelector('.section-title');
+                if (title) title.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 100);
+              isCategoryLoading = false;
+              // Re-enable category buttons
+              mountCategoryBar();
+            }).catch(error => {
+              console.error('Error loading anime content:', error);
+              // Show error message
+              moviesContainer.innerHTML = '';
+              const errorMsg = document.createElement('div');
+              errorMsg.style.textAlign = 'center';
+              errorMsg.style.padding = '2rem';
+              errorMsg.innerHTML = `
+                <h2 class="section-title">Anime</h2>
+                <p>Unable to load anime content. Please try again later.</p>
+              `;
+              moviesContainer.appendChild(errorMsg);
+              isCategoryLoading = false;
+              // Re-enable category buttons
+              mountCategoryBar();
+            });
+          } else {
+            console.error('loadAllTMDBMovies function not available for anime');
+            isCategoryLoading = false;
+            mountCategoryBar();
+          }
           return;
         }
 
@@ -6197,33 +6343,77 @@
         if (typeof setTMDBMode === 'function') setTMDBMode('movie');
         const label = cat === 'all' ? 'All Movies' : (cat.charAt(0).toUpperCase() + cat.slice(1));
         if (cat === 'all' && typeof loadAllTMDBMovies === 'function') {
-          loadAllTMDBMovies().then(movies => {
+          loadAllTMDBMovies(10).then(movies => {
+            // Check if this is still the current load
+            if (loadId !== currentCategoryLoadId) return;
             displayMovies(movies, false, label);
             // Scroll to movies section
             setTimeout(() => {
               const title = document.querySelector('.section-title');
               if (title) title.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 100);
+            isCategoryLoading = false;
+            // Re-enable category buttons
+            mountCategoryBar();
+          }).catch(error => {
+            console.error('Error loading movies:', error);
+            isCategoryLoading = false;
+            // Re-enable category buttons
+            mountCategoryBar();
           });
         } else if (typeof loadTMDBByLanguage === 'function') {
           loadTMDBByLanguage(cat, 10).then(movies => {
+            // Check if this is still the current load
+            if (loadId !== currentCategoryLoadId) return;
             displayMovies(movies, false, label);
             // Scroll to movies section
             setTimeout(() => {
               const title = document.querySelector('.section-title');
               if (title) title.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 100);
+            isCategoryLoading = false;
+            // Re-enable category buttons
+            mountCategoryBar();
+          }).catch(error => {
+            console.error('Error loading category movies:', error);
+            isCategoryLoading = false;
+            // Re-enable category buttons
+            mountCategoryBar();
           });
         } else if (typeof loadAllTMDBMovies === 'function') {
           loadAllTMDBMovies().then(movies => {
-            const filtered = typeof filterTMDBByCategory === 'function' ? filterTMDBByCategory(movies, cat) : movies;
+            // Check if this is still the current load
+            if (loadId !== currentCategoryLoadId) return;
+            let filtered = typeof filterTMDBByCategory === 'function' ? filterTMDBByCategory(movies, cat) : movies;
+            
+            // Sort by release date (newest first) for specific categories
+            if (['bollywood', 'tollywood'].includes(cat)) {
+              filtered = filtered.sort((a, b) => {
+                const dateA = new Date(a.release_date || a.releaseDate || '1900-01-01');
+                const dateB = new Date(b.release_date || b.releaseDate || '1900-01-01');
+                return dateB - dateA; // Newest first
+              });
+            }
+            
             displayMovies(filtered, false, label);
             // Scroll to movies section
             setTimeout(() => {
               const title = document.querySelector('.section-title');
               if (title) title.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 100);
+            isCategoryLoading = false;
+            // Re-enable category buttons
+            mountCategoryBar();
+          }).catch(error => {
+            console.error('Error loading filtered movies:', error);
+            isCategoryLoading = false;
+            // Re-enable category buttons
+            mountCategoryBar();
           });
+        } else {
+          isCategoryLoading = false;
+          // Re-enable category buttons
+          mountCategoryBar();
         }
         return;
       }
@@ -6231,22 +6421,55 @@
       // Local curated catalog fallback
       if (cat === 'all') {
         displayMovies(curatedMovies, false, 'All Movies');
+      } else if (cat === 'anime') {
+        // Filter anime from curated movies
+        let animeContent = filterAnimeContent(curatedMovies);
+        // Sort by release date (newest first)
+        animeContent = animeContent.sort((a, b) => {
+          const dateA = new Date(a.release_date || a.releaseDate || '1900-01-01');
+          const dateB = new Date(b.release_date || b.releaseDate || '1900-01-01');
+          return dateB - dateA; // Newest first
+        });
+        if (animeContent.length === 0) {
+          // Show message when no anime found
+          moviesContainer.innerHTML = '';
+          const noResults = document.createElement('div');
+          noResults.style.textAlign = 'center';
+          noResults.style.padding = '2rem';
+          noResults.innerHTML = `
+            <h2 class="section-title">Anime</h2>
+            <p>No anime content found in local catalog. Loading from TMDB...</p>
+          `;
+          moviesContainer.appendChild(noResults);
+        } else {
+          displayMovies(animeContent, false, 'Anime');
+        }
       } else {
         // Use language-based filtering for bollywood/tollywood
-        const filtered = filterTMDBByCategory(curatedMovies, cat);
+        let filtered = filterTMDBByCategory(curatedMovies, cat);
+        // Sort by release date (newest first) for specific categories
+        if (['bollywood', 'tollywood'].includes(cat)) {
+          filtered = filtered.sort((a, b) => {
+            const dateA = new Date(a.release_date || a.releaseDate || '1900-01-01');
+            const dateB = new Date(b.release_date || b.releaseDate || '1900-01-01');
+            return dateB - dateA; // Newest first
+          });
+        }
         const label = cat.charAt(0).toUpperCase() + cat.slice(1);
         displayMovies(filtered, false, label);
       }
       const cwSection = document.getElementById('continueWatchingSection');
       if (cwSection) {
-        cwSection.style.display = (cat === 'all') ? '' : 'none';
+        cwSection.style.display = '';
       }
-      mountCategoryBar();
       // Scroll to movies section
       setTimeout(() => {
         const title = document.querySelector('.section-title');
         if (title) title.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
+      isCategoryLoading = false;
+      // Re-enable category buttons
+      mountCategoryBar();
     }
 
     function buildCategoryBar(activeCat) {
@@ -6256,6 +6479,7 @@
         <button class="cat-btn" data-cat="all">All</button>
         <button class="cat-btn" data-cat="bollywood">Bollywood</button>
         <button class="cat-btn" data-cat="tollywood">Tollywood</button>
+        <button class="cat-btn" data-cat="anime">Anime</button>
         <button class="cat-btn" data-cat="series">Series</button>
       `;
       const setActive = (cat) => {
@@ -6275,13 +6499,23 @@
       const mount = document.getElementById('categoryBarMount');
       if (!mount) return;
       mount.innerHTML = '';
-      mount.appendChild(buildCategoryBar(currentCategory));
+      const bar = buildCategoryBar(currentCategory);
+      mount.appendChild(bar);
+      
+      // Disable buttons during loading
+      if (isCategoryLoading) {
+        bar.querySelectorAll('.cat-btn').forEach(btn => {
+          btn.disabled = true;
+          btn.style.opacity = '0.6';
+        });
+      }
       
       // Attach event listener only once using event delegation
+      // to avoid duplicate listeners when the bar is rebuilt
       if (!categoryBarListenerAttached) {
         mount.addEventListener('click', (e) => {
           const btn = e.target.closest('.cat-btn');
-          if (!btn) return;
+          if (!btn || btn.disabled) return;
           applyCategory(btn.dataset.cat);
         });
         categoryBarListenerAttached = true;
@@ -6289,6 +6523,11 @@
     }
 
     function displayMovies(movies, isSearchResults = false, titleOverride = null) {
+      // Filter out movies/series without ratings
+      const ratedMovies = movies.filter(movie => {
+        return movie.rating !== null && movie.rating !== undefined && movie.rating > 0;
+      });
+
       // Clear the movies container completely
       moviesContainer.innerHTML = '';
 
@@ -6306,11 +6545,23 @@
       sectionTitle.textContent = titleOverride || (movies === curatedMovies ? 'All Movies' : 'Search Results');
       moviesContainer.appendChild(sectionTitle);
 
+      // Check if we have any rated movies to display
+      if (ratedMovies.length === 0) {
+        const noRatedMovies = document.createElement('div');
+        noRatedMovies.style.textAlign = 'center';
+        noRatedMovies.style.padding = '2rem';
+        noRatedMovies.innerHTML = `
+          <p>No rated movies found in this category.</p>
+        `;
+        moviesContainer.appendChild(noRatedMovies);
+        return;
+      }
+
       // Add all movies
       const moviesGrid = document.createElement('div');
       moviesGrid.className = 'movies-grid';
 
-      movies.forEach(movie => {
+      ratedMovies.forEach(movie => {
         const title = movie.title || 'Untitled';
         const posterPath = movie.posterUrl || ('https://via.placeholder.com/500x750?text=' + encodeURIComponent(title));
 
@@ -6822,9 +7073,18 @@
               seasonSelect.appendChild(opt);
             });
             if (typeof updateSeasonDropdown === 'function') updateSeasonDropdown(seasons);
-            // Auto-load episodes for first season
-            const firstSeasonNum = seasons[0].season_number;
-            if (firstSeasonNum) loadEpisodesForSeason(firstSeasonNum);
+            // Auto-load episodes for selected season or first season
+            const selectedSeasonNum = movie.selectedSeason || seasons[0].season_number;
+            if (selectedSeasonNum) {
+              seasonSelect.value = selectedSeasonNum;
+              if (seasonTrigger) seasonTrigger.querySelector('.select-value').textContent = seasonSelect.options[seasonSelect.selectedIndex]?.text || `Season ${selectedSeasonNum}`;
+              loadEpisodesForSeason(selectedSeasonNum).then(() => {
+                if (movie.selectedEpisode) {
+                  episodeSelect.value = movie.selectedEpisode;
+                  if (episodeTrigger) episodeTrigger.querySelector('.select-value').textContent = episodeSelect.options[episodeSelect.selectedIndex]?.text || `Episode ${movie.selectedEpisode}`;
+                }
+              });
+            }
           } catch (err) {
             console.error('Failed to load seasons for series', err);
             seasonSelect.innerHTML = '<option>Error loading seasons</option>';
@@ -6874,8 +7134,8 @@
               try {
                 e.preventDefault();
                 // Resolve IMDB id first; player-2.nontongo.html requires an IMDB id for NontonGo embeds
-                let imdbReal = movie && (movie.imdb_id || movie.imdbId);
-                const tmdbId = movie && (movie.id || movie.movieId || movie.tmdbId);
+                let imdbReal = currentMovie && (currentMovie.imdb_id || currentMovie.imdbId);
+                const tmdbId = currentMovie && (currentMovie.id || currentMovie.movieId || currentMovie.tmdbId);
 
                 const seasonNum = seasonSelect.value || document.getElementById('seasonSelect')?.value;
                 const episodeNum = episodeSelect.value || document.getElementById('episodeSelect')?.value;
@@ -6907,13 +7167,16 @@
                 params.append('type','tv');
                 params.append('season', seasonNum);
                 params.append('episode', episodeNum);
-                if (movie && movie.title) params.append('title', movie.title);
-                if (movie && movie.posterUrl) params.append('poster', movie.posterUrl);
+                if (currentMovie && currentMovie.title) params.append('title', currentMovie.title);
+                if (currentMovie && currentMovie.posterUrl) params.append('poster', currentMovie.posterUrl);
 
                 // Debug: log final navigation URL and open
                 try { console.log('Series → player-2 URL (final):', `player-2.nontongo.html?${params.toString()}`); } catch(_) {}
                 try { if (typeof showToast === 'function') showToast('info','Opening player-2','Redirecting to NontonGo player…'); } catch(_) {}
                 localStorage.setItem('lastPlayerUsed','player2');
+                // Store modal state for restoration on back
+                const movieToStore = { ...currentMovie, selectedSeason: seasonNum, selectedEpisode: episodeNum };
+                sessionStorage.setItem('restoreModal', JSON.stringify(movieToStore));
                 window.location.href = `player-2.nontongo.html?${params.toString()}`;
               } catch(err){ console.error('Series Play click handler error', err); }
             });
@@ -6923,8 +7186,8 @@
             seriesPlayBtnPlayer.addEventListener('click', function(e){
               try {
                 e.preventDefault();
-                const tmdbId = movie && (movie.id || movie.movieId || movie.tmdbId);
-                const imdbReal = movie && (movie.imdb_id || movie.imdbId);
+                const tmdbId = currentMovie && (currentMovie.id || currentMovie.movieId || currentMovie.tmdbId);
+                const imdbReal = currentMovie && (currentMovie.imdb_id || currentMovie.imdbId);
                 if (!tmdbId && !imdbReal) {
                   if (typeof showToast==='function') showToast('error','Missing data','No TMDB or IMDB id available for this series');
                   return;
@@ -6943,12 +7206,15 @@
                 params.append('mediaType','tv');
                 params.append('season', seasonNum);
                 params.append('episode', episodeNum);
-                if (movie && movie.title) params.append('title', movie.title);
-                if (movie && movie.posterUrl) params.append('poster', movie.posterUrl);
+                if (currentMovie && currentMovie.title) params.append('title', currentMovie.title);
+                if (currentMovie && currentMovie.posterUrl) params.append('poster', currentMovie.posterUrl);
                 // Debug: log final navigation URL
                 try { console.log('Series → player URL:', `player.html?${params.toString()}`); } catch(_) {}
                 try { if (typeof showToast === 'function') showToast('info','Opening player','Redirecting to player…'); } catch(_) {}
                 localStorage.setItem('lastPlayerUsed','player');
+                // Store modal state for restoration on back
+                const movieToStore = { ...currentMovie, selectedSeason: seasonNum, selectedEpisode: episodeNum };
+                sessionStorage.setItem('restoreModal', JSON.stringify(movieToStore));
                 window.location.href = `player.html?${params.toString()}`;
               } catch(err){ console.error('Series Play (Player) click handler error', err); }
             });
@@ -7378,6 +7644,8 @@
               if (result.languageInfo) params.append('languageInfo', JSON.stringify(result.languageInfo));
               playerUrl = `player.html?${params.toString()}`;
               const finalUrl = resumeSeconds > 0 ? `${playerUrl}&t=${Math.floor(resumeSeconds)}` : playerUrl;
+              // Store modal state for restoration on back
+              sessionStorage.setItem('restoreModal', JSON.stringify(currentMovie));
               window.location.href = finalUrl;
             } else {
               const errorMsg = result?.message || 'Could not resolve a stream for this title.';
@@ -7401,6 +7669,8 @@
       if (playerUrl) {
         // Append resume time only if we have it to trigger prompt/resume
         const finalUrl = resumeSeconds > 0 ? `${playerUrl}&t=${Math.floor(resumeSeconds)}` : playerUrl;
+        // Store modal state for restoration on back
+        sessionStorage.setItem('restoreModal', JSON.stringify(currentMovie));
         window.location.href = finalUrl;
       } else {
         showToast('error', 'No Stream', 'Stream is not available for this movie yet.');
@@ -7705,6 +7975,9 @@
       const popularSection = document.getElementById('popularMoviesSection');
       const popularTVSection = document.getElementById('popularTVSection');
 
+      // Update URL with search parameter
+      updateURLState({ category: null, search: query || null });
+
       // Add searching class to body
       document.body.classList.add('searching');
 
@@ -7751,11 +8024,13 @@
         document.body.classList.remove('searching');
         isSearching = false;
         showToast('info', 'No Results', 'No matching movies found in the curated list.', 3000);
+        // Display empty results with proper title
+        displayMovies([], true, `No results for "${query}"`);
         return;
       }
 
       // Display only search results (no continue watching)
-      displayMovies(results, true);
+      displayMovies(results, true, `Search Results for "${query}"`);
     }
 
     searchBtn.addEventListener('click', performSearch);
@@ -7763,6 +8038,15 @@
       if (e.key === 'Enter') {
         performSearch();
       }
+    });
+
+    // Live search with debounce
+    let searchTimeout;
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        performSearch();
+      }, 300);
     });
 
     // Close modal: stop playback and remove iframe to free resources
@@ -7877,7 +8161,7 @@
     }
 
     // Initial load
-    window.onload = function () {
+    window.onload = async function () {
       applyPerMovieUrls();
       // Ensure the category bar is visible immediately
       mountCategoryBar();
@@ -7897,6 +8181,48 @@
           }, 500);
         }
       }
+
+      // Initialize TMDB
+      if (!movieDb) {
+        initMovieDb();
+      }
+      if (typeof initializeTMDBIntegration === 'function') {
+        await initializeTMDBIntegration();
+      }
+
+      // Restore category and search state from URL
+      const categoryParam = urlParams.get('category');
+      const searchParam = urlParams.get('search');
+
+      // Set current category from URL
+      currentCategory = categoryParam || 'all';
+
+      // Mount category bar with correct active state
+      mountCategoryBar();
+
+      // Display initial content only if no category or search to restore
+      if (!categoryParam && !searchParam) {
+        displayMovies(curatedMovies, false);
+      }
+
+      // Restore modal state if returning from player
+      try {
+        const restoreModal = sessionStorage.getItem('restoreModal');
+        if (restoreModal) {
+          sessionStorage.removeItem('restoreModal');
+          const movie = JSON.parse(restoreModal);
+          if (window.openMovieModal) window.openMovieModal(movie);
+        }
+      } catch(e) { console.error('Failed to restore modal:', e); }
+
+      if (searchParam) {
+        // Restore search state
+        searchInput.value = searchParam;
+        performSearch();
+      } else if (categoryParam && categoryParam !== 'all') {
+        // Restore category state
+        applyCategory(categoryParam);
+      }
     };
 
     // Home button: reset to full curated list
@@ -7915,6 +8241,9 @@
         if (searchTop) {
           searchTop.classList.remove('active');
         }
+
+        // Clear URL state
+        updateURLState({ category: 'all', search: null });
 
         // Show popular movies section
         const popularSection = document.getElementById('popularMoviesSection');
@@ -7955,6 +8284,8 @@
           searchInput.value = '';
           searchInput.dispatchEvent(new Event('input'));
         }
+        // Clear URL state
+        updateURLState({ category: 'all', search: null });
         // Show popular movies section
         const popularSection = document.getElementById('popularMoviesSection');
         const popularTVSection = document.getElementById('popularTVSection');
@@ -8004,6 +8335,20 @@
       // initialize state
       updateActive();
     })();
+
+    // Refresh continue watching when page becomes visible (after returning from player)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        console.log('Page became visible, refreshing continue watching...');
+        // Clear FirebaseSync cache for continue watching to force fresh load from Firestore
+        if (window.FirebaseSync && window.FirebaseSync.cache) {
+          delete window.FirebaseSync.cache['continueWatching'];
+        }
+        if (typeof loadContinueWatching === 'function') {
+          loadContinueWatching();
+        }
+      }
+    });
 
     // Dark/Light mode removed – site now uses saved Settings theme only
   </script>
@@ -8514,8 +8859,67 @@
         console.log('Starting trending refresh on page load...');
         startTrendingRefresh();
       }
-      if (typeof initializeTMDBIntegration === 'function') {
-        initializeTMDBIntegration();
+      
+      // Start category auto-refresh every 7 minutes (420,000 ms)
+      startCategoryAutoRefresh();
+    }
+
+    // Auto-refresh categories every 7 minutes to get fresh TMDB data
+    function startCategoryAutoRefresh() {
+      console.log('Starting category auto-refresh every 7 minutes...');
+      
+      // Refresh immediately, then every 7 minutes
+      setTimeout(refreshAllCategories, 1000); // Initial refresh after 1 second
+      setInterval(refreshAllCategories, 420000); // 7 minutes = 420,000 milliseconds
+    }
+
+    // Refresh all category data from TMDB
+    async function refreshAllCategories() {
+      if (!movieDb || !useTMDBCatalog) {
+        console.log('Skipping category refresh - TMDB not initialized or not in use');
+        return;
+      }
+
+      try {
+        console.log('Refreshing category data from TMDB...');
+        
+        // Clear existing cached data
+        if (movieDb && typeof movieDb.clearCache === 'function') {
+          movieDb.clearCache();
+          console.log('Cleared TMDB cache');
+        }
+        
+        // Reload all movie and TV data
+        const [movies, tvShows] = await Promise.all([
+          loadAllTMDBMovies ? loadAllTMDBMovies(10) : Promise.resolve([]),
+          loadAllTMDBTV ? loadAllTMDBTV(5) : Promise.resolve([])
+        ]);
+        
+        // Update the global catalogs
+        if (movies && movies.length > 0) {
+          allMovies = movies;
+          console.log(`Refreshed ${movies.length} movies`);
+        }
+        
+        if (tvShows && tvShows.length > 0) {
+          allTV = tvShows;
+          console.log(`Refreshed ${tvShows.length} TV shows`);
+        }
+        
+        // If we're currently viewing a category, refresh the display
+        if (currentCategory && currentCategory !== 'search') {
+          console.log(`Refreshing display for current category: ${currentCategory}`);
+          applyCategory(currentCategory);
+        }
+        
+        // Refresh trending sections
+        loadTrendingMovies();
+        loadTrendingTV();
+        
+        console.log('Category refresh completed successfully');
+        
+      } catch (error) {
+        console.error('Error during category refresh:', error);
       }
     }
 
@@ -8532,12 +8936,18 @@
 
         const movies = (result && result.movies) ? result.movies.slice(0, 20) : [];
         
-        if (movies.length === 0) {
-          container.innerHTML = '<p style="padding: 20px; text-align: center; color: #999;">No trending movies available</p>';
+        // Filter out movies without ratings
+        const ratedMovies = movies.filter(m => {
+          const rating = m.rating || (typeof m.vote_average === 'number' ? m.vote_average : null);
+          return rating !== null && rating !== undefined && rating > 0;
+        });
+        
+        if (ratedMovies.length === 0) {
+          container.innerHTML = '<p style="padding: 20px; text-align: center; color: #999;">No rated trending movies available</p>';
           return;
         }
 
-        movies.forEach((m, index) => {
+        ratedMovies.forEach((m, index) => {
           const title = m.title || 'Untitled';
           const posterPath = m.poster || (m.posterUrl || (m.poster_path ? `${movieDb.imageUrl}${m.poster_path}` : null)) || (`https://via.placeholder.com/500x750?text=${encodeURIComponent(title)}`);
           const year = m.releaseDate ? (m.releaseDate.split('-')[0]) : (m.year || '');
@@ -8620,12 +9030,18 @@
 
         const shows = (result && result.movies) ? result.movies.slice(0, 20) : [];
         
-        if (shows.length === 0) {
-          container.innerHTML = '<p style="padding: 20px; text-align: center; color: #999;">No trending series available</p>';
+        // Filter out shows without ratings
+        const ratedShows = shows.filter(m => {
+          const rating = m.rating || (typeof m.vote_average === 'number' ? m.vote_average : null);
+          return rating !== null && rating !== undefined && rating > 0;
+        });
+        
+        if (ratedShows.length === 0) {
+          container.innerHTML = '<p style="padding: 20px; text-align: center; color: #999;">No rated trending series available</p>';
           return;
         }
 
-        shows.forEach((m, index) => {
+        ratedShows.forEach((m, index) => {
           const title = m.title || 'Untitled';
           const posterPath = m.poster || (m.posterUrl || (m.poster_path ? `${movieDb.imageUrl}${m.poster_path}` : null)) || (`https://via.placeholder.com/500x750?text=${encodeURIComponent(title)}`);
           const year = m.releaseDate ? (m.releaseDate.split('-')[0]) : (m.year || '');
@@ -8742,11 +9158,6 @@
       }
     }
 
-    // Initialize when page loads
-    window.addEventListener('load', () => {
-      initMovieDb();
-    });
-  </script>
   </script>
 
   <!-- Migration Helper - Disabled for now -->

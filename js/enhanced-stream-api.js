@@ -1,7 +1,8 @@
 /**
  * Enhanced Multi-Provider Streaming API
- * Primary: Videasy (Multi-language/Multi-audio support)
- * Fallback: VidSrc.xyz, SuperEmbed
+ * Primary: VixSrc.to (HD Quality streaming)
+ * Secondary: Videasy (Multi-language/Multi-audio support)
+ * Fallback: VidSrc.xyz
  * Features: Ad-free, Multi-audio languages, High quality streams
  */
 
@@ -69,10 +70,10 @@
       }
     },
     
-    // Provider: Videasy (Primary - Multi-language/Multi-audio)
+    // Provider: Videasy (Secondary - Multi-language/Multi-audio)
     videasy: {
       name: 'Videasy',
-      priority: 1,
+      priority: 2,
       async getStream(tmdbId, mediaType = 'movie', season = null, episode = null, imdbId = null) {
         try {
           let embedUrl;
@@ -155,30 +156,29 @@
       }
     },
 
-    // Provider: SuperEmbed (generic multi-source embed)
-    superembed: {
-      name: 'SuperEmbed',
-      priority: 4,
+    // Provider: VixSrc.to (Primary embed provider)
+    vixsrc: {
+      name: 'VixSrc.to',
+      priority: 1,
       async getStream(tmdbId, mediaType = 'movie', season = null, episode = null, imdbId = null) {
         try {
-          // MultiEmbed style URLs support tmdbId directly
           let embedUrl;
           if (mediaType === 'tv' && season && episode) {
-            embedUrl = `https://multiembed.mov/?video_id=${tmdbId}&s=${season}&e=${episode}`;
+            embedUrl = `https://vixsrc.to/tv/${tmdbId}/${season}/${episode}?secondaryColor=170000&primaryColor=B20710`;
           } else {
-            embedUrl = `https://multiembed.mov/?video_id=${tmdbId}`;
+            embedUrl = `https://vixsrc.to/movie/${tmdbId}?secondaryColor=FFFFFF&primaryColor=B20710`;
           }
-
-          console.log('🎬 SuperEmbed embed:', embedUrl);
+          
+          console.log('🎬 VixSrc.to embed:', embedUrl);
           return {
             success: true,
-            provider: 'SuperEmbed',
+            provider: 'VixSrc.to',
             url: embedUrl,
             type: 'iframe',
-            quality: 'auto'
+            quality: '1080p'
           };
         } catch (error) {
-          console.warn('⚠️ SuperEmbed error:', error.message);
+          console.warn('⚠️ VixSrc.to error:', error.message);
           return { success: false };
         }
       }
@@ -204,61 +204,6 @@
           };
         } catch (error) {
           console.warn('⚠️ Custom embed error:', error.message);
-          return { success: false };
-        }
-      }
-    },
-
-    // Provider: Torrentio (returns magnet links when available)
-    torrentio: {
-      name: 'Torrentio',
-      priority: 5,
-      async getStream(tmdbId, mediaType = 'movie', season = null, episode = null) {
-        try {
-          // Requires configuration: set window.TORRENTIO_API to a Torrentio-compatible endpoint
-          const base = window.TORRENTIO_API;
-          if (!base) {
-            console.warn('⚠️ Torrentio API not configured (window.TORRENTIO_API)');
-            return { success: false };
-          }
-
-          const contentId = `tmdb:${tmdbId}`;
-          let apiUrl = `${base}/stream/${mediaType}/${contentId}.json`;
-          if (mediaType === 'tv' && season && episode) {
-            apiUrl += `?season=${encodeURIComponent(season)}&episode=${encodeURIComponent(episode)}`;
-          }
-
-          console.log('🎬 Torrentio query:', apiUrl);
-          const response = await fetch(apiUrl);
-          if (!response.ok) {
-            console.warn('⚠️ Torrentio response not ok:', response.status);
-            return { success: false };
-          }
-
-          const data = await response.json();
-          // Try to find an explicit magnet in common fields
-          let magnet = null;
-          if (data.torrents && Array.isArray(data.torrents) && data.torrents.length > 0) {
-            magnet = data.torrents.find(t => t.magnet || t.magnetURI || t.magnetLink)?.magnet || data.torrents[0].magnet || data.torrents[0].magnetURI || data.torrents[0].magnetLink;
-          }
-          if (!magnet && data.streams && Array.isArray(data.streams)) {
-            magnet = data.streams.find(s => typeof s.url === 'string' && s.url.startsWith('magnet:'))?.url;
-          }
-
-          if (!magnet) {
-            console.warn('⚠️ Torrentio: no magnet found in response');
-            return { success: false };
-          }
-
-          console.log('🎬 Torrentio magnet found:', magnet);
-          return {
-            success: true,
-            provider: 'Torrentio',
-            url: magnet,
-            type: 'magnet'
-          };
-        } catch (error) {
-          console.warn('⚠️ Torrentio error:', error.message || error);
           return { success: false };
         }
       }

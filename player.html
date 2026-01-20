@@ -2363,32 +2363,25 @@
     <!-- Server Menu -->
     <div id="serverMenu" class="server-menu" style="display: none;">
       <div class="server-menu-title">Select Server</div>
-      <button class="server-option" data-provider="videasy" data-priority="1">
+      <button class="server-option" data-provider="vixsrc" data-priority="1">
         <i class="fas fa-circle-dot"></i>
+        <div>
+          <div class="server-name">VixSrc.to</div>
+          <div class="server-features">HD Quality • Primary</div>
+        </div>
+      </button>
+      <button class="server-option" data-provider="videasy" data-priority="2">
+        <i class="fas fa-circle"></i>
         <div>
           <div class="server-name">Videasy</div>
           <div class="server-features">Multi-Audio • Multi-Language • HD</div>
         </div>
       </button>
-      <button class="server-option" data-provider="vidsrcxyz" data-priority="2">
+      <button class="server-option" data-provider="vidsrcxyz" data-priority="3">
         <i class="fas fa-circle"></i>
         <div>
           <div class="server-name">VidSrc.xyz</div>
           <div class="server-features">Fast • HD Quality</div>
-        </div>
-      </button>
-      <button class="server-option" data-provider="superembed" data-priority="3">
-        <i class="fas fa-circle"></i>
-        <div>
-          <div class="server-name">SuperEmbed</div>
-          <div class="server-features">Multi-Source • Fallback</div>
-        </div>
-      </button>
-      <button class="server-option" data-provider="torrentio" data-priority="5">
-        <i class="fas fa-magnet"></i>
-        <div>
-          <div class="server-name">Torrentio</div>
-          <div class="server-features">P2P • Torrent (Player 2)</div>
         </div>
       </button>
     </div>
@@ -5550,10 +5543,10 @@
                   embedUrl = mediaType === 'tv' 
                     ? `https://vidsrc.xyz/embed/tv/${tmdbId}/${season}/${episode}`
                     : `https://vidsrc.xyz/embed/movie/${tmdbId}`;
-                } else if (provider === 'superembed') {
+                } else if (provider === 'vixsrc') {
                   embedUrl = mediaType === 'tv'
-                    ? `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${season}&e=${episode}`
-                    : `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`;
+                    ? `https://vixsrc.to/tv/${tmdbId}/${season}/${episode}?primaryColor=FF0000&secondaryColor=FF0000`
+                    : `https://vixsrc.to/movie/${tmdbId}?primaryColor=FF0000&secondaryColor=FF0000`;
                 }
                 
                 if (embedUrl) {

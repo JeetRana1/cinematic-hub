@@ -410,8 +410,9 @@ class ContinueWatchingManager {
 
     // Use the player that was used when watching this movie
     // Default to player1 if playerUsed field is missing
-    const playerUsed = movieData.playerUsed || 'player1';
-    const playerBase = playerUsed === 'player2' ? 'player-2.nontongo.html' : 'player.html';
+    const playerUsed = (movieData.playerUsed || 'player1').toLowerCase();
+    const usePlayer2 = playerUsed === 'player2' || playerUsed === 'player-2.nontongo.html' || playerUsed === 'player-2.html';
+    const playerBase = usePlayer2 ? 'player-2.html' : 'player.html';
     console.log('🔗 Building resume URL for', movieData.title, 'with player:', playerBase);
     return `${playerBase}?${params.toString()}`;
   }

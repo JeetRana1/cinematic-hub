@@ -8,7 +8,8 @@ class MovieDatabase {
   constructor(apiKey) {
     this.apiKey = apiKey;
     this.baseUrl = 'https://api.themoviedb.org/3';
-    this.imageUrl = 'https://image.tmdb.org/t/p/w500';
+    // Use the highest available TMDB image size to avoid upscaling and blurriness
+    this.imageUrl = 'https://image.tmdb.org/t/p/original';
     this.cache = new Map();
   }
 

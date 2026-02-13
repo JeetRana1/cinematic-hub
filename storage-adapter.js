@@ -42,13 +42,6 @@
   };
 
   window.loadContinueWatching = async function(forceShow = false) {
-    try {
-      if (!window.FirebaseAuth || typeof window.FirebaseAuth.getUser !== 'function' || !window.FirebaseAuth.getUser()) {
-        setTimeout(() => loadContinueWatching(forceShow), 250);
-        return;
-      }
-    } catch (_) { }
-
     if (window.isSearching && !forceShow) {
       const section = document.getElementById('continueWatchingSection');
       if (section) section.style.display = 'none';
@@ -57,15 +50,13 @@
 
     console.log('=== DEBUG: loadContinueWatching() called ===');
     try {
-      // Wait for FirebaseSync to be initialized
-      if (!window.FirebaseSync || !window.FirebaseSync.initialized) {
-        console.log('[ContinueWatching] Waiting for Firebase to initialize...');
-        setTimeout(() => loadContinueWatching(forceShow), 500);
-        return;
+      // Get data from Firebase Sync when available, otherwise fall back to local only
+      let continueWatching = {};
+      if (window.FirebaseSync && window.FirebaseSync.initialized && typeof window.FirebaseSync.getContinueWatching === 'function') {
+        continueWatching = await window.FirebaseSync.getContinueWatching();
+      } else {
+        console.log('[ContinueWatching] Firebase not ready, using local fallback data');
       }
-
-      // Get data from Firebase Sync (cloud only)
-      const continueWatching = await window.FirebaseSync.getContinueWatching();
 
       const continueWatchingMovies = Object.entries(continueWatching).map(([id, movie]) => {
         // Convert Firestore Timestamp to milliseconds
@@ -96,6 +87,59 @@
         console.log('[StorageAdapter] Mapped movie:', mapped.title, '| Progress:', Math.round(mapped.progress), '% | Time:', Math.round(mapped.currentTime), 's | Timestamp:', mapped.timestamp);
         return mapped;
       });
+
+      // Merge local keys so Continue Watching can still render when auth/cloud is unavailable
+      try {
+        const localKeys = ['continueWatching', 'continueWatching_guest', 'continueWatching_local'];
+        const user = (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function')
+          ? window.FirebaseAuth.getUser()
+          : null;
+        const uid = user && user.uid;
+        if (uid) {
+          localKeys.push(`continueWatching_${uid}`);
+          const selectedProfile = localStorage.getItem(`fb_selected_profile_${uid}`);
+          if (selectedProfile) localKeys.push(`continueWatching_${uid}_${selectedProfile}`);
+        }
+
+        const mergedMap = {};
+        continueWatchingMovies.forEach((movie) => {
+          const key = movie.movieId || movie.id;
+          if (key) mergedMap[key] = movie;
+        });
+
+        localKeys.forEach((key) => {
+          const raw = localStorage.getItem(key);
+          if (!raw) return;
+          const data = JSON.parse(raw);
+          Object.entries(data || {}).forEach(([id, movie]) => {
+            if (!movie || typeof movie !== 'object') return;
+            const timestamp = parseInt(movie.updatedAt || movie.timestamp || 0) || 0;
+            const mapped = {
+              ...movie,
+              id: movie.movieId || movie.id || id,
+              movieId: movie.movieId || movie.id || id,
+              title: movie.title || 'Untitled',
+              progress: parseFloat(movie.progress) || 0,
+              currentTime: parseFloat(movie.currentTime) || 0,
+              duration: parseFloat(movie.duration) || 0,
+              timestamp,
+              poster: movie.posterUrl || movie.poster || movie.thumbnail || '',
+              posterUrl: movie.posterUrl || movie.poster || movie.thumbnail || ''
+            };
+            const movieKey = mapped.movieId || mapped.id;
+            if (!movieKey) return;
+            const existing = mergedMap[movieKey];
+            if (!existing || (mapped.timestamp || 0) > (existing.timestamp || 0)) {
+              mergedMap[movieKey] = mapped;
+            }
+          });
+        });
+
+        continueWatchingMovies.length = 0;
+        continueWatchingMovies.push(...Object.values(mergedMap));
+      } catch (mergeError) {
+        console.warn('[ContinueWatching] Local fallback merge failed:', mergeError);
+      }
 
       // Deduplicate by strict movieId + normalized title normalization
       // This ensures same movie with different progress times only appears once

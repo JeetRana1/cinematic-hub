@@ -17,7 +17,8 @@ export default async function handler(req, res) {
 
   try {
     const { action, id, season, episode, file, key } = req.query;
-    const API_BASE = 'https://8streamapi-ju5obhkzf-jeetrana1s-projects.vercel.app/api/v1';
+    // Allow overriding via environment variable STREAM_API
+    const API_BASE = process.env.STREAM_API || 'https://convinced-nara-personal122-7da52759.koyeb.app/api/v1';
 
     if (!action) {
       return res.status(400).json({ success: false, message: 'action parameter required' });

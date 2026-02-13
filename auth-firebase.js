@@ -9,8 +9,12 @@
 
 (function(){
   // Load firebaseConfig from external file (firebaseConfig.js)
-  if (typeof window.firebaseConfig === 'undefined') {
-    throw new Error('Firebase config not found. Please create firebaseConfig.js with your secrets.');
+  if (typeof window.firebaseConfig === 'undefined' || !window.firebaseConfig.apiKey) {
+    console.warn('Firebase config not found or invalid. Skipping Firebase initialization.');
+    // Set dummy objects for non-Firebase features
+    window.firebaseAuth = { onAuthStateChanged: (cb) => cb(null), currentUser: null, signInAnonymously: () => Promise.resolve({ user: null }) };
+    window.firebaseDb = { collection: () => ({ doc: () => ({ get: () => Promise.resolve({ exists: false }), set: () => Promise.resolve() }) }) };
+    return;
   }
   const firebaseConfig = window.firebaseConfig;
 

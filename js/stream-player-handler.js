@@ -43,16 +43,17 @@
         return false;
       }
 
-      // Restrict WebStreamr/Hayduk providers to Player 2 (id: 'videoPlayer') only
-      if (stream.provider && /webstreamr|hayduk/i.test(stream.provider) && this.playerId !== 'videoPlayer') {
-        console.warn(`Provider ${stream.provider} is only supported in Player 2. Skipping load for ${this.playerId}`);
-        this.showError(`${stream.provider} streams are only supported in Player 2`);
-        return false;
-      }
+
 
       this.currentStream = stream;
 
-      console.log(`🎬 Loading stream from ${stream.provider}`);
+      // Special logging for addon streams
+      if (stream.addon) {
+        console.log(`🎬 Loading ad-free addon stream from ${stream.provider} (Addon: ${stream.addon})`);
+        console.log(`🎬 Stream features: ${stream.features ? stream.features.join(', ') : 'Direct Stream'}`);
+      } else {
+        console.log(`🎬 Loading stream from ${stream.provider}`);
+      }
 
       // Handle magnet (torrent) streams in Player 2 using client-side WebTorrent
       if (stream.type === 'magnet') {
@@ -97,12 +98,7 @@
 
     loadIframeStream(stream) {
       try {
-        // Restrict certain iframe providers to Player 2 only
-        if (stream.provider && /webstreamr|hayduk/i.test(stream.provider) && this.playerId !== 'videoPlayer') {
-          console.warn(`Iframe streams from provider ${stream.provider} are only supported in Player 2.`);
-          this.showError(`${stream.provider} iframe streams are only supported in Player 2`);
-          return false;
-        }
+
 
         // Hide video element
         if (this.videoElement) {
@@ -270,8 +266,85 @@
         provider: this.currentStream.provider,
         quality: this.currentStream.quality,
         type: this.currentStream.type,
-        url: this.currentStream.url
+        url: this.currentStream.url,
+        languages: this.currentStream.languages || [],
+        features: this.currentStream.features || [],
+        addon: this.currentStream.addon || null,
+        bypassed: this.currentStream.bypassed || false
       };
+    }
+
+    // Check if current stream is ad-free
+    isAdFree() {
+      return this.currentStream && (
+        this.currentStream.bypassed ||
+        this.currentStream.features?.includes('Ad-free') ||
+        this.currentStream.addon
+      );
+    }
+
+    // Get available languages for current stream
+    getAvailableLanguages() {
+      if (!this.currentStream) return ['English'];
+      return this.currentStream.languages || ['English'];
+    }
+
+    // Switch to ad-free mode if available
+    async switchToAdFree() {
+      if (this.isAdFree()) {
+        console.log('✅ Already playing ad-free stream');
+        return true;
+      }
+
+      // Try to get an ad-free stream for the same content
+      if (this.currentStream && window.getEnhancedStream) {
+        try {
+          console.log('🔄 Attempting to switch to ad-free stream...');
+
+          // Extract TMDB ID from current stream URL or context
+          const tmdbId = this.extractTmdbId();
+          if (tmdbId) {
+            const adFreeStream = await window.getEnhancedStream(
+              tmdbId,
+              this.currentStream.mediaType || 'movie',
+              this.currentStream.season,
+              this.currentStream.episode,
+              null
+            );
+
+            if (adFreeStream && adFreeStream.success && adFreeStream.bypassed) {
+              console.log('✅ Found ad-free alternative, loading...');
+              return await this.loadStream(adFreeStream);
+            }
+          }
+        } catch (error) {
+          console.warn('⚠️ Failed to switch to ad-free stream:', error);
+        }
+      }
+
+      console.log('⚠️ No ad-free alternative available');
+      return false;
+    }
+
+    // Extract TMDB ID from various sources
+    extractTmdbId() {
+      // Try URL parameters first
+      const urlParams = new URLSearchParams(window.location.search);
+      const tmdbParam = urlParams.get('tmdb') || urlParams.get('id');
+      if (tmdbParam) return tmdbParam;
+
+      // Try from current stream URL
+      if (this.currentStream && this.currentStream.url) {
+        const match = this.currentStream.url.match(/\/(\d+)\//) || this.currentStream.url.match(/\/(\d+)$/);
+        if (match) return match[1];
+      }
+
+      // Try from global movie data
+      if (window.currentMovie && window.currentMovie.id) {
+        return window.currentMovie.id;
+      }
+
+      return null;
     }
   }
 

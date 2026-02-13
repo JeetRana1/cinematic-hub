@@ -1,7 +1,7 @@
 /**
  * Enhanced Multi-Provider Streaming API
- * Primary: VixSrc.to (HD Quality streaming)
- * Secondary: Videasy (Multi-language/Multi-audio support)
+ * Primary: Videasy (Multi-language/Multi-audio support)
+ * Secondary: VixSrc.to (HD Quality streaming)
  * Fallback: VidSrc.xyz
  * Features: Ad-free, Multi-audio languages, High quality streams
  */
@@ -45,7 +45,7 @@
     customHls: {
       name: 'Direct HLS',
       priority: 0,
-      async getStream() {
+      async getStream(tmdbId, mediaType = 'movie', season = null, episode = null, imdbId = null) {
         try {
           const rawUrl = window.CUSTOM_HLS_URL || getUrlParam('hls');
           if (!rawUrl) return { success: false };
@@ -69,11 +69,11 @@
         }
       }
     },
-    
-    // Provider: Videasy (Secondary - Multi-language/Multi-audio)
+
+    // Provider: Videasy (Primary - Multi-language/Multi-audio)
     videasy: {
       name: 'Videasy',
-      priority: 2,
+      priority: 1,
       async getStream(tmdbId, mediaType = 'movie', season = null, episode = null, imdbId = null) {
         try {
           let embedUrl;
@@ -156,10 +156,10 @@
       }
     },
 
-    // Provider: VixSrc.to (Primary embed provider)
+    // Provider: VixSrc.to (Secondary embed provider)
     vixsrc: {
       name: 'VixSrc.to',
-      priority: 1,
+      priority: 2,
       async getStream(tmdbId, mediaType = 'movie', season = null, episode = null, imdbId = null) {
         try {
           let embedUrl;
@@ -180,6 +180,270 @@
         } catch (error) {
           console.warn('⚠️ VixSrc.to error:', error.message);
           return { success: false };
+        }
+      }
+    },
+
+
+
+    // Provider: HindiStream (Dedicated Hindi streaming provider)
+    hindistream: {
+      name: 'HindiStream',
+      priority: 1,
+      async getStream(tmdbId, mediaType = 'movie', season = null, episode = null, imdbId = null) {
+        try {
+          // Hindi-focused streaming APIs
+          const hindiApis = [
+            {
+              name: 'Hindi Play (Direct)',
+              url: mediaType === 'tv' && season && episode
+                ? `https://hindistream.net/embed/tv/${tmdbId}/${season}/${episode}`
+                : `https://hindistream.net/embed/movie/${tmdbId}`,
+              type: 'iframe',
+              bypass: true
+            },
+            {
+              name: 'Bollywood Hub',
+              url: mediaType === 'tv' && season && episode
+                ? `https://bollywoodhub.in/embed/tv/${tmdbId}/${season}/${episode}`
+                : `https://bollywoodhub.in/embed/movie/${tmdbId}`,
+              type: 'iframe',
+              bypass: true
+            },
+            {
+              name: 'DesiPapa (Hindi)',
+              url: mediaType === 'tv' && season && episode
+                ? `https://desipapa.tv/embed/tv/${tmdbId}/${season}/${episode}`
+                : `https://desipapa.tv/embed/movie/${tmdbId}`,
+              type: 'iframe',
+              bypass: true
+            }
+          ];
+
+          // Try each Hindi-focused API
+          for (const api of hindiApis) {
+            try {
+              console.log(`🎬 HindiStream trying ${api.name}:`, api.url);
+
+              // Try to bypass embed for direct stream
+              if (api.bypass) {
+                const directStream = await this.bypassEmbed(api.url, tmdbId, mediaType, season, episode);
+                if (directStream) {
+                  return {
+                    success: true,
+                    provider: 'HindiStream (Ad-free)',
+                    url: directStream.url,
+                    type: directStream.type,
+                    quality: directStream.quality || 'HD',
+                    features: ['Ad-free', 'HD Quality', 'Direct Stream', 'Hindi Audio', 'Bollywood', 'Regional Cinema'],
+                    addon: 'hindistream-adfree',
+                    languages: ['Hindi', 'English', 'Punjabi', 'Gujarati', 'Bengali']
+                  };
+                }
+              }
+
+              // Fallback to iframe
+              return {
+                success: true,
+                provider: 'HindiStream (Ad-free)',
+                url: api.url,
+                type: api.type,
+                quality: 'HD',
+                features: ['Ad-free', 'HD Quality', 'Hindi Audio', 'Bollywood'],
+                addon: 'hindistream-adfree',
+                languages: ['Hindi', 'English']
+              };
+
+            } catch (e) {
+              console.warn(`⚠️ HindiStream: ${api.name} failed:`, e.message);
+              continue;
+            }
+          }
+
+          console.warn('⚠️ HindiStream: no streams available');
+          return { success: false, error: 'No Hindi streams available' };
+        } catch (error) {
+          console.warn('⚠️ HindiStream error:', error.message);
+          return { success: false, error: error.message };
+        }
+      },
+
+      // Bypass embedded player to extract direct stream URL
+      async bypassEmbed(embedUrl, tmdbId, mediaType, season, episode) {
+        try {
+          console.log('🔄 Attempting to bypass Hindi embed:', embedUrl);
+
+          // Use proxy to fetch embed page
+          const proxyUrl = `/api/proxy/video?url=${encodeURIComponent(embedUrl)}&provider=hindistream&clean=1`;
+          const response = await fetch(proxyUrl);
+
+          if (!response.ok) {
+            throw new Error(`Proxy request failed: ${response.status}`);
+          }
+
+          const html = await response.text();
+
+          // Look for direct stream URLs in the HTML (Hindi-specific patterns)
+          const streamPatterns = [
+            // HLS streams (.m3u8)
+            /https?:\/\/[^"'\s]+\.m3u8[^"'\s]*/gi,
+            // MP4 streams
+            /https?:\/\/[^"'\s]+\.mp4[^"'\s]*/gi,
+            // Direct video URLs from Hindi providers
+            /https?:\/\/[^"'\s]+(?:hindistream|bollywoodhub|desipapa)[^"'\s]*/gi,
+            // VidSrc direct streams
+            /https?:\/\/[^"'\s]*(?:vidsrc|vidplay)[^"'\s]*\/[^"'\s]*/gi
+          ];
+
+          for (const pattern of streamPatterns) {
+            const matches = html.match(pattern);
+            if (matches && matches.length > 0) {
+              for (const match of matches) {
+                // Validate the URL
+                if (match.includes('http') && !match.includes('ads') && !match.includes('banner')) {
+                  console.log('✅ Found Hindi direct stream:', match);
+
+                  // Determine stream type
+                  let streamType = 'mp4';
+                  if (match.includes('.m3u8')) {
+                    streamType = 'hls';
+                  } else if (match.includes('magnet:')) {
+                    streamType = 'magnet';
+                  }
+
+                  return {
+                    url: match,
+                    type: streamType,
+                    quality: 'HD',
+                    bypassed: true
+                  };
+                }
+              }
+            }
+          }
+
+          // If no direct streams found, try to find nested iframes
+          const iframeMatch = html.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+          if (iframeMatch && iframeMatch[1]) {
+            const nestedUrl = iframeMatch[1];
+            console.log('📺 Found nested Hindi iframe, attempting deeper bypass:', nestedUrl);
+
+            // Recursively try to bypass the nested iframe
+            return await this.bypassEmbed(nestedUrl, tmdbId, mediaType, season, episode);
+          }
+
+          console.log('⚠️ No direct Hindi streams found in embed');
+          return null;
+        } catch (error) {
+          console.warn('❌ Hindi embed bypass failed:', error.message);
+          return null;
+        }
+      }
+    },
+
+    // Provider: Nuvio Streams | Elfhosted (Stremio Addon - High-quality streaming links)
+    // Description: Stremio addon for high-quality streaming links.
+    // Manifest: https://nuviostreams.hayd.uk/manifest.json
+    nuviostreams: {
+      name: 'Nuvio Streams | Elfhosted',
+      priority: 1,
+      async getStream(tmdbId, mediaType = 'movie', season = null, episode = null, imdbId = null) {
+        try {
+          // Build the Stremio addon stream URL
+          let streamUrl;
+          if (mediaType === 'tv' && season && episode) {
+            streamUrl = `https://nuviostreams.hayd.uk/stream/series/tmdb:${tmdbId}:${season}:${episode}.json`;
+          } else {
+            streamUrl = `https://nuviostreams.hayd.uk/stream/movie/tmdb:${tmdbId}.json`;
+          }
+
+          console.log('🎬 Nuvio Streams: requesting streams from:', streamUrl);
+
+          // Use CORS proxy to bypass restrictions
+          const corsProxy = 'https://api.allorigins.win/raw?url=';
+          const proxiedUrl = corsProxy + encodeURIComponent(streamUrl);
+
+          // Fetch streams from the addon
+          const response = await fetch(proxiedUrl);
+          if (!response.ok) {
+            console.warn('⚠️ Nuvio Streams: API request failed:', response.status);
+            return { success: false, error: `API returned ${response.status}` };
+          }
+
+          const data = await response.json();
+          console.log('🎬 Nuvio Streams: received streams:', data.streams?.length || 0);
+
+          if (!data.streams || data.streams.length === 0) {
+            console.warn('⚠️ Nuvio Streams: no streams available');
+            return { success: false, error: 'No streams available' };
+          }
+
+          // Find the best quality stream (prefer direct streams over external players)
+          let bestStream = null;
+          let bestPriority = -1;
+
+          for (const stream of data.streams) {
+            // Skip non-web-ready streams
+            if (stream.behaviorHints && stream.behaviorHints.notWebReady) continue;
+
+            let priority = 0;
+
+            // Prioritize based on stream properties
+            if (stream.url.includes('.m3u8')) priority += 10; // HLS preferred
+            if (stream.url.includes('.mp4')) priority += 8; // MP4 next
+            if (!stream.externalUrl) priority += 5; // Direct streams preferred
+            if (stream.quality) {
+              const qualityNum = parseInt(stream.quality) || 0;
+              priority += Math.min(qualityNum / 100, 4); // Quality bonus
+            }
+
+            if (priority > bestPriority) {
+              bestPriority = priority;
+              bestStream = stream;
+            }
+          }
+
+          if (!bestStream) {
+            console.warn('⚠️ Nuvio Streams: no suitable stream found');
+            return { success: false, error: 'No suitable stream found' };
+          }
+
+          console.log('🎬 Nuvio Streams: selected stream:', bestStream.title || 'Unknown', bestStream.quality || 'auto');
+
+          // Determine stream type
+          let streamType = 'iframe';
+          if (bestStream.url.includes('.m3u8')) {
+            streamType = 'hls';
+          } else if (bestStream.url.includes('.mp4')) {
+            streamType = 'mp4';
+          } else if (bestStream.externalUrl) {
+            streamType = 'iframe'; // External players are iframes
+          }
+
+          // For direct streams, use proxy if needed
+          let finalUrl = bestStream.url;
+          if (streamType === 'hls') {
+            finalUrl = `/api/hls-proxy?type=manifest&url=${encodeURIComponent(bestStream.url)}&referer=https://nuviostreams.hayd.uk`;
+          } else if (streamType === 'mp4') {
+            finalUrl = `/api/proxy/video?url=${encodeURIComponent(bestStream.url)}&provider=nuviostreams`;
+          }
+
+          return {
+            success: true,
+            provider: 'Nuvio Streams | Elfhosted',
+            url: finalUrl,
+            type: streamType,
+            quality: bestStream.quality || 'HD',
+            features: ['High Quality', 'Direct Streams', 'Multi-Language', 'Ad-free'],
+            addon: 'nuviostreams',
+            languages: ['English', 'Hindi', 'Multi-Audio'],
+            title: bestStream.title,
+            subtitles: bestStream.subtitles || []
+          };
+
+        } catch (error) {
+          console.warn('⚠️ Nuvio Streams error:', error.message);
+          return { success: false, error: error.message };
         }
       }
     },

@@ -28,6 +28,12 @@ class ContinueWatchingDisplay {
         <i class="fas fa-play-circle" style="margin-right: 8px; color: #e50914;"></i>
         Continue Watching
       </h2>
+      <button class="continue-scroll-btn continue-scroll-left" aria-label="Scroll left">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <button class="continue-scroll-btn continue-scroll-right" aria-label="Scroll right">
+        <i class="fas fa-chevron-right"></i>
+      </button>
       <div class="continue-watching-container" id="continueWatchingContainer">
         <div class="loading-placeholder">Loading movies...</div>
       </div>
@@ -37,6 +43,38 @@ class ContinueWatchingDisplay {
     setTimeout(() => {
       this.loadMovieCards(section.querySelector('#continueWatchingContainer'), continueWatchingMovies);
     }, 0);
+
+    // Wire scroll arrows
+    const container = section.querySelector('#continueWatchingContainer');
+    const leftBtn = section.querySelector('.continue-scroll-left');
+    const rightBtn = section.querySelector('.continue-scroll-right');
+
+    const updateButtons = () => {
+      if (!container) return;
+      const canScroll = container.scrollWidth > container.clientWidth + 2;
+      if (!canScroll) {
+        leftBtn?.classList.remove('visible');
+        rightBtn?.classList.remove('visible');
+        return;
+      }
+      leftBtn?.classList.add('visible');
+      rightBtn?.classList.add('visible');
+      leftBtn?.classList.toggle('disabled', container.scrollLeft <= 0);
+      rightBtn?.classList.toggle('disabled', container.scrollLeft + container.clientWidth >= container.scrollWidth - 1);
+    };
+
+    const scrollByAmount = () => Math.max(280, Math.floor(container.clientWidth * 0.8));
+
+    leftBtn?.addEventListener('click', () => {
+      container.scrollBy({ left: -scrollByAmount(), behavior: 'smooth' });
+    });
+    rightBtn?.addEventListener('click', () => {
+      container.scrollBy({ left: scrollByAmount(), behavior: 'smooth' });
+    });
+
+    container?.addEventListener('scroll', updateButtons, { passive: true });
+    window.addEventListener('resize', updateButtons);
+    setTimeout(updateButtons, 50);
     
     return section;
   }
@@ -85,7 +123,7 @@ class ContinueWatchingDisplay {
           <div class="thumbnail-loading">
             <div class="spinner-small"></div>
           </div>
-          <img class="thumbnail-image" alt="${title}" style="display: none;" />
+          <img class="thumbnail-image" alt="${title}" style="display: none; object-fit: cover !important; object-position: center center !important;" />
         </div>
         <div class="progress-bar">
           <div class="progress" style="width: ${progress}%"></div>
@@ -107,7 +145,6 @@ class ContinueWatchingDisplay {
         <p class="last-watched">Last watched: ${movie.lastWatched || 'Recently'}</p>
       </div>
     `;
-    
     // Load thumbnail
     await this.loadThumbnail(card, movie);
     
@@ -130,25 +167,43 @@ class ContinueWatchingDisplay {
     
     let imageLoaded = false;
     
-    // Try each URL until one works
-    for (const url of thumbnailUrls) {
-      if (imageLoaded) break;
-      
-      try {
-        const validUrl = await this.validateAndLoadImage(url);
-        if (validUrl) {
-          thumbnailImage.src = validUrl;
-          thumbnailImage.style.display = 'block';
-          loadingIndicator.style.display = 'none';
-          imageLoaded = true;
-          
-          // Cache successful URL
-          this.imageCache.set(movie.movieId, validUrl);
-          console.log('Thumbnail loaded successfully:', validUrl);
+    // Check if posterUrl is TMDB - use directly without CORS validation
+    if (movie.posterUrl && movie.posterUrl.includes('image.tmdb.org')) {
+      // Convert to w300 size for better loading
+      const tmdbUrl = movie.posterUrl.replace('/original/', '/w300/');
+      console.log('Using TMDB poster directly:', tmdbUrl);
+      thumbnailImage.src = tmdbUrl;
+      thumbnailImage.crossOrigin = '';
+      thumbnailImage.style.display = 'block';
+      thumbnailImage.style.setProperty('object-fit', 'cover', 'important');
+      thumbnailImage.style.setProperty('object-position', 'center center', 'important');
+      loadingIndicator.style.display = 'none';
+      imageLoaded = true;
+      // Cache successful URL
+      this.imageCache.set(movie.movieId, tmdbUrl);
+    } else {
+      // Try each URL until one works
+      for (const url of thumbnailUrls) {
+        if (imageLoaded) break;
+        
+        try {
+          const validUrl = await this.validateAndLoadImage(url);
+          if (validUrl) {
+            thumbnailImage.src = validUrl;
+            thumbnailImage.style.display = 'block';
+            thumbnailImage.style.setProperty('object-fit', 'cover', 'important');
+            thumbnailImage.style.setProperty('object-position', 'center center', 'important');
+            loadingIndicator.style.display = 'none';
+            imageLoaded = true;
+            
+            // Cache successful URL
+            this.imageCache.set(movie.movieId, validUrl);
+            console.log('Thumbnail loaded successfully:', validUrl);
+          }
+        } catch (error) {
+          console.warn('Failed to load thumbnail:', url, error);
+          continue;
         }
-      } catch (error) {
-        console.warn('Failed to load thumbnail:', url, error);
-        continue;
       }
     }
     
@@ -280,6 +335,8 @@ class ContinueWatchingDisplay {
     loadingIndicator.style.display = 'none';
     thumbnailImage.src = this.generatePlaceholderUrl(title);
     thumbnailImage.style.display = 'block';
+    thumbnailImage.style.setProperty('object-fit', 'cover', 'important');
+    thumbnailImage.style.setProperty('object-position', 'center center', 'important');
     thumbnailImage.classList.add('fallback-image');
   }
 
@@ -328,8 +385,9 @@ class ContinueWatchingDisplay {
 
     // Use the player that was used when watching this specific movie
     // Default to player1 if playerUsed field is missing
-    const playerUsed = movie.playerUsed || 'player1';
-    const playerBase = playerUsed === 'player2' ? 'player-2.nontongo.html' : 'player.html';
+    const playerUsed = (movie.playerUsed || 'player1').toLowerCase();
+    const usePlayer2 = playerUsed === 'player2' || playerUsed === 'player-2.nontongo.html' || playerUsed === 'player-2.html';
+    const playerBase = usePlayer2 ? 'player-2.html' : 'player.html';
     console.log('🎮 Resuming in player:', playerBase, '(playerUsed field:', playerUsed, ')');
 
     // Build resume URL
@@ -351,33 +409,52 @@ class ContinueWatchingDisplay {
    * Build resume URL with proper video source
    */
   buildResumeUrl(movie, params, playerBase = 'player.html') {
-    // Check for available video sources (you'll need to adapt this to your video source logic)
     const movieId = movie.movieId;
     const title = movie.title.toLowerCase();
+    const isPlayer2Target = playerBase.includes('player-2.html');
+
+    // Stream 2 expects movie metadata only and resolves stream internally.
+    if (isPlayer2Target) {
+      window.location.href = `${playerBase}?${params.toString()}`;
+      return;
+    }
     
-    // Check MP4 overrides (adapt to your mp4Overrides object)
+    // For iframe embeds (playerUsed indicates iframe/embed player)
+    if (movie.playerUsed === 'player1' || !movie.playerUsed) {
+      // Construct the iframe source URL (Videasy, etc.)
+      // Check if we have a saved source or construct from TMDB ID
+      const iframeSrc = movie.src || `https://player.videasy.net/movie/${movieId}`;
+      
+      params.append('type', 'iframe');
+      params.append('src', iframeSrc);
+      
+      console.log('🔗 Resume iframe embed:', iframeSrc);
+      window.location.href = `${playerBase}?${params.toString()}`;
+      return;
+    }
+    
+    // Check MP4 overrides
     if (window.mp4Overrides && window.mp4Overrides[title]) {
       params.append('type', 'mp4');
       params.append('src', window.mp4Overrides[title]);
-      return `${playerBase}?${params.toString()}`;
+      window.location.href = `${playerBase}?${params.toString()}`;
+      return;
     }
     
-    // Check Drive mappings (adapt to your driveMovieMappings object)
+    // Check Drive mappings
     if (window.driveMovieMappings && window.driveMovieMappings[movieId]) {
       params.append('type', 'drive');
       params.append('id', window.driveMovieMappings[movieId]);
-      return `${playerBase}?${params.toString()}`;
+      window.location.href = `${playerBase}?${params.toString()}`;
+      return;
     }
     
-    // ...existing code...
-    
-    // Ensure resolveStreamUrlForMovie is available
+    // Try to resolve stream dynamically
     if (typeof window.resolveStreamUrlForMovie === 'function') {
       window.resolveStreamUrlForMovie(movie)
         .then(result => {
           if (result && result.src) {
             console.log('✅ Stream resolved for resume:', result.src.substring(0, 100) + '...');
-            // Build new params with resolved stream
             const newParams = new URLSearchParams();
             newParams.append('movieId', movie.movieId);
             newParams.append('id', movie.movieId);
@@ -387,29 +464,30 @@ class ContinueWatchingDisplay {
             newParams.append('type', result.type || 'hls');
             newParams.append('src', result.src);
             if (result.key) newParams.append('key', result.key);
-            if (result.language) newParams.append('language', result.language);
-            if (result.availableLanguages) newParams.append('availableLanguages', JSON.stringify(result.availableLanguages));
-            if (result.languageInfo) newParams.append('languageInfo', JSON.stringify(result.languageInfo));
             
             console.log('🔗 Redirecting to player with stream parameters');
             window.location.href = `${playerBase}?${newParams.toString()}`;
           } else {
-            console.error('❌ No stream found in resolution result');
-            this.showToast('error', 'Stream Not Found', 'Unable to resolve video stream for this movie.');
+            console.error('❌ No stream found, falling back to iframe');
+            // Fallback to iframe
+            params.append('type', 'iframe');
+            params.append('src', `https://player.videasy.net/movie/${movieId}`);
+            window.location.href = `${playerBase}?${params.toString()}`;
           }
         })
         .catch(error => {
-          console.error('❌ Error resolving stream for resume:', error);
-          this.showToast('error', 'Stream Error', 'Failed to load the video stream. Error: ' + error.message);
+          console.error('❌ Error resolving stream:', error);
+          // Fallback to iframe
+          params.append('type', 'iframe');
+          params.append('src', `https://player.videasy.net/movie/${movieId}`);
+          window.location.href = `${playerBase}?${params.toString()}`;
         });
-      
-      return null; // Async redirect handled above
     } else {
-      // Fallback: Function not available, redirect with IMDB ID and let player handle it
-      console.warn('⚠️ resolveStreamUrlForMovie not available, using fallback');
-      params.append('type', 'hls');
-      params.append('imdbId', movie.imdbId || '');
-      return `${playerBase}?${params.toString()}`;
+      // Fallback: redirect with iframe source
+      console.warn('⚠️ resolveStreamUrlForMovie not available, using iframe fallback');
+      params.append('type', 'iframe');
+      params.append('src', `https://player.videasy.net/movie/${movieId}`);
+      window.location.href = `${playerBase}?${params.toString()}`;
     }
   }
 
@@ -418,8 +496,18 @@ class ContinueWatchingDisplay {
    */
   async removeMovie(movie, cardElement) {
     const title = movie.title || 'this movie';
-    
-    if (confirm(`Remove "${title}" from Continue Watching?`)) {
+
+    const confirmed = typeof window.showConfirmModal === 'function'
+      ? await window.showConfirmModal({
+        title: 'Remove from Continue Watching?',
+        message: `Remove "${title}" from Continue Watching?`,
+        confirmText: 'Remove',
+        cancelText: 'Cancel',
+        iconClass: 'fa-solid fa-trash-can'
+      })
+      : confirm(`Remove "${title}" from Continue Watching?`);
+
+    if (confirmed) {
       try {
         // Remove from Firebase Cloud (primary storage)
         if (window.ContinueWatchingManager) {
@@ -472,6 +560,16 @@ class ContinueWatchingDisplay {
         allProgress = window.FirebaseSync.cache['continueWatching'];
       } else if (window.ContinueWatchingManager) {
         allProgress = window.ContinueWatchingManager.getAllProgress();
+      }
+      
+      // Also check localStorage for iframe-saved progress (local testing)
+      try {
+        const localData = JSON.parse(localStorage.getItem('continueWatching_local') || '{}');
+        // Merge localStorage data with Firebase data
+        allProgress = { ...allProgress, ...localData };
+        console.log('[ContinueWatchingDisplay] Merged localStorage data:', Object.keys(localData).length, 'items');
+      } catch (e) {
+        console.warn('[ContinueWatchingDisplay] Error reading localStorage:', e);
       }
       
       const movies = [];
@@ -556,3 +654,5 @@ class ContinueWatchingDisplay {
 
 // Create global instance
 window.ContinueWatchingDisplay = new ContinueWatchingDisplay();
+
+

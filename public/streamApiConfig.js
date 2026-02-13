@@ -2,8 +2,8 @@
 // Configure your Stream API endpoint here
 // Consumet API - Official public instance
 window.CONSUMET_API = 'https://api.consumet.org';
-// 8Stream API (primary ad-free backend) - Fresh deployment
-window.STREAM_API = 'https://8stream-api-pi.vercel.app/api/v1';
+// Stream API (primary ad-free backend) - updated to user-provided endpoint
+window.STREAM_API = 'https://convinced-nara-personal122-7da52759.koyeb.app/api/v1';
 window.TWOEMBED_API = ''; // e.g. https://api.2embed.cc/movie  (set to use the 2embed API)
 console.log('✓ Consumet API configured:', window.CONSUMET_API);
 console.log('✓ Stream API configured:', window.STREAM_API);

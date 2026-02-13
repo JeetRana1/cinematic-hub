@@ -10,9 +10,12 @@ export default async function handler(req, res) {
     return res.status(400).json({ success: false, message: 'Missing file or key' });
   }
 
+  // Allow overriding via environment variable STREAM_API
+  const API_BASE = process.env.STREAM_API || 'https://convinced-nara-personal122-7da52759.koyeb.app/api/v1';
+
   try {
     const response = await fetch(
-      'https://8-stream-api.vercel.app/api/v1/getStream',
+      `${API_BASE}/getStream`,
       {
         method: 'POST',
         headers: {

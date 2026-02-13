@@ -298,46 +298,38 @@
     .movie-card {
       position: relative;
       cursor: pointer;
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-        box-shadow 0.3s ease;
-      border-color: rgba(107, 102, 255, 0.4);
-      overflow: visible;
-      background: transparent;
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s ease, border-color 0.28s ease;
+      overflow: hidden;
+      background: rgba(10, 12, 18, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       display: flex;
       flex-direction: column;
-      opacity: 1;
       isolation: isolate;
-      /* keep pseudo-elements behind */
-      border-radius: 12px 12px 0 0;
+      border-radius: 14px;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
     }
 
     .movie-card::before {
       content: '';
       position: absolute;
       inset: 0;
-      border-radius: 12px;
-      padding: 2px;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
+      border-radius: inherit;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 28%);
+      opacity: 0;
+      transition: opacity 0.28s ease;
       pointer-events: none;
-      transition: background 0.3s ease;
       z-index: 0;
     }
 
     .movie-card:hover {
-      transform: translateY(-12px);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5),
-        0 0 0 1px rgba(255, 255, 255, 0.1);
+      transform: translateY(-8px);
+      box-shadow: 0 20px 38px rgba(0, 0, 0, 0.45);
+      border-color: rgba(255, 255, 255, 0.2);
       z-index: 10;
-      border-radius: 12px 12px 0 0;
     }
 
     .movie-card:hover::before {
-      background: linear-gradient(135deg, rgba(167, 139, 250, 0.4), rgba(251, 113, 133, 0.4));
-      border-radius: 12px 12px 0 0;
+      opacity: 1;
     }
 
     .poster {
@@ -345,62 +337,98 @@
       height: 260px;
       position: relative;
       overflow: hidden;
-      border-radius: 12px 12px 0 0;
-      background: rgba(0, 0, 0, 0.3);
+      border-radius: 14px 14px 0 0;
+      background: rgba(0, 0, 0, 0.35);
       flex-shrink: 0;
+    }
+
+    .poster::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 42%;
+      background: linear-gradient(180deg, rgba(5, 7, 12, 0) 0%, rgba(5, 7, 12, 0.78) 100%);
+      pointer-events: none;
+      z-index: 1;
     }
 
     .poster img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1),
-        filter 0.3s ease;
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), filter 0.28s ease;
       display: block;
     }
 
     .movie-card:hover .poster img {
-      transform: scale(1.08);
-      filter: brightness(1.1);
+      transform: scale(1.06);
+      filter: brightness(1.05);
     }
 
     .movie-info {
-      padding: 0.65rem 0.75rem;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(10px);
-      border-radius: 0 0 12px 12px;
+      padding: 0.72rem 0.78rem 0.82rem;
+      background: rgba(8, 10, 16, 0.82);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 0 0 14px 14px;
       position: relative;
       z-index: 2;
       flex-shrink: 0;
-      height: 76px;
+      min-height: 86px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      overflow: hidden;
+      gap: 0.42rem;
     }
 
     .movie-title {
-      font-size: 0.85rem;
-      font-weight: 500;
-      margin-bottom: 0.3rem;
+      font-size: 0.86rem;
+      font-weight: 600;
+      margin: 0;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      line-height: 1.25;
-      max-height: 2.5em;
-      color: #ffffff;
+      line-height: 1.28;
+      color: rgba(255, 255, 255, 0.98);
       word-break: break-word;
       overflow-wrap: break-word;
     }
 
-    .movie-rating {
-      color: #ffd700;
-      font-size: 0.85rem;
+    .movie-meta-row {
       display: flex;
       align-items: center;
+      gap: 0.42rem;
+      flex-wrap: wrap;
+    }
+
+    .meta-chip {
+      display: inline-flex;
+      align-items: center;
       gap: 0.25rem;
+      padding: 0.2rem 0.45rem;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      line-height: 1;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .meta-chip.rating-chip {
+      color: #ffd45e;
+      border-color: rgba(255, 212, 94, 0.38);
+      background: rgba(255, 212, 94, 0.12);
+    }
+
+    .meta-chip.type-chip {
+      color: rgba(255, 255, 255, 0.88);
+      border-color: rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.08);
     }
 
     .play-icon {
@@ -466,8 +494,8 @@
       position: absolute;
       top: 12px;
       right: 12px;
-      width: 36px;
-      height: 36px;
+      width: 34px;
+      height: 34px;
       background: rgba(220, 38, 38, 0.95);
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 50%;
@@ -563,13 +591,13 @@
       }
 
       .movie-info {
-        padding: 0.55rem 0.6rem;
-        height: 72px;
+        min-height: 80px;
+        padding: 0.62rem 0.62rem 0.72rem;
       }
 
       .movie-title {
         font-size: 0.8rem;
-        line-height: 1.2;
+        line-height: 1.22;
       }
     }
 
@@ -589,8 +617,8 @@
       }
 
       .movie-info {
-        height: 68px;
-        padding: 0.5rem 0.55rem;
+        min-height: 74px;
+        padding: 0.52rem 0.56rem 0.64rem;
       }
 
       .movie-title {
@@ -613,7 +641,7 @@
       }
 
       .movie-info {
-        height: 66px;
+        min-height: 72px;
         padding: 0.5rem;
       }
 
@@ -1078,6 +1106,10 @@
       bookmarks.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
       bookmarks.forEach(movie => {
+        const mediaType = (movie.mediaType || movie.type || '').toString().toLowerCase();
+        const mediaLabel = mediaType === 'tv' || mediaType === 'series' ? 'TV' : 'Movie';
+        const ratingText = movie.rating ? Number(movie.rating).toFixed(1) : 'N/A';
+        const yearText = movie.year ? String(movie.year) : '';
         const movieCard = document.createElement('div');
         movieCard.className = 'movie-card';
         movieCard.innerHTML = `
@@ -1090,8 +1122,12 @@
             <div class="play-icon"></div>
           </div>
           <div class="movie-info">
-            <h3 class="movie-title">${movie.title} (${movie.year || ''})</h3>
-            <p class="movie-rating">⭐ ${movie.rating ? movie.rating.toFixed(1) : 'N/A'}</p>
+            <h3 class="movie-title">${movie.title}</h3>
+            <div class="movie-meta-row">
+              ${yearText ? `<span class="meta-chip">${yearText}</span>` : ''}
+              <span class="meta-chip rating-chip"><i class="fas fa-star"></i> ${ratingText}</span>
+              <span class="meta-chip type-chip">${mediaLabel}</span>
+            </div>
           </div>
         `;
 

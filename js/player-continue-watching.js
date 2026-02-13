@@ -5,14 +5,25 @@
 (function () {
   'use strict';
   
-  // Skip if using iframe embed
-  const urlParams = new URLSearchParams(window.location.search);
-  const type = urlParams.get('type') || '';
-  const sourceType = urlParams.get('source') || '';
-  if (String(type).toLowerCase() === 'iframe' || String(sourceType).toLowerCase() === 'iframe') {
-    console.log('[Resume] Skipping continue watching for iframe embed');
-    return;
-  }
+  // Check if this is an iframe embed - we'll handle it with session-based tracking
+  // Delay to allow player.html to create iframe if needed
+  setTimeout(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const type = urlParams.get('type') || '';
+    const sourceType = urlParams.get('source') || '';
+    const hasIframeElement = document.getElementById('stream-iframe') !== null;
+    const isIframeEmbed = String(type).toLowerCase() === 'iframe' || 
+                          String(sourceType).toLowerCase() === 'iframe' ||
+                          hasIframeElement;
+    
+    if (isIframeEmbed) {
+      console.log('[Resume] Iframe embed detected - using session-based progress tracking');
+      initializeIframeProgressTracking();
+    } else {
+      // Not an iframe, run the video-based tracking
+      initializePlayerContinueWatching();
+    }
+  }, 1000); // 1 second delay to let player.html initialize
   
   // --- Custom Pause Overlay Logic ---
   document.addEventListener('DOMContentLoaded', function () {
@@ -91,13 +102,8 @@
   // Module-level state to be shared between functions
   let resumePromptShown = false;
 
-  // Wait for DOM to be ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializePlayerContinueWatching);
-  } else {
-    initializePlayerContinueWatching();
-  }
-
+  // Skip the old initialization - now handled by delayed check at top of file
+  // The setTimeout at line 10 handles both iframe and video detection
 
   function initializePlayerContinueWatching() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -1202,5 +1208,347 @@
     }
   `;
   document.head.appendChild(style);
+
+  // ========== IFRAME PROGRESS TRACKING ==========
+  // For iframe embeds, we can't access the video element inside due to cross-origin restrictions.
+  // Instead, we track session time as an approximation of watch progress.
+  
+  function initializeIframeProgressTracking() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const movieId = urlParams.get('movieId') || urlParams.get('id');
+    const title = urlParams.get('title') || document.title || 'Unknown Movie';
+    const poster = urlParams.get('poster') || extractThumbnailFromPage();
+    
+    if (!movieId) {
+      console.warn('[IframeResume] No movieId found, cannot track progress');
+      return;
+    }
+    
+    const movieData = {
+      movieId: movieId,
+      title: title,
+      thumbnail: poster
+    };
+    
+    console.log('[IframeResume] Initializing iframe progress tracking for:', movieData);
+    
+    // Load any existing saved progress from ContinueWatchingManager or localStorage
+    let savedProgress = null;
+    let sessionStartTime = Date.now();
+    let accumulatedWatchTime = 0;
+    let lastSaveTime = Date.now();
+    let isActive = true;
+    
+    // Try to get existing progress from ContinueWatchingManager first
+    if (window.ContinueWatchingManager?.getMovieProgress) {
+      savedProgress = window.ContinueWatchingManager.getMovieProgress(movieId);
+    }
+    
+    // If not found, try localStorage (for local testing)
+    if (!savedProgress) {
+      try {
+        // Check the combined storage first
+        const localData = JSON.parse(localStorage.getItem('continueWatching_local') || '{}');
+        if (localData[movieId]) {
+          savedProgress = localData[movieId];
+          console.log('[IframeResume] Found progress in localStorage (combined):', savedProgress.currentTime);
+        } else {
+          // Try individual key
+          const individualData = localStorage.getItem(`continueWatching_${movieId}`);
+          if (individualData) {
+            savedProgress = JSON.parse(individualData);
+            console.log('[IframeResume] Found progress in localStorage (individual):', savedProgress.currentTime);
+          }
+        }
+      } catch (e) {
+        console.warn('[IframeResume] Error reading localStorage:', e);
+      }
+    }
+    
+    if (savedProgress?.currentTime > 0) {
+      accumulatedWatchTime = savedProgress.currentTime;
+      console.log('[IframeResume] Loaded existing progress:', accumulatedWatchTime, 'seconds');
+      
+      // Show resume prompt if we have meaningful progress (> 10 seconds)
+      if (accumulatedWatchTime > 10) {
+        showIframeResumePrompt(accumulatedWatchTime, movieData);
+      }
+    }
+    
+    // Track active watching time (only when page is visible and active)
+    const trackWatchTime = () => {
+      if (!isActive) return;
+      
+      const now = Date.now();
+      const delta = (now - sessionStartTime) / 1000; // Convert to seconds
+      
+      // Only count time if page is visible and has been > 1 second (avoid rapid increments)
+      if (delta >= 1 && !document.hidden) {
+        accumulatedWatchTime += delta;
+        sessionStartTime = now;
+        
+        // Save progress every 10 seconds of watch time
+        if (now - lastSaveTime > 10000) {
+          saveIframeProgress(movieData, accumulatedWatchTime);
+          lastSaveTime = now;
+        }
+      } else {
+        // Reset session start time if not counting (avoids jump when resuming)
+        sessionStartTime = now;
+      }
+    };
+    
+    // Update tracking every second
+    const trackingInterval = setInterval(trackWatchTime, 1000);
+    
+    // Handle visibility changes (pause tracking when tab is hidden)
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        console.log('[IframeResume] Page hidden, pausing tracking at:', accumulatedWatchTime);
+        saveIframeProgress(movieData, accumulatedWatchTime);
+      } else {
+        console.log('[IframeResume] Page visible, resuming tracking');
+        sessionStartTime = Date.now();
+      }
+    });
+    
+    // Save progress when leaving the page
+    window.addEventListener('beforeunload', () => {
+      saveIframeProgress(movieData, accumulatedWatchTime);
+    });
+    
+    // Also save on page hide (for mobile)
+    window.addEventListener('pagehide', () => {
+      saveIframeProgress(movieData, accumulatedWatchTime);
+    });
+    
+    // Expose function to manually save progress (for external calls)
+    window.saveIframeWatchProgress = () => {
+      saveIframeProgress(movieData, accumulatedWatchTime);
+    };
+    
+    console.log('[IframeResume] Iframe progress tracking initialized');
+  }
+  
+  function saveIframeProgress(movieData, currentTime) {
+    if (!movieData?.movieId || currentTime < 0) return;
+    
+    // Must have at least 30 seconds watched to show in continue watching (matching display requirements)
+    if (currentTime < 30) return;
+    
+    // Estimate duration (iframe doesn't provide this, so we use a reasonable default)
+    // Most movies are ~90-120 minutes, shows ~40-60 minutes per episode
+    const estimatedDuration = currentTime > 3600 ? currentTime * 1.2 : 7200; // 2 hours default
+    
+    // Detect which player is being used
+    const currentLocation = (window.location.pathname + window.location.href).toLowerCase();
+    const isPlayer2 = currentLocation.includes('player-2');
+    
+    const progress = {
+      movieId: movieData.movieId,
+      title: movieData.title,
+      posterUrl: movieData.thumbnail || movieData.poster || '',
+      poster: movieData.thumbnail || movieData.poster || '',
+      thumbnail: movieData.thumbnail || movieData.poster || '',
+      currentTime: Math.floor(currentTime),
+      duration: Math.floor(estimatedDuration),
+      progress: Math.min(100, Math.round((currentTime / estimatedDuration) * 100)),
+      updatedAt: Date.now(),
+      validUntil: Date.now() + (7 * 24 * 60 * 60 * 1000), // 7 days
+      playerUsed: isPlayer2 ? 'player2' : 'player1',
+      source: 'iframe'
+    };
+    
+    console.log('[IframeResume] Saving progress:', progress);
+    
+    // Always save to localStorage for local testing
+    try {
+      const storageKey = 'continueWatching_local';
+      let localData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      localData[movieData.movieId] = progress;
+      localStorage.setItem(storageKey, JSON.stringify(localData));
+      console.log('[IframeResume] 💾 Saved to localStorage:', movieData.movieId, '-', currentTime, 'seconds');
+      
+      // Also save individual key for easy access
+      localStorage.setItem(`continueWatching_${movieData.movieId}`, JSON.stringify(progress));
+    } catch (localError) {
+      console.warn('[IframeResume] Failed to save to localStorage:', localError);
+    }
+    
+    // Save via ContinueWatchingManager if available (Firebase cloud)
+    if (window.ContinueWatchingManager?.saveMovieProgress) {
+      window.ContinueWatchingManager.saveMovieProgress(movieData.movieId, progress);
+      console.log('[IframeResume] ☁️ Saved progress via ContinueWatchingManager:', currentTime, 'seconds');
+    } else if (window.FirebaseSync?.saveContinueWatching) {
+      // Fallback to FirebaseSync
+      window.FirebaseSync.saveContinueWatching(movieData.movieId, progress);
+      console.log('[IframeResume] ☁️ Saved progress via FirebaseSync:', currentTime, 'seconds');
+    }
+    
+    // Also update the FirebaseSync cache immediately so homepage sees it
+    if (window.FirebaseSync?.cache) {
+      if (!window.FirebaseSync.cache['continueWatching']) {
+        window.FirebaseSync.cache['continueWatching'] = {};
+      }
+      window.FirebaseSync.cache['continueWatching'][movieData.movieId] = progress;
+      console.log('[IframeResume] Updated FirebaseSync cache');
+    }
+    
+    // Dispatch event for live updates
+    window.dispatchEvent(new CustomEvent('continueWatchingUpdated', {
+      detail: { movieId: movieData.movieId, progressData: progress }
+    }));
+  }
+  
+  function showIframeResumePrompt(resumeTime, movieData) {
+    // Don't show if already resumed this session
+    if (window.__iframeResumedThisSession) return;
+    
+    const formattedTime = formatTime(resumeTime);
+    const estimatedDuration = resumeTime > 3600 ? resumeTime * 1.2 : 7200;
+    const progressPercent = Math.min(100, Math.round((resumeTime / estimatedDuration) * 100));
+    
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'iframe-resume-prompt';
+    overlay.style.cssText = `
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      background: rgba(0, 0, 0, 0.9) !important;
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center !important;
+      z-index: 999999 !important;
+      backdrop-filter: blur(5px) !important;
+    `;
+    
+    const promptBox = document.createElement('div');
+    promptBox.style.cssText = `
+      background: rgba(20, 20, 20, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 450px;
+      width: 90%;
+      text-align: center;
+      color: white;
+      font-family: 'Netflix Sans', Arial, sans-serif;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    `;
+    
+    promptBox.innerHTML = `
+      <div style="margin-bottom: 1.5rem;">
+        <i class="fas fa-history" style="font-size: 3rem; color: #e50914; margin-bottom: 1rem;"></i>
+        <h2 style="margin: 0 0 0.5rem; font-size: 1.5rem; font-weight: 600;">Continue Watching?</h2>
+        <p style="margin: 0; color: rgba(255, 255, 255, 0.8); font-size: 1rem;">
+          "${movieData.title}"
+        </p>
+        <p style="margin: 0.5rem 0 0; color: rgba(255, 255, 255, 0.6); font-size: 0.85rem;">
+          (Approximate position - ${formattedTime})
+        </p>
+      </div>
+      
+      <div style="background: rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <span style="font-size: 0.9rem; color: rgba(255, 255, 255, 0.7);">Estimated Progress</span>
+          <span style="font-size: 0.9rem; font-weight: 500;">${progressPercent}%</span>
+        </div>
+        <div style="width: 100%; height: 4px; background: rgba(255, 255, 255, 0.2); border-radius: 2px; overflow: hidden;">
+          <div style="width: ${progressPercent}%; height: 100%; background: #e50914; transition: width 0.3s ease;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.85rem; color: rgba(255, 255, 255, 0.6);">
+          <span>${formattedTime}</span>
+          <span>~${formatTime(estimatedDuration)}</span>
+        </div>
+      </div>
+      
+      <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <button id="iframeResumeYes" style="
+          background: #e50914;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          padding: 0.75rem 1.5rem;
+          font-size: 0.95rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          min-width: 150px;
+        ">
+          <i class="fas fa-play"></i>
+          Resume from ${formattedTime}
+        </button>
+        <button id="iframeResumeNo" style="
+          background: rgba(255, 255, 255, 0.1);
+          color: white;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 6px;
+          padding: 0.75rem 1.5rem;
+          font-size: 0.95rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          min-width: 150px;
+        ">
+          <i class="fas fa-redo"></i>
+          Start Over
+        </button>
+      </div>
+    `;
+    
+    overlay.appendChild(promptBox);
+    
+    // Handle Resume button
+    const resumeYesBtn = promptBox.querySelector('#iframeResumeYes');
+    resumeYesBtn.addEventListener('click', () => {
+      window.__iframeResumedThisSession = true;
+      overlay.remove();
+      
+      // Try to seek in the iframe if possible (most iframe players don't support this, but we try)
+      const iframe = document.getElementById('stream-iframe');
+      if (iframe) {
+        try {
+          // Post message to iframe if it supports seeking
+          iframe.contentWindow.postMessage({
+            type: 'seek',
+            time: resumeTime
+          }, '*');
+          console.log('[IframeResume] Attempted to seek to:', resumeTime);
+        } catch (e) {
+          console.log('[IframeResume] Cannot seek in iframe (cross-origin)');
+        }
+      }
+      
+      showResumeConfirmation(`Resuming from approximately ${formattedTime}`);
+    });
+    
+    // Handle Start Over button
+    const resumeNoBtn = promptBox.querySelector('#iframeResumeNo');
+    resumeNoBtn.addEventListener('click', () => {
+      window.__iframeResumedThisSession = true;
+      overlay.remove();
+      
+      // Reset progress to 0
+      saveIframeProgress(movieData, 0);
+      
+      showResumeConfirmation('Starting from beginning');
+    });
+    
+    document.body.appendChild(overlay);
+    console.log('[IframeResume] Resume prompt shown for:', resumeTime, 'seconds');
+  }
+  
+  // ========== END IFRAME PROGRESS TRACKING ==========
 
 })();

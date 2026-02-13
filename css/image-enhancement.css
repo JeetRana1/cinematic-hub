@@ -1,0 +1,45 @@
+/* Image Quality Enhancement CSS - Simple and Effective */
+/* Based on the working example from your other site */
+
+/* Enhance all images for better quality */
+img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  shape-rendering: geometricPrecision;
+}
+
+/* Specifically for movie posters */
+.poster img,
+.movie-poster img,
+.continue-watching-poster img,
+.modal-poster img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  /* Apply subtle sharpening filter */
+  filter: contrast(105%) saturate(105%) brightness(102%);
+  -webkit-filter: contrast(105%) saturate(105%) brightness(102%);
+}
+
+/* Override any blurring effects that might be applied */
+.poster img,
+.movie-poster img,
+.continue-watching-poster img,
+.modal-poster img {
+  backdrop-filter: none !important;
+  filter: contrast(105%) saturate(105%) brightness(102%) !important;
+  -webkit-filter: contrast(105%) saturate(105%) brightness(102%) !important;
+}
+
+/* Enhanced quality for featured hero images */
+.featured-hero-bg,
+.modal-hero .hero-bg {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}

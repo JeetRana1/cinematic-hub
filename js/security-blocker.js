@@ -4,41 +4,41 @@
  * Protects against malicious ads and clickjacking
  */
 
-(function() {
+(function () {
   'use strict';
 
   console.log('🔒 Activating Streaming Player Security...');
 
   // 1. Block all window.open calls (popup blocker) - AGGRESSIVE
   const originalWindowOpen = window.open;
-  window.open = function(url, target, features) {
+  window.open = function (url, target, features) {
     console.warn('🚫 Popup blocked:', url);
     return {
       closed: false,
-      close: function() {},
-      focus: function() {},
-      blur: function() {},
+      close: function () { },
+      focus: function () { },
+      blur: function () { },
       location: { href: '' }
     };
   };
 
   // Block popunder attempts
-  window.blur = function() {};
-  window.focus = function() {};
+  window.blur = function () { };
+  window.focus = function () { };
 
   // 2. Block all navigation attempts (except internal)
   try {
     const originalLocationHref = Object.getOwnPropertyDescriptor(Location.prototype, 'href');
     if (originalLocationHref && originalLocationHref.set) {
       Object.defineProperty(Location.prototype, 'href', {
-        set: function(url) {
+        set: function (url) {
           if (url && !url.includes(window.location.hostname)) {
             console.warn('🚫 External navigation blocked:', url);
             return;
           }
           originalLocationHref.set.call(this, url);
         },
-        get: function() {
+        get: function () {
           return originalLocationHref.get.call(this);
         },
         configurable: true
@@ -52,7 +52,7 @@
   try {
     const originalReplace = window.location.replace;
     Object.defineProperty(window.location, 'replace', {
-      value: function(url) {
+      value: function (url) {
         if (url && !url.includes(window.location.hostname)) {
           console.warn('🚫 Location.replace blocked:', url);
           return;
@@ -70,7 +70,7 @@
   try {
     const originalAssign = window.location.assign;
     Object.defineProperty(window.location, 'assign', {
-      value: function(url) {
+      value: function (url) {
         if (url && !url.includes(window.location.hostname)) {
           console.warn('🚫 Location.assign blocked:', url);
           return;
@@ -87,27 +87,28 @@
   // 5. Block top.location changes
   try {
     Object.defineProperty(window, 'top', {
-      get: function() { return window; },
-      set: function() { console.warn('🚫 top.location change blocked'); }
+      get: function () { return window; },
+      set: function () { console.warn('🚫 top.location change blocked'); }
     });
-  } catch (e) {}
+  } catch (e) { }
 
   // 6. Block parent.location changes
   try {
     Object.defineProperty(window, 'parent', {
-      get: function() { return window; },
-      set: function() { console.warn('🚫 parent.location change blocked'); }
+      get: function () { return window; },
+      set: function () { console.warn('🚫 parent.location change blocked'); }
     });
-  } catch (e) {}
+  } catch (e) { }
 
   // 5. Sandbox iframes properly (except player embeds)
   const originalCreateElement = document.createElement;
-  document.createElement = function(tag) {
+  document.createElement = function (tag) {
     const element = originalCreateElement.call(document, tag);
-    
+
     if (tag.toLowerCase() === 'iframe') {
-      // On the player page, do NOT sandbox embeds (otherwise providers break)
-      if (window.location.pathname.toLowerCase().includes('player.html')) {
+      // On the player pages, do NOT sandbox embeds (otherwise providers break)
+      const pathname = window.location.pathname.toLowerCase();
+      if (pathname.includes('player.html') || pathname.includes('player-2.html')) {
         return element;
       }
 
@@ -117,27 +118,27 @@
         console.log('🎬 Video iframe - no sandbox restrictions');
         return element;
       }
-      
+
       // Add sandbox restrictions to other iframes (valid flags only)
       element.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-forms allow-presentation allow-popups allow-pointer-lock allow-modals allow-top-navigation-by-user-activation');
       element.setAttribute('referrerpolicy', 'no-referrer');
       console.log('🔒 Iframe sandboxed:', element.id || '(no id)');
     }
-    
+
     return element;
   };
 
   // 6. Block all link clicks to external sites (but NOT iframe clicks)
-  document.addEventListener('click', function(e) {
+  document.addEventListener('click', function (e) {
     const target = e.target.closest('a');
     if (target && target.href && e.target.tagName !== 'IFRAME') {
       const href = target.href;
-      
+
       // Allow internal links only
       if (href.includes(window.location.hostname) || href.startsWith('#') || href.startsWith('javascript:')) {
         return;
       }
-      
+
       // Block external navigation
       console.warn('🚫 External link click blocked:', href);
       e.preventDefault();
@@ -146,10 +147,10 @@
   }, true);
 
   // 7. Block all form submissions to external domains
-  document.addEventListener('submit', function(e) {
+  document.addEventListener('submit', function (e) {
     const form = e.target;
     const action = form.action;
-    
+
     if (action && !action.includes(window.location.hostname)) {
       console.warn('🚫 External form submission blocked:', action);
       e.preventDefault();
@@ -158,7 +159,7 @@
   }, true);
 
   // 8. Block unload/beforeunload from iframes
-  window.addEventListener('beforeunload', function(e) {
+  window.addEventListener('beforeunload', function (e) {
     // Allow normal navigation, just log it
     console.log('⚠️ Page unload detected');
   });
@@ -175,7 +176,7 @@
 
   // 10. Block XHR requests to suspicious domains
   const originalXHROpen = XMLHttpRequest.prototype.open;
-  XMLHttpRequest.prototype.open = function(method, url) {
+  XMLHttpRequest.prototype.open = function (method, url) {
     // Only log, don't block - some APIs are needed
     if (typeof url === 'string' && url.includes('http')) {
       console.log('📡 XHR request:', method, url.substring(0, 80));
@@ -185,7 +186,7 @@
 
   // 11. Block document.write (often used for ads/redirects)
   const originalDocumentWrite = document.write;
-  document.write = function(content) {
+  document.write = function (content) {
     if (content.includes('window.location') || content.includes('top.location')) {
       console.warn('🚫 Redirect attempt via document.write blocked');
       return;
@@ -194,7 +195,7 @@
   };
 
   // 12. Monitor iframe messages to prevent postMessage exploits
-  window.addEventListener('message', function(event) {
+  window.addEventListener('message', function (event) {
     // Only log, iframes might need to communicate
     if (event.data && typeof event.data === 'string' && event.data.includes('location')) {
       console.warn('⚠️ Suspicious iframe message:', event.data.substring(0, 80));
@@ -203,7 +204,7 @@
 
   // 13. Block any attempt to change the current URL via JavaScript
   const handler = {
-    apply: function(target, thisArg, args) {
+    apply: function (target, thisArg, args) {
       const url = args[0];
       if (typeof url === 'string' && !url.includes(window.location.hostname)) {
         console.warn('🚫 Navigation attempt blocked:', url);
@@ -216,7 +217,7 @@
   // 14. Disable navigation from iframes
   const iframeElements = document.querySelectorAll('iframe');
   iframeElements.forEach(iframe => {
-    iframe.addEventListener('load', function() {
+    iframe.addEventListener('load', function () {
       try {
         // Try to prevent iframe navigation
         const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
@@ -238,7 +239,7 @@
     });
 
     // Disable right-click context menu in iframes (blocks some redirect menus)
-    iframe.addEventListener('contextmenu', function(e) {
+    iframe.addEventListener('contextmenu', function (e) {
       // Allow, but log it
       console.log('📋 Context menu triggered in iframe');
     });

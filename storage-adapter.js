@@ -50,6 +50,25 @@
 
     console.log('=== DEBUG: loadContinueWatching() called ===');
     try {
+      const formatTime = (seconds) => {
+        const safeSeconds = Math.max(0, Math.floor(Number(seconds) || 0));
+        const h = Math.floor(safeSeconds / 3600);
+        const m = Math.floor((safeSeconds % 3600) / 60);
+        const s = safeSeconds % 60;
+        if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        return `${m}:${String(s).padStart(2, '0')}`;
+      };
+
+      const formatLastWatched = (timestamp) => {
+        const ts = Number(timestamp) || 0;
+        if (!ts) return 'Recently';
+        try {
+          return new Date(ts).toLocaleDateString();
+        } catch (_) {
+          return 'Recently';
+        }
+      };
+
       // Get data from Firebase Sync when available, otherwise fall back to local only
       let continueWatching = {};
       if (window.FirebaseSync && window.FirebaseSync.initialized && typeof window.FirebaseSync.getContinueWatching === 'function') {
@@ -254,6 +273,49 @@
         return;
       }
 
+      const clearBtn = document.getElementById('cwClearAll');
+      if (clearBtn && !clearBtn.dataset.bound) {
+        clearBtn.dataset.bound = '1';
+        clearBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          try {
+            clearBtn.disabled = true;
+            clearBtn.style.opacity = '0.6';
+
+            let cleared = false;
+            if (window.FirebaseSync && typeof window.FirebaseSync.clearContinueWatching === 'function') {
+              cleared = await window.FirebaseSync.clearContinueWatching();
+            }
+
+            // Also clear local fallback caches on this device.
+            const localKeys = ['continueWatching', 'continueWatching_guest', 'continueWatching_local'];
+            try {
+              const user = (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function')
+                ? window.FirebaseAuth.getUser()
+                : null;
+              const uid = user && user.uid;
+              if (uid) {
+                localKeys.push(`continueWatching_${uid}`);
+                const selectedProfile = localStorage.getItem(`fb_selected_profile_${uid}`);
+                if (selectedProfile) localKeys.push(`continueWatching_${uid}_${selectedProfile}`);
+              }
+            } catch (_) {}
+            localKeys.forEach((k) => localStorage.removeItem(k));
+
+            if (!cleared) {
+              console.warn('Cloud clear failed or unavailable; local cache cleared only');
+            }
+            await window.loadContinueWatching(true);
+          } catch (err) {
+            console.error('Failed to clear continue watching:', err);
+          } finally {
+            clearBtn.disabled = false;
+            clearBtn.style.opacity = '';
+          }
+        });
+      }
+
       if (validMovies.length === 0) {
         section.style.display = 'none';
         return;
@@ -282,10 +344,16 @@
         }
         
         const progressPercent = Math.round(movie.progress || 0);
+        const watchedTime = formatTime(movie.currentTime || 0);
+        const remainingSeconds = Math.max(0, (Number(movie.duration) || 0) - (Number(movie.currentTime) || 0));
+        const remainingTime = formatTime(remainingSeconds);
+        const lastWatched = formatLastWatched(movie.timestamp);
+        const movieId = String(movie.movieId || movie.id || '');
+        if (!movieId) return;
         
         const movieCard = document.createElement('div');
         movieCard.className = 'continue-watching-card';
-        movieCard.dataset.movieId = movie.id || movie.movieId;
+        movieCard.dataset.movieId = movieId;
         movieCard.innerHTML = `
           <div class="continue-watching-poster">
             <img src="${thumbnailUrl}" alt="${movie.title}" loading="lazy" />
@@ -302,13 +370,24 @@
           </div>
           <div class="continue-watching-info">
             <h3>${movie.title}</h3>
-            <p>${progressPercent}% watched</p>
+            <p>${watchedTime} watched • ${remainingTime} left</p>
+            <p>Last watched: ${lastWatched}</p>
           </div>
         `;
         
         // Add event listeners
         const resumeBtn = movieCard.querySelector('.resume-button');
         const removeBtn = movieCard.querySelector('.remove-button');
+        const resumeOverlay = movieCard.querySelector('.resume-overlay');
+        if (removeBtn) {
+          removeBtn.style.zIndex = '5';
+          removeBtn.style.pointerEvents = 'auto';
+        }
+        if (resumeOverlay) {
+          resumeOverlay.style.pointerEvents = 'none';
+          const resumeButtonInside = resumeOverlay.querySelector('.resume-button');
+          if (resumeButtonInside) resumeButtonInside.style.pointerEvents = 'auto';
+        }
         
         resumeBtn?.addEventListener('click', (e) => {
           e.preventDefault();
@@ -332,9 +411,43 @@
           e.stopPropagation();
           const movieId = movieCard.dataset.movieId;
           console.log('Removing from continue watching:', movieId);
-          if (window.ContinueWatchingManager) {
-            await window.ContinueWatchingManager.removeMovieProgress(movieId);
+          let removed = false;
+          if (window.ContinueWatchingManager && typeof window.ContinueWatchingManager.removeMovieProgress === 'function') {
+            try {
+              await window.ContinueWatchingManager.removeMovieProgress(movieId);
+              removed = true;
+            } catch (_) {}
           }
+          if (!removed && window.FirebaseSync && typeof window.FirebaseSync.removeContinueWatchingItem === 'function') {
+            try {
+              removed = await window.FirebaseSync.removeContinueWatchingItem(movieId);
+            } catch (_) {}
+          }
+
+          // Always clear local fallback entries for this movie on this device.
+          try {
+            const localKeys = ['continueWatching', 'continueWatching_guest', 'continueWatching_local'];
+            const user = (window.FirebaseAuth && typeof window.FirebaseAuth.getUser === 'function')
+              ? window.FirebaseAuth.getUser()
+              : null;
+            const uid = user && user.uid;
+            if (uid) {
+              localKeys.push(`continueWatching_${uid}`);
+              const selectedProfile = localStorage.getItem(`fb_selected_profile_${uid}`);
+              if (selectedProfile) localKeys.push(`continueWatching_${uid}_${selectedProfile}`);
+            }
+            localKeys.forEach((k) => {
+              const raw = localStorage.getItem(k);
+              if (!raw) return;
+              const parsed = JSON.parse(raw);
+              if (!parsed || typeof parsed !== 'object') return;
+              if (parsed[movieId]) {
+                delete parsed[movieId];
+                localStorage.setItem(k, JSON.stringify(parsed));
+              }
+            });
+          } catch (_) {}
+
           // Animate removal
           movieCard.style.transition = 'opacity 0.3s, transform 0.3s';
           movieCard.style.opacity = '0';

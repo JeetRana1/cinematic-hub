@@ -1279,6 +1279,9 @@
         const streamCache = new Map();
         let manifestRecoveryInProgress = false;
         let manifestRecoveryAttempts = 0;
+        let audioSwitchRequestId = 0;
+        let activeStreamLoadId = 0;
+        let activeStreamFetchController = null;
 
         function getStreamCacheKey(imdbId, trackIndex = 0) {
             return `${imdbId || 'unknown'}::${trackIndex}`;
@@ -1786,6 +1789,15 @@
 
         async function loadAudioTrack(index, options = {}) {
             try {
+                const requestId = ++audioSwitchRequestId;
+                activeStreamLoadId = requestId;
+                if (activeStreamFetchController) {
+                    try { activeStreamFetchController.abort(); } catch (_) { }
+                }
+                activeStreamFetchController = new AbortController();
+                const fetchSignal = activeStreamFetchController.signal;
+                const isStaleRequest = () => requestId !== audioSwitchRequestId;
+
                 if (useHlsAudioTracks && hls && Array.isArray(hls.audioTracks) && hls.audioTracks.length > 0) {
                     currentAudioIndex = Math.max(0, Math.min(index, hls.audioTracks.length - 1));
                     hls.audioTrack = currentAudioIndex;
@@ -1826,7 +1838,8 @@
                     const cachedUrl = getCachedStreamUrl(imdbId, index);
                     if (cachedUrl) {
                         console.log('🚀 Using cached stream - instant playback');
-                        loadStream(cachedUrl, startTime, wasPlaying);
+                        if (isStaleRequest()) return;
+                        loadStream(cachedUrl, startTime, wasPlaying, requestId);
                         updateAudioMenuUI();
                         return;
                     }
@@ -1846,13 +1859,16 @@
                     const streamRes = await fetch(streamUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: requestBody
+                        body: requestBody,
+                        signal: fetchSignal
                     });
+                    if (isStaleRequest()) return;
 
                     console.log('Stream response status:', streamRes.status);
 
                     if (streamRes.ok) {
                         const streamData = await streamRes.json();
+                        if (isStaleRequest()) return;
                         console.log('Stream response data:', streamData);
 
                         const finalData = streamData.data || streamData;
@@ -1878,16 +1894,19 @@
                         const directUrl = `${LOCAL_API_URL}/stream/${encodeURIComponent(file)}`;
                         console.log('Direct URL attempt:', directUrl);
 
-                        const directRes = await fetch(directUrl);
+                        const directRes = await fetch(directUrl, { signal: fetchSignal });
+                        if (isStaleRequest()) return;
                         if (directRes.ok) {
                             // Check if response is JSON or text
                             const contentType = directRes.headers.get('content-type');
                             if (contentType && contentType.includes('application/json')) {
                                 const directData = await directRes.json();
+                                if (isStaleRequest()) return;
                                 streamUrlFinal = directData.url || directData.link;
                             } else {
                                 // If it's not JSON, check if it's a valid HLS stream
                                 const text = await directRes.text();
+                                if (isStaleRequest()) return;
                                 if (text.includes('#EXTM3U')) {
                                     // It's a valid HLS playlist
                                     streamUrlFinal = directUrl;
@@ -1924,11 +1943,14 @@
                         const altRes = await fetch(altUrl, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: altBody
+                            body: altBody,
+                            signal: fetchSignal
                         });
+                        if (isStaleRequest()) return;
 
                         if (altRes.ok) {
                             const altData = await altRes.json();
+                            if (isStaleRequest()) return;
                             const finalAltData = altData.data || altData;
                             streamUrlFinal = finalAltData.link || finalAltData.url;
                             console.log('✅ Alternative stream URL obtained:', streamUrlFinal);
@@ -1945,19 +1967,28 @@
 
                 const isHttpUrl = typeof streamUrlFinal === 'string' && streamUrlFinal.startsWith('http');
                 if (isHttpUrl) {
-                    loadStream(streamUrlFinal, startTime, wasPlaying);
+                    if (isStaleRequest()) return;
+                    loadStream(streamUrlFinal, startTime, wasPlaying, requestId);
                     updateAudioMenuUI();
                 } else {
                     throw new Error('Unable to obtain direct stream URL. 8Stream API may be down.');
                 }
             } catch (error) {
+                if (error && error.name === 'AbortError') {
+                    return;
+                }
                 console.error('Error loading audio track:', error);
                 showError(`Stream Error: ${error.message}`);
             }
         }
 
-        async function loadStream(source, startTime = 0, shouldPlay = true) {
+        async function loadStream(source, startTime = 0, shouldPlay = true, loadRequestId = null) {
+            const streamLoadId = Number.isInteger(loadRequestId) ? loadRequestId : ++activeStreamLoadId;
+            activeStreamLoadId = streamLoadId;
+            const isStaleLoad = () => streamLoadId !== activeStreamLoadId;
+
             console.log("Loading stream:", source);
+            if (isStaleLoad()) return;
             stopPlaceholderPlayback();
             manualQualitySelection = false;
             rebufferEvents = [];
@@ -2043,6 +2074,7 @@
 
                     // ... rest of the HLS loading logic remains the same
                     hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
+                        if (isStaleLoad()) return;
                         manifestRecoveryInProgress = false;
                         manifestRecoveryAttempts = 0;
                         const maxHeight = Math.max(...hls.levels.map(l => l.height), 0);
@@ -2065,6 +2097,7 @@
                         }
 
                         setTimeout(() => {
+                            if (isStaleLoad()) return;
                             if (!hls || manualQualitySelection) return;
                             hls.startLevel = -1;
                             hls.currentLevel = -1;
@@ -2169,6 +2202,7 @@
                         }
 
                         hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, function () {
+                            if (isStaleLoad()) return;
                             if (!isTestStream || !hls || !Array.isArray(hls.audioTracks)) return;
                             if (hls.audioTracks.length > 0) {
                                 useHlsAudioTracks = true;
@@ -2185,6 +2219,7 @@
                             setupQualityMenu();
                         }
                         hls.on(Hls.Events.LEVEL_SWITCHED, function () {
+                            if (isStaleLoad()) return;
                             if (hls) {
                                 if (hls.currentLevel === -1) {
                                     selectedQualityLabel = 'Auto';
@@ -2208,16 +2243,21 @@
 
                         if (playPromise !== undefined) {
                             playPromise.then(() => {
+                                if (isStaleLoad()) return;
                                 console.log('🎬 Autoplay successful');
                                 hideLoaderWhenPlayable();
                             }).catch(error => {
+                                if (isStaleLoad()) return;
+                                if (error && error.name === 'AbortError') return;
                                 console.warn('⚠️ Autoplay blocked, trying muted:', error);
                                 // Try muted autoplay immediately
                                 video.muted = true;
                                 video.play().then(() => {
+                                    if (isStaleLoad()) return;
                                     console.log('Muted autoplay successful');
                                     hideLoaderWhenPlayable();
                                 }).catch(e => {
+                                    if (isStaleLoad()) return;
                                     console.error('❌ Autoplay failed:', e);
                                     hideLoader();
                                 });
@@ -2227,6 +2267,7 @@
                     });
 
                     hls.on(Hls.Events.ERROR, function (_, data) {
+                        if (isStaleLoad()) return;
                         if (!hls || !data || !data.fatal) return;
                         console.warn('HLS fatal error:', data.type, data.details);
                         const isManifestIssue =
@@ -3652,4 +3693,3 @@
 </body>
 
 </html>
-

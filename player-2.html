@@ -1275,7 +1275,7 @@
         let audioMenuDocListenerAdded = false;
         let episodeMenuContainer;
         const STREAM_CACHE_STORAGE_KEY = 'cinematichub_stream_cache_v1';
-        const STREAM_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+        const STREAM_CACHE_TTL_MS = 20 * 60 * 1000; // 20 minutes default
         const streamCache = new Map();
         let manifestRecoveryInProgress = false;
         let manifestRecoveryAttempts = 0;
@@ -1293,6 +1293,50 @@
             if (!Array.isArray(TEST_MULTI_AUDIO_HLS_SOURCES) || TEST_MULTI_AUDIO_HLS_SOURCES.length === 0) return '';
             const idx = Math.max(0, Math.min(currentTestStreamIndex, TEST_MULTI_AUDIO_HLS_SOURCES.length - 1));
             return TEST_MULTI_AUDIO_HLS_SOURCES[idx];
+        }
+
+        function extractInnerStreamUrlFromProxy(proxiedUrl) {
+            try {
+                const parsed = new URL(proxiedUrl);
+                const inner = parsed.searchParams.get('url');
+                if (!inner) return proxiedUrl;
+                try {
+                    return decodeURIComponent(inner);
+                } catch (_) {
+                    return inner;
+                }
+            } catch (_) {
+                return proxiedUrl;
+            }
+        }
+
+        function getStreamUrlCacheTtlMs(url) {
+            const defaultTtl = STREAM_CACHE_TTL_MS;
+            const minTtl = 30 * 1000;
+            const maxTtl = STREAM_CACHE_TTL_MS;
+            try {
+                const inner = extractInnerStreamUrlFromProxy(url);
+                const lower = String(inner || '').toLowerCase();
+
+                // Fragile signed providers rotate quickly; keep cache very short.
+                if (lower.includes('i-arch-') || lower.includes('/stream2/')) {
+                    const shortTtl = 90 * 1000;
+                    const tokenExpiryMatch = inner.match(/:(\d{10}):\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:/);
+                    if (tokenExpiryMatch && tokenExpiryMatch[1]) {
+                        const expiresUnix = Number(tokenExpiryMatch[1]);
+                        if (Number.isFinite(expiresUnix) && expiresUnix > 0) {
+                            const ttlFromToken = (expiresUnix * 1000) - Date.now() - (45 * 1000);
+                            if (ttlFromToken <= minTtl) return minTtl;
+                            return Math.max(minTtl, Math.min(ttlFromToken, 5 * 60 * 1000));
+                        }
+                    }
+                    return shortTtl;
+                }
+
+                return defaultTtl;
+            } catch (_) {
+                return Math.max(minTtl, Math.min(defaultTtl, maxTtl));
+            }
         }
 
         async function fetchImdbId(tmdbId, mediaType = null) {
@@ -1775,6 +1819,18 @@
             const cached = streamCache.get(cacheKey);
 
             if (cached && cached.expires > Date.now()) {
+                const viabilityTtl = getStreamUrlCacheTtlMs(cached.url);
+                if (viabilityTtl <= 35 * 1000) {
+                    streamCache.delete(cacheKey);
+                    persistStreamCache();
+                    return null;
+                }
+                const remainingMs = cached.expires - Date.now();
+                if (remainingMs < 30 * 1000) {
+                    streamCache.delete(cacheKey);
+                    persistStreamCache();
+                    return null;
+                }
                 console.log('📦 Using cached stream URL:', cached.url);
                 return cached.url;
             }
@@ -1790,12 +1846,13 @@
         // Cache stream URL with expiration
         function cacheStreamUrl(imdbId, url, trackIndex = 0) {
             const cacheKey = getStreamCacheKey(imdbId, trackIndex);
+            const ttl = getStreamUrlCacheTtlMs(url);
             // Cache for configured TTL
             streamCache.set(cacheKey, {
                 url: url,
-                expires: Date.now() + STREAM_CACHE_TTL_MS
+                expires: Date.now() + ttl
             });
-            console.log('Cached stream URL for ' + Math.round(STREAM_CACHE_TTL_MS / 86400000) + ' day(s)');
+            console.log('Cached stream URL for ' + Math.round(ttl / 1000) + 's');
             persistStreamCache();
         }
 

@@ -6661,6 +6661,8 @@
 
     // Simple direct loader for continue watching from localStorage only
     async function loadContinueWatchingDirect() {
+      console.log('DIRECT LOADER disabled; using Firebase-backed loadContinueWatching instead');
+      return loadContinueWatching(true);
       console.log('DIRECT LOADER START');
       try {
         const localData = JSON.parse(localStorage.getItem('continueWatching_local') || '{}');
@@ -9657,7 +9659,7 @@
       schedulePlayerWarmup();
 
       // Load continue watching after a short delay to ensure DOM is ready
-      // DISABLED - using loadContinueWatchingDirect instead
+      // Use Firebase-backed loader only.
       /*
       setTimeout(() => {
         console.log('DOM fully loaded, loading continue watching...');
@@ -10120,13 +10122,11 @@
       mountCategoryBar();
       displayMovies(curatedMovies, false);
       // loadContinueWatching is now called after auth/profile is confirmed to avoid flicker
-      // Fallback: call it directly if Firebase isn't available
-      // Delay until after category refresh completes (about 6-7 seconds)
       setTimeout(async () => {
         console.log('SETTIMEOUT EXECUTING');
-        console.log('Calling loadContinueWatchingDirect');
-        await loadContinueWatchingDirect();
-        console.log('Direct loader completed');
+        console.log('Calling loadContinueWatching');
+        await loadContinueWatching(true);
+        console.log('Continue watching load completed');
       }, 0);
 
       // Check if there's a movie ID in the URL to open modal

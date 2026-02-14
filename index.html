@@ -7581,10 +7581,11 @@
 
       // TMDB-driven catalog handling
       if (useTMDBCatalog) {
-        // Show/hide continue watching section (always show now if not searching)
+        // Show/hide continue watching section only when cards exist.
         const cwSection = document.getElementById('continueWatchingSection');
         if (cwSection) {
-          cwSection.style.display = '';
+          const hasCards = !!cwSection.querySelector('.continue-watching-card');
+          cwSection.style.display = (isSearching || !hasCards) ? 'none' : '';
         }
 
         // Update category bar active state
@@ -7835,8 +7836,9 @@
       }
       const cwSection = document.getElementById('continueWatchingSection');
       if (cwSection) {
-        // Only show if not searching
-        cwSection.style.display = isSearching ? 'none' : '';
+        // Only show if not searching and at least one continue watching card exists.
+        const hasCards = !!cwSection.querySelector('.continue-watching-card');
+        cwSection.style.display = (isSearching || !hasCards) ? 'none' : '';
       }
       // Scroll to movies section (skip during initial page load)
       if (!window.initialPageLoad) {
@@ -9932,7 +9934,13 @@
         if (popularTVSection) popularTVSection.style.display = '';
         if (featuredHero) featuredHero.style.display = 'flex';
         if (categoryBarMount) categoryBarMount.style.display = '';
-        if (cwSection) cwSection.style.display = '';
+        if (cwSection) {
+          const hasCards = !!cwSection.querySelector('.continue-watching-card');
+          cwSection.style.display = hasCards ? '' : 'none';
+        }
+        if (typeof window.loadContinueWatching === 'function') {
+          setTimeout(() => window.loadContinueWatching(true), 0);
+        }
 
         // Delegate to TMDB if enabled
         if (useTMDBCatalog && typeof loadAllTMDBMovies === 'function') {

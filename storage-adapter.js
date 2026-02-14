@@ -143,6 +143,10 @@
       return;
     }
 
+    // Keep section hidden until valid cards are confirmed to avoid empty shells.
+    const initialSection = document.getElementById('continueWatchingSection');
+    if (initialSection) initialSection.style.display = 'none';
+
     console.log('=== DEBUG: loadContinueWatching() called ===');
     try {
       const formatTime = (seconds) => {

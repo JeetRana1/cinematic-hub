@@ -1167,6 +1167,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="public/firebaseConfig.js"></script>
+    <script src="public/streamApiConfig.js?v=20260214"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="auth-firebase.js?v=3"></script>
@@ -1184,7 +1185,7 @@
             e.preventDefault();
         }, { passive: false });
 
-        const API_KEY = 'f647c22a49beb48e62a859804d39a43f';
+        const API_KEY = window.TMDB_API_KEY || '';
         const LOCAL_API_URL = 'https://convinced-nara-personal122-7da52759.koyeb.app/api/v1';
         const ALLOW_IFRAME_FALLBACK = false;
 
@@ -1492,6 +1493,10 @@
 
         async function init() {
             if (!id) return;
+            if (!API_KEY) {
+                showError('TMDB API key is not configured.');
+                return;
+            }
             if (video) video.controls = false;
             loadPersistedStreamCache();
 

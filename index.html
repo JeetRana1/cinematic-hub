@@ -10962,10 +10962,9 @@
 
   <script src="js/player-integration.js"></script>
   <script>
-    // TMDB API Configuration - Add your free API key from https://www.themoviedb.org/settings/api
-    const TMDB_API_KEY = 'f66d9d54a03e21f8ef99dd0c4258aa8a'; // Replace with your actual API key
-    // YouTube Data API key for trailer fallback (optional but required for auto lookup)
-    const YT_API_KEY = 'AIzaSyAZQSlyEUO5yMN0AGp94RVarUFxOlceuDM';
+    // Runtime API keys are injected through public/streamApiConfig.js (generated from env vars).
+    const TMDB_API_KEY = window.TMDB_API_KEY || '';
+    const YT_API_KEY = window.YT_API_KEY || '';
     let movieDb = null;
 
     // Check if there's a movie modal to restore from player back button

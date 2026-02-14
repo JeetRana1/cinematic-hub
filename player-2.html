@@ -1310,6 +1310,20 @@
             }
         }
 
+        function isFragileSignedStreamUrl(url) {
+            try {
+                const inner = extractInnerStreamUrlFromProxy(url);
+                const lower = String(inner || '').toLowerCase();
+                return (
+                    lower.includes('i-arch-') ||
+                    lower.includes('/stream2/') ||
+                    lower.includes('heast404jax.com')
+                );
+            } catch (_) {
+                return false;
+            }
+        }
+
         function getStreamUrlCacheTtlMs(url) {
             const defaultTtl = STREAM_CACHE_TTL_MS;
             const minTtl = 30 * 1000;
@@ -1819,6 +1833,11 @@
             const cached = streamCache.get(cacheKey);
 
             if (cached && cached.expires > Date.now()) {
+                if (isFragileSignedStreamUrl(cached.url)) {
+                    streamCache.delete(cacheKey);
+                    persistStreamCache();
+                    return null;
+                }
                 const viabilityTtl = getStreamUrlCacheTtlMs(cached.url);
                 if (viabilityTtl <= 35 * 1000) {
                     streamCache.delete(cacheKey);
@@ -1846,6 +1865,12 @@
         // Cache stream URL with expiration
         function cacheStreamUrl(imdbId, url, trackIndex = 0) {
             const cacheKey = getStreamCacheKey(imdbId, trackIndex);
+            if (isFragileSignedStreamUrl(url)) {
+                // Signed anti-bot URLs become flaky quickly; fetch fresh URL on each load.
+                streamCache.delete(cacheKey);
+                persistStreamCache();
+                return;
+            }
             const ttl = getStreamUrlCacheTtlMs(url);
             // Cache for configured TTL
             streamCache.set(cacheKey, {

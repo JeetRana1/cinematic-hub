@@ -1294,9 +1294,34 @@
         let manifestRecoveryAttempts = 0;
         let fragmentRecoveryInProgress = false;
         let fragmentRecoveryAttempts = 0;
+        let networkRecoveryAttempts = 0;
         let audioSwitchRequestId = 0;
         let activeStreamLoadId = 0;
         let activeStreamFetchController = null;
+        const IS_MOBILE_DEVICE = /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent || '');
+        const NETWORK_CONNECTION = navigator.connection || navigator.mozConnection || navigator.webkitConnection || null;
+        const NETWORK_EFFECTIVE_TYPE = String(NETWORK_CONNECTION?.effectiveType || '').toLowerCase();
+        const NETWORK_SAVE_DATA = !!NETWORK_CONNECTION?.saveData;
+        const IS_CONSTRAINED_NETWORK = NETWORK_SAVE_DATA || NETWORK_EFFECTIVE_TYPE === 'slow-2g' || NETWORK_EFFECTIVE_TYPE === '2g';
+        const STREAM_FETCH_TIMEOUT_MS = IS_CONSTRAINED_NETWORK ? 14000 : (IS_MOBILE_DEVICE ? 9000 : 12000);
+        const MEDIA_INFO_TIMEOUT_MS = IS_CONSTRAINED_NETWORK ? 12000 : (IS_MOBILE_DEVICE ? 8000 : 10000);
+        const CONTINUE_WATCHING_LOCAL_SAVE_INTERVAL_MS = 1000;
+        const CONTINUE_WATCHING_CLOUD_SAVE_INTERVAL_MS = IS_MOBILE_DEVICE ? 3000 : 5000;
+
+        async function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                const externalSignal = options && options.signal;
+                if (externalSignal) {
+                    if (externalSignal.aborted) controller.abort();
+                    else externalSignal.addEventListener('abort', () => controller.abort(), { once: true });
+                }
+                return await fetch(url, { ...options, signal: controller.signal });
+            } finally {
+                clearTimeout(timeoutId);
+            }
+        }
 
         function getStreamCacheKey(imdbId, trackIndex = 0) {
             return `${imdbId || 'unknown'}::${trackIndex}`;
@@ -1386,7 +1411,7 @@
             const safeType = mediaType === 'tv' || mediaType === 'series' ? 'tv' : 'movie';
             const infoUrl = `${LOCAL_API_URL}/mediaInfo?id=${encodeURIComponent(idValue)}&type=${encodeURIComponent(safeType)}`;
             console.log('?? MediaInfo URL:', infoUrl);
-            const infoRes = await fetch(infoUrl);
+            const infoRes = await fetchWithTimeout(infoUrl, {}, MEDIA_INFO_TIMEOUT_MS);
             console.log('?? MediaInfo response status:', infoRes.status);
             if (!infoRes.ok) throw new Error(`mediaInfo failed: ${infoRes.status}`);
             const infoJson = await infoRes.json();
@@ -1443,10 +1468,32 @@
             const sorted = hls.levels
                 .map((level, index) => ({ index, bitrate: Number(level.bitrate) || 0, height: Number(level.height) || 0 }))
                 .sort((a, b) => a.bitrate - b.bitrate);
+            if (IS_MOBILE_DEVICE) {
+                let bitrateCap = 850000;
+                if (NETWORK_EFFECTIVE_TYPE === 'slow-2g') bitrateCap = 320000;
+                else if (NETWORK_EFFECTIVE_TYPE === '2g') bitrateCap = 450000;
+                else if (NETWORK_EFFECTIVE_TYPE === '3g') bitrateCap = 650000;
+                const mobilePreferred = sorted.find((entry) => entry.bitrate > 0 && entry.bitrate <= bitrateCap);
+                if (mobilePreferred) return mobilePreferred.index;
+                const mobileFallback = sorted[0];
+                return mobileFallback ? mobileFallback.index : -1;
+            }
             const preferred = sorted.find((entry) => entry.bitrate >= 700000 && entry.bitrate <= 1400000);
             if (preferred) return preferred.index;
             const fallback = sorted[Math.min(1, sorted.length - 1)];
             return fallback ? fallback.index : -1;
+        }
+
+        function getConservativeAutoCapLevel() {
+            if (!hls || !Array.isArray(hls.levels) || hls.levels.length === 0) return -1;
+            const capHeight = IS_CONSTRAINED_NETWORK ? 360 : (IS_MOBILE_DEVICE ? 540 : 1080);
+            let chosen = -1;
+            for (let i = 0; i < hls.levels.length; i += 1) {
+                const levelHeight = Number(hls.levels[i]?.height) || 0;
+                if (levelHeight > 0 && levelHeight <= capHeight) chosen = i;
+            }
+            if (chosen >= 0) return chosen;
+            return getConservativeStartupLevel();
         }
 
         function getLowerLevelIndex(currentLevelIndex) {
@@ -1978,12 +2025,12 @@
                     console.log('Stream request URL:', streamUrl);
                     console.log('Stream request body:', requestBody);
 
-                    const streamRes = await fetch(streamUrl, {
+                    const streamRes = await fetchWithTimeout(streamUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: requestBody,
                         signal: fetchSignal
-                    });
+                    }, STREAM_FETCH_TIMEOUT_MS);
                     if (isStaleRequest()) return;
 
                     console.log('Stream response status:', streamRes.status);
@@ -2016,7 +2063,7 @@
                         const directUrl = `${LOCAL_API_URL}/stream/${encodeURIComponent(file)}`;
                         console.log('Direct URL attempt:', directUrl);
 
-                        const directRes = await fetch(directUrl, { signal: fetchSignal });
+                        const directRes = await fetchWithTimeout(directUrl, { signal: fetchSignal }, STREAM_FETCH_TIMEOUT_MS);
                         if (isStaleRequest()) return;
                         if (directRes.ok) {
                             // Check if response is JSON or text
@@ -2062,12 +2109,12 @@
                             id: file
                         });
 
-                        const altRes = await fetch(altUrl, {
+                        const altRes = await fetchWithTimeout(altUrl, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: altBody,
                             signal: fetchSignal
-                        });
+                        }, STREAM_FETCH_TIMEOUT_MS);
                         if (isStaleRequest()) return;
 
                         if (altRes.ok) {
@@ -2146,8 +2193,8 @@
                         enableSoftwareAES: false,
                         workerPath: null,
                         debug: false,
-                        maxBufferLength: 30,
-                        maxMaxBufferLength: 60,
+                        maxBufferLength: IS_MOBILE_DEVICE ? 18 : 30,
+                        maxMaxBufferLength: IS_CONSTRAINED_NETWORK ? 24 : (IS_MOBILE_DEVICE ? 36 : 60),
                         maxBufferSize: 120 * 1000 * 1000,
                         maxBufferHole: 0.3,
                         lowBufferWatchdogPeriod: 0.2,
@@ -2159,12 +2206,12 @@
                         liveMaxLatencyDurationCount: Infinity,
                         liveDurationInfinity: true,
                         preferManagedMediaSource: true,
-                        backBufferLength: 20,
+                        backBufferLength: IS_CONSTRAINED_NETWORK ? 8 : (IS_MOBILE_DEVICE ? 12 : 20),
                         startPosition: startTime > 0 ? Math.max(0, startTime - 2) : -1,
                         startLevel: -1,
                         capLevelToPlayerSize: true,
                         autoStartLoad: true,
-                        lowLatencyMode: true,
+                        lowLatencyMode: false,
                         fragLoadingTimeOut: 10000,
                         fragLoadingMaxRetry: 2,
                         fragLoadingRetryDelay: 500,
@@ -2177,17 +2224,17 @@
                         levelLoadingMaxRetry: 2,
                         levelLoadingRetryDelay: 500,
                         levelLoadingMaxRetryTimeout: 5000,
-                        startFragPrefetch: true,
-                        maxStarvationDelay: 4,
-                        maxLoadingDelay: 4,
+                        startFragPrefetch: !IS_MOBILE_DEVICE,
+                        maxStarvationDelay: IS_MOBILE_DEVICE ? 2.5 : 4,
+                        maxLoadingDelay: IS_MOBILE_DEVICE ? 2.5 : 4,
                         testBandwidth: true,
                         abrEwmaFastLive: 3.0,
                         abrEwmaSlowLive: 9.0,
                         abrEwmaFastVoD: 4.0,
                         abrEwmaSlowVoD: 14.0,
-                        abrEwmaDefaultEstimate: 1500000,
-                        abrBandWidthFactor: 0.72,
-                        abrBandWidthUpFactor: 0.65,
+                        abrEwmaDefaultEstimate: IS_CONSTRAINED_NETWORK ? 550000 : (IS_MOBILE_DEVICE ? 900000 : 1500000),
+                        abrBandWidthFactor: IS_CONSTRAINED_NETWORK ? 0.52 : (IS_MOBILE_DEVICE ? 0.6 : 0.72),
+                        abrBandWidthUpFactor: IS_CONSTRAINED_NETWORK ? 0.45 : (IS_MOBILE_DEVICE ? 0.55 : 0.65),
                         abrBandWidthDownFactor: 0.9
                     });
 
@@ -2201,6 +2248,7 @@
                         manifestRecoveryAttempts = 0;
                         fragmentRecoveryInProgress = false;
                         fragmentRecoveryAttempts = 0;
+                        networkRecoveryAttempts = 0;
                         const maxHeight = Math.max(...hls.levels.map(l => l.height), 0);
 
                         // Preload settings for faster startup
@@ -2210,6 +2258,7 @@
                         // Keep loader visible until playback is actually ready
 
                         const startupLevel = getConservativeStartupLevel();
+                        const conservativeCapLevel = getConservativeAutoCapLevel();
                         if (startupLevel >= 0) {
                             hls.startLevel = startupLevel;
                             hls.nextLevel = startupLevel;
@@ -2220,9 +2269,15 @@
                             console.log('🎯 Starting in Auto ABR mode');
                         }
 
+                        if (!manualQualitySelection && conservativeCapLevel >= 0) {
+                            hls.autoLevelCapping = conservativeCapLevel;
+                            console.log(`Initial auto quality cap: ${hls.levels[conservativeCapLevel]?.height || 'low'}p`);
+                        }
+
                         setTimeout(() => {
                             if (isStaleLoad()) return;
                             if (!hls || manualQualitySelection) return;
+                            if (IS_CONSTRAINED_NETWORK) return;
                             hls.startLevel = -1;
                             hls.currentLevel = -1;
                             hls.autoLevelCapping = -1;
@@ -2274,6 +2329,7 @@
 
                             player.on('playing', () => {
                                 console.log('Playing successfully');
+                                networkRecoveryAttempts = 0;
                                 hideLoaderWhenPlayable();
                                 // Unmute after successful start
                                 setTimeout(() => {
@@ -2427,6 +2483,7 @@
                         switch (data.type) {
                             case Hls.ErrorTypes.NETWORK_ERROR:
                                 {
+                                    networkRecoveryAttempts += 1;
                                     const isTimeoutError =
                                         data.details === Hls.ErrorDetails.LEVEL_LOAD_TIMEOUT ||
                                         data.details === Hls.ErrorDetails.FRAG_LOAD_TIMEOUT ||
@@ -2459,8 +2516,17 @@
                                         const lowerLevelIndex = getLowerLevelIndex(currentLevelIndex >= 0 ? currentLevelIndex : hls.levels.length - 1);
                                         if (lowerLevelIndex >= 0 && hls.levels && hls.levels[lowerLevelIndex]) {
                                             hls.nextLevel = lowerLevelIndex;
+                                            hls.autoLevelCapping = lowerLevelIndex;
                                             console.log(`⚡ Timeout recovery: forcing lower level ${hls.levels[lowerLevelIndex].height || 'auto'}p`);
                                         }
+                                    }
+                                    if (!manualQualitySelection && networkRecoveryAttempts >= 4) {
+                                        applyTemporaryQualityCap();
+                                    }
+                                    if (networkRecoveryAttempts > 12) {
+                                        console.warn('Too many consecutive network recoveries; showing stable-connection message.');
+                                        showError('Connection is unstable. Try lower quality or switch network.');
+                                        return;
                                     }
                                     hls.stopLoad();
                                     hls.startLoad(startTime > 0 ? Math.max(0, startTime - 1) : -1);
@@ -3307,6 +3373,7 @@
         let controlsHideTimer;
         let manualHideLockUntilTs = 0;
         let lastContinueWatchingSaveMs = 0;
+        let lastContinueWatchingCloudSaveMs = 0;
         let lastResumeUrlSecond = Number.isFinite(requestedResumeTime) && requestedResumeTime > 0 ? requestedResumeTime : 0;
         let lastResumeUrlSyncMs = 0;
 
@@ -3570,7 +3637,7 @@
                 syncResumeParamInUrl(force);
 
                 const now = Date.now();
-                if (!force && now - lastContinueWatchingSaveMs < 10000) return;
+                if (!force && now - lastContinueWatchingSaveMs < CONTINUE_WATCHING_LOCAL_SAVE_INTERVAL_MS) return;
 
                 const progress = Math.max(0, Math.min(100, (currentTime / duration) * 100));
                 if (!force && (currentTime < 30 || progress < 1)) return;
@@ -3594,15 +3661,23 @@
                     updatedAt: now
                 };
 
-                // Prefer cloud sync so progress appears across ports/domains (e.g., Vercel)
-                try {
-                    if (window.ContinueWatchingManager?.saveMovieProgress) {
-                        window.ContinueWatchingManager.saveMovieProgress(movieId, entry);
-                    } else if (window.FirebaseSync?.saveContinueWatching) {
-                        window.FirebaseSync.saveContinueWatching(movieId, entry);
+                const shouldSaveCloud = force || (now - lastContinueWatchingCloudSaveMs >= CONTINUE_WATCHING_CLOUD_SAVE_INTERVAL_MS);
+                if (shouldSaveCloud) {
+                    // Prefer cloud sync so progress appears across ports/domains (e.g., Vercel)
+                    try {
+                        if (window.ContinueWatchingManager?.saveMovieProgress) {
+                            window.ContinueWatchingManager.saveMovieProgress(movieId, entry);
+                        } else if (window.FirebaseSync?.updateContinueWatchingItem) {
+                            window.FirebaseSync.updateContinueWatchingItem(movieId, entry);
+                        } else if (window.FirebaseSync?.saveContinueWatching) {
+                            const payload = {};
+                            payload[movieId] = entry;
+                            window.FirebaseSync.saveContinueWatching(payload);
+                        }
+                        lastContinueWatchingCloudSaveMs = now;
+                    } catch (cloudError) {
+                        console.warn('Failed to save continue watching to cloud:', cloudError);
                     }
-                } catch (cloudError) {
-                    console.warn('Failed to save continue watching to cloud:', cloudError);
                 }
 
                 const keys = getContinueWatchingStorageKeys();

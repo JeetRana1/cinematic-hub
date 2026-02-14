@@ -181,7 +181,12 @@
     await db.collection('users').doc(uid).collection('profiles').doc(id).set(safe, { merge: true });
   }
   async function selectProfile(uid, id){ 
-    localStorage.setItem(selectedKey(uid), id); 
+    localStorage.setItem(selectedKey(uid), id);
+    try {
+      await updateUserSettings(uid, { selectedProfileId: id });
+    } catch (e) {
+      console.warn('Failed to persist selected profile to cloud settings:', e);
+    }
     // Notify FirebaseSync to reload data for the new profile
     if (window.FirebaseSync && typeof window.FirebaseSync.switchProfile === 'function') {
       await window.FirebaseSync.switchProfile(id);
@@ -189,7 +194,18 @@
   }
   async function getSelectedProfile(uid){
     await ensureUserDoc(uid);
-    const id = localStorage.getItem(selectedKey(uid));
+    let id = localStorage.getItem(selectedKey(uid));
+    if (!id) {
+      try {
+        const settings = await getUserSettings(uid);
+        if (settings && settings.selectedProfileId) {
+          id = settings.selectedProfileId;
+          localStorage.setItem(selectedKey(uid), id);
+        }
+      } catch (e) {
+        console.warn('Failed to load selected profile from cloud settings:', e);
+      }
+    }
     if (!id) return null;
     const doc = await db.collection('users').doc(uid).collection('profiles').doc(id).get();
     return doc.exists ? { id: doc.id, ...doc.data() } : null;

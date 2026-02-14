@@ -26,6 +26,8 @@
       this.auth = null;
       this.currentUser = null;
       this.currentProfile = null;
+      this.profileResolvePromise = null;
+      this.legacyMigrationDoneFor = {};
       this.cache = {}; // In-memory cache for quick access
       this.listeners = {}; // Real-time listeners
       this.initialized = false;
@@ -63,8 +65,8 @@
           if (user) {
             // Wait a bit for profile to be selected before loading data
             // This prevents race conditions on page load
-            setTimeout(() => {
-              const profileId = this.getCurrentProfile();
+            setTimeout(async () => {
+              const profileId = await this.ensureCurrentProfile();
               if (profileId) {
                 console.log('✅ Profile detected, loading data...');
                 this.loadUserData();
@@ -88,9 +90,51 @@
       if (!this.currentUser) return null;
       const uid = this.currentUser.uid;
       // Always read from localStorage (this is the source of truth)
-      const profileId = localStorage.getItem(`fb_selected_profile_${uid}`);
+      const profileId = localStorage.getItem(`fb_selected_profile_${uid}`) || this.currentProfile || null;
+      this.currentProfile = profileId || null;
       console.log('📌 getCurrentProfile:', profileId, 'for user:', uid);
       return profileId;
+    }
+
+
+    async ensureCurrentProfile() {
+      if (!this.currentUser) return null;
+
+      const localProfile = this.getCurrentProfile();
+      if (localProfile) return localProfile;
+
+      if (this.profileResolvePromise) {
+        return this.profileResolvePromise;
+      }
+
+      this.profileResolvePromise = (async () => {
+        const uid = this.currentUser.uid;
+        try {
+          const settingsDoc = await this.db.collection('users').doc(uid).collection('settings').doc('general').get();
+          const cloudSelected = settingsDoc.exists ? settingsDoc.data()?.selectedProfileId : null;
+          if (cloudSelected) {
+            localStorage.setItem(`fb_selected_profile_${uid}`, cloudSelected);
+            this.currentProfile = cloudSelected;
+            return cloudSelected;
+          }
+
+          const profilesSnapshot = await this.db.collection('users').doc(uid).collection('profiles').limit(1).get();
+          if (!profilesSnapshot.empty) {
+            const fallbackProfile = profilesSnapshot.docs[0].id;
+            localStorage.setItem(`fb_selected_profile_${uid}`, fallbackProfile);
+            this.currentProfile = fallbackProfile;
+            return fallbackProfile;
+          }
+        } catch (error) {
+          console.warn('Failed to resolve current profile from cloud:', error);
+        } finally {
+          this.profileResolvePromise = null;
+        }
+
+        return null;
+      })();
+
+      return this.profileResolvePromise;
     }
 
     // Get Firestore document path for user data
@@ -125,6 +169,7 @@
 
     // Load all user data into cache
     async loadUserData() {
+      await this.ensureCurrentProfile();
       // Verify we have a profile selected
       const profileId = this.getCurrentProfile();
       console.log('🔄 loadUserData called with profile:', profileId);
@@ -136,6 +181,8 @@
       }
 
       try {
+        await this.migrateLegacyContinueWatchingIfNeeded(profileId);
+
         const docRef = this.db.doc(docPath);
         
         // Set up real-time listener for settings
@@ -185,6 +232,33 @@
       }
     }
 
+
+    async migrateLegacyContinueWatchingIfNeeded(profileId) {
+      if (!this.currentUser || !profileId) return;
+      const uid = this.currentUser.uid;
+      const migrationKey = `${uid}:${profileId}`;
+      if (this.legacyMigrationDoneFor[migrationKey]) return;
+
+      this.legacyMigrationDoneFor[migrationKey] = true;
+
+      try {
+        const legacyRef = this.db.collection('users').doc(uid).collection('continueWatching');
+        const profileRef = this.db.collection('users').doc(uid).collection('profiles').doc(profileId).collection('continueWatching');
+        const [legacySnap, profileSnap] = await Promise.all([legacyRef.get(), profileRef.get()]);
+
+        if (legacySnap.empty || !profileSnap.empty) return;
+
+        const batch = this.db.batch();
+        legacySnap.docs.forEach((doc) => {
+          batch.set(profileRef.doc(doc.id), doc.data(), { merge: true });
+        });
+        await batch.commit();
+        console.log(`Migrated ${legacySnap.docs.length} legacy continue watching items to profile path`);
+      } catch (error) {
+        console.warn('Legacy continue watching migration skipped:', error);
+      }
+    }
+
     clearCache() {
       this.cache = {};
       if (this.unsubscribe) {
@@ -222,7 +296,7 @@
     // Initialize data loading for the current profile
     // Call this after profile is confirmed to be selected
     async initializeForProfile() {
-      const profileId = this.getCurrentProfile();
+      const profileId = await this.ensureCurrentProfile();
       if (!profileId) {
         console.warn('⚠️ initializeForProfile called but no profile selected');
         return;
@@ -241,6 +315,7 @@
 
     // Save data to Firestore
     async saveToFirestore(key, value) {
+      await this.ensureCurrentProfile();
       const docPath = this.getUserDocPath();
       if (!docPath) {
         console.warn('No user logged in, data not saved');
@@ -270,6 +345,7 @@
         return this.cache[key];
       }
 
+      await this.ensureCurrentProfile();
       const docPath = this.getUserDocPath();
       if (!docPath) {
         return defaultValue;
@@ -298,6 +374,7 @@
         return this.cache['continueWatching'];
       }
       
+      await this.ensureCurrentProfile();
       const collectionRef = this.getContinueWatchingCollectionRef();
       if (!collectionRef) return {};
       
@@ -316,6 +393,7 @@
     }
 
     async saveContinueWatching(data) {
+      await this.ensureCurrentProfile();
       const collectionRef = this.getContinueWatchingCollectionRef();
       if (!collectionRef) {
         console.warn('No user logged in, data not saved');
@@ -351,6 +429,7 @@
     }
 
     async clearContinueWatching() {
+      await this.ensureCurrentProfile();
       const collectionRef = this.getContinueWatchingCollectionRef();
       if (!collectionRef) {
         console.warn('No user logged in');
@@ -375,6 +454,7 @@
     }
 
     async updateContinueWatchingItem(movieId, movieData) {
+      await this.ensureCurrentProfile();
       const collectionRef = this.getContinueWatchingCollectionRef();
       if (!collectionRef) {
         console.warn('No user logged in, data not saved');
@@ -404,6 +484,7 @@
     }
 
     async removeContinueWatchingItem(movieId) {
+      await this.ensureCurrentProfile();
       const collectionRef = this.getContinueWatchingCollectionRef();
       if (!collectionRef) {
         console.warn('No user logged in');

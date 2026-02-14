@@ -888,6 +888,147 @@
       margin: 0.25rem 0;
     }
 
+    /* Updates Modal */
+    .updates-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 8, 18, 0.62);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      z-index: 2500;
+      padding: 1rem;
+    }
+
+    .topbar-wrapper #updatesModal {
+      pointer-events: auto;
+    }
+
+    .updates-modal-overlay.show {
+      display: flex;
+    }
+
+    .updates-modal-card {
+      width: min(720px, 96vw);
+      max-height: min(84vh, 900px);
+      overflow: auto;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: linear-gradient(145deg, rgba(15, 22, 42, 0.82), rgba(12, 18, 34, 0.78));
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      color: #eef2ff;
+    }
+
+    .updates-modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 1rem 1.1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .updates-modal-title {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+
+    .updates-modal-title i {
+      color: #fb7185;
+    }
+
+    .updates-close-btn {
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      border-radius: 10px;
+      width: 36px;
+      height: 36px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .updates-close-btn:hover {
+      background: rgba(251, 113, 133, 0.2);
+      border-color: rgba(251, 113, 133, 0.5);
+    }
+
+    .updates-modal-body {
+      padding: 1rem 1.1rem 0.8rem;
+    }
+
+    .updates-version {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      color: #d1d5db;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 999px;
+      padding: 0.28rem 0.65rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .updates-summary {
+      margin: 0 0 0.8rem;
+      color: rgba(255, 255, 255, 0.88);
+      line-height: 1.45;
+      font-size: 0.95rem;
+    }
+
+    .updates-list {
+      margin: 0;
+      padding: 0 0 0 1.1rem;
+      color: rgba(255, 255, 255, 0.92);
+      line-height: 1.45;
+      font-size: 0.92rem;
+    }
+
+    .updates-list li {
+      margin: 0 0 0.4rem;
+    }
+
+    .updates-section {
+      margin-top: 0.85rem;
+      padding-top: 0.65rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .updates-section-title {
+      margin: 0 0 0.45rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #f8fafc;
+      letter-spacing: 0.01em;
+    }
+
+    .updates-modal-foot {
+      display: flex;
+      justify-content: flex-end;
+      padding: 0.9rem 1.1rem 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .updates-cta {
+      border: none;
+      border-radius: 10px;
+      padding: 0.62rem 1rem;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, #ef4444, #fb7185);
+      cursor: pointer;
+      box-shadow: 0 12px 24px rgba(239, 68, 68, 0.28);
+    }
+
     /* Active State */
     .user-menu-btn.active {
       background: rgba(40, 40, 45, 0.95);
@@ -5409,6 +5550,10 @@
             <i class="fas fa-cog"></i>
             <span>Settings</span>
           </a>
+          <a href="#" class="dropdown-item" id="updatesLink">
+            <i class="fas fa-bullhorn"></i>
+            <span>Updates</span>
+          </a>
           <div class="dropdown-divider"></div>
           <a href="#" class="dropdown-item" id="helpLink">
             <i class="fas fa-question-circle"></i>
@@ -5419,6 +5564,28 @@
             <i class="fas fa-sign-out-alt"></i>
             <span>Sign Out</span>
           </a>
+        </div>
+      </div>
+
+      <div id="updatesModal" class="updates-modal-overlay" aria-hidden="true">
+        <div class="updates-modal-card" role="dialog" aria-modal="true" aria-labelledby="updatesModalTitle">
+          <div class="updates-modal-head">
+            <h3 id="updatesModalTitle" class="updates-modal-title">
+              <i class="fas fa-bullhorn"></i>
+              <span>Latest Updates</span>
+            </h3>
+            <button id="updatesCloseBtn" class="updates-close-btn" type="button" aria-label="Close updates modal">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="updates-modal-body">
+            <span class="updates-version" id="updatesVersionTag">Build Update</span>
+            <p class="updates-summary" id="updatesSummaryText"></p>
+            <div id="updatesSections"></div>
+          </div>
+          <div class="updates-modal-foot">
+            <button id="updatesCloseActionBtn" class="updates-cta" type="button">Close</button>
+          </div>
         </div>
       </div>
 
@@ -5487,6 +5654,27 @@
             });
           }
 
+
+          // Handle updates link (fallback binding for early script path)
+          const updatesLink = document.getElementById('updatesLink');
+          if (updatesLink && !updatesLink.dataset.fallbackBound) {
+            updatesLink.dataset.fallbackBound = '1';
+            updatesLink.addEventListener('click', (e) => {
+              e.preventDefault();
+              userMenuBtn.classList.remove('active');
+              const opener = window.showAppUpdatesModal;
+              if (typeof opener === 'function') {
+                opener();
+                return;
+              }
+              const modal = document.getElementById('updatesModal');
+              if (modal) {
+                modal.classList.add('show');
+                modal.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+              }
+            });
+          }
 
           // Handle help link → open in-app report modal
           const helpLink = document.getElementById('helpLink');
@@ -10914,6 +11102,138 @@
           closeDD();
         }
       });
+
+      // Updates modal (auto-show on unseen update notes + manual open from menu)
+      const updatesModal = document.getElementById('updatesModal');
+      const updatesCloseBtn = document.getElementById('updatesCloseBtn');
+      const updatesCloseActionBtn = document.getElementById('updatesCloseActionBtn');
+      const updatesVersionTag = document.getElementById('updatesVersionTag');
+      const updatesSummaryText = document.getElementById('updatesSummaryText');
+      const updatesSections = document.getElementById('updatesSections');
+      const updatesLink = document.getElementById('updatesLink');
+      const UPDATE_NOTES_STORAGE_KEY = `cinematichub_updates_notes_seen_v2_${user?.uid || 'guest'}_${prof?.id || 'default'}`;
+      const UPDATE_NOTES = {
+        version: '2026.02.15',
+        headline: 'Major reliability update with playback, sync, and UI quality fixes.',
+        sections: [
+          {
+            title: 'Added',
+            items: [
+              'New Updates entry in the profile menu to reopen release notes any time.',
+              'Automatic update modal display for each user/profile when new update notes are published.',
+              'Versioned update tracking so you only see each release note once unless content changes.'
+            ]
+          },
+          {
+            title: 'Fixed',
+            items: [
+              'Continue Watching clear-all and single-item remove actions now persist and sync more reliably.',
+              'Legacy/old Continue Watching entries are prevented from reappearing after clear operations.',
+              'Continue Watching section now stays hidden when no valid in-progress items exist.'
+            ]
+          },
+          {
+            title: 'Improved',
+            items: [
+              'Player 2 startup and buffering behavior tuned for slower mobile networks.',
+              'Progress persistence now updates much more frequently for better resume accuracy.',
+              'Dropdown and modal interactions were hardened for more reliable behavior on localhost and production.'
+            ]
+          }
+        ]
+      };
+
+      const hashUpdateNotes = (value) => {
+        const text = JSON.stringify(value || '');
+        let hash = 0;
+        for (let i = 0; i < text.length; i += 1) {
+          hash = ((hash << 5) - hash) + text.charCodeAt(i);
+          hash |= 0;
+        }
+        return String(hash);
+      };
+
+      const updateNotesSignature = `${UPDATE_NOTES.version}:${hashUpdateNotes(UPDATE_NOTES)}`;
+
+      const renderUpdateNotes = () => {
+        if (!updatesVersionTag || !updatesSummaryText || !updatesSections) return;
+        updatesVersionTag.textContent = `Build ${UPDATE_NOTES.version}`;
+        updatesSummaryText.textContent = UPDATE_NOTES.headline;
+
+        updatesSections.innerHTML = '';
+        const sections = Array.isArray(UPDATE_NOTES.sections) ? UPDATE_NOTES.sections : [];
+        sections.forEach((section) => {
+          const wrapper = document.createElement('section');
+          wrapper.className = 'updates-section';
+
+          const title = document.createElement('h4');
+          title.className = 'updates-section-title';
+          title.textContent = section?.title || 'Update';
+
+          const list = document.createElement('ul');
+          list.className = 'updates-list';
+          const items = Array.isArray(section?.items) ? section.items : [];
+          items.forEach((itemText) => {
+            const li = document.createElement('li');
+            li.textContent = itemText;
+            list.appendChild(li);
+          });
+
+          wrapper.appendChild(title);
+          wrapper.appendChild(list);
+          updatesSections.appendChild(wrapper);
+        });
+      };
+
+      const openUpdatesModal = () => {
+        if (!updatesModal) return;
+        renderUpdateNotes();
+        updatesModal.classList.add('show');
+        updatesModal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+      };
+
+      const closeUpdatesModal = (markSeen = true) => {
+        if (!updatesModal) return;
+        updatesModal.classList.remove('show');
+        updatesModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        if (markSeen) {
+          localStorage.setItem(UPDATE_NOTES_STORAGE_KEY, updateNotesSignature);
+        }
+      };
+
+      if (updatesModal && !updatesModal.dataset.bound) {
+        updatesModal.dataset.bound = '1';
+        updatesCloseBtn?.addEventListener('click', () => closeUpdatesModal(true));
+        updatesCloseActionBtn?.addEventListener('click', () => closeUpdatesModal(true));
+        updatesModal.addEventListener('click', (e) => {
+          if (e.target === updatesModal) closeUpdatesModal(true);
+        });
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && updatesModal.classList.contains('show')) {
+            closeUpdatesModal(true);
+          }
+        });
+      }
+
+      if (updatesLink && !updatesLink.dataset.bound) {
+        updatesLink.dataset.bound = '1';
+        updatesLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          closeDD();
+          openUpdatesModal();
+        });
+      }
+
+      const seenUpdateSignature = localStorage.getItem(UPDATE_NOTES_STORAGE_KEY) || '';
+      if (seenUpdateSignature !== updateNotesSignature) {
+        setTimeout(() => openUpdatesModal(), 280);
+      }
+
+      // Expose global handlers so other scripts/fallback listeners can open updates reliably.
+      window.showAppUpdatesModal = openUpdatesModal;
+      window.hideAppUpdatesModal = closeUpdatesModal;
 
       // Menu item click handlers with proper element IDs
       const settingsLink = document.getElementById('settingsLink');

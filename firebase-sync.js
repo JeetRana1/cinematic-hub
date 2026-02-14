@@ -442,6 +442,17 @@
         existingDocs.docs.forEach(doc => {
           batch.delete(doc.ref);
         });
+
+        // Clear legacy root collection as well to prevent old data from being migrated back.
+        if (this.currentUser) {
+          const uid = this.currentUser.uid;
+          const legacyRef = this.db.collection('users').doc(uid).collection('continueWatching');
+          const legacyDocs = await legacyRef.get();
+          legacyDocs.docs.forEach((doc) => {
+            batch.delete(doc.ref);
+          });
+        }
+
         await batch.commit();
         this.cache['continueWatching'] = {};
         window.dispatchEvent(new CustomEvent('continueWatchingUpdated', { detail: { continueWatching: {}, fromCloud: true } }));

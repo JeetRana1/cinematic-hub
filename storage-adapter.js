@@ -25,6 +25,65 @@
     console.log('Storage Adapter initialized with Firebase Sync');
   }
 
+  function confirmClearAllContinueWatching() {
+    return new Promise((resolve) => {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = [
+        'position:fixed',
+        'inset:0',
+        'background:rgba(0,0,0,0.65)',
+        'display:flex',
+        'align-items:center',
+        'justify-content:center',
+        'z-index:99999',
+        'padding:16px'
+      ].join(';');
+
+      const modal = document.createElement('div');
+      modal.style.cssText = [
+        'width:min(420px,95vw)',
+        'background:#111827',
+        'border:1px solid rgba(255,255,255,0.12)',
+        'border-radius:14px',
+        'box-shadow:0 18px 45px rgba(0,0,0,0.45)',
+        'padding:18px',
+        'color:#fff',
+        'font-family:inherit'
+      ].join(';');
+
+      modal.innerHTML = `
+        <h3 style="margin:0 0 8px;font-size:1.05rem;">Clear Continue Watching?</h3>
+        <p style="margin:0 0 16px;color:rgba(255,255,255,0.8);font-size:0.92rem;line-height:1.4;">
+          This will remove all saved continue watching movies for this profile.
+        </p>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button id="cwConfirmNo" style="padding:8px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.06);color:#fff;cursor:pointer;">No</button>
+          <button id="cwConfirmYes" style="padding:8px 14px;border-radius:10px;border:1px solid rgba(255,91,91,0.5);background:linear-gradient(135deg,#ff7a7a,#ff3b3b);color:#fff;font-weight:600;cursor:pointer;">Yes, clear all</button>
+        </div>
+      `;
+
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.remove();
+          resolve(false);
+        }
+      });
+
+      modal.querySelector('#cwConfirmNo')?.addEventListener('click', () => {
+        overlay.remove();
+        resolve(false);
+      });
+
+      modal.querySelector('#cwConfirmYes')?.addEventListener('click', () => {
+        overlay.remove();
+        resolve(true);
+      });
+
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+    });
+  }
+
   // Continue Watching Functions (replace localStorage with Firestore)
   window.getContinueWatchingKey = function() {
     // This function is kept for compatibility but not used with Firestore
@@ -279,6 +338,8 @@
         clearBtn.addEventListener('click', async (e) => {
           e.preventDefault();
           e.stopPropagation();
+          const confirmed = await confirmClearAllContinueWatching();
+          if (!confirmed) return;
           try {
             clearBtn.disabled = true;
             clearBtn.style.opacity = '0.6';
@@ -299,6 +360,15 @@
                 localKeys.push(`continueWatching_${uid}`);
                 const selectedProfile = localStorage.getItem(`fb_selected_profile_${uid}`);
                 if (selectedProfile) localKeys.push(`continueWatching_${uid}_${selectedProfile}`);
+              }
+            } catch (_) {}
+            try {
+              // Also remove any older per-movie local keys such as continueWatching_<movieId>.
+              for (let i = localStorage.length - 1; i >= 0; i -= 1) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('continueWatching_')) {
+                  localKeys.push(key);
+                }
               }
             } catch (_) {}
             localKeys.forEach((k) => localStorage.removeItem(k));

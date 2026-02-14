@@ -1587,9 +1587,8 @@
             try {
                 if (video) {
                     video.pause();
-                    if (typeof video.src === 'string' && video.src.startsWith('blob:')) {
-                        video.src = '';
-                    }
+                    // Avoid force-clearing HLS MediaSource blob URLs; doing so can emit
+                    // noisy transient GET blob:... ERR_FILE_NOT_FOUND during teardown.
                     video.srcObject = null;
                 }
             } catch (_) { }
@@ -2971,9 +2970,8 @@
                     video.style.display = '';
                     video.muted = true;
                     video.pause();
-                    if (typeof video.src === 'string' && video.src.startsWith('blob:')) {
-                        video.src = '';
-                    }
+                    // Avoid force-clearing HLS MediaSource blob URLs; doing so can emit
+                    // noisy transient GET blob:... ERR_FILE_NOT_FOUND during teardown.
                     video.srcObject = null;
                 }
                 if (hls) {
@@ -3877,4 +3875,5 @@
 </body>
 
 </html>
+
 

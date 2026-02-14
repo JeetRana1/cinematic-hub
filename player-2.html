@@ -571,6 +571,18 @@
             display: inline-flex !important;
             pointer-events: auto !important;
             z-index: 2147483647 !important;
+            position: fixed !important;
+            background: rgba(10, 12, 18, 0.96) !important;
+            border: 1px solid rgba(255, 255, 255, 0.5) !important;
+            color: #ffffff !important;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.12) inset !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        body.ui-locked .ui-lock-btn i {
+            color: #ffffff !important;
+            opacity: 1 !important;
         }
 
         .control-surface.hidden {

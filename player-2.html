@@ -3318,8 +3318,21 @@
             if (speedList) speedList.classList.remove('active');
         }
 
+        function ensureLockButtonPinned() {
+            if (!uiLockBtn) return;
+            const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+            let host = playerContainer || document.body;
+            if (fsEl && fsEl instanceof Element) {
+                host = fsEl;
+            }
+            if (uiLockBtn.parentElement !== host) {
+                host.appendChild(uiLockBtn);
+            }
+        }
+
         function updateLockButtonUI() {
             if (!uiLockBtn) return;
+            ensureLockButtonPinned();
             uiLockBtn.classList.toggle('locked', isUiLocked);
             uiLockBtn.setAttribute('aria-label', isUiLocked ? 'Unlock controls' : 'Lock controls');
             uiLockBtn.title = isUiLocked ? 'Unlock controls' : 'Lock controls';
@@ -3352,6 +3365,7 @@
         function setUiLockState(locked) {
             isUiLocked = !!locked;
             document.body.classList.toggle('ui-locked', isUiLocked);
+            ensureLockButtonPinned();
             if (isUiLocked) {
                 clearTimeout(controlsHideTimer);
                 closeOverlayMenus();
@@ -3830,10 +3844,16 @@
             }
         });
         document.addEventListener('fullscreenchange', () => {
+            ensureLockButtonPinned();
+            updateLockButtonUI();
             showControlsSurface();
             if (video && video.paused) {
                 controlSurface.classList.add('visible');
             }
+        });
+        document.addEventListener('webkitfullscreenchange', () => {
+            ensureLockButtonPinned();
+            updateLockButtonUI();
         });
 
         document.addEventListener('keydown', function (e) {

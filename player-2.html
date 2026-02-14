@@ -3326,6 +3326,27 @@
             uiLockBtn.innerHTML = isUiLocked
                 ? '<i class="fa-solid fa-lock"></i>'
                 : '<i class="fa-solid fa-lock-open"></i>';
+
+            // Hard-pin the lock button so fullscreen/control-state styles cannot hide it.
+            uiLockBtn.style.position = 'fixed';
+            uiLockBtn.style.top = 'calc(28px + env(safe-area-inset-top))';
+            uiLockBtn.style.right = 'calc(52px + env(safe-area-inset-right))';
+            uiLockBtn.style.display = 'inline-flex';
+            uiLockBtn.style.opacity = '1';
+            uiLockBtn.style.visibility = 'visible';
+            uiLockBtn.style.pointerEvents = 'auto';
+            uiLockBtn.style.zIndex = '2147483647';
+            uiLockBtn.style.transform = 'none';
+            uiLockBtn.style.background = isUiLocked ? 'rgba(10, 12, 18, 0.96)' : 'rgba(20, 22, 30, 0.72)';
+            uiLockBtn.style.borderColor = isUiLocked ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.22)';
+            uiLockBtn.style.color = '#ffffff';
+
+            const icon = uiLockBtn.querySelector('i');
+            if (icon) {
+                icon.style.opacity = '1';
+                icon.style.visibility = 'visible';
+                icon.style.color = '#ffffff';
+            }
         }
 
         function setUiLockState(locked) {

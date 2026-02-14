@@ -202,6 +202,9 @@
           poster: movie.posterUrl || movie.poster || movie.thumbnail || '',
           posterUrl: movie.posterUrl || movie.poster || movie.thumbnail || ''
         };
+        if ((!mapped.progress || mapped.progress <= 0) && mapped.duration > 0 && mapped.currentTime > 0) {
+          mapped.progress = Math.min(99, Math.round((mapped.currentTime / mapped.duration) * 100));
+        }
         console.log('[StorageAdapter] Mapped movie:', mapped.title, '| Progress:', Math.round(mapped.progress), '% | Time:', Math.round(mapped.currentTime), 's | Timestamp:', mapped.timestamp);
         return mapped;
       });
@@ -340,7 +343,9 @@
       console.log('[StorageAdapter] After dedup: ' + deduped.length + ' unique movies from ' + continueWatchingMovies.length + ' total');
 
       let validMovies = deduped.filter(movie => {
-        const hasProgress = movie.progress > 0 && movie.progress < 95;
+        const progressValue = Number(movie.progress) || 0;
+        const currentTimeValue = Number(movie.currentTime) || 0;
+        const hasProgress = (progressValue > 0 && progressValue < 95) || currentTimeValue >= 30;
         const hasValidId = movie.id || movie.movieId;
         const hasTitle = movie.title && movie.title !== 'Untitled' && movie.title !== 'Unknown Movie';
         const isNotTestMovie = !movie.title.toLowerCase().includes('test');

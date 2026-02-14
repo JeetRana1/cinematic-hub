@@ -74,11 +74,12 @@ body.searching .continue-watching-section {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #1d1c1c;
-  color: #0f1116;
+  background: rgba(229, 9, 20, 0.2);
+  color: #ffffff;
   margin-right: 0;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
   font-size: 0.9rem;
+  border: 1px solid rgba(229, 9, 20, 0.45);
 }
 
 .continue-watching-container {

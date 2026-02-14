@@ -31,7 +31,9 @@
       overlay.style.cssText = [
         'position:fixed',
         'inset:0',
-        'background:rgba(0,0,0,0.65)',
+        'background:radial-gradient(circle at 20% 20%, rgba(229,9,20,0.18), rgba(3,7,18,0.82) 45%, rgba(2,6,23,0.9) 100%)',
+        'backdrop-filter:blur(10px) saturate(120%)',
+        '-webkit-backdrop-filter:blur(10px) saturate(120%)',
         'display:flex',
         'align-items:center',
         'justify-content:center',
@@ -42,23 +44,39 @@
       const modal = document.createElement('div');
       modal.style.cssText = [
         'width:min(420px,95vw)',
-        'background:#111827',
-        'border:1px solid rgba(255,255,255,0.12)',
-        'border-radius:14px',
-        'box-shadow:0 18px 45px rgba(0,0,0,0.45)',
-        'padding:18px',
+        'background:linear-gradient(145deg, rgba(17,24,39,0.76), rgba(15,23,42,0.62))',
+        'border:1px solid rgba(255,255,255,0.16)',
+        'border-radius:18px',
+        'box-shadow:0 25px 55px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12)',
+        'backdrop-filter:blur(18px)',
+        '-webkit-backdrop-filter:blur(18px)',
+        'padding:20px',
         'color:#fff',
-        'font-family:inherit'
+        'font-family:inherit',
+        'transform:translateY(8px)',
+        'animation:cwModalIn .18s ease forwards'
       ].join(';');
 
+      if (!document.getElementById('cwConfirmModalStyles')) {
+        const style = document.createElement('style');
+        style.id = 'cwConfirmModalStyles';
+        style.textContent = `
+          @keyframes cwModalIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
       modal.innerHTML = `
-        <h3 style="margin:0 0 8px;font-size:1.05rem;">Clear Continue Watching?</h3>
-        <p style="margin:0 0 16px;color:rgba(255,255,255,0.8);font-size:0.92rem;line-height:1.4;">
+        <h3 style="margin:0 0 8px;font-size:1.1rem;font-weight:700;letter-spacing:0.1px;">Clear Continue Watching?</h3>
+        <p style="margin:0 0 18px;color:rgba(255,255,255,0.82);font-size:0.94rem;line-height:1.45;">
           This will remove all saved continue watching movies for this profile.
         </p>
         <div style="display:flex;gap:10px;justify-content:flex-end;">
-          <button id="cwConfirmNo" style="padding:8px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.06);color:#fff;cursor:pointer;">No</button>
-          <button id="cwConfirmYes" style="padding:8px 14px;border-radius:10px;border:1px solid rgba(255,91,91,0.5);background:linear-gradient(135deg,#ff7a7a,#ff3b3b);color:#fff;font-weight:600;cursor:pointer;">Yes, clear all</button>
+          <button id="cwConfirmNo" style="padding:8px 14px;border-radius:11px;border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.06);color:#f8fafc;cursor:pointer;font-weight:600;transition:all .15s ease;">No</button>
+          <button id="cwConfirmYes" style="padding:8px 14px;border-radius:11px;border:1px solid rgba(255,80,80,0.5);background:linear-gradient(135deg,#ff7a7a,#ff3b3b);color:#fff;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(255,59,59,0.3);transition:all .15s ease;">Yes, clear all</button>
         </div>
       `;
 
@@ -69,12 +87,30 @@
         }
       });
 
-      modal.querySelector('#cwConfirmNo')?.addEventListener('click', () => {
+      const noBtn = modal.querySelector('#cwConfirmNo');
+      const yesBtn = modal.querySelector('#cwConfirmYes');
+
+      noBtn?.addEventListener('mouseenter', () => {
+        noBtn.style.background = 'rgba(255,255,255,0.12)';
+      });
+      noBtn?.addEventListener('mouseleave', () => {
+        noBtn.style.background = 'rgba(255,255,255,0.06)';
+      });
+      yesBtn?.addEventListener('mouseenter', () => {
+        yesBtn.style.transform = 'translateY(-1px)';
+        yesBtn.style.boxShadow = '0 12px 24px rgba(255,59,59,0.38)';
+      });
+      yesBtn?.addEventListener('mouseleave', () => {
+        yesBtn.style.transform = 'translateY(0)';
+        yesBtn.style.boxShadow = '0 8px 20px rgba(255,59,59,0.3)';
+      });
+
+      noBtn?.addEventListener('click', () => {
         overlay.remove();
         resolve(false);
       });
 
-      modal.querySelector('#cwConfirmYes')?.addEventListener('click', () => {
+      yesBtn?.addEventListener('click', () => {
         overlay.remove();
         resolve(true);
       });

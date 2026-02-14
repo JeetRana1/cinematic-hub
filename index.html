@@ -5623,7 +5623,7 @@
     </section>
 
     <!-- Continue Watching Section -->
-    <section id="continueWatchingSection" class="continue-watching-section" style="display: block;">
+    <section id="continueWatchingSection" class="continue-watching-section" style="display: none;">
       <div class="section-header">
         <h2 class="section-title">
           <i class="fas fa-redo"></i> Continue Watching
@@ -10267,10 +10267,9 @@
           displayMovies([], false, 'All Movies');
         }
 
-        // Ensure continue watching is shown
-        const continueWatchingSection = document.getElementById('continueWatchingSection');
-        if (continueWatchingSection) {
-          continueWatchingSection.style.display = 'block';
+        // Re-evaluate continue watching visibility based on actual stored data.
+        if (typeof loadContinueWatching === 'function') {
+          loadContinueWatching(true);
         }
       });
 

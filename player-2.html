@@ -1308,21 +1308,41 @@
             }
         }
 
+                async function requestMediaInfoById(idValue) {
+            const mediaType = (urlParams.get('mediaType') || type || 'movie').toLowerCase();
+            const safeType = mediaType === 'tv' || mediaType === 'series' ? 'tv' : 'movie';
+            const infoUrl = `${LOCAL_API_URL}/mediaInfo?id=${encodeURIComponent(idValue)}&type=${encodeURIComponent(safeType)}`;
+            console.log('?? MediaInfo URL:', infoUrl);
+            const infoRes = await fetch(infoUrl);
+            console.log('?? MediaInfo response status:', infoRes.status);
+            if (!infoRes.ok) throw new Error(`mediaInfo failed: ${infoRes.status}`);
+            const infoJson = await infoRes.json();
+            console.log('?? MediaInfo response:', infoJson);
+            return infoJson;
+        }
+
         async function playFromLocalApi(imdbId) {
             try {
-                console.log(`🎬 Fetching MediaInfo for ${imdbId}...`);
-                const infoUrl = `${LOCAL_API_URL}/mediaInfo?id=${encodeURIComponent(imdbId)}`;
-                console.log('🔗 MediaInfo URL:', infoUrl);
+                console.log(`?? Fetching MediaInfo for ${imdbId}...`);
+                let infoJson = await requestMediaInfoById(imdbId);
+                let payload = infoJson?.data || infoJson;
+                let playlist = Array.isArray(payload?.playlist) ? payload.playlist : [];
+                let key = payload?.key || '';
 
-                const infoRes = await fetch(infoUrl);
-                console.log('📊 MediaInfo response status:', infoRes.status);
-                if (!infoRes.ok) throw new Error(`mediaInfo failed: ${infoRes.status}`);
+                if ((!infoJson?.success || !playlist.length || !key) && imdbId && String(imdbId).startsWith('tt')) {
+                    const tmdbFallbackId =
+                        urlParams.get('tmdbId') ||
+                        urlParams.get('movieId') ||
+                        urlParams.get('id');
 
-                const infoJson = await infoRes.json();
-                console.log('📋 MediaInfo response:', infoJson);
-                const payload = infoJson?.data || infoJson;
-                const playlist = Array.isArray(payload?.playlist) ? payload.playlist : [];
-                const key = payload?.key || '';
+                    if (tmdbFallbackId) {
+                        console.warn(`IMDb mediaInfo failed for ${imdbId}. Retrying with TMDB id ${tmdbFallbackId}...`);
+                        infoJson = await requestMediaInfoById(tmdbFallbackId);
+                        payload = infoJson?.data || infoJson;
+                        playlist = Array.isArray(payload?.playlist) ? payload.playlist : [];
+                        key = payload?.key || '';
+                    }
+                }
 
                 if (!playlist.length || !key) {
                     throw new Error('Invalid mediaInfo payload');
@@ -1330,14 +1350,14 @@
 
                 globalPlaylist = playlist;
                 globalKey = key;
-                console.log(`🎵 Playlist found: ${playlist.length} items`);
+                console.log(`?? Playlist found: ${playlist.length} items`);
 
                 // Prefer English first, otherwise fallback to the first playable item.
                 let initialTrackIndex = playlist.findIndex((t) => String(t?.title || '').toLowerCase() === 'english');
                 if (initialTrackIndex < 0) initialTrackIndex = playlist.findIndex((t) => typeof t?.file === 'string' && t.file.length > 0);
                 if (initialTrackIndex < 0) initialTrackIndex = 0;
 
-                console.log('⚡ Starting immediate audio track load...');
+                console.log('? Starting immediate audio track load...');
                 await loadAudioTrack(initialTrackIndex);
             } catch (error) {
                 console.error('playFromLocalApi failed:', error);
@@ -3693,3 +3713,4 @@
 </body>
 
 </html>
+

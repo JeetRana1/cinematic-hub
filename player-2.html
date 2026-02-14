@@ -1279,6 +1279,8 @@
         const streamCache = new Map();
         let manifestRecoveryInProgress = false;
         let manifestRecoveryAttempts = 0;
+        let fragmentRecoveryInProgress = false;
+        let fragmentRecoveryAttempts = 0;
         let audioSwitchRequestId = 0;
         let activeStreamLoadId = 0;
         let activeStreamFetchController = null;
@@ -1850,6 +1852,8 @@
                 const forceRefresh = !!options.forceRefresh;
                 if (!forceRefresh) {
                     manifestRecoveryAttempts = 0;
+                    fragmentRecoveryAttempts = 0;
+                    fragmentRecoveryInProgress = false;
                 }
 
                 // Try to get cached stream URL first
@@ -2097,6 +2101,8 @@
                         if (isStaleLoad()) return;
                         manifestRecoveryInProgress = false;
                         manifestRecoveryAttempts = 0;
+                        fragmentRecoveryInProgress = false;
+                        fragmentRecoveryAttempts = 0;
                         const maxHeight = Math.max(...hls.levels.map(l => l.height), 0);
 
                         // Preload settings for faster startup
@@ -2327,6 +2333,29 @@
                                         data.details === Hls.ErrorDetails.LEVEL_LOAD_TIMEOUT ||
                                         data.details === Hls.ErrorDetails.FRAG_LOAD_TIMEOUT ||
                                         data.details === Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT;
+                                    const isFragTimeout =
+                                        data.details === Hls.ErrorDetails.FRAG_LOAD_TIMEOUT;
+
+                                    if (!isTestStream && isFragTimeout) {
+                                        fragmentRecoveryAttempts += 1;
+
+                                        // If fragment timeouts keep repeating, refresh stream URL instead of looping forever.
+                                        if (fragmentRecoveryAttempts >= 2) {
+                                            if (fragmentRecoveryInProgress) return;
+                                            fragmentRecoveryInProgress = true;
+                                            const imdbId = urlParams.get('imdbId') || resolvedImdbId;
+                                            clearCachedStreamUrl(imdbId, currentAudioIndex);
+                                            console.warn('Repeated fragment timeout. Refreshing stream URL...');
+                                            setTimeout(() => {
+                                                loadAudioTrack(currentAudioIndex, { forceRefresh: true }).catch((err) => {
+                                                    console.error('Fragment timeout refresh failed:', err);
+                                                    fragmentRecoveryInProgress = false;
+                                                });
+                                            }, 80);
+                                            return;
+                                        }
+                                    }
+
                                     if (isTimeoutError) {
                                         const currentLevelIndex = hls.currentLevel >= 0 ? hls.currentLevel : hls.nextLevel;
                                         const lowerLevelIndex = getLowerLevelIndex(currentLevelIndex >= 0 ? currentLevelIndex : hls.levels.length - 1);

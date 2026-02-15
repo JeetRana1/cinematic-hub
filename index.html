@@ -811,6 +811,7 @@
     .user-caret {
       transition: transform 0.3s ease;
       opacity: 0.7;
+      transform: rotate(90deg);
     }
 
     .user-menu-btn:hover .user-caret {
@@ -892,9 +893,9 @@
     .updates-modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(4, 8, 18, 0.62);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      background: rgba(2, 6, 16, 0.56);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       display: none;
       align-items: center;
       justify-content: center;
@@ -912,14 +913,14 @@
     }
 
     .updates-modal-card {
-      width: min(720px, 96vw);
-      max-height: min(84vh, 900px);
+      width: min(680px, 96vw);
+      max-height: min(82vh, 900px);
       overflow: auto;
-      border-radius: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      background: linear-gradient(145deg, rgba(15, 22, 42, 0.82), rgba(12, 18, 34, 0.78));
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-      color: #eef2ff;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(11, 18, 34, 0.62);
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      color: #f3f6ff;
     }
 
     .updates-modal-head {
@@ -927,13 +928,13 @@
       align-items: center;
       justify-content: space-between;
       gap: 0.75rem;
-      padding: 1rem 1.1rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 1rem 1.15rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     }
 
     .updates-modal-title {
       margin: 0;
-      font-size: 1.15rem;
+      font-size: 1.08rem;
       font-weight: 700;
       display: flex;
       align-items: center;
@@ -941,72 +942,72 @@
     }
 
     .updates-modal-title i {
-      color: #fb7185;
+      color: #fda4af;
     }
 
     .updates-close-btn {
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      background: rgba(255, 255, 255, 0.05);
-      color: #fff;
-      border-radius: 10px;
-      width: 36px;
-      height: 36px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      background: rgba(255, 255, 255, 0.08);
+      color: #f8fafc;
+      border-radius: 12px;
+      width: 38px;
+      height: 38px;
       cursor: pointer;
       transition: all 0.18s ease;
     }
 
     .updates-close-btn:hover {
-      background: rgba(251, 113, 133, 0.2);
-      border-color: rgba(251, 113, 133, 0.5);
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.42);
     }
 
     .updates-modal-body {
-      padding: 1rem 1.1rem 0.8rem;
+      padding: 1.05rem 1.2rem 0.95rem;
     }
 
     .updates-version {
       display: inline-flex;
       align-items: center;
       gap: 0.4rem;
-      font-size: 0.78rem;
-      color: #d1d5db;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      background: rgba(255, 255, 255, 0.06);
+      font-size: 0.76rem;
+      color: #dbe4f7;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
       border-radius: 999px;
       padding: 0.28rem 0.65rem;
       margin-bottom: 0.75rem;
     }
 
     .updates-summary {
-      margin: 0 0 0.8rem;
-      color: rgba(255, 255, 255, 0.88);
-      line-height: 1.45;
-      font-size: 0.95rem;
+      margin: 0 0 1rem;
+      color: rgba(242, 247, 255, 0.95);
+      line-height: 1.55;
+      font-size: 0.93rem;
     }
 
     .updates-list {
       margin: 0;
       padding: 0 0 0 1.1rem;
-      color: rgba(255, 255, 255, 0.92);
-      line-height: 1.45;
-      font-size: 0.92rem;
+      color: rgba(241, 246, 255, 0.92);
+      line-height: 1.62;
+      font-size: 0.9rem;
     }
 
     .updates-list li {
-      margin: 0 0 0.4rem;
+      margin: 0 0 0.62rem;
     }
 
     .updates-section {
-      margin-top: 0.85rem;
-      padding-top: 0.65rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      margin-top: 1rem;
+      padding-top: 0.78rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .updates-section-title {
       margin: 0 0 0.45rem;
       font-size: 0.9rem;
       font-weight: 700;
-      color: #f8fafc;
+      color: #ffffff;
       letter-spacing: 0.01em;
     }
 
@@ -1014,19 +1015,25 @@
       display: flex;
       justify-content: flex-end;
       padding: 0.9rem 1.1rem 1rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(255, 255, 255, 0.02);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
     }
 
     .updates-cta {
-      border: none;
-      border-radius: 10px;
-      padding: 0.62rem 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.26);
+      border-radius: 12px;
+      padding: 0.62rem 1.05rem;
       font-weight: 700;
       color: #fff;
-      background: linear-gradient(135deg, #ef4444, #fb7185);
+      background: rgba(255, 255, 255, 0.1);
       cursor: pointer;
-      box-shadow: 0 12px 24px rgba(239, 68, 68, 0.28);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
+      transition: all 0.18s ease;
+    }
+
+    .updates-cta:hover {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.42);
     }
 
     /* Active State */
@@ -1036,7 +1043,7 @@
     }
 
     .user-menu-btn.active .user-caret {
-      transform: rotate(180deg);
+      transform: rotate(0deg);
     }
 
     .user-menu-btn.active+.user-dropdown {
@@ -1461,6 +1468,49 @@
       font-size: 0.75rem;
       color: var(--text-secondary);
       margin-top: 3px;
+    }
+
+    /* Final brand badge style (overrides earlier duplicate brand rules) */
+    #brandComponent {
+      background: rgba(10, 14, 24, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 12px;
+      padding: 0.42rem 0.72rem 0.44rem;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    #brandComponent .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      line-height: 1.05;
+    }
+
+    #brandComponent .brand-title {
+      margin: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+      font-size: 1.55rem;
+      font-weight: 700;
+      letter-spacing: 0.05px;
+      color: #f3f6ff;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.06), 0 6px 16px rgba(0, 0, 0, 0.32);
+    }
+
+    #brandComponent .brand-mark {
+      display: none;
+    }
+
+    #brandComponent .brand-sub {
+      margin-top: 2px;
+      margin-left: 0;
+      font-size: 0.7rem;
+      letter-spacing: 0.14px;
+      color: rgba(226, 232, 248, 0.7);
+      font-weight: 500;
     }
 
     /* Home and search buttons */
@@ -2688,8 +2738,9 @@
     .report-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.65);
-      backdrop-filter: blur(6px);
+      background: rgba(2, 6, 16, 0.56);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -2698,12 +2749,12 @@
     }
 
     .report-modal {
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
+      background: rgba(11, 18, 34, 0.62);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 20px;
       padding: 1.5rem;
       width: min(92vw, 640px);
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.12);
       animation: modalIn 0.24s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
@@ -2713,8 +2764,12 @@
       gap: 10px;
       font-size: 1.25rem;
       font-weight: 600;
-      color: var(--text-color);
+      color: #f3f6ff;
       margin-bottom: 1rem;
+    }
+
+    .report-title i {
+      color: #fda4af;
     }
 
     .report-grid {
@@ -2735,16 +2790,16 @@
 
     .report-field label {
       font-size: 0.9rem;
-      color: var(--text-secondary);
+      color: rgba(233, 240, 255, 0.82);
     }
 
     .report-input,
     .report-select,
     .report-textarea {
-      background: var(--theme-bg3);
-      border: 1px solid var(--glass-border);
-      color: var(--text-color);
-      border-radius: 10px;
+      background: rgba(20, 28, 47, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #eff5ff;
+      border-radius: 12px;
       padding: 10px 12px;
       font-family: 'Poppins', sans-serif;
       font-size: 0.95rem;
@@ -2755,14 +2810,14 @@
     .report-input:focus,
     .report-select:focus,
     .report-textarea:focus {
-      border-color: rgba(166, 108, 255, 0.6);
-      box-shadow: 0 0 0 2px rgba(166, 108, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.38);
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.14);
     }
 
     /* Force darker, higher-contrast dropdown menu for the native <select> */
     .report-select {
       color-scheme: dark;
-      background: rgba(8, 6, 12, 0.85);
+      background: rgba(20, 28, 47, 0.7);
     }
 
     .report-select option,
@@ -2791,31 +2846,66 @@
 
     .btn-ghost {
       padding: 0.65rem 1.1rem;
-      border-radius: 10px;
-      border: 1px solid var(--glass-border);
-      background: var(--theme-bg3);
-      color: var(--text-color);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.26);
+      background: rgba(255, 255, 255, 0.09);
+      color: #f8fbff;
       cursor: pointer;
       transition: all 0.2s ease;
     }
 
     .btn-ghost:hover {
       transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.42);
     }
 
     .btn-primary {
       padding: 0.65rem 1.1rem;
-      border-radius: 10px;
-      border: 1px solid transparent;
-      background: linear-gradient(135deg, var(--accent), #ff6b6b);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.26);
+      background: rgba(255, 255, 255, 0.1);
       color: #fff;
       cursor: pointer;
-      box-shadow: 0 6px 18px rgba(166, 108, 255, 0.35);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
       transition: transform 0.2s ease;
     }
 
     .btn-primary:hover {
       transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.42);
+    }
+
+    .report-modal .report-input::placeholder,
+    .report-modal .report-textarea::placeholder {
+      color: rgba(216, 226, 244, 0.55);
+    }
+
+    .report-modal .report-input:-webkit-autofill,
+    .report-modal .report-input:-webkit-autofill:hover,
+    .report-modal .report-input:-webkit-autofill:focus,
+    .report-modal .report-input:-webkit-autofill:active {
+      -webkit-text-fill-color: #eff5ff !important;
+      caret-color: #eff5ff !important;
+      -webkit-box-shadow: 0 0 0 1000px rgba(20, 28, 47, 0.88) inset !important;
+      box-shadow: 0 0 0 1000px rgba(20, 28, 47, 0.88) inset !important;
+      border-radius: 12px !important;
+      transition: background-color 9999s ease-out 0s !important;
+    }
+
+    .report-modal .report-input:-moz-autofill {
+      box-shadow: 0 0 0 1000px rgba(20, 28, 47, 0.88) inset !important;
+      -moz-text-fill-color: #eff5ff !important;
+      color: #eff5ff !important;
+      caret-color: #eff5ff !important;
+    }
+
+    body.modal-open #searchComponent {
+      pointer-events: none !important;
+      opacity: 0.2 !important;
+      filter: blur(1px);
+      z-index: 900 !important;
     }
 
     /* Report modal: custom dropdown styled like settings.html */
@@ -2889,9 +2979,9 @@
     }
 
     .report-modal .select-option[data-selected="true"] {
-      background: linear-gradient(135deg, var(--accent), #ff6b6b);
+      background: rgba(255, 255, 255, 0.16);
       color: #fff;
-      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.24) inset;
     }
 
     .report-modal .select-active .select-items {
@@ -3548,7 +3638,9 @@
     .featured-hero {
       position: relative;
       height: 100vh;
-      width: 100%;
+      width: 100vw;
+      margin-left: calc(50% - 50vw);
+      margin-right: calc(50% - 50vw);
       display: flex;
       align-items: center;
       background-size: cover;
@@ -3626,14 +3718,18 @@
     .featured-hero-badge {
       display: inline-block;
       padding: 6px 14px;
-      background: linear-gradient(135deg, #e50914 0%, #b20710 100%);
-      color: #fff;
+      background: rgba(229, 9, 20, 0.2);
+      color: #ffe7ea;
       font-size: 0.85rem;
       font-weight: 800;
-      border-radius: 4px;
+      border-radius: 10px;
       margin-bottom: 20px;
       letter-spacing: 1.5px;
-      box-shadow: 0 4px 15px rgba(229, 9, 20, 0.4);
+      border: 1px solid rgba(255, 73, 92, 0.55);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 8px 22px rgba(229, 9, 20, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+      text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
     }
 
     .featured-hero-title {
@@ -3644,12 +3740,32 @@
       color: #fff;
       letter-spacing: -2px;
       font-family: 'Outfit', sans-serif;
+      position: relative;
+      left: 0 !important;
+    }
+
+    .featured-hero-title.title-short {
+      left: 0 !important;
+    }
+
+    /* Force consistent left anchor for hero title across short/long names */
+    #featuredHero .featured-hero-content {
+      text-align: left;
+    }
+
+    #featuredHero #featuredTitle {
+      display: block;
+      width: 100%;
+      margin-left: 0;
+      text-align: left;
+      transform: translateX(-8px) !important;
     }
 
     .featured-hero-meta {
       display: flex;
       align-items: center;
-      gap: 20px;
+      gap: 10px;
+      flex-wrap: wrap;
       margin-bottom: 25px;
       font-size: 1.1rem;
       color: #eee;
@@ -3662,17 +3778,42 @@
       align-items: center;
       gap: 6px;
       font-weight: 700;
+      font-size: 0.96rem;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 4px 10px;
+      border-radius: 999px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
     }
 
     .featured-hero-year {
       opacity: 0.9;
+      font-size: 0.96rem;
+      color: rgba(255, 255, 255, 0.95);
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 4px 10px;
+      border-radius: 999px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
     }
 
     .featured-hero-type {
       text-transform: uppercase;
       font-size: 0.9rem;
       letter-spacing: 1px;
-      opacity: 0.8;
+      opacity: 0.95;
+      color: rgba(255, 255, 255, 0.95);
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 6px 12px;
+      border-radius: 999px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
     }
 
     .featured-hero-overview {
@@ -3691,6 +3832,64 @@
     .featured-hero-actions {
       display: flex;
       gap: 15px;
+    }
+
+    .featured-hero-controls {
+      position: absolute;
+      right: 42px;
+      bottom: 34px;
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .featured-hero-controls.hidden {
+      display: none;
+    }
+
+    .featured-hero-dots {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .featured-hero-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.32);
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      transition: all 0.2s ease;
+    }
+
+    .featured-hero-dot.active {
+      width: 24px;
+      background: rgba(229, 9, 20, 0.9);
+      border-color: rgba(255, 120, 130, 0.85);
+      box-shadow: 0 6px 14px rgba(229, 9, 20, 0.35);
+    }
+
+    .featured-hero-nav {
+      width: 46px;
+      height: 46px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(10, 12, 20, 0.45);
+      color: #f4f7ff;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .featured-hero-nav:hover {
+      background: rgba(229, 9, 20, 0.28);
+      border-color: rgba(255, 113, 128, 0.68);
+      transform: translateY(-1px);
     }
 
     .featured-btn {
@@ -3719,14 +3918,19 @@
     }
 
     .featured-btn.secondary {
-      background: rgba(109, 109, 110, 0.7);
-      color: #fff;
-      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.1);
+      color: #f8fbff;
+      border: 1px solid rgba(255, 255, 255, 0.26);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.24);
     }
 
     .featured-btn.secondary:hover {
-      background: rgba(109, 109, 110, 0.4);
+      background: rgba(255, 255, 255, 0.17);
+      border-color: rgba(255, 255, 255, 0.42);
       transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 12px 26px rgba(0, 0, 0, 0.3);
     }
 
     @keyframes fadeInUp {
@@ -3759,8 +3963,8 @@
 
     @media (max-width: 768px) {
       .featured-hero {
-        height: auto;
-        min-height: 70vh;
+        height: 100dvh;
+        min-height: 100svh;
         background-size: cover;
         background-position: center top;
         background-repeat: no-repeat;
@@ -3776,6 +3980,15 @@
 
       .featured-hero-title {
         font-size: 2.8rem;
+        left: 0 !important;
+      }
+
+      .featured-hero-title.title-short {
+        left: 0 !important;
+      }
+
+      #featuredHero #featuredTitle {
+        transform: translateX(-6px) !important;
       }
 
       .featured-hero-overview {
@@ -3795,11 +4008,27 @@
         padding: 0 1rem;
         max-width: 100%;
       }
+
+      .featured-hero-controls {
+        right: 16px;
+        bottom: 22px;
+        gap: 10px;
+      }
+
+      .featured-hero-nav {
+        width: 40px;
+        height: 40px;
+      }
+
+      .featured-hero-dot.active {
+        width: 20px;
+      }
     }
 
     @media (max-width: 480px) {
       .featured-hero {
-        min-height: 65vh;
+        height: 100dvh;
+        min-height: 100svh;
         background-size: cover;
         background-position: center 20%;
       }
@@ -3861,6 +4090,12 @@
       border-color: rgba(255, 255, 255, 0.3);
       transform: translateY(-3px);
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Bookmarked state for modal "In My List" button */
+    #bookmarkBtn.bookmarked i {
+      color: #c79a00;
+      text-shadow: 0 0 0 rgba(0, 0, 0, 0);
     }
 
     .genres {
@@ -5248,6 +5483,13 @@
       --search-expanded-max: 360px;
     }
 
+    /* Desktop: nudge search button slightly lower */
+    @media (min-width: 701px) {
+      :root {
+        --search-top-gap: 0.88rem;
+      }
+    }
+
     #searchComponent {
       position: fixed !important;
       top: var(--search-top-gap) !important;
@@ -5262,6 +5504,30 @@
 
     #searchComponent.expanded {
       width: min(var(--search-expanded-max), calc(100vw - var(--search-right-safe) - 1.5rem)) !important;
+    }
+
+    /* Collapsed state: show only a single clean search circle (no outer shell ring) */
+    #searchComponent:not(.expanded) .search-top {
+      width: var(--search-collapsed-size) !important;
+      min-width: var(--search-collapsed-size) !important;
+      height: var(--search-collapsed-size) !important;
+      min-height: var(--search-collapsed-size) !important;
+      padding: 0 !important;
+      border: none !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      overflow: visible !important;
+    }
+
+    #searchComponent:not(.expanded) #searchBtn {
+      width: var(--search-collapsed-size) !important;
+      height: var(--search-collapsed-size) !important;
+      min-width: var(--search-collapsed-size) !important;
+      border: 1px solid rgba(255, 255, 255, 0.24) !important;
+      background: rgba(20, 24, 38, 0.88) !important;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.36) !important;
     }
 
     #searchComponent .search-top {
@@ -5371,12 +5637,28 @@
       height: 34px !important;
       min-width: 34px !important;
       margin: 0 !important;
+      padding: 0 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
       border-radius: 999px !important;
-      border: 1px solid rgba(255, 255, 255, 0.14) !important;
-      background: rgba(255, 255, 255, 0.07) !important;
-      box-shadow: none !important;
+      border: 1px solid rgba(255, 255, 255, 0.24) !important;
+      background: rgba(255, 255, 255, 0.08) !important;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
       transform: none !important;
-      color: rgba(255, 255, 255, 0.86) !important;
+      color: rgba(255, 255, 255, 0.95) !important;
+      outline: none !important;
+      -webkit-tap-highlight-color: transparent !important;
+    }
+
+    #searchComponent #searchBtn:hover {
+      background: rgba(255, 255, 255, 0.14) !important;
+      border-color: rgba(255, 255, 255, 0.38) !important;
+    }
+
+    #searchComponent #searchBtn:active {
+      transform: scale(0.97) !important;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
     }
 
     #searchComponent #searchBtn::before,
@@ -5386,9 +5668,12 @@
     }
 
     #searchComponent #searchBtn svg {
-      width: 16px !important;
-      height: 16px !important;
-      opacity: 0.9 !important;
+      width: 17px !important;
+      height: 17px !important;
+      display: block !important;
+      margin: 0 auto !important;
+      opacity: 1 !important;
+      transform: none !important;
     }
 
     #searchComponent .search-overlay {
@@ -5450,6 +5735,12 @@
         opacity: 0.78 !important;
       }
 
+      #searchComponent #searchBtn {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+      }
+
       #searchComponent {
         top: var(--search-top-gap) !important;
         left: auto !important;
@@ -5497,7 +5788,7 @@
       <!-- Brand/Logo Component -->
       <div class="topbar-component" id="brandComponent">
         <div class="brand">
-          <h1 class="brand-title">Cinematic Hub</h1>
+          <h1 class="brand-title"><span class="brand-mark" aria-hidden="true"></span>Cinematic Hub</h1>
           <div class="brand-sub">Curated collection</div>
         </div>
       </div>
@@ -5590,6 +5881,12 @@
       </div>
 
       <script>
+        function getShortDisplayName(name, maxLength = 4) {
+          const raw = String(name || '').trim();
+          if (!raw) return 'User';
+          return raw.length > maxLength ? raw.slice(0, maxLength) : raw;
+        }
+
         // Show resume prompt modal if there is a valid continue watching entry
         document.addEventListener('DOMContentLoaded', function () {
           try {
@@ -5713,7 +6010,7 @@
             const userNameEl = document.getElementById('userName');
 
             if (profile.name && userNameEl) {
-              userNameEl.textContent = profile.name;
+              userNameEl.textContent = getShortDisplayName(profile.name, 4);
               userNameEl.classList.remove('hide-mobile');
               if (profile.name.length >= 5 && window.matchMedia('(orientation: portrait)').matches) {
                 userNameEl.classList.add('hide-mobile');
@@ -5807,6 +6104,15 @@
             <i class="fas fa-info-circle"></i> More Details
           </button>
         </div>
+      </div>
+      <div class="featured-hero-controls hidden" id="featuredHeroControls" aria-label="Featured hero controls">
+        <div class="featured-hero-dots" id="featuredHeroDots" aria-hidden="true"></div>
+        <button class="featured-hero-nav" id="featuredHeroPrev" aria-label="Previous featured title" title="Previous">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="featured-hero-nav" id="featuredHeroNext" aria-label="Next featured title" title="Next">
+          <i class="fas fa-chevron-right"></i>
+        </button>
       </div>
     </section>
 
@@ -6731,6 +7037,7 @@
     let featuredHeroRotationTimer = null;
     let featuredHeroRotationList = [];
     let featuredHeroRotationIndex = 0;
+    let featuredHeroCurrentIndex = 0;
 
     function stopFeaturedHeroRotation() {
       if (featuredHeroRotationTimer) {
@@ -6750,6 +7057,71 @@
       return arr;
     }
 
+    function updateFeaturedHeroControls() {
+      const controls = document.getElementById('featuredHeroControls');
+      const dotsWrap = document.getElementById('featuredHeroDots');
+      if (!controls || !dotsWrap) return;
+
+      const total = featuredHeroRotationList.length;
+      if (total <= 1) {
+        controls.classList.add('hidden');
+        dotsWrap.innerHTML = '';
+        return;
+      }
+
+      controls.classList.remove('hidden');
+      dotsWrap.innerHTML = featuredHeroRotationList.map((_, idx) =>
+        `<button class="featured-hero-dot${idx === featuredHeroCurrentIndex ? ' active' : ''}" data-hero-dot="${idx}" aria-label="Go to featured item ${idx + 1}" title="Go to slide ${idx + 1}"></button>`
+      ).join('');
+    }
+
+    function setFeaturedHeroByIndex(index, shouldRestartTimer = true) {
+      if (!featuredHeroRotationList.length) return;
+      const total = featuredHeroRotationList.length;
+      const safeIndex = ((index % total) + total) % total;
+      featuredHeroCurrentIndex = safeIndex;
+      featuredHeroRotationIndex = (safeIndex + 1) % total;
+
+      const movie = featuredHeroRotationList[safeIndex];
+      if (movie) populateFeaturedHero(movie);
+      updateFeaturedHeroControls();
+
+      if (shouldRestartTimer && total > 1) {
+        scheduleNextFeaturedHeroTick();
+      }
+    }
+
+    function initFeaturedHeroControls() {
+      const controls = document.getElementById('featuredHeroControls');
+      const dotsWrap = document.getElementById('featuredHeroDots');
+      const prevBtn = document.getElementById('featuredHeroPrev');
+      const nextBtn = document.getElementById('featuredHeroNext');
+      if (!controls || !dotsWrap || !prevBtn || !nextBtn) return;
+      if (controls.dataset.bound === '1') return;
+
+      prevBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setFeaturedHeroByIndex(featuredHeroCurrentIndex - 1, true);
+      });
+
+      nextBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setFeaturedHeroByIndex(featuredHeroCurrentIndex + 1, true);
+      });
+
+      dotsWrap.addEventListener('click', (e) => {
+        const dot = e.target.closest('[data-hero-dot]');
+        if (!dot) return;
+        const idx = Number(dot.getAttribute('data-hero-dot'));
+        if (!Number.isFinite(idx)) return;
+        setFeaturedHeroByIndex(idx, true);
+      });
+
+      controls.dataset.bound = '1';
+    }
+
     function scheduleNextFeaturedHeroTick() {
       stopFeaturedHeroRotation();
       const delay = 3000 + Math.floor(Math.random() * 2001); // 3s - 5s
@@ -6761,24 +7133,24 @@
           featuredHeroRotationIndex = 0;
         }
 
-        const movie = featuredHeroRotationList[featuredHeroRotationIndex];
-        featuredHeroRotationIndex += 1;
-        if (movie) {
-          populateFeaturedHero(movie);
-        }
+        setFeaturedHeroByIndex(featuredHeroRotationIndex, false);
         scheduleNextFeaturedHeroTick();
       }, delay);
     }
 
     function startFeaturedHeroRotation(movies) {
       const candidates = Array.isArray(movies) ? movies.filter(Boolean).slice(0, 3) : [];
+      initFeaturedHeroControls();
       stopFeaturedHeroRotation();
       featuredHeroRotationList = shuffleFeaturedList(candidates);
       featuredHeroRotationIndex = 0;
+      featuredHeroCurrentIndex = 0;
 
-      if (!featuredHeroRotationList.length) return;
-      populateFeaturedHero(featuredHeroRotationList[0]);
-      featuredHeroRotationIndex = 1;
+      if (!featuredHeroRotationList.length) {
+        updateFeaturedHeroControls();
+        return;
+      }
+      setFeaturedHeroByIndex(0, false);
       if (featuredHeroRotationList.length > 1) {
         scheduleNextFeaturedHeroTick();
       }
@@ -6804,9 +7176,19 @@
         featuredHero.style.display = shouldShow ? 'flex' : 'none';
       }
 
-      if (featuredTitle) featuredTitle.textContent = movie.title || movie.name || 'Untitled';
+      if (featuredTitle) {
+        const heroTitleText = movie.title || movie.name || 'Untitled';
+        featuredTitle.textContent = heroTitleText;
+        const compactLength = String(heroTitleText).replace(/\s+/g, '').length;
+        featuredTitle.classList.toggle('title-short', compactLength <= 10);
+        const isMobileHero = window.matchMedia('(max-width: 768px)').matches;
+        featuredTitle.style.left = '0';
+        featuredTitle.style.transform = isMobileHero ? 'translateX(-6px)' : 'translateX(-8px)';
+      }
 
-      const rating = movie.rating || (typeof movie.vote_average === 'number' ? movie.vote_average.toFixed(1) : '-');
+      const rawRating = movie.rating ?? movie.vote_average;
+      const ratingNum = Number(rawRating);
+      const rating = Number.isFinite(ratingNum) ? ratingNum.toFixed(1) : '-';
       if (featuredRating) featuredRating.textContent = rating;
 
       const year = movie.releaseDate ? movie.releaseDate.split('-')[0] : (movie.year || '');
@@ -10113,8 +10495,7 @@
       // Update URL with search parameter
       updateURLState({ category: null, search: query || null });
 
-      if (!query) {
-        // If search is empty, show all movies with continue watching
+      if (!query) {        // If search is empty, show all movies with continue watching
         document.body.classList.remove('searching');
         isSearching = false;
 
@@ -10151,8 +10532,7 @@
 
       // Add searching class to body
       document.body.classList.add('searching');
-      isSearching = true;
-      stopFeaturedHeroRotation();
+      isSearching = true;      stopFeaturedHeroRotation();
 
       // Hide all non-search sections
       if (popularSection) popularSection.style.display = 'none';
@@ -10363,10 +10743,8 @@
 
       // Restore category and search state from URL
       const categoryParam = urlParams.get('category');
-      const searchParam = urlParams.get('search');
-      const navEntries = performance.getEntriesByType && performance.getEntriesByType('navigation');
-      const navType = navEntries && navEntries[0] ? navEntries[0].type : '';
-      const isHardReload = navType === 'reload';
+      const urlSearchParam = (urlParams.get('search') || '').trim();
+      const searchParam = urlSearchParam;
 
       // Set current category from URL
       currentCategory = categoryParam || 'all';
@@ -10403,55 +10781,66 @@
         }
       } catch (e) { console.error('Failed to restore modal:', e); }
 
-      if (searchParam && !isHardReload) {
+      if (searchParam) {
         // Restore search state
         searchInput.value = searchParam;
         performSearch();
-      } else if (isHardReload) {
-        // On refresh, clear search state so the page starts fresh
-        searchInput.value = '';
-        document.body.classList.remove('searching');
-        isSearching = false;
-        updateURLState({ category: categoryParam || 'all', search: null });
-        syncSearchHomeButtonVisibility();
       } else if (categoryParam && categoryParam !== 'all') {
         // Restore category state
         applyCategory(categoryParam);
       }
-    };
-
-    // Home button: reset to full curated list
+    };    // Home button: reset to full curated list
     (function wireHomeButton() {
       const homeBtn = document.getElementById('homeBtn');
       if (!homeBtn) return;
 
       homeBtn.addEventListener('click', async (e) => {
         e.preventDefault();
-        // Clear search input and any active search state
-        searchInput.value = '';
+        e.stopPropagation();
+
+        // Cancel pending debounced search execution
+        try { clearTimeout(searchTimeout); } catch (_) { }
+
+        // Close modal if open
+        if (modal && modal.style.display === 'flex') {
+          closeModalBtn.click();
+        }
+
+        // Reset search state completely
+        if (searchInput) {
+          searchInput.value = '';
+        }
         document.body.classList.remove('searching');
         isSearching = false;
-        syncSearchHomeButtonVisibility();
 
         const searchTop = document.getElementById('searchTop');
         if (searchTop) {
           searchTop.classList.remove('active');
         }
+        syncSearchHomeButtonVisibility();
 
-        // Clear URL state
-        updateURLState({ category: 'all', search: null });
+        // Force clean URL with no query params to prevent search restore on refresh.
+        try {
+          const cleanUrl = window.location.pathname;
+          window.history.replaceState(null, '', cleanUrl);
+        } catch (_) {
+          updateURLState({ category: 'all', search: null });
+        }
 
-        // Show popular movies section
+        // Show core sections again
         const popularSection = document.getElementById('popularMoviesSection');
         const popularTVSection = document.getElementById('popularTVSection');
+        const featuredHero = document.getElementById('featuredHero');
+        const categoryBarMount = document.getElementById('categoryBarMount');
         if (popularSection) popularSection.style.display = '';
         if (popularTVSection) popularTVSection.style.display = '';
+        if (featuredHero) featuredHero.style.display = 'flex';
+        if (categoryBarMount) categoryBarMount.style.display = '';
 
-        // Reset category filter and show TMDB movies
+        // Reset category and render home catalog
         try { currentCategory = 'all'; } catch (_) { }
         mountCategoryBar();
 
-        // Load and display TMDB movies if available
         if (typeof loadAllTMDBMovies === 'function' && typeof displayMovies === 'function') {
           const tmdbMovies = await loadAllTMDBMovies(3);
           if (tmdbMovies.length > 0) {
@@ -10460,39 +10849,13 @@
             displayMovies([], false, 'All Movies');
           }
         } else {
-          displayMovies([], false, 'All Movies');
+          displayMovies(curatedMovies, false, 'All Movies');
         }
 
-        // Re-evaluate continue watching visibility based on actual stored data.
         if (typeof loadContinueWatching === 'function') {
           loadContinueWatching(true);
         }
-      });
 
-      homeBtn.addEventListener('click', () => {
-        // close modal if open
-        if (modal && modal.style.display === 'flex') {
-          closeModalBtn.click();
-        }
-        // clear search
-        if (searchInput) {
-          searchInput.value = '';
-          searchInput.dispatchEvent(new Event('input'));
-        }
-        syncSearchHomeButtonVisibility();
-        // Clear URL state
-        updateURLState({ category: 'all', search: null });
-        // Show popular movies section
-        const popularSection = document.getElementById('popularMoviesSection');
-        const popularTVSection = document.getElementById('popularTVSection');
-        if (popularSection) popularSection.style.display = '';
-        if (popularTVSection) popularTVSection.style.display = '';
-
-        // reset movies and category filter
-        try { currentCategory = 'all'; } catch (_) { }
-        mountCategoryBar();
-        displayMovies(curatedMovies);
-        // smooth scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     })();
@@ -10888,11 +11251,27 @@
     });
 
     // Auth gate + profile + theme load
-    FirebaseAuth.onAuthChanged(async (user) => {
+    const initializeLocalGuestMode = () => {
+      const menu = document.getElementById('appUserMenu');
+      if (menu) menu.style.display = 'block';
+      const userNameElement = document.querySelector('.user-name');
+      if (userNameElement && !userNameElement.textContent?.trim()) {
+        userNameElement.textContent = 'Guest';
+      }
+      if (typeof loadContinueWatching === 'function') {
+        loadContinueWatching(true);
+      }
+    };
+
+    const firebaseDisabledMode = window.FirebaseAuth && window.FirebaseAuth.SDK_VERSION === 'disabled-no-config';
+    if (!window.FirebaseAuth || typeof window.FirebaseAuth.onAuthChanged !== 'function' || firebaseDisabledMode) {
+      console.warn('FirebaseAuth unavailable; running in local guest mode.');
+      initializeLocalGuestMode();
+    } else window.FirebaseAuth.onAuthChanged(async (user) => {
       const menu = document.getElementById('appUserMenu');
       if (!user) { window.location.assign('/login.html'); return; }
       // Load selected profile or redirect to profiles page
-      const prof = await FirebaseAuth.getSelectedProfile(user.uid);
+      const prof = await window.FirebaseAuth.getSelectedProfile(user.uid);
       if (!prof) { window.location.assign('/profiles.html'); return; }
 
       // Initialize FirebaseSync with the confirmed profile
@@ -10909,7 +11288,7 @@
 
       // Update username
       if (userNameElement) {
-        userNameElement.textContent = prof.name || 'User';
+        userNameElement.textContent = getShortDisplayName(prof.name, 4);
       }
 
       // Update avatar
@@ -10969,7 +11348,7 @@
           // Try profile document field first, then user settings per-profile, then global
           theme = (prof && prof.theme) || null;
           if (!theme) {
-            const s = await FirebaseAuth.getUserSettings(user.uid).catch(() => null);
+            const s = await window.FirebaseAuth.getUserSettings(user.uid).catch(() => null);
             theme = (s && s.profiles && prof && s.profiles[prof.id] && s.profiles[prof.id].theme) || (s && s.theme) || null;
           }
         }
@@ -11113,31 +11492,30 @@
       const updatesLink = document.getElementById('updatesLink');
       const UPDATE_NOTES_STORAGE_KEY = `cinematichub_updates_notes_seen_v2_${user?.uid || 'guest'}_${prof?.id || 'default'}`;
       const UPDATE_NOTES = {
-        version: '2026.02.15',
-        headline: 'Major reliability update with playback, sync, and UI quality fixes.',
+        version: '2026.02.18',
+        headline: 'Quick polish update: cleaner home UI and smoother browsing.',
         sections: [
           {
-            title: 'Added',
+            title: 'New',
             items: [
-              'New Updates entry in the profile menu to reopen release notes any time.',
-              'Automatic update modal display for each user/profile when new update notes are published.',
-              'Versioned update tracking so you only see each release note once unless content changes.'
+              '\u{1F3AC} Hero now has arrows + dots so you can switch slides manually.',
+              '\u{1F4E2} Updates popup is always available from your profile menu.'
             ]
           },
           {
             title: 'Fixed',
             items: [
-              'Continue Watching clear-all and single-item remove actions now persist and sync more reliably.',
-              'Legacy/old Continue Watching entries are prevented from reappearing after clear operations.',
-              'Continue Watching section now stays hidden when no valid in-progress items exist.'
+              '\u{1F50E} Search results no longer jump back during refresh.',
+              '\u{1F3E0} Home now clears old search URL state properly.',
+              '\u{1F504} Continue Watching remove/clear sync is more reliable.'
             ]
           },
           {
             title: 'Improved',
             items: [
-              'Player 2 startup and buffering behavior tuned for slower mobile networks.',
-              'Progress persistence now updates much more frequently for better resume accuracy.',
-              'Dropdown and modal interactions were hardened for more reliable behavior on localhost and production.'
+              '\u{1F5BC} Hero title alignment is cleaner for short and long names.',
+              '\u{2B50} Hero rating now shows one decimal only (example: 6.2).',
+              '\u{1F3A8} Hero chips, badge, icons, and branding got visual polish.'
             ]
           }
         ]
@@ -11190,6 +11568,7 @@
         renderUpdateNotes();
         updatesModal.classList.add('show');
         updatesModal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
         document.body.style.overflow = 'hidden';
       };
 
@@ -11197,6 +11576,7 @@
         if (!updatesModal) return;
         updatesModal.classList.remove('show');
         updatesModal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal-open');
         document.body.style.overflow = '';
         if (markSeen) {
           localStorage.setItem(UPDATE_NOTES_STORAGE_KEY, updateNotesSignature);
@@ -11265,8 +11645,8 @@
           e.preventDefault();
           closeDD();
           try {
-            if (typeof FirebaseAuth !== 'undefined' && FirebaseAuth.signOut) {
-              await FirebaseAuth.signOut();
+            if (window.FirebaseAuth && window.FirebaseAuth.signOut) {
+              await window.FirebaseAuth.signOut();
             }
             window.location.href = 'login.html';
           } catch (error) {
@@ -11398,8 +11778,19 @@
           console.log(`Refreshed ${tvShows.length} TV shows`);
         }
 
-        // If we're currently viewing a category, refresh the display
-        if (currentCategory && currentCategory !== 'search') {
+        // Preserve active search state during background refreshes.
+        const queryInInput = (searchInput && typeof searchInput.value === 'string') ? searchInput.value.trim() : '';
+        const queryInUrl = (() => {
+          try { return new URLSearchParams(window.location.search).get('search') || ''; } catch (_) { return ''; }
+        })();
+        const hasActiveSearch = !!(isSearching || queryInInput || queryInUrl || document.body.classList.contains('searching'));
+
+        if (hasActiveSearch) {
+          console.log('Skipping category display refresh because search mode is active');
+          if (typeof performSearch === 'function') {
+            performSearch();
+          }
+        } else if (currentCategory && currentCategory !== 'search') {
           console.log(`Refreshing display for current category: ${currentCategory}`);
           applyCategory(currentCategory);
         }
@@ -11676,4 +12067,14 @@
 </body>
 
 </html>
+
+
+
+
+
+
+
+
+
+
 

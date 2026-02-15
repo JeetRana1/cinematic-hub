@@ -11,9 +11,44 @@
   // Load firebaseConfig from external file (firebaseConfig.js)
   if (typeof window.firebaseConfig === 'undefined' || !window.firebaseConfig.apiKey) {
     console.warn('Firebase config not found or invalid. Skipping Firebase initialization.');
-    // Set dummy objects for non-Firebase features
-    window.firebaseAuth = { onAuthStateChanged: (cb) => cb(null), currentUser: null, signInAnonymously: () => Promise.resolve({ user: null }) };
-    window.firebaseDb = { collection: () => ({ doc: () => ({ get: () => Promise.resolve({ exists: false }), set: () => Promise.resolve() }) }) };
+    const noAuthUnsubscribe = () => () => {};
+    const noAuth = async () => null;
+    // Keep a compat-like shape for scripts that check firebaseAuth/firebaseDb directly.
+    window.firebaseAuth = {
+      onAuthStateChanged: (cb) => { try { cb(null); } catch (_) {} return noAuthUnsubscribe(); },
+      currentUser: null,
+      signInAnonymously: () => Promise.resolve({ user: null })
+    };
+    window.firebaseDb = {
+      collection: () => ({
+        doc: () => ({
+          get: () => Promise.resolve({ exists: false }),
+          set: () => Promise.resolve(),
+          collection: () => ({ get: () => Promise.resolve({ docs: [] }) })
+        })
+      })
+    };
+    // Expose safe no-op FirebaseAuth API so pages don't crash in local/no-config mode.
+    window.FirebaseAuth = {
+      onAuthChanged: (cb) => { try { cb(null); } catch (_) {} return noAuthUnsubscribe(); },
+      getUser: () => null,
+      signUpEmailPassword: noAuth,
+      signInEmailPassword: noAuth,
+      signOut: noAuth,
+      resetPassword: noAuth,
+      requireAuth: () => null,
+      getProfiles: async () => [],
+      addProfile: async () => null,
+      deleteProfile: async () => null,
+      ensureOnline: async () => null,
+      updateProfile: async () => null,
+      selectProfile: async () => null,
+      getSelectedProfile: async () => null,
+      requireProfile: async () => null,
+      getUserSettings: async () => ({}),
+      updateUserSettings: async () => null,
+      SDK_VERSION: 'disabled-no-config'
+    };
     return;
   }
   const firebaseConfig = window.firebaseConfig;

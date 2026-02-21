@@ -1,0 +1,658 @@
+/**
+ * Continue Watching Display Manager
+ * Handles thumbnail display and UI generation for the Continue Watching section
+ */
+class ContinueWatchingDisplay {
+  constructor() {
+    this.FALLBACK_POSTER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgdmlld0JveD0iMCAwIDMwMCA0NTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iNDUwIiBmaWxsPSIjMUExQTFBIi8+CjxwYXRoIGQ9Ik0xNTAgMjI1TDE3NSAyNDBIMTI1TDE1MCAyMjVaIiBmaWxsPSIjNjY2NjY2Ii8+Cjx0ZXh0IHg9IjE1MCIgeT0iMjcwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOTk5OTk5IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4K';
+    this.imageCache = new Map();
+    this.loadingImages = new Set();
+    this.retryAttempts = new Map();
+    this.MAX_RETRY_ATTEMPTS = 3;
+  }
+
+  /**
+   * Create the Continue Watching section with proper thumbnail handling
+   */
+  createContinueWatchingSection() {
+    const continueWatchingMovies = this.getContinueWatchingMovies();
+    
+    if (continueWatchingMovies.length === 0) {
+      return null;
+    }
+    
+    const section = document.createElement('div');
+    section.className = 'continue-watching-section';
+    section.innerHTML = `
+      <h2 class="section-title">
+        <i class="fas fa-play-circle" style="margin-right: 8px; color: #e50914;"></i>
+        Continue Watching
+      </h2>
+      <button class="continue-scroll-btn continue-scroll-left" aria-label="Scroll left">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <button class="continue-scroll-btn continue-scroll-right" aria-label="Scroll right">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+      <div class="continue-watching-container" id="continueWatchingContainer">
+        <div class="loading-placeholder">Loading movies...</div>
+      </div>
+    `;
+    
+    // Load movies asynchronously to avoid blocking UI
+    setTimeout(() => {
+      this.loadMovieCards(section.querySelector('#continueWatchingContainer'), continueWatchingMovies);
+    }, 0);
+
+    // Wire scroll arrows
+    const container = section.querySelector('#continueWatchingContainer');
+    const leftBtn = section.querySelector('.continue-scroll-left');
+    const rightBtn = section.querySelector('.continue-scroll-right');
+
+    const updateButtons = () => {
+      if (!container) return;
+      const canScroll = container.scrollWidth > container.clientWidth + 2;
+      if (!canScroll) {
+        leftBtn?.classList.remove('visible');
+        rightBtn?.classList.remove('visible');
+        return;
+      }
+      leftBtn?.classList.add('visible');
+      rightBtn?.classList.add('visible');
+      leftBtn?.classList.toggle('disabled', container.scrollLeft <= 0);
+      rightBtn?.classList.toggle('disabled', container.scrollLeft + container.clientWidth >= container.scrollWidth - 1);
+    };
+
+    const scrollByAmount = () => Math.max(280, Math.floor(container.clientWidth * 0.8));
+
+    leftBtn?.addEventListener('click', () => {
+      container.scrollBy({ left: -scrollByAmount(), behavior: 'smooth' });
+    });
+    rightBtn?.addEventListener('click', () => {
+      container.scrollBy({ left: scrollByAmount(), behavior: 'smooth' });
+    });
+
+    container?.addEventListener('scroll', updateButtons, { passive: true });
+    window.addEventListener('resize', updateButtons);
+    setTimeout(updateButtons, 50);
+    
+    return section;
+  }
+
+  /**
+   * Load movie cards with proper thumbnail handling
+   */
+  async loadMovieCards(container, movies) {
+    container.innerHTML = '';
+    
+    // Create cards for each movie
+    const cardPromises = movies.map(movie => this.createMovieCard(movie));
+    const cards = await Promise.all(cardPromises);
+    
+    // Append all cards to container
+    cards.forEach(card => {
+      if (card) {
+        container.appendChild(card);
+      }
+    });
+    
+    // If no cards were created, show empty state
+    if (cards.filter(Boolean).length === 0) {
+      container.innerHTML = '<div class="empty-state">No movies to continue watching</div>';
+    }
+  }
+
+  /**
+   * Create a movie card with proper thumbnail handling
+   */
+  async createMovieCard(movie) {
+    const title = movie.title || 'Untitled Movie';
+    const progress = Math.round(movie.progress || 0);
+    const timeLeft = this.formatTime(movie.timeRemaining || 0);
+    const currentTime = this.formatTime(movie.currentTime || 0);
+    
+    // Create card element
+    const card = document.createElement('div');
+    card.className = 'continue-watching-card';
+    card.dataset.movieId = movie.movieId;
+    
+    // Create card structure
+    card.innerHTML = `
+      <div class="continue-watching-poster">
+        <div class="thumbnail-container">
+          <div class="thumbnail-loading">
+            <div class="spinner-small"></div>
+          </div>
+          <img class="thumbnail-image" alt="${title}" style="display: none; object-fit: cover !important; object-position: center center !important;" />
+        </div>
+        <div class="progress-bar">
+          <div class="progress" style="width: ${progress}%"></div>
+        </div>
+        <div class="resume-overlay">
+          <div class="resume-button">
+            <i class="fas fa-play"></i>
+            Resume
+          </div>
+        </div>
+        <div class="remove-button" title="Remove from Continue Watching">
+          <i class="fas fa-times"></i>
+        </div>
+        <div class="progress-indicator">${progress}%</div>
+      </div>
+      <div class="continue-watching-info">
+        <h3 title="${title}">${title}</h3>
+        <p class="progress-text">${currentTime} watched • ${timeLeft} left</p>
+        <p class="last-watched">Last watched: ${movie.lastWatched || 'Recently'}</p>
+      </div>
+    `;
+    // Load thumbnail
+    await this.loadThumbnail(card, movie);
+    
+    // Add event listeners
+    this.addCardEventListeners(card, movie);
+    
+    return card;
+  }
+
+  /**
+   * Load thumbnail with fallback mechanisms
+   */
+  async loadThumbnail(card, movie) {
+    const thumbnailContainer = card.querySelector('.thumbnail-container');
+    const thumbnailImage = card.querySelector('.thumbnail-image');
+    const loadingIndicator = card.querySelector('.thumbnail-loading');
+    
+    // Get potential thumbnail URLs
+    const thumbnailUrls = this.getThumbnailUrls(movie);
+    
+    let imageLoaded = false;
+    
+    // Check if posterUrl is TMDB - use directly without CORS validation
+    if (movie.posterUrl && movie.posterUrl.includes('image.tmdb.org')) {
+      // Convert to w300 size for better loading
+      const tmdbUrl = movie.posterUrl.replace('/original/', '/w300/');
+      console.log('Using TMDB poster directly:', tmdbUrl);
+      thumbnailImage.src = tmdbUrl;
+      thumbnailImage.crossOrigin = '';
+      thumbnailImage.style.display = 'block';
+      thumbnailImage.style.setProperty('object-fit', 'cover', 'important');
+      thumbnailImage.style.setProperty('object-position', 'center center', 'important');
+      loadingIndicator.style.display = 'none';
+      imageLoaded = true;
+      // Cache successful URL
+      this.imageCache.set(movie.movieId, tmdbUrl);
+    } else {
+      // Try each URL until one works
+      for (const url of thumbnailUrls) {
+        if (imageLoaded) break;
+        
+        try {
+          const validUrl = await this.validateAndLoadImage(url);
+          if (validUrl) {
+            thumbnailImage.src = validUrl;
+            thumbnailImage.style.display = 'block';
+            thumbnailImage.style.setProperty('object-fit', 'cover', 'important');
+            thumbnailImage.style.setProperty('object-position', 'center center', 'important');
+            loadingIndicator.style.display = 'none';
+            imageLoaded = true;
+            
+            // Cache successful URL
+            this.imageCache.set(movie.movieId, validUrl);
+            console.log('Thumbnail loaded successfully:', validUrl);
+          }
+        } catch (error) {
+          console.warn('Failed to load thumbnail:', url, error);
+          continue;
+        }
+      }
+    }
+    
+    // If no image loaded, use fallback
+    if (!imageLoaded) {
+      this.setFallbackThumbnail(thumbnailImage, loadingIndicator, movie.title);
+    }
+  }
+
+  /**
+   * Get potential thumbnail URLs in order of preference
+   */
+  getThumbnailUrls(movie) {
+    const urls = [];
+    const title = movie.title || '';
+    const movieId = movie.movieId || '';
+    
+    // 1. Stored poster URL (highest priority)
+    if (movie.posterUrl) {
+      urls.push(movie.posterUrl);
+    }
+    
+    // 2. Check cache
+    if (this.imageCache.has(movieId)) {
+      urls.push(this.imageCache.get(movieId));
+    }
+    
+    // 3. Common poster paths
+    const normalizedTitle = title.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+    const posterPaths = [
+      `posters/${movieId}.jpg`,
+      `posters/${movieId}.png`,
+      `posters/${movieId}.webp`,
+      `images/posters/${movieId}.jpg`,
+      `images/posters/${movieId}.png`,
+      `assets/posters/${movieId}.jpg`,
+      `assets/images/${movieId}.jpg`,
+      `posters/${normalizedTitle}.jpg`,
+      `posters/${normalizedTitle}.png`,
+      `images/${normalizedTitle}.jpg`,
+      `images/${normalizedTitle}.png`
+    ];
+    
+    urls.push(...posterPaths);
+    
+    // 4. TMDB-style URLs if movie has TMDB data
+    if (movie.tmdbId) {
+      urls.push(`https://image.tmdb.org/t/p/w300${movie.posterPath}`);
+      urls.push(`https://image.tmdb.org/t/p/w500${movie.posterPath}`);
+    }
+    
+    // 5. Generated placeholder as last resort
+    urls.push(this.generatePlaceholderUrl(title));
+    
+    // Remove duplicates and empty URLs
+    return [...new Set(urls.filter(Boolean))];
+  }
+
+  /**
+   * Validate and load image with retry mechanism
+   */
+  validateAndLoadImage(url) {
+    return new Promise((resolve, reject) => {
+      // Check if already loading
+      if (this.loadingImages.has(url)) {
+        setTimeout(() => {
+          if (this.imageCache.has(url)) {
+            resolve(this.imageCache.get(url));
+          } else {
+            reject(new Error('Image loading timeout'));
+          }
+        }, 5000);
+        return;
+      }
+      
+      this.loadingImages.add(url);
+      
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      const cleanup = () => {
+        this.loadingImages.delete(url);
+      };
+      
+      img.onload = () => {
+        cleanup();
+        // Verify image has valid dimensions
+        if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+          this.imageCache.set(url, url);
+          resolve(url);
+        } else {
+          reject(new Error('Invalid image dimensions'));
+        }
+      };
+      
+      img.onerror = () => {
+        cleanup();
+        const attempts = this.retryAttempts.get(url) || 0;
+        
+        if (attempts < this.MAX_RETRY_ATTEMPTS) {
+          this.retryAttempts.set(url, attempts + 1);
+          // Retry with exponential backoff
+          setTimeout(() => {
+            this.validateAndLoadImage(url).then(resolve).catch(reject);
+          }, Math.pow(2, attempts) * 1000);
+        } else {
+          reject(new Error('Max retry attempts reached'));
+        }
+      };
+      
+      // Set timeout for loading
+      setTimeout(() => {
+        if (this.loadingImages.has(url)) {
+          cleanup();
+          reject(new Error('Image loading timeout'));
+        }
+      }, 10000);
+      
+      img.src = url;
+    });
+  }
+
+  /**
+   * Set fallback thumbnail
+   */
+  setFallbackThumbnail(thumbnailImage, loadingIndicator, title) {
+    console.log('Using fallback thumbnail for:', title);
+    
+    loadingIndicator.style.display = 'none';
+    thumbnailImage.src = this.generatePlaceholderUrl(title);
+    thumbnailImage.style.display = 'block';
+    thumbnailImage.style.setProperty('object-fit', 'cover', 'important');
+    thumbnailImage.style.setProperty('object-position', 'center center', 'important');
+    thumbnailImage.classList.add('fallback-image');
+  }
+
+  /**
+   * Generate placeholder URL
+   */
+  generatePlaceholderUrl(title) {
+    const encodedTitle = encodeURIComponent(title || 'Movie');
+    return `https://via.placeholder.com/300x450/1a1a1a/ffffff?text=${encodedTitle}`;
+  }
+
+  /**
+   * Add event listeners to card
+   */
+  addCardEventListeners(card, movie) {
+    // Click to resume (except on remove button)
+    card.addEventListener('click', (e) => {
+      if (!e.target.closest('.remove-button')) {
+        this.resumeMovie(movie);
+      }
+    });
+    
+    // Remove button
+    const removeBtn = card.querySelector('.remove-button');
+    removeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.removeMovie(movie, card);
+    });
+    
+    // Hover effects
+    card.addEventListener('mouseenter', () => {
+      card.classList.add('hovered');
+    });
+    
+    card.addEventListener('mouseleave', () => {
+      card.classList.remove('hovered');
+    });
+  }
+
+  /**
+   * Resume movie playback
+   */
+  resumeMovie(movie) {
+    console.log('🎬 Resuming movie:', movie.title);
+    console.log('📊 Movie data:', JSON.stringify(movie, null, 2));
+
+    // Use the player that was used when watching this specific movie
+    // Default to player1 if playerUsed field is missing
+    const playerUsed = (movie.playerUsed || 'player1').toLowerCase();
+    const usePlayer2 = playerUsed === 'player2' || playerUsed === 'player-2.nontongo.html' || playerUsed === 'player-2.html';
+    const playerBase = usePlayer2 ? 'player-2.html' : 'player.html';
+    console.log('🎮 Resuming in player:', playerBase, '(playerUsed field:', playerUsed, ')');
+
+    // Build resume URL
+    const params = new URLSearchParams();
+    params.append('movieId', movie.movieId);
+    params.append('id', movie.movieId); // legacy id support
+    params.append('title', movie.title);
+    if (movie.posterUrl) params.append('poster', movie.posterUrl);
+    params.append('t', Math.floor(movie.currentTime));
+    
+    // Show loading toast while resolving stream
+    this.showToast('info', 'Loading...', 'Resolving video stream for this movie...');
+    
+    // Determine video source type and add appropriate parameters
+    this.buildResumeUrl(movie, params, playerBase);
+  }
+
+  /**
+   * Build resume URL with proper video source
+   */
+  buildResumeUrl(movie, params, playerBase = 'player.html') {
+    const movieId = movie.movieId;
+    const title = movie.title.toLowerCase();
+    const isPlayer2Target = playerBase.includes('player-2.html');
+
+    // Stream 2 expects movie metadata only and resolves stream internally.
+    if (isPlayer2Target) {
+      window.location.href = `${playerBase}?${params.toString()}`;
+      return;
+    }
+    
+    // For iframe embeds (playerUsed indicates iframe/embed player)
+    if (movie.playerUsed === 'player1' || !movie.playerUsed) {
+      // Construct the iframe source URL (Videasy, etc.)
+      // Check if we have a saved source or construct from TMDB ID
+      const iframeSrc = movie.src || `https://player.videasy.net/movie/${movieId}`;
+      
+      params.append('type', 'iframe');
+      params.append('src', iframeSrc);
+      
+      console.log('🔗 Resume iframe embed:', iframeSrc);
+      window.location.href = `${playerBase}?${params.toString()}`;
+      return;
+    }
+    
+    // Check MP4 overrides
+    if (window.mp4Overrides && window.mp4Overrides[title]) {
+      params.append('type', 'mp4');
+      params.append('src', window.mp4Overrides[title]);
+      window.location.href = `${playerBase}?${params.toString()}`;
+      return;
+    }
+    
+    // Check Drive mappings
+    if (window.driveMovieMappings && window.driveMovieMappings[movieId]) {
+      params.append('type', 'drive');
+      params.append('id', window.driveMovieMappings[movieId]);
+      window.location.href = `${playerBase}?${params.toString()}`;
+      return;
+    }
+    
+    // Try to resolve stream dynamically
+    if (typeof window.resolveStreamUrlForMovie === 'function') {
+      window.resolveStreamUrlForMovie(movie)
+        .then(result => {
+          if (result && result.src) {
+            console.log('✅ Stream resolved for resume:', result.src.substring(0, 100) + '...');
+            const newParams = new URLSearchParams();
+            newParams.append('movieId', movie.movieId);
+            newParams.append('id', movie.movieId);
+            newParams.append('title', movie.title);
+            if (movie.posterUrl) newParams.append('poster', movie.posterUrl);
+            newParams.append('t', Math.floor(movie.currentTime));
+            newParams.append('type', result.type || 'hls');
+            newParams.append('src', result.src);
+            if (result.key) newParams.append('key', result.key);
+            
+            console.log('🔗 Redirecting to player with stream parameters');
+            window.location.href = `${playerBase}?${newParams.toString()}`;
+          } else {
+            console.error('❌ No stream found, falling back to iframe');
+            // Fallback to iframe
+            params.append('type', 'iframe');
+            params.append('src', `https://player.videasy.net/movie/${movieId}`);
+            window.location.href = `${playerBase}?${params.toString()}`;
+          }
+        })
+        .catch(error => {
+          console.error('❌ Error resolving stream:', error);
+          // Fallback to iframe
+          params.append('type', 'iframe');
+          params.append('src', `https://player.videasy.net/movie/${movieId}`);
+          window.location.href = `${playerBase}?${params.toString()}`;
+        });
+    } else {
+      // Fallback: redirect with iframe source
+      console.warn('⚠️ resolveStreamUrlForMovie not available, using iframe fallback');
+      params.append('type', 'iframe');
+      params.append('src', `https://player.videasy.net/movie/${movieId}`);
+      window.location.href = `${playerBase}?${params.toString()}`;
+    }
+  }
+
+  /**
+   * Remove movie from continue watching (cloud-only)
+   */
+  async removeMovie(movie, cardElement) {
+    const title = movie.title || 'this movie';
+
+    const confirmed = typeof window.showConfirmModal === 'function'
+      ? await window.showConfirmModal({
+        title: 'Remove from Continue Watching?',
+        message: `Remove "${title}" from Continue Watching?`,
+        confirmText: 'Remove',
+        cancelText: 'Cancel',
+        iconClass: 'fa-solid fa-trash-can'
+      })
+      : confirm(`Remove "${title}" from Continue Watching?`);
+
+    if (confirmed) {
+      try {
+        // Remove from Firebase Cloud (primary storage)
+        if (window.ContinueWatchingManager) {
+          await window.ContinueWatchingManager.removeMovieProgress(movie.movieId);
+          console.log('✅ Removed from Firebase:', movie.movieId);
+        }
+        
+        // Clear from Firebase Sync cache immediately
+        if (window.FirebaseSync && window.FirebaseSync.cache && window.FirebaseSync.cache['continueWatching']) {
+          delete window.FirebaseSync.cache['continueWatching'][movie.movieId];
+          console.log('✅ Cleared from Firebase cache');
+        }
+        
+        // Animate card removal
+        cardElement.style.transition = 'all 0.3s ease';
+        cardElement.style.transform = 'translateY(-20px)';
+        cardElement.style.opacity = '0';
+        
+        setTimeout(() => {
+          cardElement.remove();
+          
+          // Check if section is now empty
+          const container = document.getElementById('continueWatchingContainer');
+          if (container && container.children.length === 0) {
+            const section = container.closest('.continue-watching-section');
+            if (section) {
+              section.style.transition = 'opacity 0.3s ease';
+              section.style.opacity = '0';
+              setTimeout(() => section.remove(), 300);
+            }
+          }
+        }, 300);
+        
+        this.showToast('success', 'Removed', `"${title}" removed from Continue Watching`);
+      } catch (error) {
+        console.error('Error removing movie:', error);
+        this.showToast('error', 'Error', 'Failed to remove movie. Please try again.');
+      }
+    }
+  }
+
+  /**
+   * Get continue watching movies from Firebase (cloud-only)
+   */
+  getContinueWatchingMovies() {
+    try {
+      // Always use Firebase cache
+      let allProgress = {};
+      if (window.FirebaseSync && window.FirebaseSync.cache && window.FirebaseSync.cache['continueWatching']) {
+        allProgress = window.FirebaseSync.cache['continueWatching'];
+      } else if (window.ContinueWatchingManager) {
+        allProgress = window.ContinueWatchingManager.getAllProgress();
+      }
+      
+      // Also check localStorage for iframe-saved progress (local testing)
+      try {
+        const localData = JSON.parse(localStorage.getItem('continueWatching_local') || '{}');
+        // Merge localStorage data with Firebase data
+        allProgress = { ...allProgress, ...localData };
+        console.log('[ContinueWatchingDisplay] Merged localStorage data:', Object.keys(localData).length, 'items');
+      } catch (e) {
+        console.warn('[ContinueWatchingDisplay] Error reading localStorage:', e);
+      }
+      
+      const movies = [];
+      const now = Date.now();
+      const COMPLETION_THRESHOLD = 5;
+      const MIN_WATCH_TIME = 30;
+
+      for (const [movieId, data] of Object.entries(allProgress)) {
+        // Skip expired entries
+        if (data.validUntil && data.validUntil < now) continue;
+
+        // Only include movies that aren't completed and have meaningful progress
+        const timeRemaining = data.duration - data.currentTime;
+        if (timeRemaining > COMPLETION_THRESHOLD && data.currentTime >= MIN_WATCH_TIME) {
+          movies.push({
+            ...data,
+            timeRemaining,
+            progressPercent: Math.round((data.currentTime / data.duration) * 100),
+            lastWatched: new Date(data.updatedAt).toLocaleDateString()
+          });
+        }
+      }
+
+      return movies.sort((a, b) => b.updatedAt - a.updatedAt);
+    } catch (error) {
+      console.error('Error getting continue watching movies:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Format time helper
+   */
+  formatTime(seconds) {
+    if (isNaN(seconds) || seconds < 0) return '0:00';
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    } else {
+      return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    }
+  }
+
+  /**
+   * Show toast notification
+   */
+  showToast(type, title, message) {
+    // Use existing toast system if available
+    if (window.showToast) {
+      window.showToast(type, title, message);
+    } else {
+      // Fallback notification
+      console.log(`${type.toUpperCase()}: ${title} - ${message}`);
+      alert(`${title}: ${message}`);
+    }
+  }
+
+  /**
+   * Update the continue watching section
+   */
+  updateContinueWatchingSection() {
+    const existingSection = document.querySelector('.continue-watching-section');
+    if (existingSection) {
+      existingSection.remove();
+    }
+    
+    const newSection = this.createContinueWatchingSection();
+    if (newSection) {
+      const moviesContainer = document.getElementById('moviesContainer');
+      if (moviesContainer && moviesContainer.firstChild) {
+        moviesContainer.insertBefore(newSection, moviesContainer.firstChild);
+      } else if (moviesContainer) {
+        moviesContainer.appendChild(newSection);
+      }
+    }
+  }
+}
+
+// Create global instance
+window.ContinueWatchingDisplay = new ContinueWatchingDisplay();
+
+
